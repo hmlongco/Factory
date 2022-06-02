@@ -20,9 +20,6 @@ extension SharedFactory {
 class OrderFactory: SharedFactory {
     static let optionalService = Factory<SimpleService?> { nil }
     static let constructedService = Factory { MyConstructedService(service: myServiceType()) }
-}
-
-extension OrderFactory {
     static let additionalService = Factory(scope: .session) { SimpleService() }
 }
 

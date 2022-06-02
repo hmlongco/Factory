@@ -51,14 +51,14 @@ class ContentViewModel7: ObservableObject {
 }
 
 class ContentViewModel8: ObservableObject {
-    var service: MyServiceType? = Factory.sharedService()
+    private let service: MyServiceType? = Factory.sharedService()
     func text() -> String {
         service?.text() ?? "Released"
     }
 }
 
 class ContentViewModel9: ObservableObject {
-    private var service = OrderFactory.optionalService()
+    private let service = OrderFactory.optionalService()
     func text() -> String {
         service?.text() ?? "HELP!"
     }
