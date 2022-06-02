@@ -1,0 +1,42 @@
+//
+//  File.swift
+//  
+//
+//  Created by Michael Long on 5/1/22.
+//
+
+import Foundation
+@testable import Factory
+
+protocol MyServiceType {
+    var id: UUID { get }
+    func text() -> String
+}
+
+class MyService: MyServiceType {
+    let id = UUID()
+    func text() -> String {
+        "MyService"
+    }
+}
+
+class MockService: MyServiceType {
+    let id = UUID()
+    func text() -> String {
+        "MockService"
+    }
+}
+
+extension Factory {
+    static let myServiceType = Factory<MyServiceType> { MyService() }
+    static let mockService = Factory { MockService() }
+    static let cachedService = Factory(scope: .cached) { MyService() }
+    static let sharedService = Factory(scope: .shared) { MyService() }
+    static let singletonService = Factory(scope: .singleton) { MyService() }
+    static let optionalService = Factory<MyServiceType?> { MyService() }
+    static let sessionService = Factory(scope: .session) { MyService() }
+}
+
+extension Factory.Scope {
+    static let session = Cached()
+}
