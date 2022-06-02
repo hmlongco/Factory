@@ -30,7 +30,7 @@ public class Factory: SharedFactory {
     // base class for user dependencies
 }
 
-public class SharedFactory {
+open class SharedFactory {
 
     public struct Factory<T> {
         public init(factory: @escaping () -> T) {
@@ -120,7 +120,7 @@ public class SharedFactory {
     }
 
     public struct Decorator {
-        static var decorate: ((_ dependency: Any) -> Void)?
+        public static var decorate: ((_ dependency: Any) -> Void)?
     }
 }
 
@@ -188,13 +188,18 @@ extension SharedFactory.Scope {
 }
 
 @propertyWrapper public struct Injected<T> {
-    internal var dependency: T
+    private var factory:  SharedFactory.Factory<T>
+    private var dependency: T
     public init(_ factory: SharedFactory.Factory<T>) {
         self.dependency = factory()
+        self.factory = factory
     }
     public var wrappedValue: T {
         get { return dependency }
         mutating set { dependency = newValue }
+    }
+    public var projectedValue: SharedFactory.Factory<T> {
+        get { return factory }
     }
 }
 
@@ -214,5 +219,8 @@ extension SharedFactory.Scope {
         mutating set {
             dependency = newValue
         }
+    }
+    public var projectedValue: SharedFactory.Factory<T> {
+        get { return factory }
     }
 }
