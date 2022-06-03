@@ -85,12 +85,12 @@ struct ContentView: View {
 
 Our ContentView uses our view model, which is assigned to a StateObject. Great. But now we want to preview our code. How do we change the behavior of `ContentViewModel` so that we're not making live API calls during development? 
 
-It's easy.
+It's easy. Just replace `MyService` with our mock.
 
 ```swift
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        let _ = Container.myServiceType.register { MockService2() }
+        let _ = Container.myService.register { MockService2() }
         ContentView()
     }
 }
