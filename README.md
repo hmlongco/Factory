@@ -83,7 +83,9 @@ struct ContentView: View {
 }
 ```
 
-Our ContentView uses our view model, which is assigned to a StateObject. Great. But now we want to preview our code. How do we change the behavior of `ContentViewModel` so that we're not making live API calls during development? It's easy.
+Our ContentView uses our view model, which is assigned to a StateObject. Great. But now we want to preview our code. How do we change the behavior of `ContentViewModel` so that we're not making live API calls during development? 
+
+It's easy.
 
 ```swift
 struct ContentView_Previews: PreviewProvider {
@@ -104,3 +106,101 @@ But Factory has a few more tricks up it's sleeve.
 
 ## Scope
 
+If you've used Resolver or some other dependency injection system before then you've probably experienced the benefits and power of scopes.
+
+And if not, the concept is easy to understand: Just how long should an instance of an object live?
+
+You've no doubt created a singleton in your apps at some point in your career. This is an example of a scope. A single instance is created and used and shared by all of methods and functions in the app.
+
+This can be done in Factory simply by adding a scope attribute.
+```swift
+extension Container {
+    static let myService = Factory<MyServiceType>(scope: .singleton) { MyService() }
+}
+```
+Now whenever someone requests an instance of `myService` they'll get the same instance of the object as everyone else.
+
+Unless altered, the default scope is `unique`; every time the factory is asked for an instance of an object it will get a new instance of that object.
+
+Other common scopes are `cached` and `shared`. Cached items are saved until the cache is reset, while shared items persist just as long as someone holds a strong reference to them. When the last reference goes away, the weakly held shared reference also goes away.
+
+You can also add your own special purpose scopes to the mix.
+```swift
+extension Container.Scope {
+    static var session = Cached()
+}
+
+extension Container {
+    static let authentication = Factory(scope: .session) { Authentication() }
+}
+```
+Once created, a single instance of `Authentication` be provided to anyone that needs one... up until the point where the session scope is reset, perhaps by a user logging out.
+
+```swift
+func logout() {
+    Container.Scope.session.reset()
+    ...
+}
+```
+Scopes are powerful tools to have in your arsenal. Use them.
+
+## Constructor Injection
+
+While property wrappers are cool, some might prefer (or need) to use a technique known as *constructor injection* where dependencies are provided to an object upon initialization. 
+
+That's easy to do in Factory. Here we have a service that depends on an instance of `MyServiceType`, which we defined earlier.
+
+```swift
+class Container {
+    static let constructedService = Factory { MyConstructedService(service: myService()) }
+}
+```
+All of the factories in a container are visible to other factories in a container. Just call the needed factory as a function and the dependency will be provided.
+
+## Custom Containers
+
+In a large project you might want to segregate factories into additional, smaller containers.
+
+```swift
+class OrderContainer: SharedContainer {
+    static let optionalService = Factory<SimpleService?> { nil }
+    static let constructedService = Factory { MyConstructedService(service: myServiceType()) }
+    static let additionalService = Factory(scope: .session) { SimpleService() }
+}
+```
+Just define a new container derived from `SharedContainer`.
+
+## SharedContainer
+
+Note that you can also add common factories to `SharedContainer` yourself. Anything added there will be visible to every container in the system.
+
+```swift
+extension SharedContainer {
+    static let api = Factory<APIServiceType> { APIService() }
+}
+```
+## Installation
+
+Factory is available as a Swift Package. Just add it to your projects.
+
+## License
+
+Factory is available under the MIT license. See the LICENSE file for more info.
+
+## Author
+
+Factory was designed, implemented, documented, and maintained by [Michael Long](https://www.linkedin.com/in/hmlong/), a Senior Lead iOS engineer at [CRi Solutions](https://www.clientresourcesinc.com/solutions/). CRi is a leader in developing cutting edge iOS, Android, and mobile web applications and solutions for our corporate and financial clients.
+
+* Email: [mlong@clientresourcesinc.com](mailto:mlong@clientresourcesinc.com)
+* Twitter: @hmlco
+
+He was also one of Google's [Open Source Peer Reward](https://opensource.googleblog.com/2021/09/announcing-latest-open-source-peer-bonus-winners.html) winners in 2021 for his work on Resolver.
+
+## Additional Resources
+
+* [Resolver: A Swift Dependency Injection System](https://github.com/hmlongco/Resolver)
+* [Inversion of Control Design Pattern ~ Wikipedia](https://en.wikipedia.org/wiki/Inversion_of_control)
+* [Inversion of Control Containers and the Dependency Injection pattern ~ Martin Fowler](https://martinfowler.com/articles/injection.html)
+* [Nuts and Bolts of Dependency Injection in Swift](https://cocoacasts.com/nuts-and-bolts-of-dependency-injection-in-swift/)
+* [Dependency Injection in Swift](https://cocoacasts.com/dependency-injection-in-swift)
+* [Swift 5.1 Takes Dependency Injection to the Next Level](https://medium.com/better-programming/taking-swift-dependency-injection-to-the-next-level-b71114c6a9c6)

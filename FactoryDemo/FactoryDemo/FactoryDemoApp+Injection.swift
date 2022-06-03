@@ -17,13 +17,13 @@ extension SharedContainer {
     static let sharedService = Factory<MyServiceType>(scope: .shared) { MyService() }
 }
 
-class OrderFactory: SharedContainer {
+class OrderContainer: SharedContainer {
     static let optionalService = Factory<SimpleService?> { nil }
     static let constructedService = Factory { MyConstructedService(service: myServiceType()) }
     static let additionalService = Factory(scope: .session) { SimpleService() }
 }
 
-extension OrderFactory {
+extension OrderContainer {
     static func argumentService(count: Int) -> Factory<ArgumentService> {
         Factory { ArgumentService(count: count) }
     }
