@@ -22,8 +22,8 @@ The first issue can lead to a performance hit on application launch. Then again,
  Factory is strongly influenced by SwiftUI, and in my opinion is highly suited for use in that environment. Factory is...
  
  * **Safe:** Factory is compile-time safe; a dependency for a given type *must* exist or the code simply will not compile.
- * **Flexible:** It's easy to override dependencies at runtime and for use in SwiftUI Previews. And, like Resolver, Factory supports application, cached, shared, and custom scopes.
- * **Lightweight:** Factory is slim and trim, coming in at about 200 lines of code.
+ * **Flexible:** It's easy to override dependencies at runtime and for use in SwiftUI Previews. And, like Resolver, Factory supports application, cached, shared, and custom scopes, customer containers, arguments, decorators, and more.
+ * **Lightweight:** With all of that Factory is slim and trim, coming in at about 200 lines of code.
  * **Performant:** Little to no setup time is needed for the vast majority of your services, resolutions are extremely fast, and no compile-time scripts or build phases are needed.
  * **Concise:** Defining a given registration usually takes but a single line of code.
  
@@ -37,7 +37,7 @@ The first issue can lead to a performance hit on application launch. Then again,
  
 ```
 extension Factory {
-    static let myService = Factory { MySimpleService() }
+    static let myService = Factory<MyServiceType> { MyService() }
 }
 ```
 Unlike Resolver which often requires defining a plethora of registration functions, or SwiftUI, where defining a new environment variable requires creating a new EnvironmentKey and adding additional getters and setters, in Factory an injection relies simply on exposing a new factory on the provided Factory container. That's it.
