@@ -1,10 +1,10 @@
-# Factory 1.0
+# Factory ![icon](https://user-images.githubusercontent.com/709283/32858974-cce8282a-ca12-11e7-944b-c8046156290b.png)
 
 A new approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
 ## Why do something new?
 
-Resolver was my first Dependency Injection system. While quite powerful and still in use in many of my applications, Resolver suffers from a few drawbacks.
+[Resolver](https://github.com/hmlongco/Resolver) was my first Dependency Injection system. While quite powerful and still in use in many of my applications, it suffers from a few drawbacks.
 
 1. Resolver requires pre-registration of all service factories up front. 
 2. Resolver uses type inference to dynamically find and return registered services in a container.
