@@ -87,7 +87,7 @@ struct ContentView: View {
 }
 ```
 
-Our ContentView uses our view model, which is assigned to a StateObject. Great. But now we want to preview our code. How do we change the behavior of `ContentViewModel` so that we're not making live API calls during development? 
+Our ContentView uses our view model, which is assigned to a StateObject. Great. But now we want to preview our code. How do we change the behavior of `ContentViewModel` so that its `MyService` dependency isn't making live API calls during development? 
 
 It's easy. Just replace `MyService` with a mock.
 
@@ -103,6 +103,24 @@ struct ContentView_Previews: PreviewProvider {
 Note the line in our preview code where we're gone back to our container and registered a new factory closure. One that provides a mock service that also conforms to `MyServiceType`.
 
 Now when our preview is displayed `ContentView` creates a `ContentViewModel` which in turn depends on `myService` using the Injected property wrapper. But when the factory is asked for an instance of `MyServiceType` it now returns a `MockService2` instance instead of the `MyService` instance originally defined.
+
+If we have several mocks that we use all of the time, was can also add a setup function to the container to make this easier.
+
+```swift
+extension Container {
+    static func setupMocks() {
+        myService.register { MockServiceN(4) }
+        sharedService.register { MockService2() }
+    }
+}
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        let _ = Container.setupMocks()
+        ContentView()
+    }
+}
+```
 
 This is a powerful concept that let's us reach deep into a chain of dependencies and alter the behavior of a system as needed.
 
@@ -150,7 +168,7 @@ Scopes are powerful tools to have in your arsenal. Use them.
 
 ## Constructor Injection
 
-While property wrappers are cool, some might prefer (or need) to use a technique known as *constructor injection* where dependencies are provided to an object upon initialization. 
+At times we might prefer (or need) to use a technique known as *constructor injection* where dependencies are provided to an object upon initialization. 
 
 That's easy to do in Factory. Here we have a service that depends on an instance of `MyServiceType`, which we defined earlier.
 
@@ -172,15 +190,46 @@ class OrderContainer: SharedContainer {
     static let additionalService = Factory(scope: .session) { SimpleService() }
 }
 ```
-Just define a new container derived from `SharedContainer`.
+Just define a new container derived from `SharedContainer` and add your factories there. You can have as many as you wish, and even derive other containers from your own. 
+
+While a container *tree* makes dependency resolutions easier, don't forget that if need be you can reach across containers simply by specifying the full container.factory path.
+
+```swift
+class PaymentsContainer: SharedContainer {
+    static let anotherService = Factory { AnotherService(OrderContainer.optionalService()) }
+}
+```
 
 ## SharedContainer
 
-Note that you can also add common factories to `SharedContainer` yourself. Anything added there will be visible to every container in the system.
+Note that you can also add your own factories to `SharedContainer`. Anything added there will be visible on every container in the system.
 
 ```swift
 extension SharedContainer {
     static let api = Factory<APIServiceType> { APIService() }
+}
+```
+
+## Unit Tests
+
+Factory also has some provisions added to make unit testing eaiser. In your unit test setUp function you can *push* the current state of the registration system and then register and test anything you want.
+
+Then in your tearDown function simply *pop* your changes to restore everything back to the way it was prior to running that test suite.
+
+```swift
+final class FactoryCoreTests: XCTestCase {
+
+    override func setUp() {
+        super.setUp()
+        Container.Registrations.push()
+     }
+
+    override func tearDown() {
+        super.tearDown()
+        Container.Registrations.pop()
+    }
+    
+    ...
 }
 ```
 ## Installation
