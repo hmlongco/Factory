@@ -1,4 +1,4 @@
-# Factory ![icon](https://user-images.githubusercontent.com/709283/32858974-cce8282a-ca12-11e7-944b-c8046156290b.png)
+![](https://github.com/hmlongco/Factory/blob/main/Logo.png?raw=true)
 
 A new approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
