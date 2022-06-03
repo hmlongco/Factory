@@ -63,10 +63,13 @@ When a factory is evaluated it provides an instance of the desired dependency. A
 
 ```swift
 class ContentViewModel: ObservableObject {
+    // dependencies
     private let myService = Container.myService()
+    private let eventLogger = Container.eventLogger()
     ...
 }
 ```
+You can use the container directly or the property wrapper if you prefer, but either way I'd suggest grouping all of a given object's dependencies in a single place and marking them as private. 
 
 ## Mocking and Testing
 
@@ -86,7 +89,7 @@ struct ContentView: View {
 
 Our ContentView uses our view model, which is assigned to a StateObject. Great. But now we want to preview our code. How do we change the behavior of `ContentViewModel` so that we're not making live API calls during development? 
 
-It's easy. Just replace `MyService` with our mock.
+It's easy. Just replace `MyService` with a mock.
 
 ```swift
 struct ContentView_Previews: PreviewProvider {
