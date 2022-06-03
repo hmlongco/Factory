@@ -11,7 +11,7 @@ import Factory
 @main
 struct FactoryDemoApp: App {
     var body: some Scene {
-        let _ = SharedFactory.setupMocks()
+        let _ = SharedContainer.setupMocks()
         WindowGroup {
             ContentView()
         }

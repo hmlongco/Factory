@@ -8,16 +8,16 @@
 import Foundation
 import Factory
 
-extension Factory {
+extension Container {
     static let simpleService = Factory { SimpleService() }
 }
 
-extension SharedFactory {
+extension SharedContainer {
     static let myServiceType = Factory<MyServiceType> { MyService() }
     static let sharedService = Factory<MyServiceType>(scope: .shared) { MyService() }
 }
 
-class OrderFactory: SharedFactory {
+class OrderFactory: SharedContainer {
     static let optionalService = Factory<SimpleService?> { nil }
     static let constructedService = Factory { MyConstructedService(service: myServiceType()) }
     static let additionalService = Factory(scope: .session) { SimpleService() }
@@ -29,11 +29,11 @@ extension OrderFactory {
     }
 }
 
-extension SharedFactory.Scope {
+extension SharedContainer.Scope {
     static var session = Cached()
 }
 
-extension SharedFactory {
+extension SharedContainer {
     static func setupMocks() {
         myServiceType.register { MockServiceN(4) }
 

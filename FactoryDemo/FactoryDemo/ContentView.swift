@@ -18,7 +18,7 @@ struct ContentView: View {
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        let _ = SharedFactory.myServiceType.register { MockService2() }
+        let _ = SharedContainer.myServiceType.register { MockService2() }
         ContentView()
     }
 }

@@ -2,8 +2,8 @@ import XCTest
 @testable import Factory
 
 class Services {
-    @Injected(Factory.myServiceType) var service
-    @Injected(Factory.mockService) var mock
+    @Injected(Container.myServiceType) var service
+    @Injected(Container.mockService) var mock
     init() {}
 }
 
@@ -11,7 +11,7 @@ final class FactoryInjectionTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        Factory.Registrations.reset()
+        Container.Registrations.reset()
     }
 
     func testBasicInjection() throws {

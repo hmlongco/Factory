@@ -1,4 +1,4 @@
-# Factory
+# Factory 1.0
 
 A new approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
@@ -33,23 +33,23 @@ The first issue can lead to a performance hit on application launch. Then again,
  
  Most container-based dependency injection systems require you to define in some way that a given service type is injectable and many reqire some sort of factory or mechanism that will provide a new instance of the service when needed.
  
- Factory is no exception. Here's a simple registraion and its associated factory.
+ Factory is no exception. Here's a simple dependency registraion.
  
 ```
-extension Factory {
+extension Container {
     static let myService = Factory<MyServiceType> { MyService() }
 }
 ```
-Unlike Resolver which often requires defining a plethora of registration functions, or SwiftUI, where defining a new environment variable requires creating a new EnvironmentKey and adding additional getters and setters, in Factory an injection relies simply on exposing a new factory on the provided Factory container. That's it.
+Unlike Resolver which often requires defining a plethora of registration functions, or SwiftUI, where defining a new environment variable requires creating a new EnvironmentKey and adding additional getters and setters, in Factory we simply add a new factory to the default container. When called, the factory returns an instance of our dependency. That's it.
 
 Injecting and using the service where needed is equally straightforward.
 
 ```
 class ContentViewModel: ObservableObject {
-    @Injected(Factory.myService) var myService
+    @Injected(Container.myService) var myService
     ...
 }
 ```
 Here our view model uses an `@Injected` property wrapper to request the desired dependency. Similar to `@EnvironmentObject` in SwiftUI, you simply provide the property wrapper with a reference to a factory of the desired type and it handles the rest.
 
-And that's the core mechanism. In order to use the property wrapper you *must* provide the predefined factory. That factory that *must* return the desired type. Fail to do either one and the code will simply not compile. As such, Factory is compile-time safe.
+And that's the core mechanism. In order to use the property wrapper you *must* define a factory. That factory that *must* return the desired type. Fail to do either one and the code will simply not compile. As such, Factory is compile-time safe.

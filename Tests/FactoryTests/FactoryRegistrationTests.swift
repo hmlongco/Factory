@@ -6,36 +6,36 @@ final class FactoryRegistrationTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        Factory.Registrations.reset()
+        Container.Registrations.reset()
     }
 
     func testPushPop() throws {
-        let service1 = Factory.myServiceType()
+        let service1 = Container.myServiceType()
         XCTAssertTrue(service1.text() == "MyService")
 
-        Factory.Registrations.push()
+        Container.Registrations.push()
 
-        Factory.myServiceType.register(factory: { MockService() })
-        let service2 = Factory.myServiceType()
+        Container.myServiceType.register(factory: { MockService() })
+        let service2 = Container.myServiceType()
         XCTAssertTrue(service2.text() == "MockService")
 
-        Factory.Registrations.pop()
+        Container.Registrations.pop()
 
-        let service3 = Factory.myServiceType()
+        let service3 = Container.myServiceType()
         XCTAssertTrue(service3.text() == "MyService")
     }
 
     func testReset() throws {
-        let service1 = Factory.myServiceType()
+        let service1 = Container.myServiceType()
         XCTAssertTrue(service1.text() == "MyService")
 
-        Factory.myServiceType.register(factory: { MockService() })
-        let service2 = Factory.myServiceType()
+        Container.myServiceType.register(factory: { MockService() })
+        let service2 = Container.myServiceType()
         XCTAssertTrue(service2.text() == "MockService")
 
-        Factory.Registrations.reset()
+        Container.Registrations.reset()
 
-        let service3 = Factory.myServiceType()
+        let service3 = Container.myServiceType()
         XCTAssertTrue(service3.text() == "MyService")
     }
 

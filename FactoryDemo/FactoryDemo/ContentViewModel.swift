@@ -9,21 +9,21 @@ import Foundation
 import Factory
 
 class ContentViewModel1: ObservableObject {
-    @Injected(Factory.myServiceType) private var service
+    @Injected(Container.myServiceType) private var service
     func text() -> String {
         service.text()
     }
 }
 
 class ContentViewModel2: ObservableObject {
-    @LazyInjected(Factory.myServiceType) private var service
+    @LazyInjected(Container.myServiceType) private var service
     func text() -> String {
         service.text()
     }
 }
 
 class ContentViewModel3: ObservableObject {
-    private let service = Factory.myServiceType()
+    private let service = Container.myServiceType()
     func text() -> String {
         service.text()
     }
@@ -44,14 +44,14 @@ class ContentViewModel6: ObservableObject {
 }
 
 class ContentViewModel7: ObservableObject {
-    private let service = Factory.simpleService()
+    private let service = Container.simpleService()
     func text() -> String {
         service.text()
     }
 }
 
 class ContentViewModel8: ObservableObject {
-    private let service: MyServiceType? = Factory.sharedService()
+    private let service: MyServiceType? = Container.sharedService()
     func text() -> String {
         service?.text() ?? "Released"
     }

@@ -26,40 +26,40 @@
 
 import Foundation
 
-public class Factory: SharedFactory {
+public struct Factory<T> {
+    public init(factory: @escaping () -> T) {
+        self.factory = factory
+    }
+    public init(scope: SharedContainer.Scope, factory: @escaping () -> T) {
+        self.factory = factory
+        self.scope = scope
+    }
+    public func callAsFunction() -> T {
+        let id = Int(bitPattern: ObjectIdentifier(T.self))
+        let dependency = scope?.cached(id) ?? SharedContainer.Registrations.registered(id) ?? factory()
+        scope?.cache(id: id, instance: dependency)
+        SharedContainer.Decorator.decorate?(dependency)
+        return dependency
+    }
+    public func register(factory: @escaping () -> T) {
+        let id = Int(bitPattern: ObjectIdentifier(T.self))
+        SharedContainer.Registrations.register(id: id, factory: factory)
+        scope?.reset(id)
+    }
+    public func reset() {
+        let id = Int(bitPattern: ObjectIdentifier(T.self))
+        SharedContainer.Registrations.reset(id)
+        scope?.reset(id)
+    }
+    private var factory: () -> T
+    private var scope: SharedContainer.Scope?
+}
+
+public class Container: SharedContainer {
     // base class for user dependencies
 }
 
-open class SharedFactory {
-
-    public struct Factory<T> {
-        public init(factory: @escaping () -> T) {
-            self.factory = factory
-        }
-        public init(scope: Scope, factory: @escaping () -> T) {
-            self.factory = factory
-            self.scope = scope
-        }
-        public func callAsFunction() -> T {
-            let id = Int(bitPattern: ObjectIdentifier(T.self))
-            let dependency = scope?.cached(id) ?? Registrations.registered(id) ?? factory()
-            scope?.cache(id: id, instance: dependency)
-            Decorator.decorate?(dependency)
-            return dependency
-        }
-        public func register(factory: @escaping () -> T) {
-            let id = Int(bitPattern: ObjectIdentifier(T.self))
-            Registrations.register(id: id, factory: factory)
-            scope?.reset(id)
-        }
-        public func reset() {
-            let id = Int(bitPattern: ObjectIdentifier(T.self))
-            Registrations.reset(id)
-            scope?.reset(id)
-        }
-        private var factory: () -> T
-        private var scope: Scope?
-    }
+open class SharedContainer {
 
     public class Registrations {
 
@@ -124,13 +124,13 @@ open class SharedFactory {
     }
 }
 
-extension SharedFactory.Scope {
+extension SharedContainer.Scope {
 
     public static let cached = Cached()
     public static let shared = Shared()
     public static let singleton = Cached()
 
-    public final class Cached: SharedFactory.Scope {
+    public final class Cached: SharedContainer.Scope {
         public override init() {}
         public override func reset() {
             defer { lock.unlock() }
@@ -156,7 +156,7 @@ extension SharedFactory.Scope {
         private var lock = NSRecursiveLock()
     }
 
-    public final class Shared: SharedFactory.Scope {
+    public final class Shared: SharedContainer.Scope {
         public override init() {}
         public override func reset() {
             defer { lock.unlock() }
@@ -188,9 +188,9 @@ extension SharedFactory.Scope {
 }
 
 @propertyWrapper public struct Injected<T> {
-    private var factory:  SharedFactory.Factory<T>
+    private var factory:  Factory<T>
     private var dependency: T
-    public init(_ factory: SharedFactory.Factory<T>) {
+    public init(_ factory: Factory<T>) {
         self.dependency = factory()
         self.factory = factory
     }
@@ -198,15 +198,15 @@ extension SharedFactory.Scope {
         get { return dependency }
         mutating set { dependency = newValue }
     }
-    public var projectedValue: SharedFactory.Factory<T> {
+    public var projectedValue: Factory<T> {
         get { return factory }
     }
 }
 
 @propertyWrapper public struct LazyInjected<T> {
-    private var factory:  SharedFactory.Factory<T>
+    private var factory:  Factory<T>
     private var dependency: T!
-    public init(_ factory: SharedFactory.Factory<T>) {
+    public init(_ factory: Factory<T>) {
         self.factory = factory
     }
     public var wrappedValue: T {
@@ -220,7 +220,7 @@ extension SharedFactory.Scope {
             dependency = newValue
         }
     }
-    public var projectedValue: SharedFactory.Factory<T> {
+    public var projectedValue: Factory<T> {
         get { return factory }
     }
 }

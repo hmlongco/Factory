@@ -27,7 +27,7 @@ class MockService: MyServiceType {
     }
 }
 
-extension Factory {
+extension Container {
     static let myServiceType = Factory<MyServiceType> { MyService() }
     static let mockService = Factory { MockService() }
     static let cachedService = Factory(scope: .cached) { MyService() }
@@ -37,6 +37,6 @@ extension Factory {
     static let sessionService = Factory(scope: .session) { MyService() }
 }
 
-extension Factory.Scope {
+extension Container.Scope {
     static let session = Cached()
 }
