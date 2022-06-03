@@ -35,7 +35,7 @@ While the first issue could lead to a performance hit on application launch, in 
  
  Factory is no exception. Here's a simple dependency registraion.
  
-```
+```swift
 extension Container {
     static let myService = Factory<MyServiceType> { MyService() }
 }
@@ -44,12 +44,63 @@ Unlike Resolver which often requires defining a plethora of registration functio
 
 Injecting and using the service where needed is equally straightforward. Here's one way to do it.
 
-```
+```swift
 class ContentViewModel: ObservableObject {
-    @Injected(Container.myService) var myService
+    @Injected(Container.myService) private var myService
     ...
 }
 ```
-Here our view model uses an `@Injected` property wrapper to request the desired dependency. Similar to `@EnvironmentObject` in SwiftUI, we simply provide the property wrapper with a reference to a factory of the desired type and it handles the rest.
+Here our view model uses an `@Injected` property wrapper to request the desired dependency. Similar to `@EnvironmentObject` in SwiftUI, we provide the property wrapper with a reference to a factory of the desired type and it handles the rest.
 
 And that's the core mechanism. In order to use the property wrapper you *must* define a factory. That factory that *must* return the desired type. Fail to do either one and the code will simply not compile. As such, Factory is compile-time safe.
+
+## Factory
+
+A `Factory` is a lightweight struct that manages a given dependency. And due to the lazy nature of static variables, a factory isn't instantiated until it's referenced for the first time.
+
+When a factory is evaluated it provides an instance of the desired dependency. As such, it's also possible to bypass the property wrapper and call the factory directly.
+
+```swift
+class ContentViewModel: ObservableObject {
+    private let myService = Container.myService()
+    ...
+}
+```
+
+## Mocking and Testing
+
+Examining the above code, one might wonder why we've gone to all of this trouble? Why not simply say `let myService = MyService()` and be done with it?
+
+Well, the primary benefit one gains from using a container-based dependency injection system is that we're able to change the behavior of the system as needed. Consider the following code:
+
+```swift
+struct ContentView: View {
+    @StateObject var model = ContentViewModel1()
+    var body: some View {
+        Text(model.text())
+            .padding()
+    }
+}
+```
+
+Our ContentView uses our view model, which is assigned to a StateObject. Great. But now we want to preview our code. How do we change the behavior of `ContentViewModel` so that we're not making live API calls during development? It's easy.
+
+```swift
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        let _ = Container.myServiceType.register { MockService2() }
+        ContentView()
+    }
+}
+```
+
+Note the line in our preview code where we're gone back to our container and registered a new factory closure. One that provides a mock service that also conforms to `MyServiceType`.
+
+Now when our preview is displayed `ContentView` creates a `ContentViewModel` which in turn depends on `myService` using the Injected property wrapper. But when the factory is asked for an instance of `MyServiceType` it now returns a `MockService2` instance instead of the `MyService` instance originally defined.
+
+This is a powerful concept that let's us reach deep into a chain of dependencies and alter the behavior of a system as needed.
+
+But Factory has a few more tricks up it's sleeve.
+
+## Scope
+
