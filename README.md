@@ -122,7 +122,7 @@ struct ContentView_Previews: PreviewProvider {
 }
 ```
 
-This is a powerful concept that let's us reach deep into a chain of dependencies and alter the behavior of a system as needed.
+This is a powerful concept that lets us reach deep into a chain of dependencies and alter the behavior of a system as needed.
 
 But Factory has a few more tricks up it's sleeve.
 

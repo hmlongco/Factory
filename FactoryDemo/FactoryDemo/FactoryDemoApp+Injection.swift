@@ -37,11 +37,14 @@ extension SharedContainer {
     static func setupMocks() {
         myServiceType.register { MockServiceN(4) }
 
-        OrderFactory.optionalService.register { SimpleService() }
+        OrderContainer.optionalService.register { SimpleService() }
 
 #if DEBUG
-        Decorator.decorate = {
-            print("DI: \(type(of: $0)) (\(Int(bitPattern: ObjectIdentifier($0 as AnyObject))))")
+        Decorator.cached = {
+            print("FACTORY: \(type(of: $0)) (\(Int(bitPattern: ObjectIdentifier($0 as AnyObject))))")
+        }
+        Decorator.created = {
+            print("FACTORY: \(type(of: $0)) (\(Int(bitPattern: ObjectIdentifier($0 as AnyObject)))) *")
         }
 #endif
     }

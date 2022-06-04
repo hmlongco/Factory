@@ -36,10 +36,15 @@ public struct Factory<T> {
     }
     public func callAsFunction() -> T {
         let id = Int(bitPattern: ObjectIdentifier(T.self))
-        let dependency = scope?.cached(id) ?? SharedContainer.Registrations.registered(id) ?? factory()
-        scope?.cache(id: id, instance: dependency)
-        SharedContainer.Decorator.decorate?(dependency)
-        return dependency
+        if let instance: T = scope?.cached(id) {
+            SharedContainer.Decorator.cached?(instance)
+            return instance
+        } else {
+            let instance = SharedContainer.Registrations.registered(id) ?? factory()
+            scope?.cache(id: id, instance: instance)
+            SharedContainer.Decorator.created?(instance)
+            return instance
+        }
     }
     public func register(factory: @escaping () -> T) {
         let id = Int(bitPattern: ObjectIdentifier(T.self))
@@ -120,7 +125,8 @@ open class SharedContainer {
     }
 
     public struct Decorator {
-        public static var decorate: ((_ dependency: Any) -> Void)?
+        public static var cached: ((_ dependency: Any) -> Void)?
+        public static var created: ((_ dependency: Any) -> Void)?
     }
 }
 

@@ -9,10 +9,15 @@ import SwiftUI
 import Factory
 
 struct ContentView: View {
-    @StateObject var model = ContentViewModel1()
+    @StateObject var model = ContentViewModel8()
     var body: some View {
-        Text(model.text())
-            .padding()
+        VStack(spacing: 20) {
+            Text(model.text())
+            NavigationLink("Link") {
+                ContentView()
+            }
+        }
+        .padding()
     }
 }
 

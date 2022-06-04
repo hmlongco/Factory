@@ -13,7 +13,10 @@ struct FactoryDemoApp: App {
     var body: some Scene {
         let _ = SharedContainer.setupMocks()
         WindowGroup {
-            ContentView()
+            NavigationView {
+                ContentView()
+            }
+            .navigationViewStyle(StackNavigationViewStyle())
         }
     }
 }

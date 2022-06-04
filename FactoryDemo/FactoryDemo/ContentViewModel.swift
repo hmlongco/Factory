@@ -30,14 +30,14 @@ class ContentViewModel3: ObservableObject {
 }
 
 class ContentViewModel4: ObservableObject {
-    private lazy var service = OrderFactory.constructedService()
+    private lazy var service = OrderContainer.constructedService()
     func text() -> String {
         service.text()
     }
 }
 
 class ContentViewModel6: ObservableObject {
-    private let service = OrderFactory.argumentService(count: 8)()
+    private let service = OrderContainer.argumentService(count: 8)()
     func text() -> String {
         service.text()
     }
@@ -58,7 +58,7 @@ class ContentViewModel8: ObservableObject {
 }
 
 class ContentViewModel9: ObservableObject {
-    private let service = OrderFactory.optionalService()
+    private let service = OrderContainer.optionalService()
     func text() -> String {
         service?.text() ?? "HELP!"
     }
