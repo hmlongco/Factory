@@ -4,7 +4,7 @@ A new approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
 ## Why do something new?
 
-[Resolver](https://github.com/hmlongco/Resolver) was my first Dependency Injection system. While quite powerful and still in use in many of my applications, it suffers from a few drawbacks.
+[Resolver](https://github.com/hmlongco/Resolver) was my first Dependency Injection system. This open source project, while quite powerful and still in use in many applications, suffers from a few drawbacks.
 
 1. Resolver requires pre-registration of all service factories up front. 
 2. Resolver uses type inference to dynamically find and return registered services in a container.
@@ -53,7 +53,7 @@ class ContentViewModel: ObservableObject {
 ```
 Here our view model uses an `@Injected` property wrapper to request the desired dependency. Similar to `@EnvironmentObject` in SwiftUI, we provide the property wrapper with a reference to a factory of the desired type and it handles the rest.
 
-And that's the core mechanism. In order to use the property wrapper you *must* define a factory. That factory that *must* return the desired type. Fail to do either one and the code will simply not compile. As such, Factory is compile-time safe.
+And that's the core mechanism. In order to use the property wrapper you *must* define a factory. That factory *must* return the desired type when asked. Fail to do either one and the code will simply not compile. As such, Factory is compile-time safe.
 
 ## Factory
 
@@ -73,7 +73,15 @@ You can use the container directly or the property wrapper if you prefer, but ei
 
 ## Mocking and Testing
 
-Examining the above code, one might wonder why we've gone to all of this trouble? Why not simply say `let myService = MyService()` and be done with it?
+Examining the above code, one might wonder why we've gone to all of this trouble? Why not simply say `let myService = MyService()` and be done with it? 
+
+Or keep the container idea, but write something similar to this…
+
+```swift
+extension Container {
+    static var myService: MyServiceType { MyService() }
+}
+```
 
 Well, the primary benefit one gains from using a container-based dependency injection system is that we're able to change the behavior of the system as needed. Consider the following code:
 
@@ -104,7 +112,22 @@ Note the line in our preview code where we're gone back to our container and reg
 
 Now when our preview is displayed `ContentView` creates a `ContentViewModel` which in turn depends on `myService` using the Injected property wrapper. But when the factory is asked for an instance of `MyServiceType` it now returns a `MockService2` instance instead of the `MyService` instance originally defined.
 
-If we have several mocks that we use all of the time, was can also add a setup function to the container to make this easier.
+We can do this because we originally defined the result of the myService factory to be the protocol `MyServiceType`. 
+
+```swift
+extension Container {
+    static let myService = Factory<MyServiceType> { MyService() }
+}
+```
+If not specialized, the type of the factory is inferred to be the type returned by the factory closure. You could also get the same result from a cast. Both are equivalent.
+
+```swift
+extension Container {
+    static let myService = Factory { MyService() as MyServiceType }
+}
+```
+
+If we have several mocks that we use all of the time, we can also add a setup function to the container to make this easier.
 
 ```swift
 extension Container {
@@ -135,6 +158,7 @@ And if not, the concept is easy to understand: Just how long should an instance 
 You've no doubt created a singleton in your apps at some point in your career. This is an example of a scope. A single instance is created and used and shared by all of methods and functions in the app.
 
 This can be done in Factory simply by adding a scope attribute.
+
 ```swift
 extension Container {
     static let myService = Factory<MyServiceType>(scope: .singleton) { MyService() }
@@ -147,6 +171,7 @@ Unless altered, the default scope is `unique`; every time the factory is asked f
 Other common scopes are `cached` and `shared`. Cached items are saved until the cache is reset, while shared items persist just as long as someone holds a strong reference to them. When the last reference goes away, the weakly held shared reference also goes away.
 
 You can also add your own special purpose scopes to the mix.
+
 ```swift
 extension Container.Scope {
     static var session = Cached()
@@ -156,7 +181,7 @@ extension Container {
     static let authentication = Factory(scope: .session) { Authentication() }
 }
 ```
-Once created, a single instance of `Authentication` be provided to anyone that needs one... up until the point where the session scope is reset, perhaps by a user logging out.
+Once created, a single instance of `Authentication` will be provided to anyone that needs one... up until the point where the session scope is reset, perhaps by a user logging out.
 
 ```swift
 func logout() {
@@ -173,7 +198,7 @@ At times we might prefer (or need) to use a technique known as *constructor inje
 That's easy to do in Factory. Here we have a service that depends on an instance of `MyServiceType`, which we defined earlier.
 
 ```swift
-class Container {
+extension Container {
     static let constructedService = Factory { MyConstructedService(service: myService()) }
 }
 ```
