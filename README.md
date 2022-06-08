@@ -4,16 +4,20 @@ A new approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
 ## Why do something new?
 
-[Resolver](https://github.com/hmlongco/Resolver) was my first Dependency Injection system. This open source project, while quite powerful and still in use in many applications, suffers from a few drawbacks.
+The first dependency injection system I ever wrote was [Resolver](https://github.com/hmlongco/Resolver). This open source project, while quite powerful and still in use in many applications, suffers from a few drawbacks.
 
 1. Resolver requires pre-registration of all service factories up front. 
 2. Resolver uses type inference to dynamically find and return registered services in a container.
 
-While the first issue could lead to a performance hit on application launch, in practice the registration process is usually quick and not normally noticable. No, it's the second item that's somewhat more problematic. 
+The first issue is relatively minor. While preregistration could lead to a performance hit on application launch, in practice the process is usually quick and not normally noticable.
 
- Failure to find a matching type *could* lead to an application crash if we attempt to resolve a given type and if a matching registration is not found. In real life that isn't really a problem as such a thing tends to be noticed and fixed rather quickly the very first time you run a unit test or when you run the application to see if your newest feature works.
+No, it’s the second item that’s somewhat more problematic.
+
+Failure to find a matching type can lead to an application crash if we attempt to resolve a given type and if a matching registration is not found. In real life that isn’t really a problem as such a thing tends to be noticed and fixed rather quickly the very first time you run a unit test or when you run the application to see if your newest feature works.
  
  But... could we do better? That question lead me on a quest for compile-time type safety. Several other systems have attempted to solve this, but I didn't want to have to add a source code scanning and generation step to my build process, nor did I want to give up a lot of the control and flexibility inherent in a run-time-based system.
+ 
+ I also wanted something simple, fast, clean, and easy to use.
  
  Could I have my cake and eat it too?
  
@@ -27,6 +31,8 @@ While the first issue could lead to a performance hit on application launch, in 
  * **Lightweight:** With all of that Factory is slim and trim, coming in at about 200 lines of code.
  * **Performant:** Little to no setup time is needed for the vast majority of your services, resolutions are extremely fast, and no compile-time scripts or build phases are needed.
  * **Concise:** Defining a registration usually takes just a single line of code.
+ * **Tested:** Unit tests ensure correct operation of registrations, resolutions, and scopes.
+ * **Free:** Factory is free and open source under the MIT License.
  
  Sound too good to be true? Let's take a look.
  
@@ -69,7 +75,7 @@ class ContentViewModel: ObservableObject {
     ...
 }
 ```
-You can use the container directly or the property wrapper if you prefer, but either way I'd suggest grouping all of a given object's dependencies in a single place and marking them as private. 
+You can use the container directly or the property wrapper if you prefer, but either way for clarity I'd suggest grouping all of a given object's dependencies in a single place and marking them as private. 
 
 ## Mocking and Testing
 
@@ -108,11 +114,11 @@ struct ContentView_Previews: PreviewProvider {
 }
 ```
 
-Note the line in our preview code where we're gone back to our container and registered a new factory closure. One that provides a mock service that also conforms to `MyServiceType`.
+Note the line in our preview code where we’re gone back to our container and registered a new closure on our factory. This function overrides the default factory closure.
 
 Now when our preview is displayed `ContentView` creates a `ContentViewModel` which in turn depends on `myService` using the Injected property wrapper. But when the factory is asked for an instance of `MyServiceType` it now returns a `MockService2` instance instead of the `MyService` instance originally defined.
 
-We can do this because we originally defined the result of the myService factory to be the protocol `MyServiceType`. 
+We can do this because we originally cast the result of the myService factory to be the protocol `MyServiceType`. And since `MockService2` conforms to the `MyServiceType` protocol, we’re good and we can replace one with the other.
 
 ```swift
 extension Container {
@@ -254,7 +260,12 @@ final class FactoryCoreTests: XCTestCase {
         Container.Registrations.pop()
     }
     
-    ...
+    func testSomething() throws {
+        Container.myServiceType.register(factory: { MockService() })
+        let model = Container.someViewModel()
+        XCTAssertTrue(model.isLoaded)
+        ...
+    }
 }
 ```
 ## Installation
