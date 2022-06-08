@@ -1,5 +1,11 @@
 # Factory Changelog
 
+### 1.0.1
+
+* Improves performance on happy path factory resolution code
+* Splits decorator into distinct cached and created decorators
+* Fixes Registration.pop() to do nothing if stack is empty
+
 ### 1.0.0
 
 * Initial Open Source Release
