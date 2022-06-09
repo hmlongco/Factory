@@ -28,16 +28,19 @@ import Foundation
 
 /// Factory manages the dependency injection process for a given object or service.
 public struct Factory<T> {
+
     /// Initializes a Factory with a factory closure that returns a new instance of the desired type.
     public init(factory: @escaping () -> T) {
         self.factory = factory
     }
+
     /// Initializes with factory closure that returns a new instance of the desired type. The scope defines the lifetime of that instance.
     public init(scope: SharedContainer.Scope, factory: @escaping () -> T) {
         self.factory = factory
         self.scope = scope
     }
-    /// Returns an instance of the desired object type. This may be a new instances or one that was created previously and then cached,
+
+    /// Resolves and returns an instance of the desired object type. This may be a new instance or one that was created previously and then cached,
     /// depending on whether or not a scope was specified when the factory was created.
     public func callAsFunction() -> T {
         let id = Int(bitPattern: ObjectIdentifier(T.self))
@@ -51,6 +54,7 @@ public struct Factory<T> {
             return instance
         }
     }
+
     /// Registers a new factory that will be used to create and return an instance of the desired object type.
     ///
     /// This registration overrides the orginal factory and its result will be returned on all new object resolutions. Registering a new
@@ -62,6 +66,7 @@ public struct Factory<T> {
         SharedContainer.Registrations.register(id: id, factory: factory)
         scope?.reset(id)
     }
+
     /// Deletes any registered factory override and resets this Factory to use the factory closure specified during initialization. Also
     /// resets the scope so that a new instance of the original type will be returned on the next resolution.
     public func reset() {
@@ -69,6 +74,7 @@ public struct Factory<T> {
         SharedContainer.Registrations.reset(id)
         scope?.reset(id)
     }
+
     private var factory: () -> T
     private var scope: SharedContainer.Scope?
 }
@@ -82,6 +88,7 @@ public class Container: SharedContainer {
 open class SharedContainer {
 
     public class Registrations {
+
         /// Pushes the current set of registration overrides onto a stack. Useful when testing when you want to push the current set of registions,
         /// add your own, test, then pop the stack to restore the world to its original state.
         public static func push() {
@@ -89,6 +96,7 @@ open class SharedContainer {
             lock.lock()
             stack.append(registrations)
         }
+
         /// Pops a previously pushed registration stack. Does nothing if stack is empty.
         public static func pop() {
             defer { lock.unlock() }
@@ -97,6 +105,7 @@ open class SharedContainer {
                 self.registrations = registrations
             }
         }
+
         /// Resets and deletes all registered factory overrides.
         public static func reset() {
             defer { lock.unlock() }
@@ -104,13 +113,14 @@ open class SharedContainer {
             registrations = [:]
         }
 
-        /// Internal function used by Factory
+        /// Internal registration function used by Factory
         fileprivate static func register<T>(id: Int, factory: @escaping () -> T) {
             defer { lock.unlock() }
             lock.lock()
             registrations[id] = factory
         }
-        /// Internal function used by Factory
+
+        /// Internal resolution function used by Factory
         fileprivate static func registered<T>(_ id: Int) -> T? {
             defer { lock.unlock() }
             lock.lock()
@@ -123,7 +133,8 @@ open class SharedContainer {
             }
             return nil
         }
-        /// Internal function used by Factory
+
+        /// Internal reset function used by Factory
         fileprivate static func reset(_ id: Int) {
             defer { lock.unlock() }
             lock.lock()
@@ -145,15 +156,18 @@ open class SharedContainer {
             fatalError()
         }
         fileprivate func reset(_ id: Int) {}
-        public func reset() {}
+        fileprivate func reset() {}
     }
 
     /// Defines decorator functions that will be called when a factory is resolved.
     public struct Decorator {
-        /// Decorator function that will be called when a factory is resolved and the instance is retrieved from a scope cache. Useful for logging.
+
+        /// Decorator function called when a factory is resolved and the instance is retrieved from a scope cache. Useful for logging.
         public static var cached: ((_ dependency: Any) -> Void)?
-        /// Decorator function that will be called when a factory is resolved and a new instance is created. Useful for logging.
+
+        /// Decorator function called when a factory is resolved and a new instance is created. Useful for logging.
         public static var created: ((_ dependency: Any) -> Void)?
+
     }
 }
 
@@ -161,14 +175,24 @@ extension SharedContainer.Scope {
 
     /// Instance of the cached scope. The same instance will be returned by the factory until the cache is reset.
     public static let cached = Cached()
+
     /// Instance of the shared (weak) scope. The same instance will be returned by the factory as long as someone maintains a strong reference.
     public static let shared = Shared()
+
     /// Instance of the singleton scope. Once created, one and only once instance of the object will be created and returned by the factory.
     public static let singleton = Cached()
 
+    /// Resets all scope caches.
+    public static func reset() {
+        Self.scopes.forEach { $0.reset() }
+    }
+
     /// Defines the cached scope. The same instance will be returned by the factory until the cache is reset.
     public final class Cached: SharedContainer.Scope {
-        public override init() {}
+        public override init() {
+            super.init()
+            Self.scopes.append(self)
+        }
         /// Resets the cache. Anything using this cache will return a new instance after the cache is reset.
         public override func reset() {
             defer { lock.unlock() }
@@ -196,7 +220,10 @@ extension SharedContainer.Scope {
 
     /// Defines the shared (weak) scope. The same instance will be returned by the factory as long as someone maintains a strong reference.
     public final class Shared: SharedContainer.Scope {
-        public override init() {}
+        public override init() {
+            super.init()
+            Self.scopes.append(self)
+        }
         /// Resets the cache. Anything using this cache will return a new instance after the cache is reset.
         public override func reset() {
             defer { lock.unlock() }
@@ -224,6 +251,8 @@ extension SharedContainer.Scope {
         private var cache = [Int:WeakBox](minimumCapacity: 32)
         private var lock = NSRecursiveLock()
     }
+
+    private static var scopes: [SharedContainer.Scope] = []
 
 }
 
