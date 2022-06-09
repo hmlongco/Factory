@@ -27,6 +27,13 @@ class MockService: MyServiceType {
     }
 }
 
+struct ValueService: MyServiceType {
+    let id = UUID()
+    func text() -> String {
+        "ValueService"
+    }
+}
+
 extension Container {
     static let myServiceType = Factory<MyServiceType> { MyService() }
     static let mockService = Factory { MockService() }
@@ -35,6 +42,8 @@ extension Container {
     static let singletonService = Factory(scope: .singleton) { MyService() }
     static let optionalService = Factory<MyServiceType?> { MyService() }
     static let sessionService = Factory(scope: .session) { MyService() }
+    static let valueService = Factory(scope: .cached) { ValueService() }
+    static let sharedValueService = Factory(scope: .shared) { ValueService() }
 }
 
 extension Container.Scope {

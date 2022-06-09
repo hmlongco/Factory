@@ -12,6 +12,7 @@ final class FactoryInjectionTests: XCTestCase {
     override func setUp() {
         super.setUp()
         Container.Registrations.reset()
+        Container.Scope.reset()
     }
 
     func testBasicInjection() throws {

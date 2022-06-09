@@ -28,7 +28,7 @@ Failure to find a matching type can lead to an application crash if we attempt t
  * **Safe:** Factory is compile-time safe; a factory for a given type *must* exist or the code simply will not compile.
  * **Flexible:** It's easy to override dependencies at runtime and for use in SwiftUI Previews.
  * **Powerful:** Like Resolver, Factory supports application, cached, shared, and custom scopes, customer containers, arguments, decorators, and more.
- * **Lightweight:** With all of that Factory is slim and trim, coming in at about 200 lines of code.
+ * **Lightweight:** With all of that Factory is slim and trim, coming in under 300 lines of code.
  * **Performant:** Little to no setup time is needed for the vast majority of your services, resolutions are extremely fast, and no compile-time scripts or build phases are needed.
  * **Concise:** Defining a registration usually takes just a single line of code.
  * **Tested:** Unit tests ensure correct operation of registrations, resolutions, and scopes.
@@ -268,6 +268,24 @@ final class FactoryCoreTests: XCTestCase {
     }
 }
 ```
+
+## Reset
+
+You can also reset a registration to bring back the original factory closures. Or, if desired, you can reset everything back to square one with a single command.
+
+```Swift
+Container.myService.reset() // single
+Container.Registrations.reset() // all 
+```
+
+The same applies to scope management. You can reset a single cache, or all of them if desired.
+
+```Swift
+Container.Scope.cached.reset() // single
+Container.Scope.reset() // all scopes except singletons
+Container.Scope.reset(includingSingletons: true) // all including singletons
+```
+
 ## Installation
 
 Factory is available as a Swift Package. Just add it to your projects.

@@ -144,19 +144,51 @@ open class SharedContainer {
         private static var registrations: [Int:() -> Any] = [:]
         private static var stack: [[Int:() -> Any]] = []
         private static var lock = NSRecursiveLock()
+
     }
 
-    /// Defines the base implementation of a scope.
+    /// Defines an abstract base implementation of a scope cache.
     public class Scope {
-        private init() {}
+
+        fileprivate init(box: @escaping (_ instance: Any) -> AnyBox) {
+            self.box = box
+            Self.scopes.append(self)
+        }
+
+        /// Resets the cache. Any factory using this cache will return a new instance after the cache is reset.
+        public func reset() {
+            defer { lock.unlock() }
+            lock.lock()
+            cache = [:]
+        }
+
+        /// Internal cache resolution function used by Factory
         fileprivate func cached<T>(_ id: Int) -> T? {
-            fatalError()
+            defer { lock.unlock() }
+            lock.lock()
+            return cache[id]?.instance as? T
         }
+
+        /// Internal cache function used by Factory
         fileprivate func cache(id: Int, instance: Any) {
-            fatalError()
+            defer { lock.unlock() }
+            lock.lock()
+            cache[id] = box(instance)
         }
-        fileprivate func reset(_ id: Int) {}
-        fileprivate func reset() {}
+
+        /// Internal reset function used by Factory
+        fileprivate func reset(_ id: Int) {
+            defer { lock.unlock() }
+            lock.lock()
+            cache.removeValue(forKey: id)
+        }
+
+        public var isEmpty: Bool { cache.isEmpty }
+
+        private var box: (_ instance: Any) -> AnyBox
+        private var cache = [Int:AnyBox](minimumCapacity: 32)
+        private var lock = NSRecursiveLock()
+
     }
 
     /// Defines decorator functions that will be called when a factory is resolved.
@@ -173,87 +205,53 @@ open class SharedContainer {
 
 extension SharedContainer.Scope {
 
-    /// Instance of the cached scope. The same instance will be returned by the factory until the cache is reset.
+    /// Defines a cached scope. The same instance will be returned by the factory until the cache is reset.
     public static let cached = Cached()
+    public final class Cached: SharedContainer.Scope {
+        public init() {
+            super.init { StrongBox(instance: $0 as AnyObject) }
+        }
+    }
 
-    /// Instance of the shared (weak) scope. The same instance will be returned by the factory as long as someone maintains a strong reference.
+    /// Defines a shared (weak) scope. The same instance will be returned by the factory as long as someone maintains a strong reference.
     public static let shared = Shared()
+    public final class Shared: SharedContainer.Scope {
+        public init() {
+            super.init { WeakBox(instance: $0 as AnyObject) }
+        }
+    }
 
-    /// Instance of the singleton scope. Once created, one and only once instance of the object will be created and returned by the factory.
-    public static let singleton = Cached()
+    /// Defines a singleton scope. The same instance will always be returned by the factory.
+    public static let singleton = Singleton()
+    public final class Singleton: SharedContainer.Scope {
+        public init() {
+            super.init { StrongBox(instance: $0 as AnyObject) }
+        }
+    }
 
     /// Resets all scope caches.
-    public static func reset() {
-        Self.scopes.forEach { $0.reset() }
-    }
-
-    /// Defines the cached scope. The same instance will be returned by the factory until the cache is reset.
-    public final class Cached: SharedContainer.Scope {
-        public override init() {
-            super.init()
-            Self.scopes.append(self)
+    public static func reset(includingSingletons: Bool = false) {
+        Self.scopes.forEach {
+            if !($0 is Singleton) || includingSingletons {
+                $0.reset()
+            }
         }
-        /// Resets the cache. Anything using this cache will return a new instance after the cache is reset.
-        public override func reset() {
-            defer { lock.unlock() }
-            lock.lock()
-            cache = [:]
-        }
-        fileprivate override func cached<T>(_ id: Int) -> T? {
-            defer { lock.unlock() }
-            lock.lock()
-            return cache[id] as? T
-        }
-        fileprivate override func cache(id: Int, instance: Any) {
-            defer { lock.unlock() }
-            lock.lock()
-            cache[id] = instance
-        }
-        fileprivate override func reset(_ id: Int) {
-            defer { lock.unlock() }
-            lock.lock()
-            cache.removeValue(forKey: id)
-        }
-        private var cache = [Int:Any](minimumCapacity: 32)
-        private var lock = NSRecursiveLock()
-    }
-
-    /// Defines the shared (weak) scope. The same instance will be returned by the factory as long as someone maintains a strong reference.
-    public final class Shared: SharedContainer.Scope {
-        public override init() {
-            super.init()
-            Self.scopes.append(self)
-        }
-        /// Resets the cache. Anything using this cache will return a new instance after the cache is reset.
-        public override func reset() {
-            defer { lock.unlock() }
-            lock.lock()
-            cache = [:]
-        }
-        fileprivate override func cached<T>(_ id: Int) -> T? {
-            defer { lock.unlock() }
-            lock.lock()
-            return cache[id]?.instance as? T
-        }
-        fileprivate override func cache(id: Int, instance: Any) {
-            defer { lock.unlock() }
-            lock.lock()
-            cache[id] = WeakBox(instance: instance as AnyObject)
-        }
-        fileprivate override func reset(_ id: Int) {
-            defer { lock.unlock() }
-            lock.lock()
-            cache.removeValue(forKey: id)
-        }
-        private struct WeakBox {
-            weak var instance: AnyObject?
-        }
-        private var cache = [Int:WeakBox](minimumCapacity: 32)
-        private var lock = NSRecursiveLock()
     }
 
     private static var scopes: [SharedContainer.Scope] = []
 
+}
+
+private protocol AnyBox {
+    var instance: AnyObject? { get }
+}
+
+private struct StrongBox: AnyBox {
+    let instance: AnyObject?
+}
+
+private struct WeakBox: AnyBox {
+    weak var instance: AnyObject?
 }
 
 /// Convenience property wrappeer takes a factory and creates an instance of the desired type.

@@ -6,7 +6,7 @@ final class FactoryScopeTests: XCTestCase {
     override func setUp() {
         super.setUp()
         Container.Registrations.reset()
-        Container.Scope.cached.reset()
+        Container.Scope.reset()
     }
 
     func testUniqueScope() throws {
@@ -94,5 +94,55 @@ final class FactoryScopeTests: XCTestCase {
         let service3 = Container.sessionService()
         XCTAssertTrue(service2.id != service3.id)
     }
+
+    func testValueCachedScope() throws {
+        let service1 = Container.valueService()
+        let service2 = Container.valueService()
+        XCTAssertTrue(service1.id == service2.id)
+        Container.Scope.cached.reset()
+        let service3 = Container.valueService()
+        XCTAssertTrue(service2.id != service3.id)
+    }
+
+    func testValueSharedScope() throws {
+        let service1 = Container.sharedValueService()
+        let service2 = Container.sharedValueService()
+        XCTAssertTrue(service1.id != service2.id) // value types can't be shared
+    }
+
+    func testGlobalScopeReset() throws {
+        let _ = Container.cachedService()
+        let _ = Container.singletonService()
+        let _ = Container.sharedService()
+        let _ = Container.sessionService()
+        XCTAssertFalse(Container.Scope.cached.isEmpty)
+        XCTAssertFalse(Container.Scope.session.isEmpty)
+        XCTAssertFalse(Container.Scope.shared.isEmpty)
+        XCTAssertFalse(Container.Scope.singleton.isEmpty)
+        Container.Scope.reset()
+        XCTAssertTrue(Container.Scope.cached.isEmpty)
+        XCTAssertTrue(Container.Scope.session.isEmpty)
+        XCTAssertTrue(Container.Scope.shared.isEmpty)
+        // following should not reset
+        XCTAssertFalse(Container.Scope.singleton.isEmpty)
+    }
+
+    func testGlobalScopeResetIncludingSingletons() throws {
+        let _ = Container.cachedService()
+        let _ = Container.singletonService()
+        let _ = Container.sharedService()
+        let _ = Container.sessionService()
+        XCTAssertFalse(Container.Scope.cached.isEmpty)
+        XCTAssertFalse(Container.Scope.session.isEmpty)
+        XCTAssertFalse(Container.Scope.shared.isEmpty)
+        XCTAssertFalse(Container.Scope.singleton.isEmpty)
+        Container.Scope.reset(includingSingletons: true)
+        XCTAssertTrue(Container.Scope.cached.isEmpty)
+        XCTAssertTrue(Container.Scope.session.isEmpty)
+        XCTAssertTrue(Container.Scope.shared.isEmpty)
+        // following should reset
+        XCTAssertTrue(Container.Scope.singleton.isEmpty)
+    }
+
 
 }

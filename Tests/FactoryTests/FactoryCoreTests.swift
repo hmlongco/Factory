@@ -6,6 +6,7 @@ final class FactoryCoreTests: XCTestCase {
     override func setUp() {
         super.setUp()
         Container.Registrations.reset()
+        Container.Scope.reset()
     }
 
     func testBasicResolution() throws {

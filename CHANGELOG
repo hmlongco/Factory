@@ -1,5 +1,10 @@
 # Factory Changelog
 
+### 1.0.2
+
+* Refactored common scope cache mechanism
+* Allow global scope cache resets
+
 ### 1.0.1
 
 * Improves performance on happy path factory resolution code

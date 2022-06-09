@@ -7,6 +7,7 @@ final class FactoryRegistrationTests: XCTestCase {
     override func setUp() {
         super.setUp()
         Container.Registrations.reset()
+        Container.Scope.reset()
     }
 
     func testPushPop() throws {
