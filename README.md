@@ -75,7 +75,7 @@ class ContentViewModel: ObservableObject {
     ...
 }
 ```
-You can use the container directly or the property wrapper if you prefer, but either way for clarity I'd suggest grouping all of a given object's dependencies in a single place and marking them as private. 
+You can call the factory or the property wrapper if you prefer, but either way for clarity I'd suggest grouping all of a given object's dependencies in a single place near the top of the class and marking them as private. 
 
 ## Mocking and Testing
 
@@ -116,7 +116,7 @@ struct ContentView_Previews: PreviewProvider {
 
 Note the line in our preview code where we’re gone back to our container and registered a new closure on our factory. This function overrides the default factory closure.
 
-Now when our preview is displayed `ContentView` creates a `ContentViewModel` which in turn depends on `myService` using the Injected property wrapper. But when the factory is asked for an instance of `MyServiceType` it now returns a `MockService2` instance instead of the `MyService` instance originally defined.
+Now when our preview is displayed `ContentView` creates a `ContentViewModel` which in turn depends on `myService` using the Injected property wrapper. But when the factory is asked for an instance of `MyServiceType` it now returns a `MockService2` instead of the `MyService` type originally defined.
 
 We can do this because we originally cast the result of the myService factory to be the protocol `MyServiceType`. And since `MockService2` conforms to the `MyServiceType` protocol, we’re good and we can replace one with the other.
 
@@ -125,13 +125,15 @@ extension Container {
     static let myService = Factory<MyServiceType> { MyService() }
 }
 ```
-If not specialized, the type of the factory is inferred to be the type returned by the factory closure. You could also get the same result from a cast. Both are equivalent.
+If not specialized, the type of the factory is inferred to be the type returned by the factory closure. You could also get the same result from explicitly specializing the generic Factory as shown below. Both are equivalent.
 
 ```swift
 extension Container {
-    static let myService = Factory { MyService() as MyServiceType }
+    static let myService = Factory<MyServiceType> { MyService() }
 }
 ```
+
+One additional thing to notice is that the result of our registration block must also conform to the type of the original factory. If it’s not and if you try to return something else Swift will complain about it and give you an error. In short, registrations are also compile-time safe.
 
 If we have several mocks that we use all of the time, we can also add a setup function to the container to make this easier.
 
@@ -176,7 +178,7 @@ Unless altered, the default scope is `unique`; every time the factory is asked f
 
 Other common scopes are `cached` and `shared`. Cached items are saved until the cache is reset, while shared items persist just as long as someone holds a strong reference to them. When the last reference goes away, the weakly held shared reference also goes away.
 
-You can also add your own special purpose scopes to the mix.
+You can also add your own special purpose caches to the mix.
 
 ```swift
 extension Container.Scope {
@@ -184,10 +186,11 @@ extension Container.Scope {
 }
 
 extension Container {
-    static let authentication = Factory(scope: .session) { Authentication() }
+    static let authenticatedUser = Factory(scope: .session) { AuthenticatedUser() }
+    static let profileImageCache = Factory(scope: .session) { ProfileImageCache() }
 }
 ```
-Once created, a single instance of `Authentication` will be provided to anyone that needs one... up until the point where the session scope is reset, perhaps by a user logging out.
+Once created, a single instance of `AuthenticatedUser` and `ProfileImageCache` will be provided to anyone that needs one... up until the point where the session scope is reset, perhaps by a user logging out.
 
 ```swift
 func logout() {
@@ -285,6 +288,12 @@ Container.Scope.cached.reset() // single
 Container.Scope.reset() // all scopes except singletons
 Container.Scope.reset(includingSingletons: true) // all including singletons
 ```
+
+## Resolver
+
+Factory will probably mark the end of Resolver. I learned a lot from that project, and it even won me an [Open Source Peer Bonus from Google](https://opensource.googleblog.com/2021/09/announcing-latest-open-source-peer-bonus-winners.html). (I always thought it a bit strange for an iOS developer to get an award from Google, but there you have it.)
+
+But Factory is smaller, faster, cleaner and all in all a much better solution than Resolver could ever be.
 
 ## Installation
 

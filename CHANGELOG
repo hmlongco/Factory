@@ -1,5 +1,9 @@
 # Factory Changelog
 
+### 1.0.4
+
+* Optimize creation of factory cache id
+
 ### 1.0.3
 
 * Streamline handling of optionals in registered

@@ -43,12 +43,11 @@ public struct Factory<T> {
     /// Resolves and returns an instance of the desired object type. This may be a new instance or one that was created previously and then cached,
     /// depending on whether or not a scope was specified when the factory was created.
     public func callAsFunction() -> T {
-        let id = Int(bitPattern: ObjectIdentifier(T.self))
         if let instance: T = scope?.cached(id) {
             SharedContainer.Decorator.cached?(instance)
             return instance
         } else {
-            let instance = SharedContainer.Registrations.registered(id) ?? factory()
+            let instance: T = SharedContainer.Registrations.registered(id) ?? factory()
             scope?.cache(id: id, instance: instance)
             SharedContainer.Decorator.created?(instance)
             return instance
@@ -62,7 +61,6 @@ public struct Factory<T> {
     ///
     /// All registrations are stored in SharedContainer.Registrations.
     public func register(factory: @escaping () -> T) {
-        let id = Int(bitPattern: ObjectIdentifier(T.self))
         SharedContainer.Registrations.register(id: id, factory: factory)
         scope?.reset(id)
     }
@@ -70,11 +68,11 @@ public struct Factory<T> {
     /// Deletes any registered factory override and resets this Factory to use the factory closure specified during initialization. Also
     /// resets the scope so that a new instance of the original type will be returned on the next resolution.
     public func reset() {
-        let id = Int(bitPattern: ObjectIdentifier(T.self))
         SharedContainer.Registrations.reset(id)
         scope?.reset(id)
     }
 
+    private let id: Int = Int(bitPattern: ObjectIdentifier(T.self))
     private var factory: () -> T
     private var scope: SharedContainer.Scope?
 }
