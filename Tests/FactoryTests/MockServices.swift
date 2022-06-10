@@ -27,6 +27,17 @@ class MockService: MyServiceType {
     }
 }
 
+class MockServiceN: MyServiceType {
+    let id = UUID()
+    let n: Int
+    init(_ n: Int) {
+        self.n = n
+    }
+    func text() -> String {
+        "MockService\(n)"
+    }
+}
+
 struct ValueService: MyServiceType {
     let id = UUID()
     func text() -> String {

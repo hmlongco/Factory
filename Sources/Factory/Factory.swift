@@ -125,11 +125,10 @@ open class SharedContainer {
             defer { lock.unlock() }
             lock.lock()
             if let registration = registrations[id] {
-                let result = registration()
-                if let optional = result as? T? {
+                if _isOptional(T.self), let optional = registration() as? T? {
                     return optional
                 }
-                return result as? T
+                return registration() as? T
             }
             return nil
         }

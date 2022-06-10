@@ -14,16 +14,26 @@ final class FactoryRegistrationTests: XCTestCase {
         let service1 = Container.myServiceType()
         XCTAssertTrue(service1.text() == "MyService")
 
-        Container.Registrations.push()
-
-        Container.myServiceType.register(factory: { MockService() })
+        // add registrtion and test initial state
+        Container.myServiceType.register(factory: { MockServiceN(1) })
         let service2 = Container.myServiceType()
-        XCTAssertTrue(service2.text() == "MockService")
+        XCTAssertTrue(service2.text() == "MockService1")
 
-        Container.Registrations.pop()
-
+        // push and test changed state
+        Container.Registrations.push()
+        Container.myServiceType.register(factory: { MockServiceN(2) })
         let service3 = Container.myServiceType()
-        XCTAssertTrue(service3.text() == "MyService")
+        XCTAssertTrue(service3.text() == "MockService2")
+
+        // pop and ensure we're back to initial state
+        Container.Registrations.pop()
+        let service4 = Container.myServiceType()
+        XCTAssertTrue(service4.text() == "MockService1")
+
+        // pop again (which does nothing) and test for initial state
+        Container.Registrations.pop()
+        let service5 = Container.myServiceType()
+        XCTAssertTrue(service5.text() == "MockService1")
     }
 
     func testReset() throws {
