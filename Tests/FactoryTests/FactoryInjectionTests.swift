@@ -1,9 +1,15 @@
 import XCTest
 @testable import Factory
 
-class Services {
+class Services1 {
     @Injected(Container.myServiceType) var service
     @Injected(Container.mockService) var mock
+    init() {}
+}
+
+class Services2 {
+    @LazyInjected(Container.myServiceType) var service
+    @LazyInjected(Container.mockService) var mock
     init() {}
 }
 
@@ -16,9 +22,22 @@ final class FactoryInjectionTests: XCTestCase {
     }
 
     func testBasicInjection() throws {
-        let services = Services()
+        let services = Services1()
         XCTAssertTrue(services.service.text() == "MyService")
         XCTAssertTrue(services.mock.text() == "MockService")
+    }
+
+    func testLazyInjection() throws {
+        let services = Services2()
+        XCTAssertTrue(services.service.text() == "MyService")
+        XCTAssertTrue(services.mock.text() == "MockService")
+    }
+
+    func testLazyInjectionOccursOnce() throws {
+        let services = Services2()
+        let id1 = services.service.id
+        let id2 = services.service.id
+        XCTAssertTrue(id1 == id2)
     }
 
 }

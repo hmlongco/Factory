@@ -111,6 +111,10 @@ final class FactoryScopeTests: XCTestCase {
     }
 
     func testGlobalScopeReset() throws {
+        XCTAssertTrue(Container.Scope.cached.isEmpty)
+        XCTAssertTrue(Container.Scope.session.isEmpty)
+        XCTAssertTrue(Container.Scope.shared.isEmpty)
+        XCTAssertTrue(Container.Scope.singleton.isEmpty)
         let _ = Container.cachedService()
         let _ = Container.singletonService()
         let _ = Container.sharedService()

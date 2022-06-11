@@ -263,9 +263,6 @@ private struct WeakBox: AnyBox {
         get { return dependency }
         mutating set { dependency = newValue }
     }
-    public var projectedValue: Factory<T> {
-        get { return factory }
-    }
 }
 
 /// Convenience property wrappeer takes a factory and creates an instance of the desired type the first time the wrapped value is requested.
@@ -285,8 +282,5 @@ private struct WeakBox: AnyBox {
         mutating set {
             dependency = newValue
         }
-    }
-    public var projectedValue: Factory<T> {
-        get { return factory }
     }
 }
