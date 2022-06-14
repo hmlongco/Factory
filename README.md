@@ -44,7 +44,7 @@ Failure to find a matching type can lead to an application crash if we attempt t
  
 ```swift
 extension Container {
-    static let myService = Factory<MyServiceType> { MyService() }
+    static let myService = Factory { MyService() as MyServiceType }
 }
 ```
 Unlike Resolver which often requires defining a plethora of registration functions, or SwiftUI, where defining a new environment variable requires creating a new EnvironmentKey and adding additional getters and setters, here we simply add a new `Factory` to the default container. When called, the factory closure is evaluated and returns an instance of our dependency. That's it.
@@ -118,22 +118,31 @@ Note the line in our preview code where we’re gone back to our container and r
 
 Now when our preview is displayed `ContentView` creates a `ContentViewModel` which in turn depends on `myService` using the Injected property wrapper. But when the factory is asked for an instance of `MyServiceType` it now returns a `MockService2` instead of the `MyService` type originally defined.
 
-We can do this because we originally cast the result of the myService factory to be the protocol `MyServiceType`. And since `MockService2` conforms to the `MyServiceType` protocol, we’re good and we can replace one with the other.
+We can do this because we originally cast the result of the myService factory to be the protocol `MyServiceType`. And since `MockService2` conforms to the `MyServiceType` protocol, we’re good and we can replace one with the other. Here's the orignal definition for reference:
+
+```swift
+extension Container {
+    static let myService = Factory { MyService() as MyServiceType }
+}
+```
+You could also get the same result from explicitly specializing the generic Factory as shown below. Both are equivalent.
 
 ```swift
 extension Container {
     static let myService = Factory<MyServiceType> { MyService() }
 }
 ```
-If not specialized, the type of the factory is inferred to be the type returned by the factory closure. You could also get the same result from explicitly specializing the generic Factory as shown below. Both are equivalent.
+
+One additional thing to keep in mind is that the result of our registration block must also conform to the type of the original factory. If it’s not and if you try to return something else Swift will complain about it and give you an error. In short, registrations are also compile-time safe.
+
+If not specialized, the type of the factory is inferred to be the type returned by the factory closure. 
 
 ```swift
 extension Container {
-    static let myService = Factory<MyServiceType> { MyService() }
+    static let myService = Factory { MyService() }
 }
 ```
-
-One additional thing to notice is that the result of our registration block must also conform to the type of the original factory. If it’s not and if you try to return something else Swift will complain about it and give you an error. In short, registrations are also compile-time safe.
+The above factory could only be replaced with another instance of `MyService` (or with a subclass of that type).
 
 If we have several mocks that we use all of the time, we can also add a setup function to the container to make this easier.
 
@@ -226,6 +235,12 @@ class OrderContainer: SharedContainer {
 ```
 Just define a new container derived from `SharedContainer` and add your factories there. You can have as many as you wish, and even derive other containers from your own. 
 
+```swift
+class PaymentsContainer: OrderContainer {
+    static let paymentsServiceType = Factory<PaymentsServiceType> { PaymentsService(service: myServiceType()) }
+}
+```
+
 While a container *tree* makes dependency resolutions easier, don't forget that if need be you can reach across containers simply by specifying the full container.factory path.
 
 ```swift
@@ -236,13 +251,55 @@ class PaymentsContainer: SharedContainer {
 
 ## SharedContainer
 
-Note that you can also add your own factories to `SharedContainer`. Anything added there will be visible on every container in the system.
+Note that you can also add your own factories to the root `SharedContainer` class. Anything added there will be visible on every container in the system.
 
 ```swift
 extension SharedContainer {
     static let api = Factory<APIServiceType> { APIService() }
 }
 ```
+
+## Class Factories
+
+Containers are a great way to define and group sets of factories, but you're not limited to them. Factories can be used anywhere. Here's an example of specifiying and using a factory provided by a class instance.
+```swift
+extension MyService {
+    static let instance = Factory<MyServiceType> { MyService() }
+}
+
+class MyViewModel {
+    private let myService = MyService.instance()
+}
+``` 
+Using a mock is equally straightforward. Just tell the factory its new result.
+```swift
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        let _ = MyService.instance.register { MockService2() }
+        ContentView()
+    }
+}
+```
+Any registrations made are managed on `SharedContainer`.
+ 
+Note that in this example we're working around a limitation of Swift. We defined our factory instance on `MyService`, even though the result type is `MyServiceType`.
+
+ So wouldn't saying `let myService = MyServiceType.instance()` make more sense? Well, it would... but in practice that gets messy. You see, Swift doesn't allow us to *extend* a protocol type with a static variable, so we're left with defining it on the default class type instead.
+
+That said, if we have access to the original protocol we *could* do the following...
+```swift
+public protocol MyServiceType {
+    static var instance: Factory<MyServiceType> { get }
+    ...
+}
+
+extension MyServiceType2 {
+    static var instance = Factory<MyServiceType> { MyService() }
+}
+```
+But that's a lot of extra boilerplate code just to define a single factory. 
+
+If you prefer this approach then have at it, but in most cases I think it's best to stick with containers and be done with it. 
 
 ## Unit Tests
 
