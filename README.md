@@ -280,13 +280,15 @@ struct ContentView_Previews: PreviewProvider {
     }
 }
 ```
-Any registrations made are managed on `SharedContainer`.
+Any registrations made in such cases are managed on `SharedContainer`.
  
-Note that in this example we're working around a limitation of Swift. We defined our factory instance on `MyService`, even though the result type is `MyServiceType`.
+Note that we defined our factory instance on `MyService`, even though the result type is `MyServiceType`.
 
- So wouldn't saying `let myService = MyServiceType.instance()` make more sense? Well, it would... but in practice that gets messy. You see, Swift doesn't allow us to *extend* a protocol type with a static variable, so we're left with defining it on the default class type instead.
+ But wouldn't saying `let myService = MyServiceType.instance()` make more sense? 
+ 
+ Well, it would... but in practice that gets messy. We can easily do static extensions on class types, but Swift doesn't allow us to do the same thing with *protocol* types. Try it and you get a compiler error.
 
-That said, if we have access to the original protocol we *could* do the following...
+That said, if we have access to the original protocol we could add our factory and *then* extend it...
 ```swift
 public protocol MyServiceType {
     static var instance: Factory<MyServiceType> { get }
@@ -299,7 +301,7 @@ extension MyServiceType2 {
 ```
 But that's a lot of extra boilerplate code just to define a single factory. 
 
-If you prefer this approach then have at it, but in most cases I think it's best to stick with containers and be done with it. 
+If you prefer the class instance approach then have at it, but in most cases I think it's best to stick with the basic containers and be done with it. 
 
 ## Unit Tests
 
