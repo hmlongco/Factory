@@ -140,12 +140,14 @@ Note the line in our preview code where we’re gone back to our container and r
 
 Now when our preview is displayed `ContentView` creates a `ContentViewModel` which in turn has a dependency on `myService` using the `Injected` property wrapper. 
 
-But now when the wrapper asks the factory for an instance of `MyServiceType` it gets a `MockService2` instead of the `MyService` type originally defined.
+And when the wrapper asks the factory for an instance of `MyServiceType` it now gets a `MockService2` instead of the `MyService` type originally defined.
 
 
 This is a powerful concept that lets us reach deep into a chain of dependencies and alter the behavior of a system as needed.
 
-And that's just scratching the surface; Factory has quite a few more tricks up its sleeve...
+But we're not done yet. 
+
+Factory has quite a few more tricks up its sleeve...
 
 ## Scope
 
@@ -216,7 +218,9 @@ func authenticated(with user: User) {
 ```
 Now any view model or service that needs an instance of an authenticated user will receive one.
 
-Important:  *Calling register also removes any cached dependency from its associated scope.* This ensures that any new dependency injection request performed from that point on will always get the most recently defined instance of an object.
+Note that Factory is *thread-safe.* Registrations and resolutions lock and unlock the containers and caches as needed.
+
+Also note that calling register also *removes any cached dependency from its associated scope.* This ensures that any new dependency injection request performed from that point on will always get the most recently defined instance of an object.
 
 ## Custom Containers
 
