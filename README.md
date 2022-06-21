@@ -260,49 +260,6 @@ extension SharedContainer {
 ```
 Note that any registrations defined with your app are managed by `SharedContainer`. More on this later.
 
-## Class Factories
-
-Containers are a great way to define and group sets of factories, but you're not limited to them. Factories can be used anywhere. Here's an example of specifiying and using a factory provided by a class instance.
-```swift
-extension MyService {
-    static let instance = Factory<MyServiceType> { MyService() }
-}
-
-class MyViewModel {
-    private let myService = MyService.instance()
-}
-``` 
-Using a mock is equally straightforward. Just tell the factory its new result.
-```swift
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        let _ = MyService.instance.register { MockService2() }
-        ContentView()
-    }
-}
-```
- 
-Note that we defined our factory instance on `MyService`, even though the result type is `MyServiceType`.
-
- But wouldn't saying `let myService = MyServiceType.instance()` make more sense? 
- 
- Well, it would... but in practice that gets messy. We can easily do static variable extensions on classes and structs, but Swift doesn't allow us to do the same thing with *protocol* types. Try it and you get a compiler error.
-
-That said, if we have access to the original protocol we could add our factory definition and *then* extend it...
-```swift
-public protocol MyServiceType {
-    static var instance: Factory<MyServiceType> { get }
-    ...
-}
-
-extension MyServiceType {
-    static var instance = Factory<MyServiceType> { MyService() }
-}
-```
-But that's a lot of extra boilerplate code just to define a single factory. 
-
-If you prefer the class instance approach then have at it, but in most cases I think it's best to stick with the basic containers and be done with it. 
-
 ## Setup
 
 If we have several mocks that we use all of the time in our previews, we can also add a setup function to the container to make this easier.
@@ -325,7 +282,7 @@ struct ContentView_Previews: PreviewProvider {
 
 ## Reset
 
-You can also reset a registration to bring back the original factory closures. Or, if desired, you can reset everything back to square one with a single command.
+You can also reset a registration to bring back the original factory closure. Or, if desired, you can reset everything back to square one with a single command.
 
 ```Swift
 Container.myService.reset() // single
