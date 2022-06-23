@@ -222,7 +222,7 @@ func authenticated(with user: User) {
 
 func logout() {
     ...
-    Container.userProviding.register { nil }
+    Container.userProviding.reset()
     ...
 }
 ```
