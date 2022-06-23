@@ -210,13 +210,23 @@ All of the factories in a container are visible to the other factories in that c
 With Factory registrations can be performed at any time. Consider.
 
 ```swift
+extension Container {
+    static let userProviding = Factory<UserProviding?> { nil }
+}
+
 func authenticated(with user: User) {
     ...
     Container.userProviding.register { UserProvider(user: user) }
     ...
 }
+
+func logout() {
+    ...
+    Container.userProviding.register { nil }
+    ...
+}
 ```
-Now any view model or service that needs an instance of an authenticated user will receive one.
+Now any view model or service that needs an instance of an authenticated user will receive one (or nothing if no user is authenticated).
 
 Note that Factory is *thread-safe.* Registrations and resolutions lock and unlock the containers and caches as needed.
 
