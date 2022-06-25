@@ -10,6 +10,48 @@ final class FactoryRegistrationTests: XCTestCase {
         Container.Scope.reset()
     }
 
+    func testRegistrationAndResolution() throws {
+        Container.shared.register { MyService() }
+        let service: MyService? = Container.shared.resolve(MyService.self)
+        XCTAssertTrue(service?.text() == "MyService")
+    }
+
+    func testRegistrationAndInferredResolution() throws {
+        Container.shared.register { MyService() }
+        let service: MyService = Container.shared.resolve()!
+        XCTAssertTrue(service.text() == "MyService")
+    }
+
+    func testProtocolRegistrationAndResolution() throws {
+        Container.shared.register { MyService() as MyServiceType }
+        let service: MyServiceType? = Container.shared.resolve(MyServiceType.self)
+        XCTAssertTrue(service?.text() == "MyService")
+    }
+
+    func testRegistrationAndOptionalResolution() throws {
+        Container.shared.register { MyService() }
+        let service: MyService? = Container.shared.resolve(MyService.self)
+        XCTAssertTrue(service?.text() == "MyService")
+    }
+
+    func testRegistrationAndOptionalInferredResolution() throws {
+        Container.shared.register { MyService() }
+        let service: MyService? = Container.shared.resolve(MyService.self)
+        XCTAssertTrue(service?.text() == "MyService")
+    }
+
+    func testProtocolRegistrationAndOptionalResolution() throws {
+        Container.shared.register { MyService() as MyServiceType }
+        let service: MyServiceType? = Container.shared.resolve(MyServiceType.self)
+        XCTAssertTrue(service?.text() == "MyService")
+    }
+
+    func testProtocolRegistrationAndInferredOptionalResolution() throws {
+        Container.shared.register { MyService() as MyServiceType }
+        let service: MyServiceType? = Container.shared.resolve()
+        XCTAssertTrue(service?.text() == "MyService")
+    }
+
     func testPushPop() throws {
         let service1 = Container.myServiceType()
         XCTAssertTrue(service1.text() == "MyService")

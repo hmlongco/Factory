@@ -47,7 +47,7 @@ public struct Factory<T> {
             SharedContainer.Decorator.cached?(instance)
             return instance
         } else {
-            let instance: T = SharedContainer.Registrations.registered(id) ?? factory()
+            let instance: T = SharedContainer.shared.registrations.resolve(id) ?? factory()
             scope?.cache(id: id, instance: instance)
             SharedContainer.Decorator.created?(instance)
             return instance
@@ -61,20 +61,28 @@ public struct Factory<T> {
     ///
     /// All registrations are stored in SharedContainer.Registrations.
     public func register(factory: @escaping () -> T) {
-        SharedContainer.Registrations.register(id: id, factory: factory)
+        SharedContainer.shared.registrations.register(id: id, factory: factory)
         scope?.reset(id)
     }
 
     /// Deletes any registered factory override and resets this Factory to use the factory closure specified during initialization. Also
     /// resets the scope so that a new instance of the original type will be returned on the next resolution.
     public func reset() {
-        SharedContainer.Registrations.reset(id)
+        SharedContainer.shared.registrations.reset(id)
         scope?.reset(id)
     }
 
     private let id: Int = Int(bitPattern: ObjectIdentifier(T.self))
     private var factory: () -> T
     private var scope: SharedContainer.Scope?
+}
+
+extension Factory {
+    /// Initializes an unsafe Factory.
+    public init(unsafe type: T.Type, scope: SharedContainer.Scope? = nil) {
+        self.factory = { fatalError("type \(T.self) never registered") }
+        self.scope = scope
+    }
 }
 
 /// Empty convenience class for user dependencies.
@@ -85,41 +93,47 @@ public class Container: SharedContainer {
 /// Base class for all containers.
 open class SharedContainer {
 
+    public static let shared = SharedContainer()
+
+    /// Public registration function
+    public func register<T>(factory: @escaping () -> T) {
+        let id: Int = Int(bitPattern: ObjectIdentifier(T.self))
+        registrations.register(id: id, factory: factory)
+    }
+
+    /// Public resolution functions
+    public func resolve<T>(_ type: T.Type = T.self) -> T? {
+        let id: Int = Int(bitPattern: ObjectIdentifier(T.self))
+        return registrations.resolve(id)
+    }
+
     public class Registrations {
 
         /// Pushes the current set of registration overrides onto a stack. Useful when testing when you want to push the current set of registions,
         /// add your own, test, then pop the stack to restore the world to its original state.
         public static func push() {
-            defer { lock.unlock() }
-            lock.lock()
-            stack.append(registrations)
+            SharedContainer.shared.registrations.push()
         }
 
         /// Pops a previously pushed registration stack. Does nothing if stack is empty.
         public static func pop() {
-            defer { lock.unlock() }
-            lock.lock()
-            if let registrations = stack.popLast() {
-                self.registrations = registrations
-            }
+            SharedContainer.shared.registrations.pop()
         }
 
         /// Resets and deletes all registered factory overrides.
         public static func reset() {
-            defer { lock.unlock() }
-            lock.lock()
-            registrations = [:]
+            SharedContainer.shared.registrations.reset()
         }
 
         /// Internal registration function used by Factory
-        fileprivate static func register<T>(id: Int, factory: @escaping () -> T) {
+        fileprivate func register<T>(id: Int, factory: @escaping () -> T) {
             defer { lock.unlock() }
             lock.lock()
             registrations[id] = factory
         }
 
         /// Internal resolution function used by Factory
-        fileprivate static func registered<T>(_ id: Int) -> T? {
+        fileprivate func resolve<T>(_ id: Int) -> T? {
             defer { lock.unlock() }
             lock.lock()
             if let registration = registrations[id] {
@@ -131,18 +145,44 @@ open class SharedContainer {
             return nil
         }
 
+        /// Pushes the current set of registration overrides onto a stack. Useful when testing when you want to push the current set of registions,
+        /// add your own, test, then pop the stack to restore the world to its original state.
+        fileprivate func push() {
+            defer { lock.unlock() }
+            lock.lock()
+            stack.append(registrations)
+        }
+
+        /// Pops a previously pushed registration stack. Does nothing if stack is empty.
+        fileprivate func pop() {
+            defer { lock.unlock() }
+            lock.lock()
+            if let registrations = stack.popLast() {
+                self.registrations = registrations
+            }
+        }
+
+        /// Resets and deletes all registered factory overrides.
+        fileprivate func reset() {
+            defer { lock.unlock() }
+            lock.lock()
+            registrations = [:]
+        }
+
         /// Internal reset function used by Factory
-        fileprivate static func reset(_ id: Int) {
+        fileprivate func reset(_ id: Int) {
             defer { lock.unlock() }
             lock.lock()
             registrations.removeValue(forKey: id)
         }
 
-        private static var registrations: [Int:() -> Any] = [:]
-        private static var stack: [[Int:() -> Any]] = []
-        private static var lock = NSRecursiveLock()
+        private var registrations: [Int:() -> Any] = [:]
+        private var stack: [[Int:() -> Any]] = []
+        private var lock = NSRecursiveLock()
 
     }
+
+    fileprivate var registrations = Registrations()
 
     /// Defines an abstract base implementation of a scope cache.
     public class Scope {
@@ -253,11 +293,12 @@ private struct WeakBox: AnyBox {
 
 /// Convenience property wrappeer takes a factory and creates an instance of the desired type.
 @propertyWrapper public struct Injected<T> {
-    private var factory:  Factory<T>
     private var dependency: T
     public init(_ factory: Factory<T>) {
         self.dependency = factory()
-        self.factory = factory
+    }
+    public init(unsafe type: T.Type) {
+        self.dependency = SharedContainer.shared.resolve(type)!
     }
     public var wrappedValue: T {
         get { return dependency }
@@ -271,6 +312,9 @@ private struct WeakBox: AnyBox {
     private var dependency: T!
     public init(_ factory: Factory<T>) {
         self.factory = factory
+    }
+    public init(unsafe type: T.Type) {
+        self.factory = Factory<T>{ SharedContainer.shared.resolve(type)! }
     }
     public var wrappedValue: T {
         mutating get {
