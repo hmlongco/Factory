@@ -9,7 +9,9 @@ import SwiftUI
 import Factory
 
 struct ContentView: View {
-    @StateObject var model = ContentViewModel8()
+
+    @StateObject var model = ContentModuleViewModel()
+
     var body: some View {
         VStack(spacing: 20) {
             Text(model.text())
@@ -19,6 +21,7 @@ struct ContentView: View {
         }
         .padding()
     }
+    
 }
 
 struct ContentView_Previews: PreviewProvider {
