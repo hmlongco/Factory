@@ -7,6 +7,7 @@
 
 import Foundation
 import Factory
+import Common
 
 extension Container {
     static let simpleService = Factory { SimpleService() }

@@ -25,13 +25,13 @@ class ContentModuleViewModel: ObservableObject {
         Container.commonType.register {
             MyCommonType()
         }
-        let network1 = Container.networkType()
+        let network1 = Container.networkType() // uses CommonType iternally
         network1.test()
 
         // test 2 - should reset and log Common
         print("\nMODULES: Testing reset to see original type, type == Common")
         Container.Registrations.reset()
-        let network2 = Container.networkType()
+        let network2 = Container.networkType() // uses CommonType iternally
         network2.test()
 
         // test 3
@@ -39,8 +39,16 @@ class ContentModuleViewModel: ObservableObject {
         Container.shared.register {
             MyCommonType() as CommonType
         }
-        let network3 = Container.networkType()
+        let network3 = Container.networkType() // uses CommonType iternally
         network3.test()
+
+        // test 4
+        print("\nMODULES: Testing registration on unsafe factory, type == MyCommonType")
+        Container.unsafeType.register {
+            MyCommonType()
+        }
+        let network4 = Container.unsafeType()
+        network4.test()
     }
 
 }

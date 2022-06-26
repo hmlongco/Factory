@@ -16,6 +16,10 @@ extension Container {
     public static var commonType = Factory<CommonType> { Common() }
 }
 
+extension Container {
+    public static var unsafeType = Factory(unsafe: CommonType.self)
+}
+
 private class Common: CommonType {
     public init() {}
     public func test() {
