@@ -32,7 +32,7 @@ private class CommonNetworkType: CommonType {
     }
 }
 
-public class Network: NetworkType {
+private class Network: NetworkType {
     @Injected(Container.commonType) private var commonType
     public init() {}
     public func test() {
