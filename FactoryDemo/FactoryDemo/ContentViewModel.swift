@@ -20,29 +20,33 @@ class ContentModuleViewModel: ObservableObject {
     }
 
     func testFactory() {
-        // method 1 - register on Factory
+        // test 1
+        print("\nMODULES: Testing registration on factory, type == MyCommonType")
         Container.commonType.register {
             MyCommonType()
         }
-        // method 2 - register type on shared container
-        Container.shared.register {
-            MyCommonType() as CommonType
-        }
-        // test 1
         let network1 = Container.networkType()
         network1.test()
-        // test 2
+
+        // test 2 - should reset and log Common
+        print("\nMODULES: Testing reset to see original type, type == Common")
         Container.Registrations.reset()
         let network2 = Container.networkType()
         network2.test()
+
+        // test 3
+        print("\nMODULES: Testing registration on shared container, type == MyCommonType")
+        Container.shared.register {
+            MyCommonType() as CommonType
+        }
+        let network3 = Container.networkType()
+        network3.test()
     }
 
 }
 
 internal class MyCommonType: CommonType {
-    public init() {
-        print("MyCommonType")
-    }
+    public init() {}
     public func test() {
         print("My Common Test")
     }

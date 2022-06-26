@@ -17,9 +17,7 @@ extension Container {
 }
 
 private class Common: CommonType {
-    public init() {
-        print("Common")
-    }
+    public init() {}
     public func test() {
         print("Common Test")
     }

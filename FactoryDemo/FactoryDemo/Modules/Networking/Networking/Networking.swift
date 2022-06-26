@@ -19,9 +19,7 @@ extension Container {
 
 public class Network: NetworkType {
     @Injected(Container.commonType) private var commonType
-    public init() {
-        print("Network")
-    }
+    public init() {}
     public func test() {
         commonType.test()
         print("Network Test")
