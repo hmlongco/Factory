@@ -17,6 +17,21 @@ extension Container {
     public static var networkType = Factory<NetworkType> { Network() }
 }
 
+extension Container {
+    public static func networkSetup() {
+        Container.Registrations.register {
+            CommonNetworkType() as CommonType
+        }
+    }
+}
+
+private class CommonNetworkType: CommonType {
+    public init() {}
+    public func test() {
+        print("Common Network Test")
+    }
+}
+
 public class Network: NetworkType {
     @Injected(Container.commonType) private var commonType
     public init() {}

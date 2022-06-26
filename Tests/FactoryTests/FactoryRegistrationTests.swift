@@ -11,44 +11,44 @@ final class FactoryRegistrationTests: XCTestCase {
     }
 
     func testRegistrationAndResolution() throws {
-        Container.shared.register { MyService() }
-        let service: MyService? = Container.shared.resolve(MyService.self)
+        Container.Registrations.register { MyService() }
+        let service: MyService? = Container.Registrations.resolve(MyService.self)
         XCTAssertTrue(service?.text() == "MyService")
     }
 
     func testRegistrationAndInferredResolution() throws {
-        Container.shared.register { MyService() }
-        let service: MyService = Container.shared.resolve()!
+        Container.Registrations.register { MyService() }
+        let service: MyService = Container.Registrations.resolve()!
         XCTAssertTrue(service.text() == "MyService")
     }
 
     func testProtocolRegistrationAndResolution() throws {
-        Container.shared.register { MyService() as MyServiceType }
-        let service: MyServiceType? = Container.shared.resolve(MyServiceType.self)
+        Container.Registrations.register { MyService() as MyServiceType }
+        let service: MyServiceType? = Container.Registrations.resolve(MyServiceType.self)
         XCTAssertTrue(service?.text() == "MyService")
     }
 
     func testRegistrationAndOptionalResolution() throws {
-        Container.shared.register { MyService() }
-        let service: MyService? = Container.shared.resolve(MyService.self)
+        Container.Registrations.register { MyService() }
+        let service: MyService? = Container.Registrations.resolve(MyService.self)
         XCTAssertTrue(service?.text() == "MyService")
     }
 
     func testRegistrationAndOptionalInferredResolution() throws {
-        Container.shared.register { MyService() }
-        let service: MyService? = Container.shared.resolve(MyService.self)
+        Container.Registrations.register { MyService() }
+        let service: MyService? = Container.Registrations.resolve(MyService.self)
         XCTAssertTrue(service?.text() == "MyService")
     }
 
     func testProtocolRegistrationAndOptionalResolution() throws {
-        Container.shared.register { MyService() as MyServiceType }
-        let service: MyServiceType? = Container.shared.resolve(MyServiceType.self)
+        Container.Registrations.register { MyService() as MyServiceType }
+        let service: MyServiceType? = Container.Registrations.resolve(MyServiceType.self)
         XCTAssertTrue(service?.text() == "MyService")
     }
 
     func testProtocolRegistrationAndInferredOptionalResolution() throws {
-        Container.shared.register { MyService() as MyServiceType }
-        let service: MyServiceType? = Container.shared.resolve()
+        Container.Registrations.register { MyService() as MyServiceType }
+        let service: MyServiceType? = Container.Registrations.resolve()
         XCTAssertTrue(service?.text() == "MyService")
     }
 

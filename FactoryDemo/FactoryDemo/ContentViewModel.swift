@@ -36,19 +36,25 @@ class ContentModuleViewModel: ObservableObject {
 
         // test 3
         print("\nMODULES: Testing registration on shared container, type == MyCommonType")
-        Container.shared.register {
+        Container.Registrations.register {
             MyCommonType() as CommonType
         }
         let network3 = Container.networkType() // uses CommonType iternally
         network3.test()
 
         // test 4
+        print("\nMODULES: Testing cross-module registration change on Container, type == CommonNetworkType")
+        Container.networkSetup()
+        let network4 = Container.networkType()
+        network4.test()
+
+        // test 5
         print("\nMODULES: Testing registration on unsafe factory, type == MyCommonType")
         Container.unsafeType.register {
             MyCommonType()
         }
-        let network4 = Container.unsafeType()
-        network4.test()
+        let network5 = Container.unsafeType()
+        network5.test()
     }
 
 }
