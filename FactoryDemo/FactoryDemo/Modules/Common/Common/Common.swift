@@ -17,8 +17,12 @@ extension Container {
 }
 
 extension Container {
-    public static var unsafeType = Factory(unsafe: CommonType.self)
+    public static var promisedType = Factory<CommonType?> { nil }
 }
+
+//extension Container {
+//    public static var unsafeType = Factory(unsafe: CommonType.self)
+//}
 
 private class Common: CommonType {
     public init() {}

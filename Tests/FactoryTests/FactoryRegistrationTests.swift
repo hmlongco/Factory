@@ -52,6 +52,14 @@ final class FactoryRegistrationTests: XCTestCase {
         XCTAssertTrue(service?.text() == "MyService")
     }
 
+    func testPromisedRegistrationAndOptionalResolution() throws {
+        let service1: MyServiceType? = Container.promisedService()
+        XCTAssertTrue(service1?.text() == nil)
+        Container.promisedService.register { MyService() }
+        let service2: MyServiceType? = Container.promisedService()
+        XCTAssertTrue(service2?.text() == "MyService")
+    }
+
     func testPushPop() throws {
         let service1 = Container.myServiceType()
         XCTAssertTrue(service1.text() == "MyService")

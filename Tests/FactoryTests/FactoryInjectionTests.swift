@@ -18,10 +18,10 @@ class Services5 {
     init() {}
 }
 
-class Services6 {
-    @Injected(Container.unsafeService) var service
-    init() {}
-}
+//class Services6 {
+//    @Injected(Container.unsafeService) var service
+//    init() {}
+//}
 
 
 final class FactoryInjectionTests: XCTestCase {
@@ -72,10 +72,10 @@ final class FactoryInjectionTests: XCTestCase {
 //        XCTAssertTrue(services.mock.text() == "MockService")
 //    }
 
-    func testUnsafeFactoryInjection() throws {
-        Container.unsafeService.register { MyService() }
-        let services = Services6()
-        XCTAssertTrue(services.service.text() == "MyService")
-    }
+//    func testUnsafeFactoryInjection() throws {
+//        Container.unsafeService.register { MyService() }
+//        let services = Services6()
+//        XCTAssertTrue(services.service.text() == "MyService")
+//    }
 
 }

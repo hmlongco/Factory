@@ -55,7 +55,8 @@ extension Container {
     static let sessionService = Factory(scope: .session) { MyService() }
     static let valueService = Factory(scope: .cached) { ValueService() }
     static let sharedValueService = Factory(scope: .shared) { ValueService() }
-    static let unsafeService = Factory(unsafe: MyServiceType.self)
+    static let promisedService = Factory<MyServiceType?> { nil }
+//    static let unsafeService = Factory(unsafe: MyServiceType.self)
 }
 
 extension Container.Scope {

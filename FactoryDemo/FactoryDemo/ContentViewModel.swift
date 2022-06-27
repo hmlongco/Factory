@@ -49,12 +49,20 @@ class ContentModuleViewModel: ObservableObject {
         network4.test()
 
         // test 5
-        print("\nMODULES: Testing registration on unsafe factory, type == MyCommonType")
-        Container.unsafeType.register {
+        print("\nMODULES: Testing registration on optional promised factory, type == MyCommonType")
+        Container.promisedType.register {
             MyCommonType()
         }
-        let network5 = Container.unsafeType()
-        network5.test()
+        let network5 = Container.promisedType()
+        network5?.test()
+
+        // test 6
+        //        print("\nMODULES: Testing registration on unsafe factory, type == MyCommonType")
+        //        Container.unsafeType.register {
+        //            MyCommonType()
+        //        }
+        //        let network6 = Container.unsafeType()
+        //        network6.test()
     }
 
 }

@@ -77,14 +77,6 @@ public struct Factory<T> {
     private var scope: SharedContainer.Scope?
 }
 
-extension Factory {
-    /// Initializes an unsafe Factory. Use at your own risk.
-    public init(unsafe type: T.Type, scope: SharedContainer.Scope? = nil) {
-        self.factory = { fatalError("type \(T.self) never registered") }
-        self.scope = scope
-    }
-}
-
 /// Empty convenience class for user dependencies.
 public class Container: SharedContainer {
 
