@@ -1,5 +1,11 @@
 # Factory Changelog
 
+### 1.0.5
+
+* Fix unneeded Factory retention in Injected Property Wrapper
+* Some internal name changes
+* Added Multipl Module examples in demo project
+
 ### 1.0.4
 
 * Optimize creation of factory cache id

@@ -265,11 +265,9 @@ private struct WeakBox: AnyBox {
 
 /// Convenience property wrappeer takes a factory and creates an instance of the desired type.
 @propertyWrapper public struct Injected<T> {
-    private var factory:  Factory<T>
     private var dependency: T
     public init(_ factory: Factory<T>) {
         self.dependency = factory()
-        self.factory = factory
     }
     public var wrappedValue: T {
         get { return dependency }
