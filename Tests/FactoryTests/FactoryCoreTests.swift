@@ -44,4 +44,10 @@ final class FactoryCoreTests: XCTestCase {
         XCTAssertTrue(service3?.text() == "MockService")
     }
 
+    func testExplicitlyUnrwappedOptionalResolution() throws {
+        Container.optionalService.register { MyService() }
+        let service1: MyServiceType = Container.optionalService()!
+        XCTAssertTrue(service1.text() == "MyService")
+    }
+
 }

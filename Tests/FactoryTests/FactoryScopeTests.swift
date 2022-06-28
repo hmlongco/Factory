@@ -148,5 +148,26 @@ final class FactoryScopeTests: XCTestCase {
         XCTAssertTrue(Container.Scope.singleton.isEmpty)
     }
 
+    func testNilService() throws {
+        Container.nilSService.reset()
+        let service1 = Container.nilSService()
+        XCTAssertNil(service1)
+        Container.nilSService.register {
+            MyService()
+        }
+        let service2 = Container.nilSService()
+        XCTAssertNotNil(service2)
+    }
+
+    func testNilScopedService() throws {
+        Container.nilScopedService.reset()
+        let service1 = Container.nilScopedService()
+        XCTAssertNil(service1)
+        Container.nilScopedService.register {
+            MyService()
+        }
+        let service2 = Container.nilScopedService()
+        XCTAssertNotNil(service2)
+    }
 
 }

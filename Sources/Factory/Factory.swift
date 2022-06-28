@@ -175,6 +175,9 @@ open class SharedContainer {
         fileprivate func cached<T>(_ id: Int) -> T? {
             defer { lock.unlock() }
             lock.lock()
+            if _isOptional(T.self), let optional = cache[id]?.instance as? T? {
+                return optional
+            }
             return cache[id]?.instance as? T
         }
 
