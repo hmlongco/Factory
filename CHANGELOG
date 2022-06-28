@@ -1,5 +1,9 @@
 # Factory Changelog
 
+### 1.0.6
+
+* Fix issue with caching optional types
+
 ### 1.0.5
 
 * Fix unneeded Factory retention in Injected Property Wrapper
