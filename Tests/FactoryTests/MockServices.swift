@@ -47,6 +47,7 @@ struct ValueService: MyServiceType {
 
 extension Container {
     static let myServiceType = Factory<MyServiceType> { MyService() }
+    static let myServiceType2 = Factory<MyServiceType> { MyService() }
     static let mockService = Factory { MockService() }
     static let cachedService = Factory(scope: .cached) { MyService() }
     static let sharedService = Factory(scope: .shared) { MyService() }
@@ -58,7 +59,6 @@ extension Container {
     static let valueService = Factory(scope: .cached) { ValueService() }
     static let sharedValueService = Factory(scope: .shared) { ValueService() }
     static let promisedService = Factory<MyServiceType?> { nil }
-//    static let unsafeService = Factory(unsafe: MyServiceType.self)
 }
 
 extension Container.Scope {

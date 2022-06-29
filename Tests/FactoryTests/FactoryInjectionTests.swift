@@ -18,12 +18,6 @@ class Services5 {
     init() {}
 }
 
-//class Services6 {
-//    @Injected(Container.unsafeService) var service
-//    init() {}
-//}
-
-
 final class FactoryInjectionTests: XCTestCase {
 
     override func setUp() {
@@ -55,27 +49,5 @@ final class FactoryInjectionTests: XCTestCase {
         let services = Services5()
         XCTAssertTrue(services.service?.text() == "MyService")
     }
-
-//    func testUnsafeTypeInjection() throws {
-//        Container.Registrations.register { MyService() as MyServiceType }
-//        Container.Registrations.register { MockService() }
-//        let services = Services3()
-//        XCTAssertTrue(services.service.text() == "MyService")
-//        XCTAssertTrue(services.mock.text() == "MockService")
-//    }
-//
-//    func testLazyUnsafeTypeInjection() throws {
-//        Container.Registrations.register { MyService() as MyServiceType }
-//        Container.Registrations.register { MockService() }
-//        let services = Services4()
-//        XCTAssertTrue(services.service.text() == "MyService")
-//        XCTAssertTrue(services.mock.text() == "MockService")
-//    }
-
-//    func testUnsafeFactoryInjection() throws {
-//        Container.unsafeService.register { MyService() }
-//        let services = Services6()
-//        XCTAssertTrue(services.service.text() == "MyService")
-//    }
 
 }

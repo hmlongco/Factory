@@ -72,7 +72,7 @@ public struct Factory<T> {
         scope?.reset(id)
     }
 
-    private let id: Int = Int(bitPattern: ObjectIdentifier(T.self))
+    private let id: UUID = UUID()
     private var factory: () -> T
     private var scope: SharedContainer.Scope?
 }
@@ -86,18 +86,6 @@ public class Container: SharedContainer {
 open class SharedContainer {
 
     public class Registrations {
-
-        /// public registration function
-        public static func register<T>(factory: @escaping () -> T) {
-            let id: Int = Int(bitPattern: ObjectIdentifier(T.self))
-            register(id: id, factory: factory)
-        }
-
-        /// public resolution function
-        public static func resolve<T>(_ type: T.Type = T.self) -> T? {
-            let id: Int = Int(bitPattern: ObjectIdentifier(type))
-            return resolve(id: id)
-        }
 
         /// Pushes the current set of registration overrides onto a stack. Useful when testing when you want to push the current set of registions,
         /// add your own, test, then pop the stack to restore the world to its original state.
@@ -124,14 +112,14 @@ open class SharedContainer {
         }
 
         /// Internal registration function used by Factory
-        fileprivate static func register<T>(id: Int, factory: @escaping () -> T) {
+        fileprivate static func register<T>(id: UUID, factory: @escaping () -> T) {
             defer { lock.unlock() }
             lock.lock()
             registrations[id] = factory
         }
 
         /// Internal resolution function used by Factory
-        fileprivate static func resolve<T>(id: Int) -> T? {
+        fileprivate static func resolve<T>(id: UUID) -> T? {
             defer { lock.unlock() }
             lock.lock()
             if let registration = registrations[id] {
@@ -144,14 +132,14 @@ open class SharedContainer {
         }
 
         /// Internal reset function used by Factory
-        fileprivate static func reset(_ id: Int) {
+        fileprivate static func reset(_ id: UUID) {
             defer { lock.unlock() }
             lock.lock()
             registrations.removeValue(forKey: id)
         }
 
-        private static var registrations: [Int:() -> Any] = [:]
-        private static var stack: [[Int:() -> Any]] = []
+        private static var registrations: [UUID:() -> Any] = [:]
+        private static var stack: [[UUID:() -> Any]] = []
         private static var lock = NSRecursiveLock()
 
     }
@@ -172,7 +160,7 @@ open class SharedContainer {
         }
 
         /// Internal cache resolution function used by Factory
-        fileprivate func cached<T>(_ id: Int) -> T? {
+        fileprivate func cached<T>(_ id: UUID) -> T? {
             defer { lock.unlock() }
             lock.lock()
             if _isOptional(T.self), let optional = cache[id]?.instance as? T? {
@@ -182,14 +170,14 @@ open class SharedContainer {
         }
 
         /// Internal cache function used by Factory
-        fileprivate func cache(id: Int, instance: Any) {
+        fileprivate func cache(id: UUID, instance: Any) {
             defer { lock.unlock() }
             lock.lock()
             cache[id] = box(instance)
         }
 
         /// Internal reset function used by Factory
-        fileprivate func reset(_ id: Int) {
+        fileprivate func reset(_ id: UUID) {
             defer { lock.unlock() }
             lock.lock()
             cache.removeValue(forKey: id)
@@ -198,7 +186,7 @@ open class SharedContainer {
         public var isEmpty: Bool { cache.isEmpty }
 
         private var box: (_ instance: Any) -> AnyBox
-        private var cache = [Int:AnyBox](minimumCapacity: 32)
+        private var cache = [UUID:AnyBox](minimumCapacity: 32)
         private var lock = NSRecursiveLock()
 
     }

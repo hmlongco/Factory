@@ -10,56 +10,6 @@ final class FactoryRegistrationTests: XCTestCase {
         Container.Scope.reset()
     }
 
-    func testRegistrationAndResolution() throws {
-        Container.Registrations.register { MyService() }
-        let service: MyService? = Container.Registrations.resolve(MyService.self)
-        XCTAssertTrue(service?.text() == "MyService")
-    }
-
-    func testRegistrationAndInferredResolution() throws {
-        Container.Registrations.register { MyService() }
-        let service: MyService = Container.Registrations.resolve()!
-        XCTAssertTrue(service.text() == "MyService")
-    }
-
-    func testProtocolRegistrationAndResolution() throws {
-        Container.Registrations.register { MyService() as MyServiceType }
-        let service: MyServiceType? = Container.Registrations.resolve(MyServiceType.self)
-        XCTAssertTrue(service?.text() == "MyService")
-    }
-
-    func testRegistrationAndOptionalResolution() throws {
-        Container.Registrations.register { MyService() }
-        let service: MyService? = Container.Registrations.resolve(MyService.self)
-        XCTAssertTrue(service?.text() == "MyService")
-    }
-
-    func testRegistrationAndOptionalInferredResolution() throws {
-        Container.Registrations.register { MyService() }
-        let service: MyService? = Container.Registrations.resolve(MyService.self)
-        XCTAssertTrue(service?.text() == "MyService")
-    }
-
-    func testProtocolRegistrationAndOptionalResolution() throws {
-        Container.Registrations.register { MyService() as MyServiceType }
-        let service: MyServiceType? = Container.Registrations.resolve(MyServiceType.self)
-        XCTAssertTrue(service?.text() == "MyService")
-    }
-
-    func testProtocolRegistrationAndInferredOptionalResolution() throws {
-        Container.Registrations.register { MyService() as MyServiceType }
-        let service: MyServiceType? = Container.Registrations.resolve()
-        XCTAssertTrue(service?.text() == "MyService")
-    }
-
-    func testPromisedRegistrationAndOptionalResolution() throws {
-        let service1: MyServiceType? = Container.promisedService()
-        XCTAssertTrue(service1?.text() == nil)
-        Container.promisedService.register { MyService() }
-        let service2: MyServiceType? = Container.promisedService()
-        XCTAssertTrue(service2?.text() == "MyService")
-    }
-
     func testPushPop() throws {
         let service1 = Container.myServiceType()
         XCTAssertTrue(service1.text() == "MyService")
