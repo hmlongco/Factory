@@ -254,7 +254,7 @@ private struct WeakBox: AnyBox {
     weak var instance: AnyObject?
 }
 
-/// Convenience property wrappeer takes a factory and creates an instance of the desired type.
+/// Convenience property wrapper takes a factory and creates an instance of the desired type.
 @propertyWrapper public struct Injected<T> {
     private var dependency: T
     public init(_ factory: Factory<T>) {
@@ -266,7 +266,7 @@ private struct WeakBox: AnyBox {
     }
 }
 
-/// Convenience property wrappeer takes a factory and creates an instance of the desired type the first time the wrapped value is requested.
+/// Convenience property wrapper takes a factory and creates an instance of the desired type the first time the wrapped value is requested.
 @propertyWrapper public struct LazyInjected<T> {
     private var factory:  Factory<T>
     private var dependency: T!
