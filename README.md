@@ -205,9 +205,9 @@ extension Container {
 ```
 All of the factories in a container are visible to the other factories in that container. Just call the needed factory as a function and the dependency will be provided.
 
-## Dynamic Registration
+## Optionals and Dynamic Registration
 
-With Factory registrations can be performed at any time. Consider.
+With Factory registrations can be performed at any time. Consider the following optional factory.
 
 ```swift
 extension Container {
@@ -226,11 +226,28 @@ func logout() {
     ...
 }
 ```
-Now any view model or service that needs an instance of an authenticated user will receive one (or nothing if no user is authenticated).
+Now any view model or service that needs an instance of an authenticated user will receive one (or nothing if no user is authenticated). Here's an example:
+```swift
+class SomeViewModel: ObservableObject {
+    @Injected(Container.userProviding) private let provider
+    func update(email: String) {
+        provider?.updateEmailAddress(email)
+    }
+}
+```
+The injected provider is optional by default since the Factory was defined that way. You *could* explicitly unwrap the optional...
+```swift
+@Injected(Container.userProviding) private let provider: UserProviding!
+```
 
-Note that Factory is *thread-safe.* Registrations and resolutions lock and unlock the containers and caches as needed.
+But doing so violates the core premise on which Factory was built in the first place: *Your code is guaranteed to be safe.* 
+
+I'd avise against it.
+
+A few other things here. First, note that Factory is *thread-safe.* Registrations and resolutions lock and unlock the containers and caches as needed.
 
 Also note that calling register also *removes any cached dependency from its associated scope.* This ensures that any new dependency injection request performed from that point on will always get the most recently defined instance of an object.
+
 
 ## Custom Containers
 
