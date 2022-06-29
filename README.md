@@ -244,9 +244,11 @@ But doing so violates the core premise on which Factory was built in the first p
 
 I'd avise against it.
 
-A few other things here. First, note that Factory is *thread-safe.* Registrations and resolutions lock and unlock the containers and caches as needed.
+A few other things here. First, note that we used `@Injected` to supply an optional type. We don't need a `@OptionalInjected` property wrapper to do this as we did in Resolver. Same for `@LazyInjected`.
 
-Also note that calling register also *removes any cached dependency from its associated scope.* This ensures that any new dependency injection request performed from that point on will always get the most recently defined instance of an object.
+Next, note that Factory is *thread-safe.* Registrations and resolutions lock and unlock the containers and caches as needed.
+
+And finally, note that calling register also *removes any cached dependency from its associated scope.* This ensures that any new dependency injection request performed from that point on will always get the most recently defined instance of an object.
 
 
 ## Custom Containers
