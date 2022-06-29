@@ -19,13 +19,13 @@ extension Container {
 
 extension Container {
     public static func networkSetup() {
-        Container.Registrations.register {
-            CommonNetworkType() as CommonType
+        Container.networkType.register {
+            CommonNetworkType()
         }
     }
 }
 
-private class CommonNetworkType: CommonType {
+private class CommonNetworkType: NetworkType {
     public init() {}
     public func test() {
         print("Common Network Test")
