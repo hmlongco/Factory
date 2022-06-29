@@ -25,6 +25,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 /// Factory manages the dependency injection process for a given object or service.
 public struct Factory<T> {
@@ -274,6 +275,21 @@ extension SharedContainer.Scope {
         }
     }
 }
+
+@available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+@propertyWrapper public struct InjectedObject<T>: DynamicProperty where T: ObservableObject {
+    @ObservedObject private var dependency: T
+
+    public init(_ factory: Factory<T>) {
+        self.dependency = factory()
+    }
+    public var wrappedValue: T {
+        get { return dependency }
+        mutating set { dependency = newValue }
+    }
+    public var projectedValue: ObservedObject<T>.Wrapper {
+        return self.$dependency
+    }
 #endif
 
 /// Resolving an instance of a service is a recursive process (service A needs a B which needs a C).
