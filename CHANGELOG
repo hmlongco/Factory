@@ -1,5 +1,9 @@
 # Factory Changelog
 
+### 1.0.8
+
+* Revised locking strategy for improved performance
+
 ### 1.0.7
 
 * Fixed issue with factories of the same type
