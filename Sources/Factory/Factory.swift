@@ -276,6 +276,9 @@ extension SharedContainer.Scope {
     }
 }
 
+/// Convenience property wrapper takes a factory and creates an instance of the desired object that can be observed.
+/// This wrapper is meant for use in SwiftUI Views and exposes bindable objects similar to that of SwiftUI @observedObject and @environmentObject.
+/// Dependent service must be of type ObservableObject. Updating object state will trigger view update.
 @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 @propertyWrapper public struct InjectedObject<T>: DynamicProperty where T: ObservableObject {
     @ObservedObject private var dependency: T
