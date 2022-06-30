@@ -50,12 +50,11 @@ public struct Factory<T> {
         if let instance: T = scope?.cached(id) {
             SharedContainer.Decorator.cached?(instance)
             return instance
-        } else {
-            let instance: T = SharedContainer.Registrations.resolve(id: id) ?? factory()
-            scope?.cache(id: id, instance: instance)
-            SharedContainer.Decorator.created?(instance)
-            return instance
         }
+        let instance: T = SharedContainer.Registrations.resolve(id: id) ?? factory()
+        scope?.cache(id: id, instance: instance)
+        SharedContainer.Decorator.created?(instance)
+        return instance
     }
 
     /// Registers a new factory that will be used to create and return an instance of the desired object type.
@@ -277,17 +276,19 @@ extension SharedContainer.Scope {
 #endif
 
 /// Resolving an instance of a service is a recursive process (service A needs a B which needs a C).
+/// Defines lock used for multi-threaded protection around registrations and scope caches.
+#if os(iOS) || os(macOS) || os(tvOS) || os(watchOS)
 private final class FactoryRecursiveLock {
     init() {
         pthread_mutexattr_init(&recursiveMutexAttr)
         pthread_mutexattr_settype(&recursiveMutexAttr, PTHREAD_MUTEX_RECURSIVE)
         pthread_mutex_init(&recursiveMutex, &recursiveMutexAttr)
     }
-    @inline(__always)
+    @inlinable
     final func lock() {
         pthread_mutex_lock(&recursiveMutex)
     }
-    @inline(__always)
+    @inlinable
     final func unlock() {
         pthread_mutex_unlock(&recursiveMutex)
     }
@@ -295,8 +296,10 @@ private final class FactoryRecursiveLock {
     private var recursiveMutexAttr = pthread_mutexattr_t()
 }
 
-/// Lock used for multi-threaded protection around registrations and scope caches
 private var globalRecursiveLock = FactoryRecursiveLock()
+#else
+private var globalRecursiveLock = NSRecursiveLock()
+#endif
 
 /// Internal box protocol for scope functionality
 private protocol AnyBox {
