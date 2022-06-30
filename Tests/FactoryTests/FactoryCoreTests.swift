@@ -38,10 +38,17 @@ final class FactoryCoreTests: XCTestCase {
         XCTAssertTrue(service1?.text() == "MyService")
         Container.optionalService.register { nil }
         let service2: MyServiceType? = Container.optionalService()
-        Container.optionalService.register { MockService() }
         XCTAssertNil(service2)
+        Container.optionalService.register { MockService() }
         let service3: MyServiceType? = Container.optionalService()
         XCTAssertTrue(service3?.text() == "MockService")
+    }
+
+    func testRecursiveResolution() throws {
+        let a = Container.recursiveA()
+        XCTAssertNotNil(a)
+        XCTAssertNotNil(a?.b)
+        XCTAssertNotNil(a?.b?.c)
     }
 
     func testExplicitlyUnrwappedOptionalResolution() throws {

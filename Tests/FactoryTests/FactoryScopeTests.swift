@@ -159,4 +159,27 @@ final class FactoryScopeTests: XCTestCase {
         XCTAssertNotNil(service2)
     }
 
+    func testNilScopedServiceCaching() throws {
+        Container.nilScopedService.reset()
+        XCTAssertTrue(Container.Scope.cached.isEmpty)
+        let service1 = Container.nilScopedService()
+        XCTAssertNil(service1)
+        XCTAssertFalse(Container.Scope.cached.isEmpty) // nil was cached
+        let service2 = Container.nilScopedService()
+        XCTAssertNil(service2) // cached nil was returned
+        XCTAssertFalse(Container.Scope.cached.isEmpty)
+        Container.nilScopedService.register {
+            MyService()
+        }
+        let service3 = Container.nilScopedService()
+        XCTAssertNotNil(service3)
+        XCTAssertFalse(Container.Scope.cached.isEmpty)
+        Container.nilScopedService.register {
+            nil
+        }
+        let service4 = Container.nilScopedService()
+        XCTAssertNil(service4) // cache was reset by registration
+        XCTAssertFalse(Container.Scope.cached.isEmpty)
+    }
+
 }

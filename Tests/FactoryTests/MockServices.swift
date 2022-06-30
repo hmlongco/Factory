@@ -45,6 +45,21 @@ struct ValueService: MyServiceType {
     }
 }
 
+// classes for recursive resolution test
+class RecursiveA {
+    @Injected(Container.recursiveB) var b: RecursiveB?
+    init() {}
+}
+
+class RecursiveB {
+    @Injected(Container.recursiveC) var c: RecursiveC?
+    init() {}
+}
+
+class RecursiveC {
+    init() {}
+}
+
 extension Container {
     static let myServiceType = Factory<MyServiceType> { MyService() }
     static let myServiceType2 = Factory<MyServiceType> { MyService() }
@@ -59,6 +74,12 @@ extension Container {
     static let valueService = Factory(scope: .cached) { ValueService() }
     static let sharedValueService = Factory(scope: .shared) { ValueService() }
     static let promisedService = Factory<MyServiceType?> { nil }
+}
+
+extension Container {
+    static var recursiveA = Factory<RecursiveA?> { RecursiveA() }
+    static var recursiveB = Factory<RecursiveB?> { RecursiveB() }
+    static var recursiveC = Factory<RecursiveC?> { RecursiveC() }
 }
 
 extension Container.Scope {
