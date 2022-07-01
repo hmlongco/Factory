@@ -1,5 +1,10 @@
 # Factory Changelog
 
+### 1.0.9
+
+* Condition per-platform locking strategy
+* Added multithreaded test case
+
 ### 1.0.8
 
 * Revised locking strategy for improved performance
