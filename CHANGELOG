@@ -1,5 +1,9 @@
 # Factory Changelog
 
+### 1.1.0
+
+* Adds ParameterFactory to provide type-safe argument passing
+
 ### 1.0.9
 
 * Condition per-platform locking strategy
