@@ -205,6 +205,37 @@ extension Container {
 ```
 All of the factories in a container are visible to the other factories in that container. Just call the needed factory as a function and the dependency will be provided.
 
+## Passing Parameters
+
+Like it or not, some services require one or more parameters to be passed to them in order to be initialized correctly. In that case use `ParameterFactory`.
+
+```swift
+extension Container {
+    static var argumentService = ParameterFactory<Int, MyServiceType> { n in
+        ParameterService(value: n)
+    }
+}
+
+```
+
+One caveat is that you can't use the `@Injected` property wrapper with `ParameterFactory` as there's no way to get the needed parameters to the property wrapper before the wrapper is initialized. That being the case, you'll probably need to reference the container directly and do something similar to the following.
+
+```swift
+class MyClass {
+    var myService: MyServiceType
+    init(_ n: Int) {
+         myService = Container.parameterService(n)
+    }
+}
+```
+If you need to pass more than one parameter just use a tuple, dictionary, or struct.
+```swift
+static var tupleService = ParameterFactory<(Int, Int), MultipleParameterService> { (a, b) in
+    MultipleParameterService(a: a, b: b)
+}
+```
+Finally, if you define a scope keep in mind that the first argument passed will be used to create the dependency and *that* dependency will be cached. Since the cached object will be returned from now on any arguments passed in later requests will be ignored until the scope is reset.
+
 ## Optionals and Dynamic Registration
 
 With Factory registrations can be performed at any time. Consider the following optional factory.
@@ -249,7 +280,6 @@ A few other things here. First, note that we used `@Injected` to supply an optio
 Next, note that Factory is *thread-safe.* Registrations and resolutions lock and unlock the containers and caches as needed.
 
 And finally, note that calling register also *removes any cached dependency from its associated scope.* This ensures that any new dependency injection request performed from that point on will always get the most recently defined instance of an object.
-
 
 ## Custom Containers
 

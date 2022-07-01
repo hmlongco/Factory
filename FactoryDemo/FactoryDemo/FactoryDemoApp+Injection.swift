@@ -25,8 +25,8 @@ class OrderContainer: SharedContainer {
 }
 
 extension OrderContainer {
-    static func argumentService(count: Int) -> Factory<ArgumentService> {
-        Factory { ArgumentService(count: count) }
+    static func argumentService(count: Int) -> Factory<ParameterService> {
+        Factory { ParameterService(count: count) }
     }
 }
 

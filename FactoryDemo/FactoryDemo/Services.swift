@@ -48,7 +48,7 @@ public class MockServiceN: MyServiceType {
     }
 }
 
-class ArgumentService {
+class ParameterService {
     let count: Int
     init(count: Int) {
         self.count = count

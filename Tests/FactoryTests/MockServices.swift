@@ -10,11 +10,13 @@ import Foundation
 
 protocol MyServiceType {
     var id: UUID { get }
+    var value: Int { get }
     func text() -> String
 }
 
 class MyService: MyServiceType {
     let id = UUID()
+    let value: Int = 0
     func text() -> String {
         "MyService"
     }
@@ -22,6 +24,7 @@ class MyService: MyServiceType {
 
 class MockService: MyServiceType {
     let id = UUID()
+    let value: Int = 0
     func text() -> String {
         "MockService"
     }
@@ -30,6 +33,7 @@ class MockService: MyServiceType {
 class MockServiceN: MyServiceType {
     let id = UUID()
     let n: Int
+    var value: Int { n }
     init(_ n: Int) {
         self.n = n
     }
@@ -40,6 +44,7 @@ class MockServiceN: MyServiceType {
 
 struct ValueService: MyServiceType {
     let id = UUID()
+    let value: Int = -1
     func text() -> String {
         "ValueService"
     }
@@ -60,6 +65,18 @@ class RecursiveC {
     init() {}
 }
 
+class ParameterService: MyServiceType {
+    let id = UUID()
+    let value: Int
+    init(value: Int) {
+        self.value = value
+    }
+    func text() -> String {
+        "ParameterService\(value)"
+    }
+}
+
+
 extension Container {
     static let myServiceType = Factory<MyServiceType> { MyService() }
     static let myServiceType2 = Factory<MyServiceType> { MyService() }
@@ -74,6 +91,18 @@ extension Container {
     static let valueService = Factory(scope: .cached) { ValueService() }
     static let sharedValueService = Factory(scope: .shared) { ValueService() }
     static let promisedService = Factory<MyServiceType?> { nil }
+}
+
+extension Container {
+    static var parameterService = ParameterFactory { n in
+        ParameterService(value: n) as MyServiceType
+    }
+}
+
+extension Container {
+    static var tupleService = ParameterFactory<(Int, Int), MyServiceType> { (a, b) in
+        ParameterService(value: a + b)
+    }
 }
 
 extension Container {

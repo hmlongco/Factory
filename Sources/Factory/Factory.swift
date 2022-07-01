@@ -31,13 +31,12 @@ public struct Factory<T> {
 
     /// Initializes a Factory with a factory closure that returns a new instance of the desired type.
     public init(factory: @escaping () -> T) {
-        self.factory = factory
+        self.registration = Registration<Void, T>(id: UUID(), factory: factory, scope: nil)
     }
 
     /// Initializes with factory closure that returns a new instance of the desired type. The scope defines the lifetime of that instance.
     public init(scope: SharedContainer.Scope, factory: @escaping () -> T) {
-        self.factory = factory
-        self.scope = scope
+        self.registration = Registration<Void, T>(id: UUID(), factory: factory, scope: scope)
     }
 
     /// Resolves and returns an instance of the desired object type. This may be a new instance or one that was created previously and then cached,
@@ -47,14 +46,8 @@ public struct Factory<T> {
     public func callAsFunction() -> T {
         defer { globalRecursiveLock.unlock() }
         globalRecursiveLock.lock()
-        if let instance: T = scope?.cached(id) {
-            SharedContainer.Decorator.cached?(instance)
-            return instance
-        }
-        let instance: T = SharedContainer.Registrations.resolve(id: id) ?? factory()
-        scope?.cache(id: id, instance: instance)
-        SharedContainer.Decorator.created?(instance)
-        return instance
+        let registration = SharedContainer.Registrations.registration(id: registration.id) as? Registration<Void, T> ?? registration
+        return registration.resolve(())
     }
 
     /// Registers a new factory that will be used to create and return an instance of the desired object type.
@@ -64,24 +57,60 @@ public struct Factory<T> {
     ///
     /// All registrations are stored in SharedContainer.Registrations.
     public func register(factory: @escaping () -> T) {
-        defer { globalRecursiveLock.unlock() }
-        globalRecursiveLock.lock()
-        SharedContainer.Registrations.register(id: id, factory: factory)
-        scope?.reset(id)
+        Registration<Void, T>(id: registration.id, factory: factory, scope: registration.scope).register()
     }
 
     /// Deletes any registered factory override and resets this Factory to use the factory closure specified during initialization. Also
     /// resets the scope so that a new instance of the original type will be returned on the next resolution.
     public func reset() {
-        defer { globalRecursiveLock.unlock() }
-        globalRecursiveLock.lock()
-        SharedContainer.Registrations.reset(id)
-        scope?.reset(id)
+        registration.reset()
     }
 
-    private let id: UUID = UUID()
-    private var factory: () -> T
-    private var scope: SharedContainer.Scope?
+    private let registration: Registration<Void, T>
+}
+
+/// ParameterFactory manages the dependency injection process for a given object or service that needs one or more arguments
+/// passed to it during instantiation.
+public struct ParameterFactory<P, T> {
+
+    /// Initializes a Factory with a factory closure that returns a new instance of the desired type.
+    public init(factory: @escaping (_ params: P) -> T) {
+        self.registration = Registration<P, T>(id: UUID(), factory: factory, scope: nil)
+    }
+
+    /// Initializes with factory closure that returns a new instance of the desired type. The scope defines the lifetime of that instance.
+    public init(scope: SharedContainer.Scope, factory: @escaping (_ params: P) -> T) {
+        self.registration = Registration<P, T>(id: UUID(), factory: factory, scope: scope)
+    }
+
+    /// Resolves and returns an instance of the desired object type. This may be a new instance or one that was created previously and then cached,
+    /// depending on whether or not a scope was specified when the factory was created.
+    ///
+    /// Note return type could of T could still be <T?> depending on original Factory specification.
+    public func callAsFunction(_ params: P) -> T {
+        defer { globalRecursiveLock.unlock() }
+        globalRecursiveLock.lock()
+        let registration = SharedContainer.Registrations.registration(id: registration.id) as? Registration<P, T> ?? registration
+        return registration.resolve(params)
+    }
+
+    /// Registers a new factory that will be used to create and return an instance of the desired object type.
+    ///
+    /// This registration overrides the orginal factory and its result will be returned on all new object resolutions. Registering a new
+    /// factory also clears the previous instance from the associated scope.
+    ///
+    /// All registrations are stored in SharedContainer.Registrations.
+    public func register(factory: @escaping (_ params: P) -> T) {
+        Registration<P, T>(id: registration.id, factory: factory, scope: registration.scope).register()
+    }
+
+    /// Deletes any registered factory override and resets this Factory to use the factory closure specified during initialization. Also
+    /// resets the scope so that a new instance of the original type will be returned on the next resolution.
+    public func reset() {
+        registration.reset()
+    }
+
+    private let registration: Registration<P, T>
 }
 
 /// Empty convenience class for user dependencies.
@@ -91,6 +120,40 @@ public class Container: SharedContainer {
 
 /// Base class for all containers.
 open class SharedContainer {
+
+    fileprivate struct Registration<P,T>: AnyRegistration {
+
+        let id: UUID
+        let factory: (P) -> T
+        let scope: SharedContainer.Scope?
+
+        func resolve(_ params: P) -> T {
+            // lock occurs prior to fetching registration in Factory
+            if let instance: T = scope?.cached(id) {
+                SharedContainer.Decorator.cached?(instance)
+                return instance
+            }
+            let instance: T = factory(params)
+            scope?.cache(id: id, instance: instance)
+            SharedContainer.Decorator.created?(instance)
+            return instance
+        }
+
+        func register() {
+            defer { globalRecursiveLock.unlock() }
+            globalRecursiveLock.lock()
+            SharedContainer.Registrations.register(self)
+            scope?.reset(id)
+        }
+
+        func reset() {
+            defer { globalRecursiveLock.unlock() }
+            globalRecursiveLock.lock()
+            SharedContainer.Registrations.reset(id)
+            scope?.reset(id)
+        }
+
+    }
 
     public class Registrations {
 
@@ -118,27 +181,23 @@ open class SharedContainer {
             registrations = [:]
         }
 
-        /// Internal registration function used by Factory
-        fileprivate static func register<T>(id: UUID, factory: @escaping () -> T) {
-            registrations[id] = factory
+       /// Internal registration function used by Factory
+        fileprivate static func register(_ registration: AnyRegistration) {
+            registrations[registration.id] = registration
         }
 
         /// Internal resolution function used by Factory
-        fileprivate static func resolve<T>(id: UUID) -> T? {
-            if let instance = registrations[id]?() {
-                // following needed to successfully unwrap cached Any into <T?>'s and <T>'s
-                return instance as? T? ?? instance as? T
-            }
-            return nil
+        fileprivate static func registration(id: UUID) -> AnyRegistration? {
+            return registrations[id]
         }
 
-        /// Internal reset function used by Factory
+         /// Internal reset function used by Factory
         fileprivate static func reset(_ id: UUID) {
             registrations.removeValue(forKey: id)
         }
 
-        private static var registrations: [UUID:() -> Any] = [:]
-        private static var stack: [[UUID:() -> Any]] = []
+        private static var registrations: [UUID:AnyRegistration] = [:]
+        private static var stack: [[UUID:AnyRegistration]] = []
 
     }
 
@@ -300,6 +359,14 @@ private var globalRecursiveLock = FactoryRecursiveLock()
 #else
 private var globalRecursiveLock = NSRecursiveLock()
 #endif
+
+/// Internal definitions
+fileprivate typealias Registration = SharedContainer.Registration
+
+/// Internal box protocol for registrations
+fileprivate protocol AnyRegistration {
+    var id: UUID { get }
+}
 
 /// Internal box protocol for scope functionality
 private protocol AnyBox {
