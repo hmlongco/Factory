@@ -41,11 +41,8 @@ extension SharedContainer {
         OrderContainer.optionalService.register { SimpleService() }
 
 #if DEBUG
-        Decorator.cached = {
+        Decorator.decorate = {
             print("FACTORY: \(type(of: $0)) (\(Int(bitPattern: ObjectIdentifier($0 as AnyObject))))")
-        }
-        Decorator.created = {
-            print("FACTORY: \(type(of: $0)) (\(Int(bitPattern: ObjectIdentifier($0 as AnyObject)))) *")
         }
 #endif
     }

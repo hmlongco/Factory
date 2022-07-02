@@ -19,46 +19,56 @@ final class FactoryMultithreadingTests: XCTestCase {
     func testMultiThreading() throws {
         // basically tests that nothing locks up or crashes while doing registrations and resolutions.
         // behavior is pretty apparent if locks are disabled.
-        for _ in 0...1000 {
+        for _ in 0...10000 {
             qa.async {
                MultiThreadedContainer.a.register { A(b: MultiThreadedContainer.b()) }
             }
             qa.async {
-                MultiThreadedContainer.b.register { B(c: MultiThreadedContainer.c()) }
                 self.qc.async {
-                    let b: B = MultiThreadedContainer.b()
-                    b.test()
+                    MultiThreadedContainer.b.register { B(c: MultiThreadedContainer.c()) }
                 }
                 self.qe.async {
                     let b: B = MultiThreadedContainer.b()
                     b.test()
                 }
             }
-            qa.async {
+            qc.async {
+                MultiThreadedContainer.b.register { B(c: MultiThreadedContainer.c()) }
+            }
+            qe.async {
                 let b: B = MultiThreadedContainer.b()
                 b.test()
             }
-            qb.async {
+            qa.async {
                 let a: A = MultiThreadedContainer.a()
                 a.test()
+            }
+            qb.async {
+                let b: B = MultiThreadedContainer.b()
+                b.test()
             }
             qb.async {
                 let d: D = MultiThreadedContainer.d()
                 d.test()
             }
             qc.async {
-                let e: E = MultiThreadedContainer.e()
+                let b: B = MultiThreadedContainer.b()
+                b.test()
+            }
+            qc.async {
                 self.qe.async {
-                    e.test()
-                }
+                    MultiThreadedContainer.e.register { E() }
+               }
                 self.qe.async {
+                    let e: E = MultiThreadedContainer.e()
                     e.test()
                 }
             }
         }
 
-        wait(interval: 1.0) {
-            XCTAssert(iterations == 9009)
+        wait(interval: 2.0) {
+            print(iterations)
+            XCTAssert(iterations == 80008)
         }
 
     }

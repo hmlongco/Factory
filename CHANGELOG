@@ -1,5 +1,12 @@
 # Factory Changelog
 
+### 1.2.0 - Stable release
+
+* Revised structure to better support ParameterFactory
+* Returned to more agressive locking mechanisms
+* Revised caching code to eliminate multiple locks
+* Changes decorator behavior in favor of a single common decorator for new and cached instances
+
 ### 1.1.0
 
 * Adds ParameterFactory to provide type-safe argument passing

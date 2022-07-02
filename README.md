@@ -28,7 +28,7 @@ Failure to find a matching type can lead to an application crash if we attempt t
  * **Safe:** Factory is compile-time safe; a factory for a given type *must* exist or the code simply will not compile.
  * **Flexible:** It's easy to override dependencies at runtime and for use in SwiftUI Previews.
  * **Powerful:** Like Resolver, Factory supports application, cached, shared, and custom scopes, custom containers, arguments, decorators, and more.
- * **Lightweight:** With all of that Factory is slim and trim, barely 400 lines of code and half the size of Resolver.
+ * **Lightweight:** With all of that Factory is slim and trim, well under 400 lines of code and half the size of Resolver.
  * **Performant:** Little to no setup time is needed for the vast majority of your services, resolutions are extremely fast, and no compile-time scripts or build phases are needed.
  * **Concise:** Defining a registration usually takes just a single line of code. Same for resolution.
  * **Tested:** Unit tests ensure correct operation of registrations, resolutions, and scopes.
@@ -166,7 +166,7 @@ extension Container {
 ```
 Now whenever someone requests an instance of `myService` they'll get the same instance of the object as everyone else.
 
-Unless altered, the default scope is `unique`; every time the factory is asked for an instance of an object it will get a new instance of that object.
+If not specified the default scope is `unique`; every time the factory is asked for an instance of an object it will get a new instance of that object.
 
 Other common scopes are `cached` and `shared`. Cached items are persisted until the cache is reset, while shared items exist just as long as someone holds a strong reference to them. When the last reference goes away, the weakly held shared reference also goes away.
 
