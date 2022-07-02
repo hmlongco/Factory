@@ -199,7 +199,9 @@ open class SharedContainer {
                 return instance
             }
             let instance: T = factory()
-            cache[id] = box(instance)
+            if let box = box(instance) {
+                cache[id] = box
+            }
             return instance
         }
 
@@ -210,7 +212,7 @@ open class SharedContainer {
             cache.removeValue(forKey: id)
         }
 
-        fileprivate func box<T>(_ instance: T) -> AnyBox {
+        fileprivate func box<T>(_ instance: T) -> AnyBox? {
             StrongBox<T>(boxed: instance)
         }
 
@@ -244,8 +246,8 @@ extension SharedContainer.Scope {
         public override init() {
             super.init()
         }
-        fileprivate override func box<T>(_ instance: T) -> AnyBox {
-            WeakBox(boxed: instance as AnyObject)
+        fileprivate override func box<T>(_ instance: T) -> AnyBox? {
+            type(of: instance) is AnyClass ? WeakBox(boxed: instance as AnyObject) : nil
         }
     }
 
