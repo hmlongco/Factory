@@ -42,12 +42,44 @@ final class FactoryScopeTests: XCTestCase {
     }
 
     func testSharedScope() throws {
-        var service1: MyService? = Container.sharedService()
-        var service2: MyService? = Container.sharedService()
+        var service1: MyServiceType? = Container.sharedService()
+        var service2: MyServiceType? = Container.sharedService()
+        XCTAssertNotNil(service1)
+        XCTAssertNotNil(service2)
+        // Shared cached item ids should match
         XCTAssertTrue(service1?.id == service2?.id)
         service1 = nil
         service2 = nil
-        let service3: MyService? = Container.sharedService()
+        let service3: MyServiceType? = Container.sharedService()
+        XCTAssertNotNil(service3)
+        XCTAssertTrue(service2?.id != service3?.id)
+    }
+
+    func testOptionalSharedScope() throws {
+        var service1: MyServiceType? = Container.optionalSharedService()
+        var service2: MyServiceType? = Container.optionalSharedService()
+        XCTAssertNotNil(service1)
+        XCTAssertNotNil(service2)
+        // Shared cached item ids should match
+        XCTAssertTrue(service1?.id == service2?.id)
+        service1 = nil
+        service2 = nil
+        let service3: MyServiceType? = Container.optionalSharedService()
+        XCTAssertNotNil(service3)
+        XCTAssertTrue(service2?.id != service3?.id)
+    }
+
+    func testOptionalValueSharedScope() throws {
+        var service1: MyServiceType? = Container.optionalValueService()
+        var service2: MyServiceType? = Container.optionalValueService()
+        XCTAssertNotNil(service1)
+        XCTAssertNotNil(service2)
+        // Value types aren't shared so cached item ids should NOT match
+        XCTAssertTrue(service1?.id != service2?.id)
+        service1 = nil
+        service2 = nil
+        let service3: MyServiceType? = Container.optionalValueService()
+        XCTAssertNotNil(service3)
         XCTAssertTrue(service2?.id != service3?.id)
     }
 
@@ -160,26 +192,51 @@ final class FactoryScopeTests: XCTestCase {
     }
 
     func testNilScopedServiceCaching() throws {
-        Container.nilScopedService.reset()
+        Container.nilCachedService.reset()
         XCTAssertTrue(Container.Scope.cached.isEmpty)
-        let service1 = Container.nilScopedService()
+        let service1 = Container.nilCachedService()
         XCTAssertNil(service1)
-        XCTAssertFalse(Container.Scope.cached.isEmpty) // nil was cached
-        let service2 = Container.nilScopedService()
-        XCTAssertNil(service2) // cached nil was returned
-        XCTAssertFalse(Container.Scope.cached.isEmpty)
-        Container.nilScopedService.register {
+        XCTAssertTrue(Container.Scope.cached.isEmpty) // nothing caches
+        let service2 = Container.nilCachedService()
+        XCTAssertNil(service2)
+        XCTAssertTrue(Container.Scope.cached.isEmpty) // nothing caches
+        Container.nilCachedService.register {
             MyService()
         }
-        let service3 = Container.nilScopedService()
+        let service3 = Container.nilCachedService()
         XCTAssertNotNil(service3)
-        XCTAssertFalse(Container.Scope.cached.isEmpty)
-        Container.nilScopedService.register {
+        XCTAssertFalse(Container.Scope.cached.isEmpty) // cached value
+        Container.nilCachedService.register {
             nil
         }
-        let service4 = Container.nilScopedService()
+        let service4 = Container.nilCachedService()
         XCTAssertNil(service4) // cache was reset by registration
-        XCTAssertFalse(Container.Scope.cached.isEmpty)
+        XCTAssertTrue(Container.Scope.cached.isEmpty) // nothing cached
     }
 
+    func testNilSharedServiceCaching() throws {
+        Container.nilSharedService.reset()
+        XCTAssertTrue(Container.Scope.shared.isEmpty)
+        let service1 = Container.nilSharedService()
+        XCTAssertNil(service1)
+        XCTAssertTrue(Container.Scope.shared.isEmpty) // nothing caches
+        let service2 = Container.nilSharedService()
+        XCTAssertNil(service2)
+        XCTAssertTrue(Container.Scope.shared.isEmpty) // nothing caches
+        Container.nilSharedService.register {
+            MyService()
+        }
+        let service3 = Container.nilSharedService()
+        XCTAssertNotNil(service3)
+        let service4 = Container.nilSharedService()
+        XCTAssertNotNil(service4)
+        XCTAssertTrue(service3?.id == service4?.id)
+        XCTAssertFalse(Container.Scope.shared.isEmpty) // cached value
+        Container.nilSharedService.register {
+            nil
+        }
+        let service5 = Container.nilSharedService()
+        XCTAssertNil(service5) // cache was reset by registration
+        XCTAssertTrue(Container.Scope.shared.isEmpty) // nothing cached
+    }
 }

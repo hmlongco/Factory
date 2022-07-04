@@ -11,13 +11,13 @@ final class FactoryDefectTests: XCTestCase {
 
     // scope would not correctly resolve a factory with an optional type. e.g. Factory<MyType?>(scope: .cached) { nil }
     func testNilScopedService() throws {
-        Container.nilScopedService.reset()
-        let service1 = Container.nilScopedService()
+        Container.nilCachedService.reset()
+        let service1 = Container.nilCachedService()
         XCTAssertNil(service1)
-        Container.nilScopedService.register {
+        Container.nilCachedService.register {
             MyService()
         }
-        let service2 = Container.nilScopedService()
+        let service2 = Container.nilCachedService()
         XCTAssertNotNil(service2)
     }
 

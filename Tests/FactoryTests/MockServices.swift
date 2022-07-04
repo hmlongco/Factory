@@ -85,8 +85,11 @@ extension Container {
     static let sharedService = Factory(scope: .shared) { MyService() }
     static let singletonService = Factory(scope: .singleton) { MyService() }
     static let optionalService = Factory<MyServiceType?> { MyService() }
+    static let optionalSharedService = Factory<MyServiceType?>(scope: .shared) { MyService() }
+    static let optionalValueService = Factory<MyServiceType?> { ValueService() }
     static let nilSService = Factory<MyServiceType?> { nil }
-    static let nilScopedService = Factory<MyServiceType?>(scope: .cached) { nil }
+    static let nilCachedService = Factory<MyServiceType?>(scope: .cached) { nil }
+    static let nilSharedService = Factory<MyServiceType?>(scope: .shared) { nil }
     static let sessionService = Factory(scope: .session) { MyService() }
     static let valueService = Factory(scope: .cached) { ValueService() }
     static let sharedValueService = Factory(scope: .shared) { ValueService() }

@@ -1,5 +1,9 @@
 # Factory Changelog
 
+### 1.2.1
+
+* Fix issue with shared scope when type was optional
+
 ### 1.2.0 - Stable release
 
 * Revised structure to better support ParameterFactory

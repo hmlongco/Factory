@@ -196,22 +196,33 @@ open class SharedContainer {
             defer { lock.unlock() }
             lock.lock()
             if let box = cache[id], let instance = box.instance as? T {
-                return instance
+                if let optional = instance as? OptionalProtocol {
+                    if optional.hasWrappedValue {
+                        return instance
+                    }
+                } else {
+                    return instance
+                }
             }
             let instance: T = factory()
-            if let box = box(instance) {
+            if let optional = instance as? OptionalProtocol {
+                if optional.hasWrappedValue, let box = box(instance) {
+                    cache[id] = box
+                }
+            } else if let box = box(instance) {
                 cache[id] = box
             }
             return instance
         }
 
-        /// Internal reset function used by Factory
+       /// Internal reset function used by Factory
         fileprivate func reset(_ id: UUID) {
             defer { lock.unlock() }
             lock.lock()
             cache.removeValue(forKey: id)
         }
 
+        /// Internal function correctly boxes cache value depending upon scope type
         fileprivate func box<T>(_ instance: T) -> AnyBox? {
             StrongBox<T>(boxed: instance)
         }
@@ -247,7 +258,15 @@ extension SharedContainer.Scope {
             super.init()
         }
         fileprivate override func box<T>(_ instance: T) -> AnyBox? {
-            type(of: instance) is AnyClass ? WeakBox(boxed: instance as AnyObject) : nil
+            if let optional = instance as? OptionalProtocol {
+                // Actual wrapped type could be value, protocol, or something else so we need to check if wrapped instance is class type
+                if optional.hasWrappedValue, type(of: optional.unwrap()) is AnyObject.Type {
+                    return WeakBox(boxed: instance as AnyObject)
+                }
+            } else if type(of: instance) is AnyClass {
+                return WeakBox(boxed: instance as AnyObject)
+            }
+            return nil
         }
     }
 
@@ -341,6 +360,27 @@ private struct Registration<P,T> {
         scope?.reset(id)
     }
 
+}
+
+/// Internal protocol used to evaluate optional types for caching
+private protocol OptionalProtocol {
+    var hasWrappedValue: Bool { get }
+    func unwrap() -> Any
+}
+
+extension Optional : OptionalProtocol {
+    fileprivate var hasWrappedValue: Bool {
+        if case .some = self {
+            return true
+        }
+        return false
+    }
+    fileprivate func unwrap() -> Any {
+        if case .some(let unwrapped) = self {
+            return unwrapped
+        }
+        preconditionFailure("trying to unwrap nil")
+    }
 }
 
 /// Internal box protocol for scope functionality
