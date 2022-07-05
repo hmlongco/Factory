@@ -1,5 +1,9 @@
 # Factory Changelog
 
+### 1.2.2
+
+* Fix issue with optional nil lazy injection
+
 ### 1.2.1
 
 * Fix issue with shared scope when type was optional
