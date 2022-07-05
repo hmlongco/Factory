@@ -39,4 +39,19 @@ final class FactoryDefectTests: XCTestCase {
         XCTAssertTrue(service4.text() == "MyService")
     }
 
+    // If lazy injecting an optional type factory would be called repeatedly. Resolution should attempted once.
+    func testLazyInjectionOccursOnce() throws {
+        Container.nilSService.reset()
+        let service1 = TestLazyInjectionOccursOnce()
+        XCTAssertNil(service1.service)
+        Container.nilSService.register {
+            MyService()
+        }
+        XCTAssertNil(service1.service)
+   }
+
+}
+
+private class TestLazyInjectionOccursOnce {
+    @LazyInjected(Container.nilSService) var service
 }

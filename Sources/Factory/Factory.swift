@@ -197,7 +197,7 @@ open class SharedContainer {
             lock.lock()
             if let box = cache[id], let instance = box.instance as? T {
                 if let optional = instance as? OptionalProtocol {
-                    if optional.hasWrappedValue {
+                    if optional.hasSome {
                         return instance
                     }
                 } else {
@@ -206,7 +206,7 @@ open class SharedContainer {
             }
             let instance: T = factory()
             if let optional = instance as? OptionalProtocol {
-                if optional.hasWrappedValue, let box = box(instance) {
+                if optional.hasSome, let box = box(instance) {
                     cache[id] = box
                 }
             } else if let box = box(instance) {
@@ -260,7 +260,8 @@ extension SharedContainer.Scope {
         fileprivate override func box<T>(_ instance: T) -> AnyBox? {
             if let optional = instance as? OptionalProtocol {
                 // Actual wrapped type could be value, protocol, or something else so we need to check if wrapped instance is class type
-                if optional.hasWrappedValue, type(of: optional.unwrap()) is AnyObject.Type {
+                if let unwrapped = optional.unwrap(), type(of: unwrapped) is AnyObject.Type {
+                    // box original type so we match type when item retrieved from cache
                     return WeakBox(boxed: instance as AnyObject)
                 }
             } else if type(of: instance) is AnyClass {
@@ -308,13 +309,15 @@ extension SharedContainer.Scope {
 @propertyWrapper public struct LazyInjected<T> {
     private var factory:  Factory<T>
     private var dependency: T!
+    private var injectionNeeded = true
     public init(_ factory: Factory<T>) {
         self.factory = factory
     }
     public var wrappedValue: T {
         mutating get {
-            if dependency == nil {
+            if injectionNeeded {
                 dependency = factory()
+                injectionNeeded = false
             }
             return dependency
         }
@@ -364,22 +367,22 @@ private struct Registration<P,T> {
 
 /// Internal protocol used to evaluate optional types for caching
 private protocol OptionalProtocol {
-    var hasWrappedValue: Bool { get }
-    func unwrap() -> Any
+    var hasSome: Bool { get }
+    func unwrap() -> Any?
 }
 
 extension Optional : OptionalProtocol {
-    fileprivate var hasWrappedValue: Bool {
-        if case .some = self {
-            return true
+    fileprivate var hasSome: Bool {
+        switch self {
+        case .none: return false
+        case .some: return true
         }
-        return false
     }
-    fileprivate func unwrap() -> Any {
-        if case .some(let unwrapped) = self {
-            return unwrapped
+    fileprivate func unwrap() -> Any? {
+        switch self {
+        case .none: return nil
+        case .some(let unwrapped): return unwrapped
         }
-        preconditionFailure("trying to unwrap nil")
     }
 }
 
