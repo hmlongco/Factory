@@ -141,7 +141,7 @@ open class SharedContainer {
             registrations = [:]
         }
 
-       /// Internal registration function used by Factory
+        /// Internal registration function used by Factory
         fileprivate static func register(id: UUID, factory: AnyFactory) {
             defer { lock.unlock() }
             lock.lock()
@@ -155,7 +155,7 @@ open class SharedContainer {
             return registrations[id]
         }
 
-         /// Internal reset function used by Factory
+        /// Internal reset function used by Factory
         fileprivate static func reset(_ id: UUID) {
             defer { lock.unlock() }
             lock.lock()
@@ -197,7 +197,7 @@ open class SharedContainer {
             lock.lock()
             if let box = cache[id], let instance = box.instance as? T {
                 if let optional = instance as? OptionalProtocol {
-                    if optional.hasSome {
+                    if optional.hasWrappedValue {
                         return instance
                     }
                 } else {
@@ -205,17 +205,13 @@ open class SharedContainer {
                 }
             }
             let instance: T = factory()
-            if let optional = instance as? OptionalProtocol {
-                if optional.hasSome, let box = box(instance) {
-                    cache[id] = box
-                }
-            } else if let box = box(instance) {
+            if let box = box(instance) {
                 cache[id] = box
             }
             return instance
         }
 
-       /// Internal reset function used by Factory
+        /// Internal reset function used by Factory
         fileprivate func reset(_ id: UUID) {
             defer { lock.unlock() }
             lock.lock()
@@ -224,7 +220,11 @@ open class SharedContainer {
 
         /// Internal function correctly boxes cache value depending upon scope type
         fileprivate func box<T>(_ instance: T) -> AnyBox? {
-            StrongBox<T>(boxed: instance)
+            if let optional = instance as? OptionalProtocol {
+                return optional.hasWrappedValue ? StrongBox<T>(boxed: instance) : nil
+            } else {
+                return StrongBox<T>(boxed: instance)
+            }
         }
 
         private var lock = NSLock()
@@ -259,12 +259,10 @@ extension SharedContainer.Scope {
         }
         fileprivate override func box<T>(_ instance: T) -> AnyBox? {
             if let optional = instance as? OptionalProtocol {
-                // Actual wrapped type could be value, protocol, or something else so we need to check if wrapped instance is class type
-                if let unwrapped = optional.unwrap(), type(of: unwrapped) is AnyObject.Type {
-                    // box original type so we match type when item retrieved from cache
-                    return WeakBox(boxed: instance as AnyObject)
+                if let unwrapped = optional.wrappedValue, type(of: unwrapped) is AnyObject.Type {
+                    return WeakBox(boxed: unwrapped as AnyObject)
                 }
-            } else if type(of: instance) is AnyClass {
+            } else if type(of: instance) is AnyObject.Type {
                 return WeakBox(boxed: instance as AnyObject)
             }
             return nil
@@ -367,21 +365,29 @@ private struct Registration<P,T> {
 
 /// Internal protocol used to evaluate optional types for caching
 private protocol OptionalProtocol {
-    var hasSome: Bool { get }
-    func unwrap() -> Any?
+    var hasWrappedValue: Bool { get }
+    var wrappedType: Any.Type { get }
+    var wrappedValue: Any? { get }
 }
 
 extension Optional : OptionalProtocol {
-    fileprivate var hasSome: Bool {
+    var hasWrappedValue: Bool {
         switch self {
-        case .none: return false
-        case .some: return true
+        case .none:
+            return false
+        case .some:
+            return true
         }
     }
-    fileprivate func unwrap() -> Any? {
+    var wrappedType: Any.Type {
+        Wrapped.self
+    }
+    var wrappedValue: Any? {
         switch self {
-        case .none: return nil
-        case .some(let unwrapped): return unwrapped
+        case .none:
+            return nil
+        case .some(let value):
+            return value
         }
     }
 }
@@ -395,7 +401,7 @@ private protocol AnyBox {
 private struct StrongBox<T>: AnyBox {
     let boxed: T
     var instance: Any {
-        boxed
+        boxed as Any
     }
 }
 

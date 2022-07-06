@@ -52,6 +52,7 @@ final class FactoryScopeTests: XCTestCase {
         service2 = nil
         let service3: MyServiceType? = Container.sharedService()
         XCTAssertNotNil(service3)
+        // Shared instance should have released so new and old ids should not match
         XCTAssertTrue(service2?.id != service3?.id)
     }
 
@@ -66,6 +67,7 @@ final class FactoryScopeTests: XCTestCase {
         service2 = nil
         let service3: MyServiceType? = Container.optionalSharedService()
         XCTAssertNotNil(service3)
+        // Shared instance should have released so new and old ids should not match
         XCTAssertTrue(service2?.id != service3?.id)
     }
 
@@ -80,6 +82,7 @@ final class FactoryScopeTests: XCTestCase {
         service2 = nil
         let service3: MyServiceType? = Container.optionalValueService()
         XCTAssertNotNil(service3)
+        // New and old ids should still not match
         XCTAssertTrue(service2?.id != service3?.id)
     }
 

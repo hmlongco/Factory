@@ -1,5 +1,9 @@
 # Factory Changelog
 
+### 1.2.3
+
+* Streamline critical path through scope caching mechanism
+
 ### 1.2.2
 
 * Fix issue with optional nil lazy injection

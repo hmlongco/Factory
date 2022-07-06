@@ -48,7 +48,7 @@ final class FactoryDefectTests: XCTestCase {
             MyService()
         }
         XCTAssertNil(service1.service)
-   }
+    }
 
 }
 
