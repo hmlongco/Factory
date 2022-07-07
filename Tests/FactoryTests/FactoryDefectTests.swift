@@ -50,8 +50,34 @@ final class FactoryDefectTests: XCTestCase {
         XCTAssertNil(service1.service)
     }
 
+    // Nested injection when both are on the same scope locks thread. If this test passes then thread wasn't locked...
+    func testSingletondScopeLocking() throws {
+        let service1: LockingTestA? = Container.lockingTestA()
+        XCTAssertNotNil(service1)
+        let service2: LockingTestA? = Container.lockingTestA()
+        XCTAssertNotNil(service2)
+        let text1 = Container.singletonService().text()
+        let text2 = Container.singletonService().text()
+        XCTAssertTrue(text1 == text2)
+    }
+
 }
 
-private class TestLazyInjectionOccursOnce {
+fileprivate class TestLazyInjectionOccursOnce {
     @LazyInjected(Container.nilSService) var service
+}
+
+extension Container {
+    fileprivate static var lockingTestA = Factory(scope: .singleton) { LockingTestA() }
+    fileprivate static var lockingTestB = Factory(scope: .singleton) { LockingTestB() }
+}
+
+// classes for recursive resolution test
+fileprivate class LockingTestA {
+    @Injected(Container.lockingTestB) var b: LockingTestB
+    init() {}
+}
+
+fileprivate class LockingTestB {
+    init() {}
 }

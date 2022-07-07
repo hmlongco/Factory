@@ -1,5 +1,9 @@
 # Factory Changelog
 
+### 1.2.4
+
+* Recursive lock required in scope resolution
+
 ### 1.2.3
 
 * Streamline critical path through scope caching mechanism

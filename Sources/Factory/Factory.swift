@@ -109,7 +109,6 @@ public struct ParameterFactory<P, T> {
 
 /// Empty convenience class for user dependencies.
 public class Container: SharedContainer {
-
 }
 
 /// Base class for all containers.
@@ -227,7 +226,7 @@ open class SharedContainer {
             }
         }
 
-        private var lock = NSLock()
+        private var lock = NSRecursiveLock()
         private var cache: [UUID:AnyBox] = .init(minimumCapacity: 64)
 
     }

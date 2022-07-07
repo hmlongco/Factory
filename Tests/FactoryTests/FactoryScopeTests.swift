@@ -6,7 +6,7 @@ final class FactoryScopeTests: XCTestCase {
     override func setUp() {
         super.setUp()
         Container.Registrations.reset()
-        Container.Scope.reset()
+        Container.Scope.reset(includingSingletons: true)
     }
 
     func testUniqueScope() throws {
