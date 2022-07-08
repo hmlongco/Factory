@@ -162,8 +162,8 @@ open class SharedContainer {
         }
 
         private static var lock = NSLock()
-        private static var registrations: [UUID:AnyFactory] = .init(minimumCapacity: 64)
-        private static var stack: [[UUID:AnyFactory]] = []
+        private static var registrations: [UUID: AnyFactory] = .init(minimumCapacity: 64)
+        private static var stack: [[UUID: AnyFactory]] = []
 
     }
 
@@ -227,7 +227,7 @@ open class SharedContainer {
         }
 
         private var lock = NSRecursiveLock()
-        private var cache: [UUID:AnyBox] = .init(minimumCapacity: 64)
+        private var cache: [UUID: AnyBox] = .init(minimumCapacity: 64)
 
     }
 
@@ -304,7 +304,7 @@ extension SharedContainer.Scope {
 
 /// Convenience property wrapper takes a factory and creates an instance of the desired type the first time the wrapped value is requested.
 @propertyWrapper public struct LazyInjected<T> {
-    private var factory:  Factory<T>
+    private var factory: Factory<T>
     private var dependency: T!
     private var injectionNeeded = true
     public init(_ factory: Factory<T>) {
@@ -329,12 +329,12 @@ extension SharedContainer.Scope {
 private protocol AnyFactory {}
 
 /// Typed factory container
-private struct TypedFactory<P,T>: AnyFactory {
+private struct TypedFactory<P, T>: AnyFactory {
     let factory: (P) -> T
 }
 
 /// Internal registration manager for factories.
-private struct Registration<P,T> {
+private struct Registration<P, T> {
 
     let id: UUID = UUID()
     let factory: (P) -> T
@@ -342,7 +342,7 @@ private struct Registration<P,T> {
 
     /// Resolves registration returning cached value from scope or new instance from factory. This is pretty much the heart of Factory.
     func resolve(_ params: P) -> T {
-        let currentFactory: (P) -> T  = (SharedContainer.Registrations.factory(for: id) as? TypedFactory<P, T>)?.factory ?? factory
+        let currentFactory: (P) -> T = (SharedContainer.Registrations.factory(for: id) as? TypedFactory<P, T>)?.factory ?? factory
         let instance: T = scope?.resolve(id: id, factory: { currentFactory(params) }) ?? currentFactory(params)
         SharedContainer.Decorator.decorate?(instance)
         return instance
@@ -369,7 +369,7 @@ private protocol OptionalProtocol {
     var wrappedValue: Any? { get }
 }
 
-extension Optional : OptionalProtocol {
+extension Optional: OptionalProtocol {
     var hasWrappedValue: Bool {
         switch self {
         case .none:
