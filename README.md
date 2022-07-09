@@ -322,7 +322,7 @@ As mentioned earlier, any registrations defined with your app are managed here.
 
 ## Setup
 
-If we have several mocks that we use all of the time in our previews, we can also add a setup function to the container to make this easier.
+If we have several mocks that we use all of the time in our previews or unit tests, we can also add a setup function to a given container to make this easier.
 
 ```swift
 extension Container {
@@ -342,7 +342,9 @@ struct ContentView_Previews: PreviewProvider {
 
 ## Reset
 
-You can also reset a registration to bring back the original factory closure. Or, if desired, you can reset everything back to square one with a single command.
+Using register on a factory lets us change the state of the system. But what if we need to revert back to the original behavior?
+
+Simple. Just reset it to bring back the original factory closure. Or, if desired, you can reset *everything* back to square one with a single command.
 
 ```Swift
 Container.myService.reset() // single
@@ -360,7 +362,7 @@ The `includingSingletons` option must be explicitly specified in order to reset 
 
 ## Xcode Unit Tests
 
-Finally, Factory has a few more provisions added to make unit testing eaiser. In your unit test setUp function you can *push* the current state of the registration system and then register and test anything you want.
+Finally, Factory has a few additional provisions added to make unit testing eaiser. In your unit test setUp function you can *push* the current state of the registration system and then register and test anything you want.
 
 ```swift
 final class FactoryCoreTests: XCTestCase {
@@ -386,7 +388,6 @@ final class FactoryCoreTests: XCTestCase {
 ```
 
 Then in your tearDown function simply *pop* your changes to restore everything back to the way it was prior to running that test suite.
-
 
 ## Resolver
 
