@@ -413,7 +413,7 @@ He was also one of Google's [Open Source Peer Reward](https://opensource.googleb
 ## Additional Resources
 
 * [Resolver: A Swift Dependency Injection System](https://github.com/hmlongco/Resolver)
-* [Builder: A Declarative UIKit Library](https://github.com/hmlongco/Builder) (Uses Factory in Demo)
+* [Builder: A Declarative UIKit Library (Uses Factory in Demo)](https://github.com/hmlongco/Builder)
 * [Inversion of Control Design Pattern ~ Wikipedia](https://en.wikipedia.org/wiki/Inversion_of_control)
 * [Inversion of Control Containers and the Dependency Injection pattern ~ Martin Fowler](https://martinfowler.com/articles/injection.html)
 * [Nuts and Bolts of Dependency Injection in Swift](https://cocoacasts.com/nuts-and-bolts-of-dependency-injection-in-swift/)
