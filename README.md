@@ -307,17 +307,18 @@ class PaymentsContainer: SharedContainer {
     static let anotherService = Factory { AnotherService(OrderContainer.optionalService()) }
 }
 ```
+It's important to note that in Factory a custom container is not really a "container" in the traditional sense. It's a name space, used to group similar or related factories together. All registrations and scopes are still managed by the parent `SharedContainer` classs on which all containers are based.
 
 ## SharedContainer
 
-Note that you can also add your own factories to the root `SharedContainer` class. Anything added there will be visible  and available to every container in the system.
+You can also add your own factories to the root `SharedContainer` class. Anything added there will be visible and available to every container in the system.
 
 ```swift
 extension SharedContainer {
     static let api = Factory<APIServiceType> { APIService() }
 }
 ```
-Note that any registrations defined with your app are managed by `SharedContainer`. More on this later.
+As mentioned earlier, any registrations defined with your app are managed here.
 
 ## Setup
 
