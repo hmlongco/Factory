@@ -281,6 +281,37 @@ Next, note that Factory is *thread-safe.* Registrations and resolutions lock and
 
 And finally, note that calling register also *removes any cached dependency from its associated scope.* This ensures that any new dependency injection request performed from that point on will always get the most recently defined instance of an object.
 
+## Lazy and Weak Injections
+Factory also has `LazyInjected` and `WeakLazyInjected` property wrappers. Use `LazyInjected` when you want to defer construction of some class until it's actually needed. Here the child `service` won't be instantiated until the `test` function is called.
+```
+class ServicesP {
+    @LazyInjected(Container.servicesC) var service
+    let name = "Parent"
+    init() {}
+    func test() -> String? {
+        service.name
+    }
+}
+```
+And `WeakLazyInjected` is useful when building parent/child relationships and you want to avoid retain cycles back to the parent class. It's also lazy since otherwise you'd have a cyclic dependency between the parent and the child. (P needs C which needs P which needs C which...)'
+```swift
+class ServicesC {
+    @WeakLazyInjected(Container.servicesP) var service: ServicesP?
+    init() {}
+    let name = "Child"
+    func test() -> String? {
+        service?.name
+    }
+}
+```
+And the factories. Note the shared scopes so references can be kept and maintained for the parent/child relationships.
+```swift
+extension Container {
+    static var servicesP = Factory(scope: .shared) { ServicesP() }
+    static var servicesC = Factory(scope: .shared) { ServicesC() }
+}
+```
+
 ## Custom Containers
 
 In a large project you might want to segregate factories into additional, smaller containers.

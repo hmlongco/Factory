@@ -306,15 +306,36 @@ extension SharedContainer.Scope {
 @propertyWrapper public struct LazyInjected<T> {
     private var factory: Factory<T>
     private var dependency: T!
-    private var injectionNeeded = true
+    private var initialize = true
     public init(_ factory: Factory<T>) {
         self.factory = factory
     }
     public var wrappedValue: T {
         mutating get {
-            if injectionNeeded {
+            if initialize {
                 dependency = factory()
-                injectionNeeded = false
+                initialize = false
+            }
+            return dependency
+        }
+        mutating set {
+            dependency = newValue
+        }
+    }
+}
+
+@propertyWrapper public struct WeakLazyInjected<T:AnyObject> {
+    private var factory: Factory<T>
+    private weak var dependency: T?
+    private var initialize = true
+    public init(_ factory: Factory<T>) {
+        self.factory = factory
+    }
+    public var wrappedValue: T? {
+        mutating get {
+            if initialize {
+                dependency = factory()
+                initialize = false
             }
             return dependency
         }

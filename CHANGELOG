@@ -1,5 +1,9 @@
 # Factory Changelog
 
+### 1.2.5
+
+* Added WeakLazyInjected property wrapper for parent child relationships
+
 ### 1.2.4
 
 * Recursive lock required in scope resolution

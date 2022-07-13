@@ -18,6 +18,30 @@ class Services5 {
     init() {}
 }
 
+class ServicesP {
+    @LazyInjected(Container.servicesC) var service
+    let name = "Parent"
+    init() {}
+    func test() -> String? {
+        service.name
+    }
+}
+
+class ServicesC {
+    @WeakLazyInjected(Container.servicesP) var service: ServicesP?
+    init() {}
+    let name = "Child"
+    func test() -> String? {
+        service?.name
+    }
+}
+
+extension Container {
+    fileprivate static var servicesP = Factory(scope: .shared) { ServicesP() }
+    fileprivate static var servicesC = Factory(scope: .shared) { ServicesC() }
+}
+
+
 final class FactoryInjectionTests: XCTestCase {
 
     override func setUp() {
@@ -48,6 +72,15 @@ final class FactoryInjectionTests: XCTestCase {
     func testOptionalInjection() throws {
         let services = Services5()
         XCTAssertTrue(services.service?.text() == "MyService")
+    }
+
+    func testWeakLazyInjection() throws {
+        var parent: ServicesP? = Container.servicesP()
+        let child = Container.servicesC()
+        XCTAssertTrue(parent?.test() == "Child")
+        XCTAssertTrue(child.test() == "Parent")
+        parent = nil
+        XCTAssertNil(child.test())
     }
 
 }
