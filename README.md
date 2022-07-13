@@ -283,7 +283,7 @@ And finally, note that calling register also *removes any cached dependency from
 
 ## Lazy and Weak Injections
 Factory also has `LazyInjected` and `WeakLazyInjected` property wrappers. Use `LazyInjected` when you want to defer construction of some class until it's actually needed. Here the child `service` won't be instantiated until the `test` function is called.
-```
+```swift
 class ServicesP {
     @LazyInjected(Container.servicesC) var service
     let name = "Parent"
@@ -310,6 +310,10 @@ extension Container {
     static var servicesP = Factory(scope: .shared) { ServicesP() }
     static var servicesC = Factory(scope: .shared) { ServicesC() }
 }
+```
+Note that if you use `WeakLazyInjected` then that class must have been instantiated previously and a strong reference to the class must be maintained elsewhere. If not then the class will be released as soon as it's created. Think of it like...
+```swift
+weak var gone: MyClass? = MyClass()
 ```
 
 ## Custom Containers
