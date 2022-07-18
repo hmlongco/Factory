@@ -56,16 +56,46 @@ final class FactoryScopeTests: XCTestCase {
         XCTAssertTrue(service2?.id != service3?.id)
     }
 
-    func testOptionalSharedScope() throws {
-        var service1: MyServiceType? = Container.optionalSharedService()
-        var service2: MyServiceType? = Container.optionalSharedService()
+    func testExplicitProtocolSharedScope() throws {
+        var service1: MyServiceType? = Container.sharedExplicitProtocol()
+        var service2: MyServiceType? = Container.sharedExplicitProtocol()
         XCTAssertNotNil(service1)
         XCTAssertNotNil(service2)
         // Shared cached item ids should match
         XCTAssertTrue(service1?.id == service2?.id)
         service1 = nil
         service2 = nil
-        let service3: MyServiceType? = Container.optionalSharedService()
+        let service3: MyServiceType? = Container.sharedExplicitProtocol()
+        XCTAssertNotNil(service3)
+        // Shared instance should have released so new and old ids should not match
+        XCTAssertTrue(service2?.id != service3?.id)
+    }
+
+    func testInferredProtocolSharedScope() throws {
+        var service1: MyServiceType? = Container.sharedInferredProtocol()
+        var service2: MyServiceType? = Container.sharedInferredProtocol()
+        XCTAssertNotNil(service1)
+        XCTAssertNotNil(service2)
+        // Shared cached item ids should match
+        XCTAssertTrue(service1?.id == service2?.id)
+        service1 = nil
+        service2 = nil
+        let service3: MyServiceType? = Container.sharedInferredProtocol()
+        XCTAssertNotNil(service3)
+        // Shared instance should have released so new and old ids should not match
+        XCTAssertTrue(service2?.id != service3?.id)
+    }
+
+    func testOptionalSharedScope() throws {
+        var service1: MyServiceType? = Container.sharedOptionalProtocol()
+        var service2: MyServiceType? = Container.sharedOptionalProtocol()
+        XCTAssertNotNil(service1)
+        XCTAssertNotNil(service2)
+        // Shared cached item ids should match
+        XCTAssertTrue(service1?.id == service2?.id)
+        service1 = nil
+        service2 = nil
+        let service3: MyServiceType? = Container.sharedOptionalProtocol()
         XCTAssertNotNil(service3)
         // Shared instance should have released so new and old ids should not match
         XCTAssertTrue(service2?.id != service3?.id)

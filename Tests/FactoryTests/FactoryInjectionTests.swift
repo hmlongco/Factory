@@ -41,6 +41,46 @@ extension Container {
     fileprivate static var servicesC = Factory(scope: .shared) { ServicesC() }
 }
 
+protocol ProtocolP: AnyObject {
+    var name: String { get }
+    func test() -> String?
+}
+
+class ProtocolClassP: ProtocolP {
+    let child = Container.protocolC()
+    let name = "Parent"
+    init() {}
+    func test() -> String? {
+        child.name
+    }
+}
+
+protocol ProtocolC: AnyObject {
+    var parent: ProtocolP? { get set }
+    var name: String { get }
+    func test() -> String?
+}
+
+class ProtocolClassC: ProtocolC {
+    weak var parent: ProtocolP?
+    init() {}
+    let name = "Child"
+    func test() -> String? {
+        parent?.name
+    }
+}
+
+extension Container {
+    fileprivate static var protocolP = Factory<ProtocolP> (scope: .shared) {
+        let p = ProtocolClassP()
+        p.child.parent = p
+        return p
+    }
+    fileprivate static var protocolC = Factory<ProtocolC> (scope: .shared) {
+        ProtocolClassC()
+    }
+}
+
 
 final class FactoryInjectionTests: XCTestCase {
 
@@ -81,6 +121,15 @@ final class FactoryInjectionTests: XCTestCase {
         XCTAssertTrue(child.test() == "Parent")
         parent = nil
         XCTAssertNil(child.test())
+    }
+
+    func testWeakLazyInjectionProtocol() throws {
+        var parent: ProtocolP? = Container.protocolP()
+        let child: ProtocolC? = Container.protocolC()
+        XCTAssertTrue(parent?.test() == "Child")
+        XCTAssertTrue(child?.test() == "Parent")
+        parent = nil
+        XCTAssertNil(child?.test())
     }
 
 }

@@ -61,6 +61,22 @@ final class FactoryDefectTests: XCTestCase {
         XCTAssertTrue(text1 == text2)
     }
 
+    // Shared scope caching feiled when caching a non-optional protocol
+    func testProtocolSharedScope() throws {
+        var service1: MyServiceType? = Container.sharedExplicitProtocol()
+        var service2: MyServiceType? = Container.sharedExplicitProtocol()
+        XCTAssertNotNil(service1)
+        XCTAssertNotNil(service2)
+        // Shared cached item ids should match
+        XCTAssertTrue(service1?.id == service2?.id)
+        service1 = nil
+        service2 = nil
+        let service3: MyServiceType? = Container.sharedExplicitProtocol()
+        XCTAssertNotNil(service3)
+        // Shared instance should have released so new and old ids should not match
+        XCTAssertTrue(service2?.id != service3?.id)
+    }
+
 }
 
 fileprivate class TestLazyInjectionOccursOnce {

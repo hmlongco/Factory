@@ -194,13 +194,15 @@ open class SharedContainer {
         fileprivate func resolve<T>(id: UUID, factory: () -> T) -> T {
             defer { lock.unlock() }
             lock.lock()
-            if let box = cache[id], let instance = box.instance as? T {
-                if let optional = instance as? OptionalProtocol {
-                    if optional.hasWrappedValue {
+            if let box = cache[id] {
+                if let instance = box.instance as? T {
+                    if let optional = instance as? OptionalProtocol {
+                        if optional.hasWrappedValue {
+                           return instance
+                        }
+                    } else {
                         return instance
                     }
-                } else {
-                    return instance
                 }
             }
             let instance: T = factory()
@@ -261,7 +263,7 @@ extension SharedContainer.Scope {
                 if let unwrapped = optional.wrappedValue, type(of: unwrapped) is AnyObject.Type {
                     return WeakBox(boxed: unwrapped as AnyObject)
                 }
-            } else if type(of: instance) is AnyObject.Type {
+            } else {
                 return WeakBox(boxed: instance as AnyObject)
             }
             return nil
@@ -324,9 +326,9 @@ extension SharedContainer.Scope {
     }
 }
 
-@propertyWrapper public struct WeakLazyInjected<T:AnyObject> {
+@propertyWrapper public struct WeakLazyInjected<T> {
     private var factory: Factory<T>
-    private weak var dependency: T?
+    private weak var dependency: AnyObject?
     private var initialize = true
     public init(_ factory: Factory<T>) {
         self.factory = factory
@@ -334,13 +336,13 @@ extension SharedContainer.Scope {
     public var wrappedValue: T? {
         mutating get {
             if initialize {
-                dependency = factory()
+                dependency = factory() as AnyObject
                 initialize = false
             }
-            return dependency
+            return dependency as? T
         }
         mutating set {
-            dependency = newValue
+            dependency = newValue as AnyObject
         }
     }
 }

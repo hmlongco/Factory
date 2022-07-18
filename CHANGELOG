@@ -1,5 +1,10 @@
 # Factory Changelog
 
+### 1.2.6
+
+* Fixed shared caching issue with non-optional protocol types
+* Fixed type problem with WeakLazyInjected and protocol types
+
 ### 1.2.5
 
 * Added WeakLazyInjected property wrapper for parent child relationships

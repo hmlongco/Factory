@@ -80,19 +80,30 @@ class ParameterService: MyServiceType {
 extension Container {
     static let myServiceType = Factory<MyServiceType> { MyService() }
     static let myServiceType2 = Factory<MyServiceType> { MyService() }
+
     static let mockService = Factory { MockService() }
+
     static let cachedService = Factory(scope: .cached) { MyService() }
+
     static let sharedService = Factory(scope: .shared) { MyService() }
-    static let singletonService = Factory(scope: .singleton) { MyService() }
+    static let sharedExplicitProtocol = Factory<MyServiceType>(scope: .shared) { MyService() }
+    static let sharedInferredProtocol = Factory(scope: .shared) { MyService() as MyServiceType }
+    static let sharedOptionalProtocol = Factory<MyServiceType?>(scope: .shared) { MyService() }
+
     static let optionalService = Factory<MyServiceType?> { MyService() }
-    static let optionalSharedService = Factory<MyServiceType?>(scope: .shared) { MyService() }
     static let optionalValueService = Factory<MyServiceType?> { ValueService() }
+
+    static let singletonService = Factory(scope: .singleton) { MyService() }
+
     static let nilSService = Factory<MyServiceType?> { nil }
     static let nilCachedService = Factory<MyServiceType?>(scope: .cached) { nil }
     static let nilSharedService = Factory<MyServiceType?>(scope: .shared) { nil }
+
     static let sessionService = Factory(scope: .session) { MyService() }
+
     static let valueService = Factory(scope: .cached) { ValueService() }
     static let sharedValueService = Factory(scope: .shared) { ValueService() }
+
     static let promisedService = Factory<MyServiceType?> { nil }
 }
 
