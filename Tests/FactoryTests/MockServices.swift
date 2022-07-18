@@ -103,6 +103,7 @@ extension Container {
 
     static let valueService = Factory(scope: .cached) { ValueService() }
     static let sharedValueService = Factory(scope: .shared) { ValueService() }
+    static let sharedValueProtocol = Factory<MyServiceType>(scope: .shared) { ValueService() }
 
     static let promisedService = Factory<MyServiceType?> { nil }
 }

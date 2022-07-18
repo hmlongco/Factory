@@ -263,7 +263,7 @@ extension SharedContainer.Scope {
                 if let unwrapped = optional.wrappedValue, type(of: unwrapped) is AnyObject.Type {
                     return WeakBox(boxed: unwrapped as AnyObject)
                 }
-            } else {
+            } else if type(of: instance as Any) is AnyObject.Type {
                 return WeakBox(boxed: instance as AnyObject)
             }
             return nil

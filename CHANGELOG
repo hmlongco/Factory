@@ -1,5 +1,9 @@
 # Factory Changelog
 
+### 1.2.7
+
+* Fixed shared caching behavior with value-based protocols
+
 ### 1.2.6
 
 * Fixed shared caching issue with non-optional protocol types
