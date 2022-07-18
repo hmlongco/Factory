@@ -1,5 +1,9 @@
 # Factory Changelog
 
+### 1.2.8
+
+* Cocoapods Support
+
 ### 1.2.7
 
 * Fixed shared caching behavior with value-based protocols

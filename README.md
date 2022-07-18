@@ -434,6 +434,10 @@ But Factory is smaller, faster, cleaner and all in all a much better solution th
 
 Factory is available as a Swift Package. Just add it to your projects.
 
+It's also available via CocoaPods. Just add `pod Factory` to your Podfile.
+
+Finally, Factory is just a single file. Download the project and then add Factory.swift to your project. It's that easy.
+
 ## License
 
 Factory is available under the MIT license. See the LICENSE file for more info.
