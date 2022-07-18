@@ -68,6 +68,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4C09C37F288622820091F7B9 /* CODE_OF_CONDUCT.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = CODE_OF_CONDUCT.md; path = ../../CODE_OF_CONDUCT.md; sourceTree = "<group>"; };
+		4C09C380288622820091F7B9 /* Factory.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; name = Factory.podspec; path = ../../Factory.podspec; sourceTree = "<group>"; };
+		4C09C381288622820091F7B9 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../../README.md; sourceTree = "<group>"; };
+		4C09C382288622820091F7B9 /* CHANGELOG */ = {isa = PBXFileReference; lastKnownFileType = text; name = CHANGELOG; path = ../../CHANGELOG; sourceTree = "<group>"; };
 		4CCC840D2868CF5B00B474F7 /* Common.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Common.xcodeproj; path = Common/Common.xcodeproj; sourceTree = "<group>"; };
 		4CCC84382868CF8900B474F7 /* Networking.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Networking.xcodeproj; path = Networking/Networking.xcodeproj; sourceTree = "<group>"; };
 		4CEEC345284927EE00C979B3 /* FactoryDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FactoryDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -95,6 +99,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4C09C37A288622460091F7B9 /* Files */ = {
+			isa = PBXGroup;
+			children = (
+				4C09C382288622820091F7B9 /* CHANGELOG */,
+				4C09C37F288622820091F7B9 /* CODE_OF_CONDUCT.md */,
+				4C09C380288622820091F7B9 /* Factory.podspec */,
+				4C09C381288622820091F7B9 /* README.md */,
+			);
+			path = Files;
+			sourceTree = "<group>";
+		};
 		4CCC83EA2868CF2100B474F7 /* Modules */ = {
 			isa = PBXGroup;
 			children = (
@@ -125,6 +140,7 @@
 		4CEEC33C284927EE00C979B3 = {
 			isa = PBXGroup;
 			children = (
+				4C09C37A288622460091F7B9 /* Files */,
 				4CEEC35628492B8A00C979B3 /* Packages */,
 				4CEEC347284927EE00C979B3 /* FactoryDemo */,
 				4CEEC346284927EE00C979B3 /* Products */,
