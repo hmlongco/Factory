@@ -48,12 +48,14 @@ final class FactoryScopeTests: XCTestCase {
         XCTAssertNotNil(service2)
         // Shared cached item ids should match
         XCTAssertTrue(service1?.id == service2?.id)
+        let oldID = service1?.id
+        XCTAssertNotNil(oldID)
         service1 = nil
         service2 = nil
         let service3: MyServiceType? = Container.sharedService()
         XCTAssertNotNil(service3)
         // Shared instance should have released so new and old ids should not match
-        XCTAssertTrue(service2?.id != service3?.id)
+        XCTAssertTrue(oldID != service3?.id)
     }
 
     func testExplicitProtocolSharedScope() throws {
@@ -63,12 +65,14 @@ final class FactoryScopeTests: XCTestCase {
         XCTAssertNotNil(service2)
         // Shared cached item ids should match
         XCTAssertTrue(service1?.id == service2?.id)
+        let oldID = service1?.id
+        XCTAssertNotNil(oldID)
         service1 = nil
         service2 = nil
         let service3: MyServiceType? = Container.sharedExplicitProtocol()
         XCTAssertNotNil(service3)
         // Shared instance should have released so new and old ids should not match
-        XCTAssertTrue(service2?.id != service3?.id)
+        XCTAssertTrue(oldID != service3?.id)
     }
 
     func testInferredProtocolSharedScope() throws {
@@ -78,12 +82,14 @@ final class FactoryScopeTests: XCTestCase {
         XCTAssertNotNil(service2)
         // Shared cached item ids should match
         XCTAssertTrue(service1?.id == service2?.id)
+        let oldID = service1?.id
+        XCTAssertNotNil(oldID)
         service1 = nil
         service2 = nil
         let service3: MyServiceType? = Container.sharedInferredProtocol()
         XCTAssertNotNil(service3)
         // Shared instance should have released so new and old ids should not match
-        XCTAssertTrue(service2?.id != service3?.id)
+        XCTAssertTrue(oldID != service3?.id)
     }
 
     func testOptionalSharedScope() throws {
@@ -93,12 +99,14 @@ final class FactoryScopeTests: XCTestCase {
         XCTAssertNotNil(service2)
         // Shared cached item ids should match
         XCTAssertTrue(service1?.id == service2?.id)
+        let oldID = service1?.id
+        XCTAssertNotNil(oldID)
         service1 = nil
         service2 = nil
         let service3: MyServiceType? = Container.sharedOptionalProtocol()
         XCTAssertNotNil(service3)
         // Shared instance should have released so new and old ids should not match
-        XCTAssertTrue(service2?.id != service3?.id)
+        XCTAssertTrue(oldID != service3?.id)
     }
 
     func testOptionalValueSharedScope() throws {
@@ -108,12 +116,14 @@ final class FactoryScopeTests: XCTestCase {
         XCTAssertNotNil(service2)
         // Value types aren't shared so cached item ids should NOT match
         XCTAssertTrue(service1?.id != service2?.id)
+        let oldID = service1?.id
+        XCTAssertNotNil(oldID)
         service1 = nil
         service2 = nil
         let service3: MyServiceType? = Container.optionalValueService()
         XCTAssertNotNil(service3)
         // New and old ids should still not match
-        XCTAssertTrue(service2?.id != service3?.id)
+        XCTAssertTrue(oldID != service3?.id)
     }
 
     func testSharedScopeGlobalReset() throws {
