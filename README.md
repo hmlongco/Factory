@@ -38,9 +38,9 @@ Failure to find a matching type can lead to an application crash if we attempt t
   
  ## A Simple Example
  
- Most container-based dependency injection systems require you to define in some way that a given service type is available for injection and many reqire some sort of factory or mechanism that will provide a new instance of the service when needed.
+Most container-based dependency injection systems require you to define in some way that a given service type is available for injection and many require some sort of factory or mechanism that will provide a new instance of the service when needed.
  
- Factory is no exception. Here's a simple dependency registraion.
+ Factory is no exception. Here's a simple dependency registration.
  
 ```swift
 extension Container {
