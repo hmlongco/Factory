@@ -224,7 +224,7 @@ One caveat is that you can't use the `@Injected` property wrapper with `Paramete
 class MyClass {
     var myService: MyServiceType
     init(_ n: Int) {
-         myService = Container.parameterService(n)
+         myService = Container.argumentService(n)
     }
 }
 ```
