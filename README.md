@@ -211,7 +211,7 @@ Like it or not, some services require one or more parameters to be passed to the
 
 ```swift
 extension Container {
-    static var argumentService = ParameterFactory<Int, MyServiceType> { n in
+    static var parameterService = ParameterFactory<Int, MyServiceType> { n in
         ParameterService(value: n)
     }
 }
