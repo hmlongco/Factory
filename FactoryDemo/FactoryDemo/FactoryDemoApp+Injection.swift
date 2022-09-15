@@ -47,3 +47,30 @@ extension SharedContainer {
 #endif
     }
 }
+
+// implements
+
+public protocol AServiceType {
+    func text() -> String
+}
+
+public protocol BServiceType {
+    func text() -> String
+}
+
+class Multiple: AServiceType, BServiceType {
+    func text() -> String {
+        return "Multiple"
+    }
+}
+
+extension Container {
+    private static var multiple = Factory<AServiceType&BServiceType> { Multiple() }
+    static var aService = Factory<AServiceType> { multiple() }
+    static var bService = Factory<BServiceType> { multiple() }
+}
+
+class MultipleDemo {
+    var aService: AServiceType = Container.aService()
+    var bService: BServiceType = Container.bService()
+}
