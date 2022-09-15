@@ -99,25 +99,6 @@ Just call the desired specific factory as a function and you'll get an instance 
 
 *You can access the factory directly or the property wrapper if you prefer, but either way for clarity I'd suggest grouping all of a given object's dependencies in a single place near the top of the class and marking them as private.*
 
-## SwiftUI
-
-Note that you can also use the later pattern in SwiftUI to assign a dependency to a `StateObject` or `ObservedObject`.
-```swift
-class ContentView: ObservableObject {
-    @StateObject private var viewModel = Container.contentViewModel()
-    var body: some View {
-        ...
-    }
-}
-```
-Keep in mind that if you assign to an `ObservedObject` your Factory is responsible for managing the object's lifecycle (see the section on Scopes below).
-
-Unlike Resolver, Factory doesn't have an @InjectedObject property wrapper. There are [a few reasons for this](https://github.com/hmlongco/Factory/issues/15), but for now doing your own assignment to `StateObject` or `ObservedObject` is the preferred approach. 
-
-In fact, one should probably avoid using Factory to create the view model in the first place.  It's usually unneccesary and Factory's really designed to provide the VM and other services with the dependencies that *they* need. 
-
-Especially since those services have no access to the environment.
-
 ## Mocking and Testing
 
 If we go back and look at our original view model code one might wonder why we've gone to all of this trouble? Why not simply say `let myService = MyService()` and be done with it? 
@@ -374,7 +355,47 @@ extension SharedContainer {
 ```
 As mentioned earlier, any registrations defined with your app are managed here.
 
-## Setup
+## SwiftUI Integrations
+
+Note that you can also use the Service Locator pattern in SwiftUI to assign a dependency to a `StateObject` or `ObservedObject`.
+```swift
+class ContentView: ObservableObject {
+    @StateObject private var viewModel = Container.contentViewModel()
+    var body: some View {
+        ...
+    }
+}
+```
+Keep in mind that if you assign to an `ObservedObject` your Factory is responsible for managing the object's lifecycle (see the section on Scopes below).
+
+Unlike Resolver, Factory doesn't have an @InjectedObject property wrapper. There are [a few reasons for this](https://github.com/hmlongco/Factory/issues/15), but for now doing your own assignment to `StateObject` or `ObservedObject` is the preferred approach. 
+
+That said, at this point in time I feel that we should probably avoid using Factory to create the view model in the first place.  It's usually unneccesary, [you really can't use protocols with view models anyway](https://betterprogramming.pub/swiftui-view-models-are-not-protocols-8c415c0325b1), and for the most part Factory's really designed to provide the VM and other services with the dependencies that *they* need. 
+
+Especially since those services have no access to the environment.
+
+## SwiftUI Previews
+
+With that in mind, here's an example of updating a view model's service dependency in order to setup a particular state for  preview.
+
+```swift
+class ContentView: ObservableObject {
+    @StateObject private var viewModel = ContentViewModel()
+    var body: some View {
+        ...
+    }
+}
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        let _ = Container.myService.register { MockServiceN(4) }
+        ContentView()
+    }
+}
+```
+If we can control where the view model gets its data then we can put the view model into pretty much any state we choose.
+
+## Common Setup
 
 If we have several mocks that we use all of the time in our previews or unit tests, we can also add a setup function to a given container to make this easier.
 
