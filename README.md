@@ -99,9 +99,28 @@ Just call the desired specific factory as a function and you'll get an instance 
 
 *You can access the factory directly or the property wrapper if you prefer, but either way for clarity I'd suggest grouping all of a given object's dependencies in a single place near the top of the class and marking them as private.*
 
+## SwiftUI
+
+Note that you can also use the later pattern in SwiftUI to assign a dependency to a `StateObject` or `ObservedObject`.
+```swift
+class ContentView: ObservableObject {
+    @StateObject private var viewModel = Container.contentViewModel()
+    var body: some View {
+        ...
+    }
+}
+```
+Keep in mind that if you assign to an `ObservedObject` your Factory is responsible for managing the object's lifecycle (see the section on Scopes below).
+
+Unlike Resolver, Factory doesn't have an @InjectedObject property wrapper. There are [a few reasons for this](https://github.com/hmlongco/Factory/issues/15), but for now doing your own assignment to `StateObject` or `ObservedObject` is the preferred approach. 
+
+In fact, one should probably avoid using Factory to create the view model in the first place.  It's usually unneccesary and Factory's really designed to provide the VM and other services with the dependencies that *they* need. 
+
+Especially since those services have no access to the environment.
+
 ## Mocking and Testing
 
-If we go back and look at our view model code one might wonder why we've gone to all of this trouble? Why not simply say `let myService = MyService()` and be done with it? 
+If we go back and look at our original view model code one might wonder why we've gone to all of this trouble? Why not simply say `let myService = MyService()` and be done with it? 
 
 Or keep the container idea, but write something similar to this…
 
