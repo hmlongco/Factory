@@ -14,7 +14,7 @@ final class FactoryRegistrationTests: XCTestCase {
         let service1 = Container.myServiceType()
         XCTAssertTrue(service1.text() == "MyService")
 
-        // add registrtion and test initial state
+        // add registration and test initial state
         Container.myServiceType.register(factory: { MockServiceN(1) })
         let service2 = Container.myServiceType()
         XCTAssertTrue(service2.text() == "MockService1")
