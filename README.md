@@ -542,6 +542,7 @@ Factory is available under the MIT license. See the LICENSE file for more info.
 Factory is designed, implemented, documented, and maintained by [Michael Long](https://www.linkedin.com/in/hmlong/), a Lead iOS Software Engineer and a Top 1,000 Technology Writer on Medium.
 
 * LinkedIn: [@hmlong](https://www.linkedin.com/in/hmlong/)
+* Medium: [@michaellong](https://medium.com/@michaellong)
 * Twitter: @hmlco
 
 Michael was also one of Google's [Open Source Peer Reward](https://opensource.googleblog.com/2021/09/announcing-latest-open-source-peer-bonus-winners.html) winners in 2021 for his work on Resolver.
