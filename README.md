@@ -539,12 +539,12 @@ Factory is available under the MIT license. See the LICENSE file for more info.
 
 ## Author
 
-Factory was designed, implemented, documented, and maintained by [Michael Long](https://www.linkedin.com/in/hmlong/), a Senior Lead iOS engineer at [CRi Solutions](https://www.clientresourcesinc.com/solutions/). CRi is a leader in developing cutting edge iOS, Android, and mobile web applications and solutions for our corporate and financial clients.
+Factory is designed, implemented, documented, and maintained by [Michael Long](https://www.linkedin.com/in/hmlong/), a Lead iOS Software Engineer and a Top 1,000 Technology Writer on Medium.
 
-* Email: [mlong@clientresourcesinc.com](mailto:mlong@clientresourcesinc.com)
+* LinkedIn: [@hmlong](https://www.linkedin.com/in/hmlong/)
 * Twitter: @hmlco
 
-He was also one of Google's [Open Source Peer Reward](https://opensource.googleblog.com/2021/09/announcing-latest-open-source-peer-bonus-winners.html) winners in 2021 for his work on Resolver.
+Michael was also one of Google's [Open Source Peer Reward](https://opensource.googleblog.com/2021/09/announcing-latest-open-source-peer-bonus-winners.html) winners in 2021 for his work on Resolver.
 
 ## Additional Resources
 
