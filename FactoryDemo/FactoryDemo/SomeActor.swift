@@ -42,7 +42,7 @@ actor SomeActor {
 class SomeActorParent {
 
     @Injected(Container.myActor) var myActor
-    
+
     let myTest1 = Container.mainActorFuncTest()
     let myTest2 = Container.mainActorTest()
 

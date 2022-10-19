@@ -8,9 +8,14 @@
 import Foundation
 import Factory
 import Common
+import SwiftUI
 
 extension Container {
     static let simpleService = Factory { SimpleService() }
+}
+
+extension Container {
+    static let contentViewModel = Factory { ContentModuleViewModel() }
 }
 
 extension SharedContainer {
@@ -74,3 +79,4 @@ class MultipleDemo {
     var aService: AServiceType = Container.aService()
     var bService: BServiceType = Container.bService()
 }
+

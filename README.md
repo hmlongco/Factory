@@ -316,6 +316,59 @@ Note that if you use `WeakLazyInjected` then that class must have been instantia
 weak var gone: MyClass? = MyClass()
 ```
 
+## Functional Injection
+
+Factory can inject more than service classes and structs. Consider:
+```swift
+typealias AccountProviding = () async throws -> [Account]
+
+extension Container {
+    static let accountProvider = Factory<AccountProviding> {
+        { try await Network.get(path: "/accounts") }
+    }
+}
+```
+And here's the view model that utilizes it.
+```swift
+class AccountViewModel: ObservableObject {
+    @Injected(Container.accountProvider) var accountProvider
+    @Published var accounts: [Account] = []
+    @MainActor func load() async {
+        do {
+            accounts = try await accountProvider()
+        } catch {
+            print(error)
+        }
+    }
+}
+```
+Now consider how easy it is to write a test with mock accounts...
+```swift
+func testAllAccounts() async {
+    Container.accountProvider.register {{ Account.mockAccounts }}
+    do {
+        let viewModel = AccountViewModel()
+        try await viewModel.load()
+        XCTAssert(viewModel.accounts.count == 5)
+    } catch {
+        XCTFail("Account load failed")
+    }
+}
+```
+Or test edge cases like no accounts found. Or test specifc errors.
+```swift
+func testEmptyAccounts() async {
+    Container.accountProvider.register {{ [] }}
+    ...
+}
+
+func testErrorLoadingAccounts() async {
+    Container.accountProvider.register {{ throw APIError.network }}
+    ...
+}
+```
+Functional injection is a powerful tool. Here's an article that goes into the technique in more detail: [Factory and Functional Dependency Injection](https://betterprogramming.pub/factory-and-functional-dependency-injection-2d0a38042d05)
+
 ## Custom Containers
 
 In a large project you might want to segregate factories into additional, smaller containers.

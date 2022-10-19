@@ -14,8 +14,14 @@ class ContentModuleViewModel: ObservableObject {
 
     @Injected(Container.myServiceType) private var service
 
-    func text() -> String {
+    @Published var name: String = "Michael"
+
+    init() {
+        print("ContentModuleViewModel Initialized")
         testFactory()
+    }
+
+    func text() -> String {
         return service.text()
     }
 
