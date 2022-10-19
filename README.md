@@ -318,7 +318,7 @@ weak var gone: MyClass? = MyClass()
 
 ## Functional Injection
 
-Factory can inject more than service classes and structs. Functional Injection is a powerful tool that can, in many cases, eliminate the need for traditional for the protocols, implementations, and stubs and mocks used in traditional Protocol-Oriented-Programing.
+Factory can inject more than service classes and structs. Functional Injection is a powerful tool that can, in many cases, eliminate the need for defining protocols, implementations, and the various stubs and mocks one needs when doing traditional Protocol-Oriented-Programing.
 
 Consider:
 ```swift
