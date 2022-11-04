@@ -435,7 +435,7 @@ With that in mind, here's an example of updating a view model's service dependen
 
 ```swift
 class ContentView: ObservableObject {
-    @StateObject private var viewModel = ContentViewModel()
+    @StateObject var viewModel = ContentViewModel()
     var body: some View {
         ...
     }
@@ -449,6 +449,23 @@ struct ContentView_Previews: PreviewProvider {
 }
 ```
 If we can control where the view model gets its data then we can put the view model into pretty much any state we choose.
+
+If we want to do multiple previews at once, each with different data, we simply need to instantiate our view models and pass them into the view as parameters.
+```swift
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        Group {
+            let _ = Container.myServiceType.register { MockServiceN(4) }
+            let vm1 = ContentModuleViewModel()
+            ContentView(viewModel: vm1)
+
+            let _ = Container.myServiceType.register { MockServiceN(8) }
+            let vm2 = ContentModuleViewModel()
+            ContentView(viewModel: vm2)
+        }
+    }
+}
+```
 
 ## Common Setup
 
