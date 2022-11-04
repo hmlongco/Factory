@@ -79,4 +79,3 @@ class MultipleDemo {
     var aService: AServiceType = Container.aService()
     var bService: BServiceType = Container.bService()
 }
-
