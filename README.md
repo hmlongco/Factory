@@ -455,11 +455,11 @@ If we want to do multiple previews at once, each with different data, we simply 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         Group {
-            let _ = Container.myServiceType.register { MockServiceN(4) }
+            let _ = Container.myService.register { MockServiceN(4) }
             let vm1 = ContentModuleViewModel()
             ContentView(viewModel: vm1)
 
-            let _ = Container.myServiceType.register { MockServiceN(8) }
+            let _ = Container.myService.register { MockServiceN(8) }
             let vm2 = ContentModuleViewModel()
             ContentView(viewModel: vm2)
         }
