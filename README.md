@@ -456,11 +456,11 @@ struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         Group {
             let _ = Container.myService.register { MockServiceN(4) }
-            let vm1 = ContentModuleViewModel()
+            let vm1 = ContentViewModel()
             ContentView(viewModel: vm1)
 
             let _ = Container.myService.register { MockServiceN(8) }
-            let vm2 = ContentModuleViewModel()
+            let vm2 = ContentViewModel()
             ContentView(viewModel: vm2)
         }
     }
