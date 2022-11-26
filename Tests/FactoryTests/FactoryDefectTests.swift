@@ -77,7 +77,7 @@ final class FactoryDefectTests: XCTestCase {
         XCTAssertTrue(service2?.id != service3?.id)
     }
 
-    // Shared scope caching feiled when caching a non-optional protocol value
+    // Shared scope caching failed when caching a non-optional protocol value
     func testProtocolSharedValueScope() throws {
         var service1: MyServiceType? = Container.sharedValueProtocol()
         var service2: MyServiceType? = Container.sharedValueProtocol()

@@ -49,7 +49,7 @@ public struct Factory<T> {
 
     /// Registers a new factory that will be used to create and return an instance of the desired object type.
     ///
-    /// This registration overrides the orginal factory and its result will be returned on all new object resolutions. Registering a new
+    /// This registration overrides the original factory and its result will be returned on all new object resolutions. Registering a new
     /// factory also clears the previous instance from the associated scope.
     ///
     /// All registrations are stored in SharedContainer.Registrations.
@@ -90,7 +90,7 @@ public struct ParameterFactory<P, T> {
 
     /// Registers a new factory that will be used to create and return an instance of the desired object type.
     ///
-    /// This registration overrides the orginal factory and its result will be returned on all new object resolutions. Registering a new
+    /// This registration overrides the original factory and its result will be returned on all new object resolutions. Registering a new
     /// factory also clears the previous instance from the associated scope.
     ///
     /// All registered factories are stored in SharedContainer.Registrations.
