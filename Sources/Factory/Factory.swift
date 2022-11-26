@@ -116,7 +116,7 @@ open class SharedContainer {
 
     public class Registrations {
 
-        /// Pushes the current set of registration overrides onto a stack. Useful when testing when you want to push the current set of registions,
+        /// Pushes the current set of registration overrides onto a stack. Useful when testing when you want to push the current set of registrations,
         /// add your own, test, then pop the stack to restore the world to its original state.
         public static func push() {
             defer { lock.unlock() }
