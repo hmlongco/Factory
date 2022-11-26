@@ -22,7 +22,7 @@ struct ContentView: View {
             Button("Mutate") {
                 model.name += "z"
             }
-            OpenView(site: "https://www.google.com")
+            //OpenView(site: "https://www.google.com")
         }
         .padding()
     }

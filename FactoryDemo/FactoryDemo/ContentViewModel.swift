@@ -12,7 +12,7 @@ import Networking
 
 class ContentModuleViewModel: ObservableObject {
 
-    @Injected(Container.myServiceType) private var service
+    @Injected(Container.autoRegisteredService) private var service
 
     @Published var name: String = "Michael"
 
@@ -22,7 +22,7 @@ class ContentModuleViewModel: ObservableObject {
     }
 
     func text() -> String {
-        return service.text()
+        return service?.text() ?? "failed"
     }
 
     func testFactory() {

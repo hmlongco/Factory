@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4C3F6FE92932C5F80084A647 /* AutomaticRegistration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C3F6FE82932C5F80084A647 /* AutomaticRegistration.swift */; };
 		4C4ED1F828FDADB3009E41A5 /* FunctionInjection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C4ED1F728FDADB3009E41A5 /* FunctionInjection.swift */; };
 		4C6EB40628D792D400D17E7D /* Alternatives.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C6EB40528D792D400D17E7D /* Alternatives.swift */; };
 		4C928B7E291568CD00679CBF /* InjectedObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C928B7D291568CD00679CBF /* InjectedObject.swift */; };
@@ -72,6 +73,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4C3F6FE82932C5F80084A647 /* AutomaticRegistration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutomaticRegistration.swift; sourceTree = "<group>"; };
 		4C4ED1F728FDADB3009E41A5 /* FunctionInjection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FunctionInjection.swift; sourceTree = "<group>"; };
 		4C6EB40528D792D400D17E7D /* Alternatives.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Alternatives.swift; sourceTree = "<group>"; };
 		4C928B7D291568CD00679CBF /* InjectedObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InjectedObject.swift; sourceTree = "<group>"; };
@@ -154,10 +156,11 @@
 				4CEEC348284927EE00C979B3 /* FactoryDemoApp.swift */,
 				4CEEC35B2849309C00C979B3 /* FactoryDemoApp+Injection.swift */,
 				4CEEC34A284927EE00C979B3 /* ContentView.swift */,
-				4C4ED1F728FDADB3009E41A5 /* FunctionInjection.swift */,
 				4CEEC35F2849311000C979B3 /* ContentViewModel.swift */,
+				4C4ED1F728FDADB3009E41A5 /* FunctionInjection.swift */,
 				4CEEC35D284930DB00C979B3 /* Services.swift */,
 				4C6EB40528D792D400D17E7D /* Alternatives.swift */,
+				4C3F6FE82932C5F80084A647 /* AutomaticRegistration.swift */,
 				4C928B7D291568CD00679CBF /* InjectedObject.swift */,
 				4CA223FF28CFC49900944456 /* SomeActor.swift */,
 				4CEEC34C284927EF00C979B3 /* Assets.xcassets */,
@@ -311,6 +314,7 @@
 				4C928B7E291568CD00679CBF /* InjectedObject.swift in Sources */,
 				4C4ED1F828FDADB3009E41A5 /* FunctionInjection.swift in Sources */,
 				4CEEC349284927EE00C979B3 /* FactoryDemoApp.swift in Sources */,
+				4C3F6FE92932C5F80084A647 /* AutomaticRegistration.swift in Sources */,
 				4CEEC35C2849309C00C979B3 /* FactoryDemoApp+Injection.swift in Sources */,
 				4C6EB40628D792D400D17E7D /* Alternatives.swift in Sources */,
 				4CEEC3602849311000C979B3 /* ContentViewModel.swift in Sources */,

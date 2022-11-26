@@ -348,6 +348,20 @@ extension SharedContainer.Scope {
 }
 #endif
 
+/// Enable automatic registrations
+public protocol AutoRegistring {
+    static func registerAllServices()
+}
+
+extension Container {
+    fileprivate static var autoRgistrationCheck: Bool = {
+        if let registering = (Container() as Any) as? AutoRegistring {
+            type(of: registering).registerAllServices()
+        }
+        return true
+    }()
+}
+
 /// Internal box protocol for factories
 private protocol AnyFactory {}
 
@@ -365,6 +379,7 @@ private struct Registration<P, T> {
 
     /// Resolves registration returning cached value from scope or new instance from factory. This is pretty much the heart of Factory.
     func resolve(_ params: P) -> T {
+        let _ = Container.autoRgistrationCheck
         let currentFactory: (P) -> T = (SharedContainer.Registrations.factory(for: id) as? TypedFactory<P, T>)?.factory ?? factory
         let instance: T = scope?.resolve(id: id, factory: { currentFactory(params) }) ?? currentFactory(params)
         SharedContainer.Decorator.decorate?(instance)
