@@ -1,5 +1,9 @@
 # Factory Changelog
 
+### 1.2.9
+
+* Add an registration endpoint that's called prior to first service resolution.
+
 ### 1.2.8
 
 * Cocoapods Support

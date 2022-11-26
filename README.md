@@ -281,6 +281,22 @@ Next, note that Factory is *thread-safe.* Registrations and resolutions lock and
 
 And finally, note that calling register also *removes any cached dependency from its associated scope.* This ensures that any new dependency injection request performed from that point on will always get the most recently defined instance of an object.
 
+## AutoRegistering
+
+If you use the above technique to create optional registrations across multiple modules in your project you may find that you need to register some instances prior to application initialization. If so you can do the following.
+```swift
+extension Container: AutoRegistring {
+    static func registerAllServices() {
+        autoRegisteredService.register {
+            ModuleA.register()
+            ModuleB.register()
+            ...
+        }
+    }
+}
+```
+Just make `Container` conform to `AutoRegistering` and provide the `registerAllServices` static function. This function will be called *once* prior to the very first Factory service resolution.
+
 ## Lazy and Weak Injections
 Factory also has `LazyInjected` and `WeakLazyInjected` property wrappers. Use `LazyInjected` when you want to defer construction of some class until it's actually needed. Here the child `service` won't be instantiated until the `test` function is called.
 ```swift
