@@ -354,11 +354,9 @@ public protocol AutoRegistring {
 }
 
 extension Container {
-    fileprivate static var autoRgistrationCheck: Bool = {
-        if let registering = (Container() as Any) as? AutoRegistring {
-            type(of: registering).registerAllServices()
-        }
-        return true
+    /// Statically allocated var performs automatic registration check one time and one time only.
+    fileprivate static var autoRgistrationCheck: Void  = {
+        (Container.self as? AutoRegistring.Type)?.registerAllServices()
     }()
 }
 
