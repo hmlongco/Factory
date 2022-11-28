@@ -285,7 +285,7 @@ And finally, note that calling register also *removes any cached dependency from
 
 If you use the above technique to create optional registrations across multiple modules in your project you may find that you need to register some instances prior to application initialization. If so you can do the following.
 ```swift
-extension Container: AutoRegistring {
+extension Container: AutoRegistering {
     static func registerAllServices() {
         autoRegisteredService.register {
             ModuleA.register()
