@@ -9,7 +9,7 @@ The first dependency injection system I ever wrote was [Resolver](https://github
 1. Resolver requires pre-registration of all services up front. 
 2. Resolver uses type inference to dynamically find and return registered services from a container.
 
-The first drawback is relatively minor. While preregistration could lead to a performance hit on application launch, in practice the process is usually quick and not normally noticable.
+The first drawback is relatively minor. While preregistration could lead to a performance hit on application launch, in practice the process is usually quick and not normally noticeable.
 
 No, it’s the second one that’s somewhat more problematic.
 
@@ -95,7 +95,7 @@ class ContentViewModel: ObservableObject {
     ...
 }
 ```
-Just call the desired specific factory as a function and you'll get an instance of its managed dpendency. It's that simple.
+Just call the desired specific factory as a function and you'll get an instance of its managed dependency. It's that simple.
 
 *You can access the factory directly or the property wrapper if you prefer, but either way for clarity I'd suggest grouping all of a given object's dependencies in a single place near the top of the class and marking them as private.*
 
@@ -273,7 +273,7 @@ The injected provider is optional by default since the Factory was defined that 
 
 But doing so violates the core premise on which Factory was built in the first place: *Your code is guaranteed to be safe.* 
 
-I'd avise against it.
+I'd advise against it.
 
 A few other things here. First, note that we used `@Injected` to supply an optional type. We don't need a `@OptionalInjected` property wrapper to do this as we did in Resolver. Same for `@LazyInjected`.
 
@@ -373,7 +373,7 @@ func testAllAccounts() async {
     }
 }
 ```
-Or test edge cases like no accounts found. Or test specifc errors.
+Or test edge cases like no accounts found. Or test specific errors.
 ```swift
 func testEmptyAccounts() async {
     Container.accountProvider.register {{ [] }}
@@ -413,7 +413,7 @@ class PaymentsContainer: SharedContainer {
     static let anotherService = Factory { AnotherService(OrderContainer.optionalService()) }
 }
 ```
-It's important to note that in Factory a custom container is not really a "container" in the traditional sense. It's a name space, used to group similar or related factories together. All registrations and scopes are still managed by the parent `SharedContainer` classs on which all containers are based.
+It's important to note that in Factory a custom container is not really a "container" in the traditional sense. It's a name space, used to group similar or related factories together. All registrations and scopes are still managed by the parent `SharedContainer` class on which all containers are based.
 
 ## SharedContainer
 
@@ -441,7 +441,7 @@ Keep in mind that if you assign to an `ObservedObject` your Factory is responsib
 
 Unlike Resolver, Factory doesn't have an @InjectedObject property wrapper. There are [a few reasons for this](https://github.com/hmlongco/Factory/issues/15), but for now doing your own assignment to `StateObject` or `ObservedObject` is the preferred approach. 
 
-That said, at this point in time I feel that we should probably avoid using Factory to create the view model in the first place.  It's usually unneccesary, [you really can't use protocols with view models anyway](https://betterprogramming.pub/swiftui-view-models-are-not-protocols-8c415c0325b1), and for the most part Factory's really designed to provide the VM and other services with the dependencies that *they* need. 
+That said, at this point in time I feel that we should probably avoid using Factory to create the view model in the first place.  It's usually unnecessary, [you really can't use protocols with view models anyway](https://betterprogramming.pub/swiftui-view-models-are-not-protocols-8c415c0325b1), and for the most part Factory's really designed to provide the VM and other services with the dependencies that *they* need. 
 
 Especially since those services have no access to the environment.
 
@@ -525,7 +525,7 @@ The `includingSingletons` option must be explicitly specified in order to reset 
 
 ## Xcode Unit Tests
 
-Finally, Factory has a few additional provisions added to make unit testing eaiser. In your unit test setUp function you can *push* the current state of the registration system and then register and test anything you want.
+Finally, Factory has a few additional provisions added to make unit testing easier. In your unit test setUp function you can *push* the current state of the registration system and then register and test anything you want.
 
 ```swift
 final class FactoryCoreTests: XCTestCase {
