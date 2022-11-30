@@ -281,6 +281,8 @@ Next, note that Factory is *thread-safe.* Registrations and resolutions lock and
 
 And finally, note that calling register also *removes any cached dependency from its associated scope.* This ensures that any new dependency injection request performed from that point on will always get the most recently defined instance of an object.
 
+This technique can also be handy when doing registrations in a project with multiple modules. See: [Factory: Multiple Module Registration](https://betterprogramming.pub/factory-multiple-module-registration-f9d19721a31d?sk=a03d78484d8c351762306ff00a8be67c)
+
 ## AutoRegistering
 
 If you use the above technique to create optional registrations across multiple modules in your project you may find that you need to register some instances prior to application initialization. If so you can do the following.
@@ -583,6 +585,7 @@ Michael was also one of Google's [Open Source Peer Reward](https://opensource.go
 ## Additional Resources
 
 * [Factory and Functional Dependency Injection](https://betterprogramming.pub/factory-and-functional-dependency-injection-2d0a38042d05)
+* [Factory: Multiple Module Registration](https://betterprogramming.pub/factory-multiple-module-registration-f9d19721a31d?sk=a03d78484d8c351762306ff00a8be67c)
 * [Resolver: A Swift Dependency Injection System](https://github.com/hmlongco/Resolver)
 * [Inversion of Control Design Pattern ~ Wikipedia](https://en.wikipedia.org/wiki/Inversion_of_control)
 * [Inversion of Control Containers and the Dependency Injection pattern ~ Martin Fowler](https://martinfowler.com/articles/injection.html)
