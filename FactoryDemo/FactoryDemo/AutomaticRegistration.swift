@@ -8,7 +8,7 @@
 import Foundation
 import Factory
 
-extension Container: AutoRegistring {
+extension Container: AutoRegistering {
 
     static let autoRegisteredService = Factory<MyServiceType?> {
         nil
