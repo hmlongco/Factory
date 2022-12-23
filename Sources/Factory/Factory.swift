@@ -240,6 +240,7 @@ open class SharedContainer {
         public static var decorate: ((_ dependency: Any) -> Void)?
 
     }
+
 }
 
 extension SharedContainer.Scope {
@@ -378,8 +379,28 @@ private struct Registration<P, T> {
     /// Resolves registration returning cached value from scope or new instance from factory. This is pretty much the heart of Factory.
     func resolve(_ params: P) -> T {
         let _ = Container.autoRegistrationCheck
+
         let currentFactory: (P) -> T = (SharedContainer.Registrations.factory(for: id) as? TypedFactory<P, T>)?.factory ?? factory
+
+        #if DEBUG
+        dependencyLock.lock()
+        let typeComponents = String(describing: T.self).components(separatedBy: CharacterSet(charactersIn: "<>"))
+        let typeName = typeComponents.count > 1 ? typeComponents[1] : typeComponents[0]
+        let typeIndex = dependencyChain.firstIndex { $0 == typeName }
+        dependencyChain.append(typeName)
+        if let index = typeIndex {
+            let description = dependencyChain[index...].joined(separator: " > ")
+            fatalError("circular dependency chain - \(description)")
+        }
+        #endif
+
         let instance: T = scope?.resolve(id: id, factory: { currentFactory(params) }) ?? currentFactory(params)
+
+        #if DEBUG
+        dependencyChain.removeLast()
+        dependencyLock.unlock()
+        #endif
+
         SharedContainer.Decorator.decorate?(instance)
         return instance
     }
@@ -397,6 +418,13 @@ private struct Registration<P, T> {
     }
 
 }
+
+#if DEBUG
+/// Internal array used to check for circular dependency cycles
+private var dependencyChain = Array<String>()
+/// Internal lock used to check for circular dependency cycles
+private var dependencyLock = NSRecursiveLock()
+#endif
 
 /// Internal protocol used to evaluate optional types for caching
 private protocol OptionalProtocol {

@@ -333,6 +333,7 @@ Note that if you use `WeakLazyInjected` then that class must have been instantia
 ```swift
 weak var gone: MyClass? = MyClass()
 ```
+`WeakLazyInjected` can also come in handy when you need to break circular dependencies. See below.
 
 ## Functional Injection
 
@@ -428,9 +429,42 @@ extension SharedContainer {
 ```
 As mentioned earlier, any registrations defined with your app are managed here.
 
+## Circular Dependency Chain Detection
+
+What's a circular dependency? Let's say that A needs B to be constructed, and B needs a C. But what happens if C needs an A? Examine the following class definitions.
+```swift
+class CircularA {
+    @Injected(Container.circularB) var circularB
+}
+
+class CircularB {
+    @Injected(Container.circularC) var circularC
+}
+
+class CircularC {
+    @Injected(Container.circularA) var circularA
+}
+```
+Attempting make an instance of `CircularA` is going to result in an infinite loop. Why? Well, A's injected property wrapper needs a B in to construct an A. Okay, fine. Let's make one. But B's wrapper needs a C, which can't be made without injecting an A, which once more needs a B... and so on. Ad infinitum.
+
+This is a circular dependency chain.
+
+Unfortunately, by the time this code is compiled and run it's too late to break the cycle. We've effectively coded an infinite loop into our program. All Factory can do in this case is die gracefully and in the process dump the dependency chain that indicates where the problem lies.
+```
+2022-12-23 14:57:23.512032-0600 FactoryDemo[47546:6946786] Factory/Factory.swift:393: 
+Fatal error: circular dependency chain - CircularA > CircularB > CircularC > CircularA
+```
+With the above information in hand we should be able to find the problem and fix it.
+
+We could fix things by chaging CircularC's injection wrapper to `LazyInjected` or, better yet, `WeakLazyInjected` in order to avoid a retain cycle. But a better solution would probably entail finding and breaking out the functionality that `CircularA` and `CircularC` are depending upon into a *third* object they both could include.
+
+Circular dependencies such as this are usually a violation of the Single Responsibility Principle, and should be avoided.
+
+*Note: Due to the overhead involved, circular dependency detection only occurs when running the application in DEBUG mode. The code is stripped out of production builds for improved performance.*
+
 ## SwiftUI Integrations
 
-Note that you can also use the Service Locator pattern in SwiftUI to assign a dependency to a `StateObject` or `ObservedObject`.
+Factory can be used in SwiftUI to assign a dependency to a `StateObject` or `ObservedObject`.
 ```swift
 class ContentView: ObservableObject {
     @StateObject private var viewModel = Container.contentViewModel()
@@ -439,7 +473,7 @@ class ContentView: ObservableObject {
     }
 }
 ```
-Keep in mind that if you assign to an `ObservedObject` your Factory is responsible for managing the object's lifecycle (see the section on Scopes below).
+Keep in mind that if you assign to an `ObservedObject` your Factory is responsible for managing the object's lifecycle (see the section on Scopes above).
 
 Unlike Resolver, Factory doesn't have an @InjectedObject property wrapper. There are [a few reasons for this](https://github.com/hmlongco/Factory/issues/15), but for now doing your own assignment to `StateObject` or `ObservedObject` is the preferred approach. 
 
