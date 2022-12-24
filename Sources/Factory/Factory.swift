@@ -383,21 +383,18 @@ private struct Registration<P, T> {
         let currentFactory: (P) -> T = (SharedContainer.Registrations.factory(for: id) as? TypedFactory<P, T>)?.factory ?? factory
 
         #if DEBUG
-        let wrappedFactory: () -> T = {
-            defer { dependencyChain.removeLast(); dependencyLock.unlock() }
-            dependencyLock.lock()
-            let typeComponents = String(describing: T.self).components(separatedBy: CharacterSet(charactersIn: "<>"))
-            let typeName = typeComponents.count > 1 ? typeComponents[1] : typeComponents[0]
-            if let index = dependencyChain.firstIndex(where: { $0 == typeName }) {
-                fatalError("circular dependency chain - \(dependencyChain[index...].joined(separator: " > ")) > \(typeName)")
-            }
-            dependencyChain.append(typeName)
-            return currentFactory(params)
+        defer { dependencyChain.removeLast(); dependencyLock.unlock() }
+        dependencyLock.lock()
+        let typeComponents = String(describing: T.self).components(separatedBy: CharacterSet(charactersIn: "<>"))
+        let typeName = typeComponents.count > 1 ? typeComponents[1] : typeComponents[0]
+        let typeIndex = dependencyChain.firstIndex(where: { $0 == typeName })
+        dependencyChain.append(typeName)
+        if let index = typeIndex {
+            fatalError("circular dependency chain - \(dependencyChain[index...].joined(separator: " > "))")
         }
-        let instance: T = scope?.resolve(id: id, factory: wrappedFactory) ?? wrappedFactory()
-        #else
-        let instance: T = scope?.resolve(id: id, factory: { currentFactory(params) }) ?? currentFactory(params)
         #endif
+
+        let instance: T = scope?.resolve(id: id, factory: { currentFactory(params) }) ?? currentFactory(params)
 
         SharedContainer.Decorator.decorate?(instance)
 
