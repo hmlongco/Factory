@@ -379,29 +379,28 @@ private struct Registration<P, T> {
     /// Resolves registration returning cached value from scope or new instance from factory. This is pretty much the heart of Factory.
     func resolve(_ params: P) -> T {
         let _ = Container.autoRegistrationCheck
-
+        
         let currentFactory: (P) -> T = (SharedContainer.Registrations.factory(for: id) as? TypedFactory<P, T>)?.factory ?? factory
 
         #if DEBUG
-        dependencyLock.lock()
-        let typeComponents = String(describing: T.self).components(separatedBy: CharacterSet(charactersIn: "<>"))
-        let typeName = typeComponents.count > 1 ? typeComponents[1] : typeComponents[0]
-        let typeIndex = dependencyChain.firstIndex { $0 == typeName }
-        dependencyChain.append(typeName)
-        if let index = typeIndex {
-            let description = dependencyChain[index...].joined(separator: " > ")
-            fatalError("circular dependency chain - \(description)")
+        let wrappedFactory: () -> T = {
+            defer { dependencyChain.removeLast(); dependencyLock.unlock() }
+            dependencyLock.lock()
+            let typeComponents = String(describing: T.self).components(separatedBy: CharacterSet(charactersIn: "<>"))
+            let typeName = typeComponents.count > 1 ? typeComponents[1] : typeComponents[0]
+            if let index = dependencyChain.firstIndex(where: { $0 == typeName }) {
+                fatalError("circular dependency chain - \(dependencyChain[index...].joined(separator: " > ")) > \(typeName)")
+            }
+            dependencyChain.append(typeName)
+            return currentFactory(params)
         }
-        #endif
-
+        let instance: T = scope?.resolve(id: id, factory: wrappedFactory) ?? wrappedFactory()
+        #else
         let instance: T = scope?.resolve(id: id, factory: { currentFactory(params) }) ?? currentFactory(params)
-
-        #if DEBUG
-        dependencyChain.removeLast()
-        dependencyLock.unlock()
         #endif
 
         SharedContainer.Decorator.decorate?(instance)
+
         return instance
     }
 

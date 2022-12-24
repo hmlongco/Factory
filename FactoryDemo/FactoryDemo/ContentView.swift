@@ -22,7 +22,9 @@ struct ContentView: View {
             Button("Mutate") {
                 model.name += "z"
             }
-            //OpenView(site: "https://www.google.com")
+            Button("Trigger Circular Dependency Crash") {
+                Container.testCircularDependencies()
+            }
         }
         .padding()
     }

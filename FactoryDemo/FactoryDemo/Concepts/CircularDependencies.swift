@@ -30,7 +30,7 @@ extension Container {
 
     static var optionalA = Factory<CircularA?> { CircularA() }
 
-    func testCircularDependencies() {
+    static func testCircularDependencies() {
         let a = Container.circularA()
         print(a)
     }
