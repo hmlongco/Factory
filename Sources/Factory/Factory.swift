@@ -119,15 +119,15 @@ open class SharedContainer {
         /// Pushes the current set of registration overrides onto a stack. Useful when testing when you want to push the current set of registrations,
         /// add your own, test, then pop the stack to restore the world to its original state.
         public static func push() {
-            defer { lock.unlock() }
-            lock.lock()
+            defer { globalRecursiveLock.unlock() }
+            globalRecursiveLock.lock()
             stack.append(registrations)
         }
 
         /// Pops a previously pushed registration stack. Does nothing if stack is empty.
         public static func pop() {
-            defer { lock.unlock() }
-            lock.lock()
+            defer { globalRecursiveLock.unlock() }
+            globalRecursiveLock.lock()
             if let registrations = stack.popLast() {
                 self.registrations = registrations
             }
@@ -135,33 +135,26 @@ open class SharedContainer {
 
         /// Resets and deletes all registered factory overrides.
         public static func reset() {
-            defer { lock.unlock() }
-            lock.lock()
+            defer { globalRecursiveLock.unlock() }
+            globalRecursiveLock.lock()
             registrations = [:]
         }
 
         /// Internal registration function used by Factory
         fileprivate static func register(id: UUID, factory: AnyFactory) {
-            defer { lock.unlock() }
-            lock.lock()
             registrations[id] = factory
         }
 
         /// Internal resolution function used by Factory
         fileprivate static func factory(for id: UUID) -> AnyFactory? {
-            defer { lock.unlock() }
-            lock.lock()
             return registrations[id]
         }
 
         /// Internal reset function used by Factory
         fileprivate static func reset(_ id: UUID) {
-            defer { lock.unlock() }
-            lock.lock()
             registrations.removeValue(forKey: id)
         }
 
-        private static var lock = NSLock()
         private static var registrations: [UUID: AnyFactory] = .init(minimumCapacity: 64)
         private static var stack: [[UUID: AnyFactory]] = []
 
@@ -171,39 +164,29 @@ open class SharedContainer {
     public class Scope {
 
         fileprivate init() {
-            defer { lock.unlock() }
-            lock.lock()
+            defer { globalRecursiveLock.unlock() }
+            globalRecursiveLock.lock()
             Self.scopes.append(self)
         }
 
         /// Resets the cache. Any factory using this cache will return a new instance after the cache is reset.
         public func reset() {
-            defer { lock.unlock() }
-            lock.lock()
+            defer { globalRecursiveLock.unlock() }
+            globalRecursiveLock.lock()
             cache = [:]
         }
 
         /// Public query mechanism for cache empty
         public var isEmpty: Bool {
-            defer { lock.unlock() }
-            lock.lock()
+            defer { globalRecursiveLock.unlock() }
+            globalRecursiveLock.lock()
             return cache.isEmpty
         }
 
         /// Internal cache resolution function used by Factory Registration
         fileprivate func resolve<T>(id: UUID, factory: () -> T) -> T {
-            defer { lock.unlock() }
-            lock.lock()
-            if let box = cache[id] {
-                if let instance = box.instance as? T {
-                    if let optional = instance as? OptionalProtocol {
-                        if optional.hasWrappedValue {
-                           return instance
-                        }
-                    } else {
-                        return instance
-                    }
-                }
+            if let cached: T = cached(id: id) {
+                return cached
             }
             let instance: T = factory()
             if let box = box(instance) {
@@ -212,11 +195,20 @@ open class SharedContainer {
             return instance
         }
 
-        /// Internal reset function used by Factory
-        fileprivate func reset(_ id: UUID) {
-            defer { lock.unlock() }
-            lock.lock()
-            cache.removeValue(forKey: id)
+        /// Internal function returns cached value if exists
+        fileprivate func cached<T>(id: UUID) -> T? {
+            if let box = cache[id] {
+                if let instance = box.instance as? T {
+                    if let optional = instance as? OptionalProtocol {
+                        if optional.hasWrappedValue {
+                            return instance
+                        }
+                    } else {
+                        return instance
+                    }
+                }
+            }
+            return nil
         }
 
         /// Internal function correctly boxes cache value depending upon scope type
@@ -228,8 +220,12 @@ open class SharedContainer {
             }
         }
 
-        private var lock = NSRecursiveLock()
-        private var cache: [UUID: AnyBox] = .init(minimumCapacity: 64)
+        /// Internal reset function used by Factory
+        fileprivate final func reset(_ id: UUID) {
+            cache.removeValue(forKey: id)
+        }
+
+       private var cache: [UUID: AnyBox] = .init(minimumCapacity: 64)
 
     }
 
@@ -251,6 +247,30 @@ extension SharedContainer.Scope {
         public override init() {
             super.init()
         }
+    }
+
+    /// Defines a graph scope. A single instance of a given type will be returned during a given resolution cycle.
+    public static let graph = Graph()
+    public final class Graph: SharedContainer.Scope {
+        public override init() {
+            super.init()
+        }
+        /// Internal cache resolution function used by Factory Registration
+        fileprivate override func resolve<T>(id: UUID, factory: () -> T) -> T {
+            if let cached: T = cached(id: id) {
+                return cached
+            }
+            resolutionDepth += 1
+            let instance: T = factory()
+            resolutionDepth -= 1
+            if resolutionDepth == 0 {
+                cache = [:]
+            } else if let box = box(instance) {
+                cache[id] = box
+            }
+            return instance
+        }
+        private var resolutionDepth: Int = 0
     }
 
     /// Defines a shared (weak) scope. The same instance will be returned by the factory as long as someone maintains a strong reference.
@@ -378,13 +398,14 @@ private struct Registration<P, T> {
 
     /// Resolves registration returning cached value from scope or new instance from factory. This is pretty much the heart of Factory.
     func resolve(_ params: P) -> T {
+        defer { globalRecursiveLock.unlock() }
+        globalRecursiveLock.lock()
+
         let _ = Container.autoRegistrationCheck
         
         let currentFactory: (P) -> T = (SharedContainer.Registrations.factory(for: id) as? TypedFactory<P, T>)?.factory ?? factory
 
         #if DEBUG
-        defer { dependencyChain.removeLast(); dependencyLock.unlock() }
-        dependencyLock.lock()
         let typeComponents = String(describing: T.self).components(separatedBy: CharacterSet(charactersIn: "<>"))
         let typeName = typeComponents.count > 1 ? typeComponents[1] : typeComponents[0]
         let typeIndex = dependencyChain.firstIndex(where: { $0 == typeName })
@@ -396,6 +417,10 @@ private struct Registration<P, T> {
 
         let instance: T = scope?.resolve(id: id, factory: { currentFactory(params) }) ?? currentFactory(params)
 
+        #if DEBUG
+        dependencyChain.removeLast()
+        #endif
+
         SharedContainer.Decorator.decorate?(instance)
 
         return instance
@@ -403,23 +428,28 @@ private struct Registration<P, T> {
 
     /// Registers a factory override and resets cache.
     func register(factory: @escaping (_ params: P) -> T) {
+        defer { globalRecursiveLock.unlock() }
+        globalRecursiveLock.lock()
         SharedContainer.Registrations.register(id: id, factory: TypedFactory<P, T>(factory: factory))
         scope?.reset(id)
     }
 
     /// Removes a factory override and resets cache.
     func reset() {
+        defer { globalRecursiveLock.unlock() }
+        globalRecursiveLock.lock()
         SharedContainer.Registrations.reset(id)
         scope?.reset(id)
     }
 
 }
 
+/// Master recursive lock
+private var globalRecursiveLock = NSRecursiveLock()
+
 #if DEBUG
 /// Internal array used to check for circular dependency cycles
 private var dependencyChain = Array<String>()
-/// Internal lock used to check for circular dependency cycles
-private var dependencyLock = NSRecursiveLock()
 #endif
 
 /// Internal protocol used to evaluate optional types for caching

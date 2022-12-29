@@ -58,6 +58,15 @@ final class FactoryScopeTests: XCTestCase {
         XCTAssertTrue(oldID != service3?.id)
     }
 
+    func testGraphScope() throws {
+        // Has base to graph scope
+        let graph1 = Container.graphWrapper()
+        XCTAssertTrue(graph1.service1.id == graph1.service2.id)
+        // No base to the graph scope
+        let graph2 = GraphWrapper()
+        XCTAssertTrue(graph2.service1.id != graph2.service2.id)
+    }
+
     func testExplicitProtocolSharedScope() throws {
         var service1: MyServiceType? = Container.sharedExplicitProtocol()
         var service2: MyServiceType? = Container.sharedExplicitProtocol()

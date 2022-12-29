@@ -8,6 +8,14 @@
 import Foundation
 @testable import Factory
 
+protocol IDProviding {
+    var id: UUID { get }
+}
+
+protocol ValueProviding: IDProviding {
+    var value: Int { get }
+}
+
 protocol MyServiceType {
     var id: UUID { get }
     var value: Int { get }
@@ -21,6 +29,8 @@ class MyService: MyServiceType {
         "MyService"
     }
 }
+
+extension MyService: ValueProviding {}
 
 class MockService: MyServiceType {
     let id = UUID()
@@ -76,7 +86,6 @@ class ParameterService: MyServiceType {
     }
 }
 
-
 extension Container {
     static let myServiceType = Factory<MyServiceType> { MyService() }
     static let myServiceType2 = Factory<MyServiceType> { MyService() }
@@ -106,8 +115,10 @@ extension Container {
     static let sharedValueProtocol = Factory<MyServiceType>(scope: .shared) { ValueService() }
 
     static let promisedService = Factory<MyServiceType?> { nil }
+
 }
 
+// For parameter tests
 extension Container {
     static var parameterService = ParameterFactory { n in
         ParameterService(value: n) as MyServiceType
@@ -120,12 +131,45 @@ extension Container {
     }
 }
 
+// Custom scope
+
+extension Container.Scope {
+    static let session = Cached()
+}
+
+// Class for recursive scope test
+
 extension Container {
     static var recursiveA = Factory<RecursiveA?> { RecursiveA() }
     static var recursiveB = Factory<RecursiveB?> { RecursiveB() }
     static var recursiveC = Factory<RecursiveC?> { RecursiveC() }
 }
 
-extension Container.Scope {
-    static let session = Cached()
+// Classes for graph scope tests
+
+class GraphWrapper {
+    @Injected(Container.graphService) var service1
+    @Injected(Container.graphService) var service2
+    init() {}
 }
+
+extension Container {
+    static let graphWrapper = Factory(scope: .graph) { GraphWrapper() }
+    static let graphService = Factory(scope: .graph) { MyService() }
+}
+
+// Classes for implements scope tests
+
+class ProtocolConsumer {
+    @Injected(Container.idProvider) var ids
+    @Injected(Container.valueProvider) var values
+    init() {}
+}
+
+extension Container {
+    static let consumer = Factory(scope: .graph) { ProtocolConsumer() }
+    static let idProvider = Factory<IDProviding> { commonProviding() }
+    static let valueProvider = Factory<ValueProviding> { commonProviding() }
+    private static let commonProviding = Factory(scope: .graph) { MyService() }
+}
+
