@@ -1,5 +1,11 @@
 # Factory Changelog
 
+### 1.3.0
+
+* Added support for Graph scopes
+* Added Circular Dependency Detection checks when running in DEBUG mode
+* Fixed issue with shared scope failing in iOS 14.x and earlier - Issue #43
+
 ### 1.2.9
 
 * Add an registration endpoint that's called prior to first service resolution.

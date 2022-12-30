@@ -66,9 +66,9 @@ final class FactoryMultithreadingTests: XCTestCase {
             }
         }
 
-        wait(interval: 2.0) {
+        wait(interval: 5.0) {
             print(iterations)
-            XCTAssert(iterations == 80008)
+            XCTAssertEqual(iterations, 80008)
         }
 
     }

@@ -184,7 +184,7 @@ open class SharedContainer {
         }
 
         /// Internal cache resolution function used by Factory Registration
-        fileprivate func resolve<T>(id: UUID, factory: () -> T) -> T {
+        internal func resolve<T>(id: UUID, factory: () -> T) -> T {
             if let cached: T = cached(id: id) {
                 return cached
             }
@@ -197,15 +197,13 @@ open class SharedContainer {
 
         /// Internal function returns cached value if exists
         fileprivate func cached<T>(id: UUID) -> T? {
-            if let box = cache[id] {
-                if let instance = box.instance as? T {
-                    if let optional = instance as? OptionalProtocol {
-                        if optional.hasWrappedValue {
-                            return instance
-                        }
-                    } else {
-                        return instance
+            if let box = cache[id] as? StrongBox<T> {
+                if let optional = box.boxed as? OptionalProtocol {
+                    if optional.hasWrappedValue {
+                        return box.boxed
                     }
+                } else {
+                    return  box.boxed
                 }
             }
             return nil
@@ -221,7 +219,7 @@ open class SharedContainer {
         }
 
         /// Internal reset function used by Factory
-        fileprivate final func reset(_ id: UUID) {
+        internal final func reset(_ id: UUID) {
             cache.removeValue(forKey: id)
         }
 
@@ -256,7 +254,7 @@ extension SharedContainer.Scope {
             super.init()
         }
         /// Internal cache resolution function used by Factory Registration
-        fileprivate override func resolve<T>(id: UUID, factory: () -> T) -> T {
+        internal override func resolve<T>(id: UUID, factory: () -> T) -> T {
             if let cached: T = cached(id: id) {
                 return cached
             }
@@ -278,6 +276,21 @@ extension SharedContainer.Scope {
     public final class Shared: SharedContainer.Scope {
         public override init() {
             super.init()
+        }
+        /// Internal function returns cached value if exists
+        internal override func cached<T>(id: UUID) -> T? {
+            if let box = cache[id] as? WeakBox {
+                if let instance = box.boxed as? T {
+                    if let optional = instance as? OptionalProtocol {
+                        if optional.hasWrappedValue {
+                            return instance
+                        }
+                    } else {
+                        return instance
+                    }
+                }
+            }
+            return nil
         }
         fileprivate override func box<T>(_ instance: T) -> AnyBox? {
             if let optional = instance as? OptionalProtocol {
@@ -482,22 +495,14 @@ extension Optional: OptionalProtocol {
 }
 
 /// Internal box protocol for scope functionality
-private protocol AnyBox {
-    var instance: Any { get }
-}
+private protocol AnyBox {}
 
 /// Strong box for cached and singleton scopes
 private struct StrongBox<T>: AnyBox {
     let boxed: T
-    var instance: Any {
-        boxed as Any
-    }
 }
 
 /// Weak box for shared scope
 private struct WeakBox: AnyBox {
     weak var boxed: AnyObject?
-    var instance: Any {
-        boxed as Any
-    }
 }
