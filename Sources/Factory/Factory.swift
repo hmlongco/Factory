@@ -203,7 +203,7 @@ open class SharedContainer {
                         return box.boxed
                     }
                 } else {
-                    return  box.boxed
+                    return box.boxed
                 }
             }
             return nil
@@ -279,19 +279,18 @@ extension SharedContainer.Scope {
         }
         /// Internal function returns cached value if exists
         internal override func cached<T>(id: UUID) -> T? {
-            if let box = cache[id] as? WeakBox {
-                if let instance = box.boxed as? T {
-                    if let optional = instance as? OptionalProtocol {
-                        if optional.hasWrappedValue {
-                            return instance
-                        }
-                    } else {
+            if let box = cache[id] as? WeakBox, let instance = box.boxed as? T {
+                if let optional = instance as? OptionalProtocol {
+                    if optional.hasWrappedValue {
                         return instance
                     }
+                } else {
+                    return instance
                 }
             }
             return nil
         }
+        /// Override function correctly boxes weak cache value
         fileprivate override func box<T>(_ instance: T) -> AnyBox? {
             if let optional = instance as? OptionalProtocol {
                 if let unwrapped = optional.wrappedValue, type(of: unwrapped) is AnyObject.Type {
@@ -304,7 +303,7 @@ extension SharedContainer.Scope {
         }
     }
 
-    /// Defines a singleton scope. The same instance will always be returned by the factory.
+    /// Defines the singleton scope. The same instance will always be returned by the factory.
     public static let singleton = Singleton()
     public final class Singleton: SharedContainer.Scope {
         public override init() {
@@ -314,6 +313,8 @@ extension SharedContainer.Scope {
 
     /// Resets all scope caches.
     public static func reset(includingSingletons: Bool = false) {
+        defer { globalRecursiveLock.unlock() }
+        globalRecursiveLock.lock()
         Self.scopes.forEach {
             if !($0 is Singleton) || includingSingletons {
                 $0.reset()
