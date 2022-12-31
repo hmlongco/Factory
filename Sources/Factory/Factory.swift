@@ -173,7 +173,7 @@ open class SharedContainer {
         public func reset() {
             defer { globalRecursiveLock.unlock() }
             globalRecursiveLock.lock()
-            cache = [:]
+            unsafeReset()
         }
 
         /// Public query mechanism for cache empty
@@ -223,7 +223,14 @@ open class SharedContainer {
             cache.removeValue(forKey: id)
         }
 
-       private var cache: [UUID: AnyBox] = .init(minimumCapacity: 64)
+        /// Internal function to clear cache
+        internal func unsafeReset() {
+            if !cache.isEmpty {
+                cache = [:]
+            }
+        }
+
+        private var cache: [UUID: AnyBox] = .init(minimumCapacity: 64)
 
     }
 
@@ -247,28 +254,14 @@ extension SharedContainer.Scope {
         }
     }
 
-    /// Defines a graph scope. A single instance of a given type will be returned during a given resolution cycle.
+    /// Defines the graph scope. A single instance of a given type will be returned during a given resolution cycle.
+    ///
+    /// This scope is managed and cleared by the main resolution function at the end of each resolution cycle.
     public static let graph = Graph()
     public final class Graph: SharedContainer.Scope {
         public override init() {
             super.init()
         }
-        /// Internal cache resolution function used by Factory Registration
-        internal override func resolve<T>(id: UUID, factory: () -> T) -> T {
-            if let cached: T = cached(id: id) {
-                return cached
-            }
-            resolutionDepth += 1
-            let instance: T = factory()
-            resolutionDepth -= 1
-            if resolutionDepth == 0 {
-                cache = [:]
-            } else if let box = box(instance) {
-                cache[id] = box
-            }
-            return instance
-        }
-        private var resolutionDepth: Int = 0
     }
 
     /// Defines a shared (weak) scope. The same instance will be returned by the factory as long as someone maintains a strong reference.
@@ -429,7 +422,13 @@ private struct Registration<P, T> {
         }
         #endif
 
+        globalGraphResolutionDepth += 1
         let instance: T = scope?.resolve(id: id, factory: { currentFactory(params) }) ?? currentFactory(params)
+        globalGraphResolutionDepth -= 1
+
+        if globalGraphResolutionDepth == 0 {
+            SharedContainer.Scope.graph.unsafeReset()
+        }
 
         #if DEBUG
         dependencyChain.removeLast()
@@ -460,6 +459,9 @@ private struct Registration<P, T> {
 
 /// Master recursive lock
 private var globalRecursiveLock = NSRecursiveLock()
+
+/// Master graph resolution depth counter
+private var globalGraphResolutionDepth = 0
 
 #if DEBUG
 /// Internal array used to check for circular dependency cycles

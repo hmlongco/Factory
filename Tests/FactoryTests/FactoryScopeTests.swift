@@ -62,9 +62,11 @@ final class FactoryScopeTests: XCTestCase {
         // Has base to graph scope
         let graph1 = Container.graphWrapper()
         XCTAssertTrue(graph1.service1.id == graph1.service2.id)
+        XCTAssertTrue(Container.Scope.graph.isEmpty)
         // No base to the graph scope
         let graph2 = GraphWrapper()
         XCTAssertTrue(graph2.service1.id != graph2.service2.id)
+        XCTAssertTrue(Container.Scope.graph.isEmpty)
     }
 
     func testExplicitProtocolSharedScope() throws {

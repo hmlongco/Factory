@@ -194,7 +194,7 @@ Scopes are powerful tools to have in your arsenal. Use them.
 
 ## Graph Scope
 
-There's one additional scope, called `graph`. This scope will reuse any factory instances resolved during a given resolution cycle. This comes in handy when a single class implements multiple protocols. Consider the following...
+There's one additional scope, called `graph`. This scope will reuse any factory instances resolved during a given resolution cycle. This can come in handy when a single class implements multiple protocols. Consider the following...
 ```swift
 class ProtocolConsumer {
     @Injected(Container.idProvider) var ids
@@ -205,7 +205,7 @@ class ProtocolConsumer {
 The `ProtocolConsumer` wants two different protocols. But it doesn't know that a single class provides both services. (Nor should it care.) Take a look at the referenced factories.
 ```swift
 extension Container {
-    static let consumer = Factory(scope: .graph) { ProtocolConsumer() }
+    static let consumer = Factory { ProtocolConsumer() }
     static let idProvider = Factory<IDProviding> { commonProviding() }
     static let valueProvider = Factory<ValueProviding> { commonProviding() }
     private static let commonProviding = Factory(scope: .graph) { MyService() }
@@ -213,9 +213,9 @@ extension Container {
 ```
 Both provider factories reference the same factory. When Factory is asked for an instance of `consumer`, both providers will receive the same instance of `MyService`.
 
-There are a few caveats and considerations for using graph. The first is that anyone who wants to participate in the graph needs to explicitely state as such using the graph scope. Note the scope parameters for `consumer` and `commonProviding`.
+There are a few caveats and considerations for using graph. The first is that anyone who wants to participate in the graph needs to explicitely state as such using the graph scope. Note the scope parameter for `commonProviding`.
 
-The second is that there needs to be a "root" to the graph. In the above example, the `consumer` object is the root. Factory is asked for a consumer, which in turn requires two providers. If you were to instantiate an instance of `ProtocolConsumer` yourself, each Injected property wrapper will initialize sequentually on the same thread, resulting in two distinct resolution cycles.
+The second is that there needs to be a "root" to the graph. In the above example, the `consumer` object is the root. Factory is asked for a consumer, which in turn requires two providers. If you were to instantiate an instance of `ProtocolConsumer` yourself, each one of ProtocolConsumer's Injected property wrappers would initialize sequentually on the same thread, resulting in two separate and distinct resolution cycles.
 
 ## Constructor Injection
 
