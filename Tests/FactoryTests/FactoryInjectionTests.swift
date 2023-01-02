@@ -13,6 +13,12 @@ class Services2 {
     init() {}
 }
 
+class Services3 {
+    @WeakLazyInjected(Container.myServiceType) var service
+    @WeakLazyInjected(Container.mockService) var mock
+    init() {}
+}
+
 class Services5 {
     @Injected(Container.optionalService) var service
     init() {}
@@ -37,6 +43,9 @@ class ServicesC {
 }
 
 extension Container {
+    fileprivate static var services1 = Factory { Services1() }
+    fileprivate static var services2 = Factory { Services2() }
+    fileprivate static var services3 = Factory { Services3() }
     fileprivate static var servicesP = Factory(scope: .shared) { ServicesP() }
     fileprivate static var servicesC = Factory(scope: .shared) { ServicesC() }
 }
@@ -130,6 +139,36 @@ final class FactoryInjectionTests: XCTestCase {
         XCTAssertTrue(child?.test() == "Parent")
         parent = nil
         XCTAssertNil(child?.test())
+    }
+
+    func testInjectionSet() throws {
+        let service = Container.services1()
+        let oldId = service.service.id
+        let newService = MyService()
+        let newId = newService.id
+        service.service = newService
+        XCTAssertTrue(service.service.id != oldId)
+        XCTAssertTrue(service.service.id == newId)
+    }
+
+    func testLazyInjectionSet() throws {
+        let service = Container.services2()
+        let oldId = service.service.id
+        let newService = MyService()
+        let newId = newService.id
+        service.service = newService
+        XCTAssertTrue(service.service.id != oldId)
+        XCTAssertTrue(service.service.id == newId)
+    }
+
+    func testWeakLazyInjectionSet() throws {
+        let service = Container.services3()
+        let oldId = service.service?.id
+        let newService = MyService()
+        let newId = newService.id
+        service.service = newService
+        XCTAssertTrue(service.service?.id != oldId)
+        XCTAssertTrue(service.service?.id == newId)
     }
 
 }

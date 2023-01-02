@@ -23,6 +23,46 @@ final class FactoryScopeTests: XCTestCase {
         XCTAssertTrue(service2.id == service3.id)
     }
 
+    func testOptionalCachedScope() throws {
+        let service1: MyServiceType? = Container.cachedOptionalService()
+        let service2: MyServiceType? = Container.cachedOptionalService()
+        XCTAssertNotNil(service1)
+        XCTAssertNotNil(service2)
+        // Shared cached item ids should match
+        XCTAssertTrue(service1?.id == service2?.id)
+        let oldID = service1?.id
+        XCTAssertNotNil(oldID)
+        // Clear cache
+        Container.Scope.cached.reset()
+        let service3: MyServiceType? = Container.cachedOptionalService()
+        XCTAssertNotNil(service3)
+        // Shared instance should have released so new and old ids should not match
+        XCTAssertTrue(oldID != service3?.id)
+    }
+
+    func testEmptyOptionalCachedScope() throws {
+        let emptyService1: MyServiceType? = Container.cachedEmptyOptionalService()
+        let emptyService2: MyServiceType? = Container.cachedEmptyOptionalService()
+        XCTAssertNil(emptyService1)
+        XCTAssertNil(emptyService2)
+        // test caching after registration
+        Container.cachedEmptyOptionalService.register { MyService() }
+        let service1: MyServiceType? = Container.cachedOptionalService()
+        let service2: MyServiceType? = Container.cachedOptionalService()
+        XCTAssertNotNil(service1)
+        XCTAssertNotNil(service2)
+        // Shared cached item ids should match
+        XCTAssertTrue(service1?.id == service2?.id)
+        let oldID = service1?.id
+        XCTAssertNotNil(oldID)
+        // Clear cache
+        Container.Scope.cached.reset()
+        let service3: MyServiceType? = Container.cachedOptionalService()
+        XCTAssertNotNil(service3)
+        // Shared instance should have released so new and old ids should not match
+        XCTAssertTrue(oldID != service3?.id)
+    }
+
     func testCachedScopeGlobalReset() throws {
         let service1 = Container.cachedService()
         let service2 = Container.cachedService()
@@ -293,4 +333,16 @@ final class FactoryScopeTests: XCTestCase {
         XCTAssertNil(service5) // cache was reset by registration
         XCTAssertTrue(Container.Scope.shared.isEmpty) // nothing cached
     }
+
+    func testImplementsGraphScope() throws {
+        // Has base to graph scope
+        let consumer = Container.consumer()
+        XCTAssertTrue(consumer.ids.id == consumer.values.id)
+        XCTAssertTrue(Container.Scope.graph.isEmpty)
+        // No base to the graph scope
+        let consumer2 = ProtocolConsumer()
+        XCTAssertTrue(consumer2.ids.id != consumer2.values.id)
+        XCTAssertTrue(Container.Scope.graph.isEmpty)
+    }
+
 }

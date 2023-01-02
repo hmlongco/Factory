@@ -64,5 +64,5 @@ final class FactoryCoreTests: XCTestCase {
         let service2: MyServiceType? = Container.promisedService()
         XCTAssertTrue(service2?.text() == "MyService")
     }
-
+    
 }

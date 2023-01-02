@@ -31,12 +31,12 @@ public struct Factory<T> {
 
     /// Initializes a Factory with a factory closure that returns a new instance of the desired type.
     public init(factory: @escaping () -> T) {
-        self.registration = Registration<Void, T>(factory: factory, scope: nil)
+        self.registration = Registration<Void, T>(id: UUID(), factory: factory, scope: nil)
     }
 
     /// Initializes with factory closure that returns a new instance of the desired type. The scope defines the lifetime of that instance.
     public init(scope: SharedContainer.Scope, factory: @escaping () -> T) {
-        self.registration = Registration<Void, T>(factory: factory, scope: scope)
+        self.registration = Registration<Void, T>(id: UUID(), factory: factory, scope: scope)
     }
 
     /// Resolves and returns an instance of the desired object type. This may be a new instance or one that was created previously and then cached,
@@ -72,12 +72,12 @@ public struct ParameterFactory<P, T> {
 
     /// Initializes a Factory with a factory closure that returns a new instance of the desired type.
     public init(factory: @escaping (_ params: P) -> T) {
-        self.registration = Registration<P, T>(factory: factory, scope: nil)
+        self.registration = Registration<P, T>(id: UUID(), factory: factory, scope: nil)
     }
 
     /// Initializes with factory closure that returns a new instance of the desired type. The scope defines the lifetime of that instance.
     public init(scope: SharedContainer.Scope, factory: @escaping (_ params: P) -> T) {
-        self.registration = Registration<P, T>(factory: factory, scope: scope)
+        self.registration = Registration<P, T>(id: UUID(), factory: factory, scope: scope)
     }
 
     /// Resolves and returns an instance of the desired object type. This may be a new instance or one that was created previously and then cached,
@@ -198,13 +198,7 @@ open class SharedContainer {
         /// Internal function returns cached value if exists
         fileprivate func cached<T>(id: UUID) -> T? {
             if let box = cache[id] as? StrongBox<T> {
-                if let optional = box.boxed as? OptionalProtocol {
-                    if optional.hasWrappedValue {
-                        return box.boxed
-                    }
-                } else {
-                    return box.boxed
-                }
+                return box.boxed
             }
             return nil
         }
@@ -213,9 +207,8 @@ open class SharedContainer {
         fileprivate func box<T>(_ instance: T) -> AnyBox? {
             if let optional = instance as? OptionalProtocol {
                 return optional.hasWrappedValue ? StrongBox<T>(boxed: instance) : nil
-            } else {
-                return StrongBox<T>(boxed: instance)
             }
+            return StrongBox<T>(boxed: instance)
         }
 
         /// Internal reset function used by Factory
@@ -399,7 +392,7 @@ private struct TypedFactory<P, T>: AnyFactory {
 /// Internal registration manager for factories.
 private struct Registration<P, T> {
 
-    let id: UUID = UUID()
+    let id: UUID
     let factory: (P) -> T
     let scope: SharedContainer.Scope?
 
@@ -471,7 +464,6 @@ private var dependencyChain = Array<String>()
 /// Internal protocol used to evaluate optional types for caching
 private protocol OptionalProtocol {
     var hasWrappedValue: Bool { get }
-    var wrappedType: Any.Type { get }
     var wrappedValue: Any? { get }
 }
 
@@ -483,9 +475,6 @@ extension Optional: OptionalProtocol {
         case .some:
             return true
         }
-    }
-    var wrappedType: Any.Type {
-        Wrapped.self
     }
     var wrappedValue: Any? {
         switch self {

@@ -30,4 +30,18 @@ final class FactoryParameterTests: XCTestCase {
         XCTAssertTrue(service2.text() == "MockService6")
    }
 
+    func testScopedParameterServiceResolutions() throws {
+        let service1 = Container.scopedParameterService(6)
+        XCTAssertTrue(service1.value == 6)
+    }
+
+    func testScopedParameterServiceReset() throws {
+        XCTAssertTrue(Container.Scope.cached.isEmpty)
+        let service1 = Container.scopedParameterService(6)
+        XCTAssertTrue(service1.value == 6)
+        XCTAssertFalse(Container.Scope.cached.isEmpty)
+        Container.scopedParameterService.reset()
+        XCTAssertTrue(Container.Scope.cached.isEmpty)
+    }
+
 }

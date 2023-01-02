@@ -93,6 +93,8 @@ extension Container {
     static let mockService = Factory { MockService() }
 
     static let cachedService = Factory(scope: .cached) { MyService() }
+    static let cachedOptionalService = Factory<MyServiceType?>(scope: .cached) { MyService() }
+    static let cachedEmptyOptionalService = Factory<MyServiceType?>(scope: .cached) { nil }
 
     static let sharedService = Factory(scope: .shared) { MyService() }
     static let sharedExplicitProtocol = Factory<MyServiceType>(scope: .shared) { MyService() }
@@ -121,6 +123,9 @@ extension Container {
 // For parameter tests
 extension Container {
     static var parameterService = ParameterFactory { n in
+        ParameterService(value: n) as MyServiceType
+    }
+    static var scopedParameterService = ParameterFactory(scope: .cached) { n in
         ParameterService(value: n) as MyServiceType
     }
 }
@@ -154,7 +159,7 @@ class GraphWrapper {
 }
 
 extension Container {
-    static let graphWrapper = Factory(scope: .graph) { GraphWrapper() }
+    static let graphWrapper = Factory { GraphWrapper() }
     static let graphService = Factory(scope: .graph) { MyService() }
 }
 
@@ -167,9 +172,8 @@ class ProtocolConsumer {
 }
 
 extension Container {
-    static let consumer = Factory(scope: .graph) { ProtocolConsumer() }
-    static let idProvider = Factory<IDProviding> { commonProviding() }
-    static let valueProvider = Factory<ValueProviding> { commonProviding() }
-    private static let commonProviding = Factory(scope: .graph) { MyService() }
+    static let consumer = Factory { ProtocolConsumer() }
+    static let idProvider = Factory<IDProviding> { commonProvider() }
+    static let valueProvider = Factory<ValueProviding> { commonProvider() }
+    private static let commonProvider = Factory(scope: .graph) { MyService() }
 }
-
