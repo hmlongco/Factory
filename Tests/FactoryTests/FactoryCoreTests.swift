@@ -44,13 +44,6 @@ final class FactoryCoreTests: XCTestCase {
         XCTAssertTrue(service3?.text() == "MockService")
     }
 
-    func testRecursiveResolution() throws {
-        let a = Container.recursiveA()
-        XCTAssertNotNil(a)
-        XCTAssertNotNil(a?.b)
-        XCTAssertNotNil(a?.b?.c)
-    }
-
     func testExplicitlyUnrwappedOptionalResolution() throws {
         Container.optionalService.register { MyService() }
         let service1: MyServiceType = Container.optionalService()!
@@ -64,5 +57,11 @@ final class FactoryCoreTests: XCTestCase {
         let service2: MyServiceType? = Container.promisedService()
         XCTAssertTrue(service2?.text() == "MyService")
     }
-    
+
+    func testCircularDependencyFailure() {
+        expectFatalError(expectedMessage: "circular dependency chain - RecursiveA > RecursiveB > RecursiveC > RecursiveA") {
+            let _ = Container.recursiveA()
+        }
+    }
+
 }

@@ -411,7 +411,10 @@ private struct Registration<P, T> {
         let typeIndex = dependencyChain.firstIndex(where: { $0 == typeName })
         dependencyChain.append(typeName)
         if let index = typeIndex {
-            fatalError("circular dependency chain - \(dependencyChain[index...].joined(separator: " > "))")
+            globalGraphResolutionDepth = 0
+            globalRecursiveLock = NSRecursiveLock()
+            let message = "circular dependency chain - \(dependencyChain[index...].joined(separator: " > "))"
+            factoryFatalError(message, #file, #line)
         }
         #endif
 
@@ -498,3 +501,8 @@ private struct StrongBox<T>: AnyBox {
 private struct WeakBox: AnyBox {
     weak var boxed: AnyObject?
 }
+
+#if DEBUG
+/// Allow unit test interception of any fatal errors that may occur running the circular dependency check
+internal var factoryFatalError = Swift.fatalError
+#endif

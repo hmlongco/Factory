@@ -72,6 +72,7 @@ class RecursiveB {
 }
 
 class RecursiveC {
+    @Injected(Container.recursiveA) var a: RecursiveA?
     init() {}
 }
 
