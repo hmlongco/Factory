@@ -31,7 +31,7 @@ Failure to find a matching type can lead to an application crash if we attempt t
  * **Lightweight:** With all of that Factory is slim and trim, just 500 lines of code and half the size of Resolver.
  * **Performant:** Little to no setup time is needed for the vast majority of your services, resolutions are extremely fast, and no compile-time scripts or build phases are needed.
  * **Concise:** Defining a registration usually takes just a single line of code. Same for resolution.
- * **Tested:** 100% Unit test code coverage helps ensure correct operation of registrations, resolutions, and scopes.
+ * **Tested:** Unit tests with 100% code coverage helps ensure correct operation of registrations, resolutions, and scopes.
  * **Free:** Factory is free and open source under the MIT License.
  
  Sound too good to be true? Let's take a look.
