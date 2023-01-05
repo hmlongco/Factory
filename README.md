@@ -581,6 +581,12 @@ Container.Scope.reset(includingSingletons: true) // all including singletons
 ```
 The `includingSingletons` option must be explicitly specified in order to reset singletons. You have the power. Use it wisely.
 
+Note that Injected, LazyInjected, and WeakLazyInjected perform the resolution request once and only once, just as if you did...
+```swift
+let service = Container.myService()
+```
+Resetting the cache has no impact on existing service resolutions, and only insures that new resolutions will get a new copy of the service.
+
 ## Xcode Unit Tests
 
 Factory has a few additional provisions added to make unit testing easier. In your unit test setUp function you can *push* the current state of the registration system and then register and test anything you want.
