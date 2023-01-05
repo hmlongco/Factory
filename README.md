@@ -4,18 +4,16 @@ A new approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
 ## Why Something New?
 
-The first dependency injection system I ever wrote was [Resolver](https://github.com/hmlongco/Resolver). This open source project, while quite powerful and still in use in many applications, suffers from a few drawbacks.
+The first dependency injection system I wrote was [Resolver](https://github.com/hmlongco/Resolver). That open source project, while quite powerful and still in use in many applications, suffered from a few drawbacks.
 
-1. Resolver requires pre-registration of all services up front. 
+1. Resolver required pre-registration of all services up front. 
 2. Resolver uses type inference to dynamically find and return registered services from a container.
 
 The first drawback is relatively minor. While preregistration could lead to a performance hit on application launch, in practice the process is usually quick and not normally noticeable.
 
-No, it’s the second one that’s somewhat more problematic.
-
-Failure to find a matching type can lead to an application crash if we attempt to resolve a given type and a matching registration is not found. In real life that isn’t really a problem as such a thing tends to be noticed and fixed rather quickly the very first time you run a unit test or the second you run the application to see if your newest feature works.
+The second issue, however, is more problematic since failure to find a matching registration for that type can lead to an application crash. In real life that isn’t usually a problem as such a thing tends to be noticed and fixed the first time you run a unit test or the second you run the application to see if your newest feature works.
  
- But... could we do better? That question lead me on a quest for compile-time type safety. Several other systems have attempted to solve this, but I didn't want to have to add a source code scanning and generation step to my build process, nor did I want to give up a lot of the control and flexibility inherent in a run-time-based system.
+ But still... could we do better? That question lead me on a quest for compile-time type safety. Several other systems have attempted to solve this, but I didn't want to have to add a source code scanning and generation step to my build process, nor did I want to give up a lot of the control and flexibility inherent in a run-time-based system.
  
  I also wanted something simple, fast, clean, and easy to use.
  
@@ -57,7 +55,7 @@ class ContentViewModel: ObservableObject {
     ...
 }
 ```
-Here our view model uses one of Factory's `@Injected` property wrappers to request the desired dependency. Similar to `@EnvironmentObject` in SwiftUI, we provide the property wrapper initializer with a reference to a factory of the desired type and it handles the rest.
+Here our view model uses one of Factory's `@Injected` property wrappers to request the desired dependency. Similar to `@Environment` in SwiftUI, we provide the property wrapper initializer with a reference to a factory of the desired type and it handles the rest.
 
 And that's the core mechanism. In order to use the property wrapper you *must* define a factory. That factory *must* return the desired type when asked. Fail to do either one and the code will simply not compile. As such, Factory is compile-time safe.
 
@@ -77,7 +75,7 @@ We can also get the same result by explicitly specializing the generic Factory a
 static let myService = Factory<MyServiceType> { MyService() }
 ```
 
-Do neither one and the factory type will always be the returned type. In this case it's `MyService`.
+Do neither one and the factory type will always be the returned type. Here it's `MyService`.
 
 ```swift
 static let myService = Factory { MyService() }
@@ -141,7 +139,6 @@ Note the line in our preview code where we’re gone back to our container and r
 Now when our preview is displayed `ContentView` creates a `ContentViewModel` which in turn has a dependency on `myService` using the `Injected` property wrapper. 
 
 And when the wrapper asks the factory for an instance of `MyServiceType` it now gets a `MockService2` instead of the `MyService` type originally defined.
-
 
 This is a powerful concept that lets us reach deep into a chain of dependencies and alter the behavior of a system as needed.
 
