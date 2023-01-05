@@ -414,7 +414,7 @@ private struct Registration<P, T> {
             globalGraphResolutionDepth = 0
             globalRecursiveLock = NSRecursiveLock()
             let message = "circular dependency chain - \(dependencyChain[index...].joined(separator: " > "))"
-            factoryFatalError(message, #file, #line)
+            triggerFatalError(message, #file, #line)
         }
         #endif
 
@@ -504,5 +504,6 @@ private struct WeakBox: AnyBox {
 
 #if DEBUG
 /// Allow unit test interception of any fatal errors that may occur running the circular dependency check
-internal var factoryFatalError = Swift.fatalError
+/// Variation of solution: https://stackoverflow.com/questions/32873212/unit-test-fatalerror-in-swift#
+internal var triggerFatalError = Swift.fatalError
 #endif

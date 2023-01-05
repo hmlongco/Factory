@@ -586,7 +586,7 @@ The `includingSingletons` option must be explicitly specified in order to reset 
 
 ## Xcode Unit Tests
 
-Finally, Factory has a few additional provisions added to make unit testing easier. In your unit test setUp function you can *push* the current state of the registration system and then register and test anything you want.
+Factory has a few additional provisions added to make unit testing easier. In your unit test setUp function you can *push* the current state of the registration system and then register and test anything you want.
 
 ```swift
 final class FactoryCoreTests: XCTestCase {
@@ -612,6 +612,40 @@ final class FactoryCoreTests: XCTestCase {
 ```
 
 Then in your tearDown function simply *pop* your changes to restore everything back to the way it was prior to running that test suite.
+
+## Xcode UI Testing
+
+We can use the autoregistration feature mentioned earlier to help us out when running UI Tests. The test case is fairly straightforward.
+```swift
+import XCTest
+
+final class FactoryDemoUITests: XCTestCase {
+    func testExample() throws {
+        let app = XCUIApplication()
+        app.launchArguments.append("-mock1")
+        app.launch()
+
+        let welcome = app.staticTexts["Mock Number 1! for Michael"]
+        XCTAssert(welcome.exists)
+    }
+}
+```
+And then in the application we check the launch arguments to see what registrations we might want to change.
+```swift
+import Foundation
+import Factory
+
+#if DEBUG
+extension Container: AutoRegistering {
+    public static func registerAllServices() {
+        if ProcessInfo().arguments.contains("-mock1") {
+            myServiceType.register { MockServiceN(1) }
+        }
+    }
+}
+#endif
+```
+Obviously, one can add as many different test cases and registrations as needed.
 
 ## Resolver
 

@@ -15,10 +15,18 @@ extension Container: AutoRegistering {
     }
 
     public static func registerAllServices() {
+
         print("AUTOREGISTRATION!!!")
+
         autoRegisteredService.register {
             MyService()
         }
+
+        #if DEBUG
+        if ProcessInfo().arguments.contains("-mock1") {
+            myServiceType.register { MockServiceN(1) }
+        }
+        #endif
     }
 
 }

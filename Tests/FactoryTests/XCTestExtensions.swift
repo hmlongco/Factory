@@ -15,20 +15,20 @@ extension XCTestCase {
         let expectation = self.expectation(description: "expectingFatalError")
         var assertionMessage: String = ""
 
-        factoryFatalError = { (message, _, _) in
+        triggerFatalError = { (message, _, _) in
             assertionMessage = message()
             DispatchQueue.main.async {
                 expectation.fulfill()
             }
             Thread.exit()
-            fatalError("will never be executed since thread exits")
+            Swift.fatalError("will never be executed since thread exits")
         }
 
         Thread(block: testcase).start()
 
         waitForExpectations(timeout: 0.1) { _ in
             XCTAssertEqual(expectedMessage, assertionMessage)
-            factoryFatalError = Swift.fatalError
+            triggerFatalError = Swift.fatalError
         }
     }
     
