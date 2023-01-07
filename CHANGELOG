@@ -1,5 +1,9 @@
 # Factory Changelog
 
+### 1.3.3
+
+* Minor bugfix in circular dependency check to reset chain on error
+
 ### 1.3.2
 
 * Increase unit test code coverage to 100%
