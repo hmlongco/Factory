@@ -6,9 +6,9 @@ final class FactoryMultithreadingTests: XCTestCase {
     let container = MultiThreadedContainer()
 
     let qa = DispatchQueue(label: "A", qos: .userInteractive, attributes: .concurrent)
-    let qb = DispatchQueue(label: "B", qos: .background, attributes: .concurrent)
-    let qc = DispatchQueue(label: "C", qos: .userInitiated, attributes: .concurrent)
-    let qe = DispatchQueue(label: "E", qos: .userInitiated, attributes: .concurrent)
+    let qb = DispatchQueue(label: "B", qos: .userInitiated, attributes: .concurrent)
+    let qc = DispatchQueue(label: "C", qos: .background, attributes: .concurrent)
+    let qd = DispatchQueue(label: "E", qos: .background, attributes: .concurrent)
 
     override func setUp() {
         super.setUp()
@@ -19,6 +19,12 @@ final class FactoryMultithreadingTests: XCTestCase {
     func testMultiThreading() throws {
         // basically tests that nothing locks up or crashes while doing registrations and resolutions.
         // behavior is pretty apparent if locks are disabled.
+
+        let expA = expectation(description: "A")
+        let expB = expectation(description: "B")
+        let expC = expectation(description: "C")
+        let expD = expectation(description: "D")
+
         for _ in 0...10000 {
             qa.async {
                MultiThreadedContainer.a.register { A(b: MultiThreadedContainer.b()) }
@@ -27,7 +33,7 @@ final class FactoryMultithreadingTests: XCTestCase {
                 self.qc.async {
                     MultiThreadedContainer.b.register { B(c: MultiThreadedContainer.c()) }
                 }
-                self.qe.async {
+                self.qd.async {
                     let b: B = MultiThreadedContainer.b()
                     b.test()
                 }
@@ -35,7 +41,7 @@ final class FactoryMultithreadingTests: XCTestCase {
             qc.async {
                 MultiThreadedContainer.b.register { B(c: MultiThreadedContainer.c()) }
             }
-            qe.async {
+            qd.async {
                 let b: B = MultiThreadedContainer.b()
                 b.test()
             }
@@ -56,20 +62,31 @@ final class FactoryMultithreadingTests: XCTestCase {
                 b.test()
             }
             qc.async {
-                self.qe.async {
+                self.qd.async {
                     MultiThreadedContainer.e.register { E() }
-               }
-                self.qe.async {
+                }
+                self.qd.async {
                     let e: E = MultiThreadedContainer.e()
                     e.test()
                 }
             }
         }
 
-        wait(interval: 8.0) {
-            print(iterations)
-            XCTAssertEqual(iterations, 80008)
+        self.qa.async {  expA.fulfill() }
+        self.qb.async {  expB.fulfill() }
+        self.qc.async {  expC.fulfill() }
+        self.qd.async {  expD.fulfill() }
+
+        wait(for: [expA, expB, expC, expD], timeout: 20)
+
+        // threads not quite done yet
+        
+        while interationValue() < 80008 {
+            Thread.sleep(forTimeInterval: 0.2)
         }
+
+        print(iterations)
+        XCTAssertEqual(iterations, 80008)
 
     }
 
@@ -77,6 +94,12 @@ final class FactoryMultithreadingTests: XCTestCase {
 
 var iterations = 0
 let lock = NSRecursiveLock()
+
+func interationValue() -> Int {
+    defer { lock.unlock() }
+    lock.lock()
+    return iterations
+}
 
 func increment() {
     lock.lock()
