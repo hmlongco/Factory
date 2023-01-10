@@ -1,5 +1,9 @@
 # Factory Changelog
 
+### 1.3.4
+
+* Add resolve() function to property wrappers to trigger immediate resolution.
+
 ### 1.3.3
 
 * Minor bugfix in circular dependency check to reset chain on error

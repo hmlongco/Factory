@@ -315,13 +315,22 @@ extension SharedContainer.Scope {
 #if swift(>=5.1)
 /// Convenience property wrapper takes a factory and creates an instance of the desired type.
 @propertyWrapper public struct Injected<T> {
+    private var factory: Factory<T>
     private var dependency: T
     public init(_ factory: Factory<T>) {
+        self.factory = factory
         self.dependency = factory()
     }
     public var wrappedValue: T {
         get { return dependency }
         mutating set { dependency = newValue }
+    }
+    public var projectedValue: Injected<T> {
+        get { return self }
+        mutating set { self = newValue }
+    }
+    public mutating func resolve() {
+        dependency = factory()
     }
 }
 
@@ -336,14 +345,21 @@ extension SharedContainer.Scope {
     public var wrappedValue: T {
         mutating get {
             if initialize {
-                dependency = factory()
-                initialize = false
+                resolve()
             }
             return dependency
         }
         mutating set {
             dependency = newValue
         }
+    }
+    public var projectedValue: LazyInjected<T> {
+        get { return self }
+        mutating set { self = newValue }
+    }
+    public mutating func resolve() {
+        dependency = factory()
+        initialize = false
     }
 }
 
@@ -357,8 +373,7 @@ extension SharedContainer.Scope {
     public var wrappedValue: T? {
         mutating get {
             if initialize {
-                dependency = factory() as AnyObject
-                initialize = false
+                resolve()
             }
             return dependency as? T
         }
@@ -366,7 +381,16 @@ extension SharedContainer.Scope {
             dependency = newValue as AnyObject
         }
     }
+    public var projectedValue: WeakLazyInjected<T> {
+        get { return self }
+        mutating set { self = newValue }
+    }
+    public mutating func resolve() {
+        dependency = factory() as AnyObject
+        initialize = false
+    }
 }
+
 #endif
 
 /// Enable automatic registrations
@@ -466,13 +490,13 @@ private var globalDependencyChain: [String] = []
 #endif
 
 /// Internal protocol used to evaluate optional types for caching
-private protocol OptionalProtocol {
+public protocol OptionalProtocol {
     var hasWrappedValue: Bool { get }
     var wrappedValue: Any? { get }
 }
 
 extension Optional: OptionalProtocol {
-    var hasWrappedValue: Bool {
+    public var hasWrappedValue: Bool {
         switch self {
         case .none:
             return false
@@ -480,7 +504,7 @@ extension Optional: OptionalProtocol {
             return true
         }
     }
-    var wrappedValue: Any? {
+    public var wrappedValue: Any? {
         switch self {
         case .none:
             return nil

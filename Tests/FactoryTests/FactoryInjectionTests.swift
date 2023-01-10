@@ -14,7 +14,7 @@ class Services2 {
 }
 
 class Services3 {
-    @WeakLazyInjected(Container.myServiceType) var service
+    @WeakLazyInjected(Container.sharedService) var service
     @WeakLazyInjected(Container.mockService) var mock
     init() {}
 }
@@ -162,6 +162,8 @@ final class FactoryInjectionTests: XCTestCase {
     }
 
     func testWeakLazyInjectionSet() throws {
+        let strongReference: MyService? = Container.sharedService()
+        XCTAssertNotNil(strongReference)
         let service = Container.services3()
         let oldId = service.service?.id
         let newService = MyService()
@@ -169,6 +171,49 @@ final class FactoryInjectionTests: XCTestCase {
         service.service = newService
         XCTAssertTrue(service.service?.id != oldId)
         XCTAssertTrue(service.service?.id == newId)
+    }
+
+    func testInjectionResolve() throws {
+        let object = Container.services1()
+        let oldId = object.service.id
+        // force resolution
+        object.$service.resolve()
+        // should have new instance
+        let newId = object.service.id
+        XCTAssertTrue(oldId != newId)
+    }
+
+    func testLazyInjectionResolve() throws {
+        let object = Container.services2()
+        let oldId = object.service.id
+        // force resolution
+        object.$service.resolve()
+        // should have new instance
+        let newId = object.service.id
+        XCTAssertTrue(oldId != newId)
+    }
+
+    func testWeakLazyInjectionResolve() throws {
+        var strongReference: MyService? = Container.sharedService()
+        XCTAssertNotNil(strongReference)
+        let oldId = strongReference?.id
+
+        let service = Container.services3()
+        let newID = service.service?.id
+        XCTAssertTrue(oldId == newID)
+
+        service.service = nil
+
+        service.$service.resolve()
+        XCTAssertNotNil(service.service)
+        XCTAssertTrue(service.service?.id == newID)
+
+        strongReference = nil
+        XCTAssertNil(service.service)
+
+        service.$service.resolve()
+
+        XCTAssertNil(service.service)
     }
 
 }
