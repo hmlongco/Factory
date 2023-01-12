@@ -29,13 +29,8 @@ import Foundation
 /// Factory manages the dependency injection process for a given object or service.
 public struct Factory<T> {
 
-    /// Initializes a Factory with a factory closure that returns a new instance of the desired type.
-    public init(factory: @escaping () -> T) {
-        self.registration = Registration<Void, T>(id: UUID(), factory: factory, scope: nil)
-    }
-
     /// Initializes with factory closure that returns a new instance of the desired type. The scope defines the lifetime of that instance.
-    public init(scope: SharedContainer.Scope, factory: @escaping () -> T) {
+    public init(scope: SharedContainer.Scope? = .none, factory: @escaping () -> T) {
         self.registration = Registration<Void, T>(id: UUID(), factory: factory, scope: scope)
     }
 
@@ -59,8 +54,8 @@ public struct Factory<T> {
 
     /// Deletes any registered factory override and resets this Factory to use the factory closure specified during initialization. Also
     /// resets the scope so that a new instance of the original type will be returned on the next resolution.
-    public func reset() {
-        registration.reset()
+    public func reset(_ options: FactoryResetOptions = .all) {
+        registration.reset(options)
     }
 
     private let registration: Registration<Void, T>
@@ -70,13 +65,8 @@ public struct Factory<T> {
 /// passed to it during instantiation.
 public struct ParameterFactory<P, T> {
 
-    /// Initializes a Factory with a factory closure that returns a new instance of the desired type.
-    public init(factory: @escaping (_ params: P) -> T) {
-        self.registration = Registration<P, T>(id: UUID(), factory: factory, scope: nil)
-    }
-
     /// Initializes with factory closure that returns a new instance of the desired type. The scope defines the lifetime of that instance.
-    public init(scope: SharedContainer.Scope, factory: @escaping (_ params: P) -> T) {
+    public init(scope: SharedContainer.Scope? = .none, factory: @escaping (_ params: P) -> T) {
         self.registration = Registration<P, T>(id: UUID(), factory: factory, scope: scope)
     }
 
@@ -100,8 +90,8 @@ public struct ParameterFactory<P, T> {
 
     /// Deletes any registered factory override and resets this Factory to use the factory closure specified during initialization. Also
     /// resets the scope so that a new instance of the original type will be returned on the next resolution.
-    public func reset() {
-        registration.reset()
+    public func reset(_ options: FactoryResetOptions = .all) {
+        registration.reset(options)
     }
 
     private let registration: Registration<P, T>
@@ -140,6 +130,13 @@ open class SharedContainer {
             registrations = [:]
         }
 
+        /// Public query mechanism for checking if registrations exist
+        public static var isEmpty: Bool {
+            defer { globalRecursiveLock.unlock() }
+            globalRecursiveLock.lock()
+            return registrations.isEmpty
+        }
+
         /// Internal registration function used by Factory
         fileprivate static func register(id: UUID, factory: AnyFactory) {
             registrations[id] = factory
@@ -151,7 +148,7 @@ open class SharedContainer {
         }
 
         /// Internal reset function used by Factory
-        fileprivate static func reset(_ id: UUID) {
+        fileprivate static func reset(for id: UUID) {
             registrations.removeValue(forKey: id)
         }
 
@@ -173,7 +170,7 @@ open class SharedContainer {
         public func reset() {
             defer { globalRecursiveLock.unlock() }
             globalRecursiveLock.lock()
-            unsafeReset()
+            clearCacheIfNeeded()
         }
 
         /// Public query mechanism for cache empty
@@ -212,12 +209,12 @@ open class SharedContainer {
         }
 
         /// Internal reset function used by Factory
-        internal final func reset(_ id: UUID) {
+        internal final func reset(for id: UUID) {
             cache.removeValue(forKey: id)
         }
 
-        /// Internal function to clear cache
-        internal func unsafeReset() {
+        /// Internal function to clear cache if needed
+        internal func clearCacheIfNeeded() {
             if !cache.isEmpty {
                 cache = [:]
             }
@@ -303,7 +300,7 @@ extension SharedContainer.Scope {
         globalRecursiveLock.lock()
         Self.scopes.forEach {
             if !($0 is Singleton) || includingSingletons {
-                $0.reset()
+                $0.clearCacheIfNeeded()
             }
         }
     }
@@ -329,7 +326,8 @@ extension SharedContainer.Scope {
         get { return self }
         mutating set { self = newValue }
     }
-    public mutating func resolve() {
+    public mutating func resolve(reset options: FactoryResetOptions = .none) {
+        factory.reset(options)
         dependency = factory()
     }
 }
@@ -357,7 +355,8 @@ extension SharedContainer.Scope {
         get { return self }
         mutating set { self = newValue }
     }
-    public mutating func resolve() {
+    public mutating func resolve(reset options: FactoryResetOptions = .none) {
+        factory.reset(options)
         dependency = factory()
         initialize = false
     }
@@ -385,7 +384,8 @@ extension SharedContainer.Scope {
         get { return self }
         mutating set { self = newValue }
     }
-    public mutating func resolve() {
+    public mutating func resolve(reset options: FactoryResetOptions = .none) {
+        factory.reset(options)
         dependency = factory() as AnyObject
         initialize = false
     }
@@ -448,7 +448,7 @@ private struct Registration<P, T> {
         globalGraphResolutionDepth -= 1
 
         if globalGraphResolutionDepth == 0 {
-            SharedContainer.Scope.graph.unsafeReset()
+            SharedContainer.Scope.graph.clearCacheIfNeeded()
         }
 
         #if DEBUG
@@ -465,17 +465,35 @@ private struct Registration<P, T> {
         defer { globalRecursiveLock.unlock() }
         globalRecursiveLock.lock()
         SharedContainer.Registrations.register(id: id, factory: TypedFactory<P, T>(factory: factory))
-        scope?.reset(id)
+        scope?.reset(for: id)
     }
 
     /// Removes a factory override and resets cache.
-    func reset() {
+    func reset(_ options: FactoryResetOptions) {
+        guard options != .none else {
+            return
+        }
         defer { globalRecursiveLock.unlock() }
         globalRecursiveLock.lock()
-        SharedContainer.Registrations.reset(id)
-        scope?.reset(id)
+        switch options {
+        case .registration:
+            SharedContainer.Registrations.reset(for: id)
+        case .scope:
+            scope?.reset(for: id)
+        default:
+            SharedContainer.Registrations.reset(for: id)
+            scope?.reset(for: id)
+        }
     }
 
+}
+
+/// Reset options for factory and registrations
+public enum FactoryResetOptions {
+    case all
+    case none
+    case registration
+    case scope
 }
 
 /// Master recursive lock

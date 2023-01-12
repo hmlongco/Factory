@@ -58,6 +58,45 @@ final class FactoryCoreTests: XCTestCase {
         XCTAssertTrue(service2?.text() == "MyService")
     }
 
+    func testResetOptions() {
+        func registerAndResolve() {
+            Container.cachedService.register {
+                MyService()
+            }
+            let _ = Container.cachedService()
+        }
+
+        XCTAssertTrue(Container.Registrations.isEmpty)
+        XCTAssertTrue(Container.Scope.cached.isEmpty)
+
+        registerAndResolve()
+
+        Container.cachedService.reset(.none)
+
+        XCTAssertFalse(Container.Registrations.isEmpty)
+        XCTAssertFalse(Container.Scope.cached.isEmpty)
+
+        Container.cachedService.reset(.all)
+
+        XCTAssertTrue(Container.Registrations.isEmpty)
+        XCTAssertTrue(Container.Scope.cached.isEmpty)
+
+        registerAndResolve()
+
+        Container.cachedService.reset(.registration)
+
+        XCTAssertTrue(Container.Registrations.isEmpty)
+        XCTAssertFalse(Container.Scope.cached.isEmpty)
+
+        registerAndResolve()
+
+        Container.cachedService.reset(.scope)
+
+        XCTAssertFalse(Container.Registrations.isEmpty)
+        XCTAssertTrue(Container.Scope.cached.isEmpty)
+
+    }
+
     func testCircularDependencyFailure() {
         expectFatalError(expectedMessage: "circular dependency chain - RecursiveA > RecursiveB > RecursiveC > RecursiveA") {
             let _ = Container.recursiveA()

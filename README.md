@@ -357,9 +357,10 @@ weak var gone: MyClass? = MyClass()
 ```
 `WeakLazyInjected` can also come in handy when you need to break circular dependencies. See below.
 
-Property wrapper resolution can also be triggered manually if needed. This will force the wrapper to obtain an instance (or a new instance) of a service from its factory.
+Property wrapper resolution may also be triggered manually if needed.
 ```swift
-$service.resolve()
+$service.resolve() // resolves instance from factory (may be cached by scope)
+$service.resolve(reset: .scope) // clears cache, then resolves instance from factory
 ```
 
 ## Functional Injection
@@ -573,11 +574,15 @@ Using register on a factory lets us change the state of the system. But what if 
 Simple. Just reset it to bring back the original factory closure. Or, if desired, you can reset *everything* back to square one with a single command.
 
 ```Swift
-Container.myService.reset() // single
-Container.Registrations.reset() // all 
+Container.myService.reset() // resets this factory only
+Container.Registrations.reset() // clears all registrations 
 ```
-
-The same applies to scope management. You can reset a single cache, or all of them if desired. This includes any caches you might have added, like the `session` scope we added above.
+Resetting a factory clears its registration and also clears the existing service from the scope cache. You can be more specific if needed. 
+```Swift
+Container.myService.reset(.registration) // clears registration only
+Container.myService.reset(.scope) // clears scope only
+```
+Similar functionality applies to scope management. You can reset a single cache, or all of them if desired. This includes any caches you might have added, like the `session` scope we added above.
 
 ```Swift
 Container.Scope.cached.reset() // single
@@ -590,7 +595,7 @@ Note that Injected, LazyInjected, and WeakLazyInjected perform the resolution re
 ```swift
 let service = Container.myService()
 ```
-Resetting the cache has no impact on existing service resolutions, and only insures that new resolutions will get a new copy of the service.
+Resetting the cache after a service has been resolved has no impact on the existing resolutions. It only insures that new resolutions will get a new copy of the service.
 
 ## Xcode Unit Tests
 
