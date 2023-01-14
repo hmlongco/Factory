@@ -1,103 +1,210 @@
 //
 //  Alternatives.swift
-//  FactoryDemo
+//  NewFactoryDemo
 //
 //  Created by Michael Long on 9/18/22.
 //
 
 import Foundation
-import Factory
 
-public struct AltFactory<T> {
-
-    /// Initializes a Factory with a factory closure that returns a new instance of the desired type.
-    public init(_ factory: @autoclosure @escaping () -> T) {
-        self.registration = AltRegistration<Void, T>(factory: factory)
+public struct NewFactory<T> {
+    public init(_ factory: @escaping () -> T) {
+        self.container = NewContainer.shared
+        self.factory = factory
     }
-
-    /// Initializes a Factory with a factory closure that returns a new instance of the desired type.
-    public init(_ container: AnyObject, _ factory: @autoclosure @escaping () -> T) {
-        self.registration = AltRegistration<Void, T>(factory: factory)
+    public init(_ container: FactoryContainer, _ factory: @escaping () -> T) {
+        self.container = container
+        self.factory = factory
     }
-
-    /// Resolves and returns an instance of the desired object type. This may be a new instance or one that was created previously and then cached,
-    /// depending on whether or not a scope was specified when the factory was created.
-    ///
-    /// Note return type could of T could still be <T?> depending on original Factory specification.
     public func callAsFunction() -> T {
-        registration.resolve(())
+        container.registrations.resolve(id: id, factory: factory)
     }
-
-    /// Registers a new factory that will be used to create and return an instance of the desired object type.
-    ///
-    /// This registration overrides the orginal factory and its result will be returned on all new object resolutions. Registering a new
-    /// factory also clears the previous instance from the associated scope.
-    ///
-    /// All registrations are stored in SharedContainer.Registrations.
-    public func register(factory: @autoclosure @escaping () -> T) {
-       // registration.register(factory: factory)
+    public func register(factory: @escaping () -> T) {
+        container.registrations.register(id: id, factory: factory)
     }
-
-    /// Deletes any registered factory override and resets this Factory to use the factory closure specified during initialization. Also
-    /// resets the scope so that a new instance of the original type will be returned on the next resolution.
+    public func name(_ name: String) -> Self {
+        var mutable = self
+        mutable.name = name
+        return mutable
+    }
+    public func scope(_ scope: NewFactoryScope) -> Self {
+        var mutable = self
+        mutable.scope = scope
+        return mutable
+    }
     public func reset() {
-        //registration.reset()
+        container.registrations.reset(id: id)
     }
-
-    private let registration: AltRegistration<Void, T>
+    private var id: String {
+        "\(container).\(T.self).\(name)"
+    }
+    private let container: FactoryContainer
+    private let factory: () -> T
+    private var name: String = "*"
+    private var scope: NewFactoryScope?
 }
 
-private struct AltRegistration<P, T> {
+private struct NewRegistration<T> {}
 
-    let id: UUID = UUID()
-    let factory: (P) -> T
-
-    func resolve(_ p: P) -> T {
-        factory(p)
-    }
-
+public class NewFactoryScope {}
+public extension NewFactoryScope {
+    static var cached: NewFactoryScope = NewFactoryScope()
+    static var shared: NewFactoryScope = NewFactoryScope()
+    static var singleton: NewFactoryScope = NewFactoryScope()
 }
 
-class AltContainer1 {
-    static var shared = AltContainer1()
-}
-class AltContainer2 {
-    static var shared = AltContainer2()
-}
-
-extension AltContainer1 {
-    var constructedService: AltFactory<MyConstructedService> {
-        .init(MyConstructedService(service: self.supporting()) )
+public class Registrations {
+    fileprivate func resolve<T>(id: String, factory: () -> T) -> T {
+        defer { lock.unlock() }
+        lock.lock()
+        print("RESOLVING \(id)")
+        return registrations[id]?() as? T ?? factory()
     }
-    var supporting: AltFactory<MyServiceType> {
-        .init(MyService() )
+    fileprivate func register<T>(id: String, factory: @escaping () -> T) {
+        defer { lock.unlock() }
+        lock.lock()
+        registrations[id] = factory
     }
-}
-
-
-extension AltContainer2 {
-    var constructedService: AltFactory<MyConstructedService> {
-        .init(self, MyConstructedService(service: self.supporting()) )
+    fileprivate func reset(id: String) {
+        defer { lock.unlock() }
+        lock.lock()
+        registrations.removeValue(forKey: id)
     }
-    var supporting: AltFactory<MyServiceType> {
-        .init(self, MyService() )
-    }
+    internal var lock = NSRecursiveLock()
+    internal var registrations: [String:(() -> Any)] = [:]
 }
 
 
-extension Container {
-    static let constructedService = Factory {
-        MyConstructedService(service: supporting())
+
+
+public protocol FactoryContainer: AnyObject {
+    var registrations: Registrations { get }
+}
+
+extension FactoryContainer {
+    public func factory<T>(factory: @escaping () -> T) -> NewFactory<T> {
+        NewFactory(self, factory)
     }
-    static let supporting = Factory<MyServiceType> {
-        MyService()
+    public func container<T>(factory: @escaping () -> T) -> NewFactory<T> {
+        NewFactory(self, factory)
     }
 }
+
+
+
+public protocol InjectableContainer: FactoryContainer {
+    static var shared: Self { get }
+}
+
+public final class NewContainer: InjectableContainer {
+    public static var shared = NewContainer()
+    public var registrations: Registrations = Registrations()
+}
+
+extension NewContainer {
+    static var oldSchool = NewFactory<MyServiceType> { MyService() }
+        .scope(.shared)
+}
+
+
+extension NewContainer {
+    var service: NewFactory<MyServiceType> {
+        .init(self) { MyService() }
+    }
+    var cachedService: NewFactory<MyServiceType> {
+        .init(self) { MyService() }
+            .scope(.singleton)
+    }
+    var namedService: NewFactory<MyServiceType> {
+        .init(self) { MyService() }
+            .name("test")
+    }
+    var constructedService: NewFactory<MyConstructedService> {
+        .init(self) { MyConstructedService(service: self.service()) }
+    }
+    func parameterized(_ n: Int) -> NewFactory<ParameterService> {
+        .init(self) { ParameterService(count: n) }
+    }
+}
+
+
+
+
+public final class MyContainer: InjectableContainer {
+    public static var shared = MyContainer()
+    public var registrations: Registrations = Registrations()
+}
+
+extension MyContainer {
+    var anotherService: NewFactory<MyServiceType> {
+        factory { MyService() }
+    }
+}
+
+
+//public class PureContainer: NewFactoryContainer {
+//    public var manager = ContainerManager()
+//    lazy var anotherService = NewFactory<MyServiceType>(self) {
+//        MyService()
+//    }
+//    lazy var constructedService = NewFactory<MyConstructedService>(self) {
+//        MyConstructedService(service: self.anotherService())
+//    }
+//}
+
+
+@propertyWrapper public struct NewInjected<T> {
+    private var dependency: T
+    public init(_ keyPath: KeyPath<NewContainer, NewFactory<T>>) {
+        self.dependency = NewContainer.shared[keyPath: keyPath]()
+    }
+    public init<C:InjectableContainer>(_ keyPath: KeyPath<C, NewFactory<T>>) {
+        self.dependency = C.shared[keyPath: keyPath]()
+    }
+    public var wrappedValue: T {
+        get { return dependency }
+        mutating set { dependency = newValue }
+    }
+}
+
+
 
 class Test1 {
-    let service = AltContainer1.shared.constructedService()
-}
-class Test2 {
-    let service = Container.constructedService()
+
+    // Old factory static service Locator
+    let oldSchool = NewContainer.oldSchool()
+
+    // New shared service Locator
+    let service = NewContainer.shared.constructedService()
+
+    // Constructor initialized from container
+    let service2: MyConstructedService
+
+    // Lazy initialized from container
+    private let container: NewContainer
+    private lazy var service3: MyConstructedService = container.constructedService()
+    private lazy var service4: MyServiceType = container.service()
+
+    // Injected property from default shared container
+    @NewInjected(\.constructedService) var constructed
+
+    // Injected property from custom container
+    @NewInjected(\MyContainer.anotherService) var anotherService
+
+    // Constructor
+    init(container: NewContainer) {
+        // construct from container
+        service2 = container.constructedService()
+
+        // save container for lazy resolution
+        self.container = container
+
+        container.service.register { MockServiceN(8) }
+
+        print(constructed.text())
+        print(service.text())
+        print(service2.text())
+    }
+
 }
 

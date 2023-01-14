@@ -514,21 +514,14 @@ public protocol OptionalProtocol {
 }
 
 extension Optional: OptionalProtocol {
-    public var hasWrappedValue: Bool {
-        switch self {
-        case .none:
-            return false
-        case .some:
-            return true
-        }
+    @inlinable public var hasWrappedValue: Bool {
+        wrappedValue != nil
     }
-    public var wrappedValue: Any? {
-        switch self {
-        case .none:
-            return nil
-        case .some(let value):
+    @inlinable public var wrappedValue: Any? {
+        if case .some(let value) = self {
             return value
         }
+        return nil
     }
 }
 
