@@ -16,10 +16,12 @@ public class SimpleService {
 
 
 public protocol MyServiceType {
+    var id: UUID { get }
     func text() -> String
 }
 
 public class MyService: MyServiceType {
+    public let id = UUID()
     public func text() -> String {
         "Hello World!"
     }
@@ -27,18 +29,21 @@ public class MyService: MyServiceType {
 
 
 public class MockService1: MyServiceType {
+    public let id = UUID()
     public func text() -> String {
         "Mock World!"
     }
 }
 
 public class MockService2: MyServiceType {
+    public let id = UUID()
     public func text() -> String {
         "Mock Worlds!"
     }
 }
 
 public class MockServiceN: MyServiceType {
+    public let id = UUID()
     let n: Int
     internal init(_ n: Int) {
         self.n = n
@@ -49,7 +54,8 @@ public class MockServiceN: MyServiceType {
 }
 
 class ParameterService {
-    let count: Int
+    public let id = UUID()
+    public let count: Int
     init(count: Int) {
         self.count = count
     }
@@ -59,6 +65,8 @@ class ParameterService {
 }
 
 class MyConstructedService {
+
+    public let id = UUID()
 
     private let service: MyServiceType
 

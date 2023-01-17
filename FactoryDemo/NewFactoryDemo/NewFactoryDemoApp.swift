@@ -11,7 +11,6 @@ import SwiftUI
 struct NewFactoryDemoApp: App {
     var body: some Scene {
         WindowGroup {
-            let _ = Container.shared.service.register { MockServiceN(8) }
             ContentView()
         }
     }
