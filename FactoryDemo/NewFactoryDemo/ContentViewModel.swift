@@ -76,6 +76,8 @@ class ContentViewModel: ObservableObject {
         print(container.string1())
         print(container.string2())
 
+        let _ = MyContainer.staticTest()
+        
         // container.testCircularDependencies()
     }
 
