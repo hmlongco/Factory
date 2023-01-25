@@ -8,13 +8,14 @@
 import Foundation
 
 // Example of static Factory 1.0 registration
-extension Container {
-    static var oldSchool: Factory<MyServiceType> {
-        factory { MyService() }
-    }
-}
+//extension Container {
+//    static var oldSchool = Factory<MyServiceType> {
+//        MyService()
+//    }
+//}
 
-// Example of static Factory 2.0 registration, still not recommended.
+// Example of static Factory 2.0 registration, still not recommended as bound to a single container
+// and no longer works with @Injected property wrappers.
 extension Container {
     static var newSchool: Factory<MyServiceType> {
         factory { MyService() }
@@ -24,20 +25,32 @@ extension Container {
 // Example of basic registration in a Factory 2.0 container
 extension Container {
     var service: Factory<MyServiceType> {
+        Factory(self) { MyService() }
+    }
+}
+
+// Example of basic factory registration using convenience function
+extension Container {
+    var convenientService: Factory<MyServiceType> {
         factory { MyService() }
     }
 }
 
 // Examples of scoped services in a Factory 2.0 container
 extension Container {
+    var standardService: Factory<MyServiceType> {
+        factory { MyService() } // unique
+    }
     var cachedService: Factory<MyServiceType> {
-        factory(scope: .cached) { MyService() }
+        factory { MyService() }.cached
     }
     var singletonService: Factory<SimpleService> {
-        factory(scope: .singleton) { SimpleService() }
+        factory { SimpleService() }.singleton
     }
     var sharedService: Factory<MyServiceType> {
-        factory(scope: .shared) { MyService() }
+        factory { MyService() }
+            .decorator { print("DECORATING \($0.id)") }
+            .shared
     }
 }
 
@@ -73,7 +86,6 @@ extension Container {
     }
 }
 
-
 extension Scope {
     static let mine = Cached()
 }
@@ -82,7 +94,9 @@ extension Container: AutoRegistering {
     public func autoRegister() {
         service.register { MockServiceN(0) }
         cachedService.register { MockServiceN(2) }
-        // manager.decorator = { print("RESOLVING \(type(of: $0))") }
+        decorator {
+            print("RESOLVED \(type(of: $0))")
+        }
     }
 }
 
@@ -96,7 +110,8 @@ public final class MyContainer: SharedContainer {
         factory { MyService() }
     }
     var sample2: Factory<MyServiceType> {
-        factory(scope: .shared) { MyService() }
+        factory { MyService() }
+            .custom(scope: .mine)
     }
 
 }
@@ -150,15 +165,15 @@ class GraphDependencyClass {
 
 extension Container {
     var graphBase: Factory<GraphBaseClass> { factory { GraphBaseClass() } }
-    var graphDependency: Factory<GraphDependencyClass> { factory(scope: .graph) { GraphDependencyClass() } }
+    var graphDependency: Factory<GraphDependencyClass> { factory { GraphDependencyClass() }.graph }
 }
 
 // Static
 
 extension MyContainer {
     static var staticTest: Factory<MyServiceType> {
-        factory(scope: .mine) {
-            MyService()
-        }
+        factory { MyService() }
+            .decorator { print("STATIC \($0.id)") }
+            .shared
     }
 }

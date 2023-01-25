@@ -18,18 +18,21 @@ import Foundation
 ///
 /// extension Container {
 ///     var service: Factory<ServiceType> {
-///         factory { MyService() }
+///         Factory(self) { MyService() }
 ///     }
 /// }
 ///
-/// Inside the computed variable we build our Factory, providing a factory closure that creates an instance of our object when needed. The factory
-/// function creates our Factory for us, binding it to the current instance of its container. That Factory is then returned to the caller, usually
-/// to be evaluated (see `callAsFunction()` below).
+/// Inside the computed variable we build our Factory, providing it with a refernce to its container and also with a factory closure that
+/// creates an instance of our object when needed. That Factory is then returned to the caller, usually to be evaluated (see `callAsFunction()`
+/// below). Every time we resolve this factory we'll get a new, unique instance of our object.
 ///
-/// Every time we resolve this function we'll get a new, unique instance of our object. Factory also supports additional scopes we can use
-/// to manage our dependencies lifecycle, and those can be added to the definition when needed. (See `Scope`.)
+/// For convenience, containers also provide a `factory` function that will create the factory and do the binding for us.
 ///
-/// factory(scope: .shared) { MyService() }
+/// extension Container {
+///     var service: Factory<ServiceType> {
+///         factory { MyService() }
+///     }
+/// }
 ///
 /// Like SwftUI Views, Factory structs are lightweight and transitory. Ther're created when needed and then immediately discared once their purpose
 /// has been served.
@@ -43,11 +46,11 @@ public struct Factory<T> {
     ///   - scope: The cache (if any) used to manage the lifetime of the created object. Unique is the default. (no caching)
     ///   - key: Hidden value used to differentiate different instances of the same type in the same container.
     ///   - factory: A factory closure that produces an object of the desired type when required.
-    fileprivate init(container: SharedContainer, scope: Scope, key: String, _ factory: @escaping () -> T) {
+    public init(_ container: SharedContainer, key: String = #function, _ factory: @escaping () -> T) {
         self.id = "\(container.self).\(key)"
         self.container = container
         self.factory = TypedFactory(factory: factory)
-        self.scope = scope
+        self.scope = .unique
     }
 
 //    /// Deprecated initializer
@@ -94,14 +97,51 @@ public struct Factory<T> {
     }
 
     /// Internal id used to manage registrations and cached values. Usually looks something like "MyApp.Container.service".
-    internal var id: String
+    fileprivate var id: String
     /// A strong reference to the container supporting this Factory.
-    internal let container: SharedContainer
+    fileprivate let container: SharedContainer
     /// The originally registered factory closure used to produce an object of the desired type.
-    internal let factory: TypedFactory<T>
+    fileprivate let factory: TypedFactory<T>
     /// The scope responsible for managing the lifecycle of any objects created by this Factory.
-    internal var scope: Scope
+    fileprivate var scope: Scope
+    /// Decorator will be passed fully constructed instance for further configuration.
+    fileprivate var decorator: ((T) -> Void)?
 
+}
+
+// MARK: Factory Scope Helpers
+
+extension Factory {
+    /// Defines dependency scope to be cached
+    public var cached: Factory<T> {
+        map { $0.scope = .cached }
+    }
+    /// Defines dependency scope to be graph
+    public var graph: Factory<T> {
+        map { $0.scope = .graph }
+    }
+    /// Defines dependency scope to be shared
+    public var shared: Factory<T> {
+        map { $0.scope = .shared }
+    }
+    /// Defines dependency scope to be singleton
+    public var singleton: Factory<T> {
+        map { $0.scope = .singleton }
+    }
+    /// Defines dependency scope
+    public func custom(scope: Scope) -> Factory<T> {
+        map { $0.scope = scope }
+    }
+    /// Adds factory specific decorator
+    public func decorator(_ decorator: @escaping (_ instance: T) -> Void) -> Factory<T> {
+        map { $0.decorator = decorator }
+    }
+    /// Allows builder-style mutation of self
+    private func map (_ mutate: (inout Factory<T>) -> Void) -> Factory<T> {
+        var mutable = self
+        mutate(&mutable)
+        return mutable
+    }
 }
 
 // MARK: - Containers
@@ -112,32 +152,45 @@ public struct Factory<T> {
 ///
 /// SharedContainer defines the protocol all Containers must adopt.
 public protocol SharedContainer: AnyObject {
+
     /// Defines a single "shared" container for that container type.
     ///
     /// This container is used by the various @Injected property wrappers to resolve the keyPath to a given Factory. Care should be taken in
-    /// mixed environments where you're passing container references and using the @Injected property wrappers.
+    /// mixed environments where you're passing container references AND using the @Injected property wrappers.
     static var shared: Self { get }
+
     /// Defines the ContainerManager used to manage registrations, resolutions, and scope caching for that container. Ecapsulating the code in
     /// this fashion makes creating and using your own custom containers much simpler.
     var manager: ContainerManager { get set }
+
 }
 
-/// Defines factory providers for containers
+/// Defines the default factory providers for containers
 extension SharedContainer {
-    /// Creates and returns a Factory struct associated with to the current `shared` container. The default scope is `unique` unless otherwise
+
+    /// Creates and returns a Factory struct associated with the `shared` container for this class. The default scope is `unique` unless otherwise
     /// specified.
-    public static func factory<T>(scope: Scope = .unique, key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
-        Factory(container: shared, scope: scope, key: key, factory)
+    @inlinable public static func factory<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+        Factory(shared, key: "\(key).static)", factory)
     }
+
     /// Creates and returns a Factory struct associated with the current` container. The default scope is `unique` unless otherwise specified.
-    public func factory<T>(scope: Scope = .unique, key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
-        Factory(container: self, scope: scope, key: key, factory)
+    @inlinable public func factory<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+        Factory(self, key: key, factory)
     }
+
+    /// Defines a decorator for the container. This decorator will see every dependency resolved by this container.
+    public func decorator(_ decorator: ((Any) -> ())?) {
+        manager.decorator = decorator
+    }
+
 }
 
-/// Default "Convenience" Container
+/// The default "Convenience" Container
 public final class Container: SharedContainer {
+    // Define the default shared container.
     public static var shared = Container()
+    // Define the container's manager.
     public var manager = ContainerManager()
 }
 
@@ -192,6 +245,7 @@ public class ContainerManager {
         globalDependencyChain.removeLast()
 #endif
 
+        factory.decorator?(instance)
         decorator?(instance)
 
         return instance
@@ -229,8 +283,8 @@ public class ContainerManager {
         }
     }
 
-    /// Support closure allows all
-    public var decorator: ((Any) -> ())?
+    /// Support closure decorates all factory resolutions for this container.
+    internal var decorator: ((Any) -> ())?
 
     // Internals
     internal typealias FactoryMap = [String:AnyFactory]
@@ -639,57 +693,3 @@ private struct WeakBox: AnyBox {
 /// Variation of solution: https://stackoverflow.com/questions/32873212/unit-test-fatalerror-in-swift#
 internal var triggerFatalError = Swift.fatalError
 #endif
-
-/// Defines factory providers for containers
-// extension SharedContainer {
-    //    /// Defines the default factory scope builder for containers
-    //    public var scope: FactoryBuilder {
-    //        FactoryBuilder(container: self)
-    //    }
-    //    /// Defines the default static factory scope builder for containers
-    //    public static var scope: FactoryBuilder {
-    //        FactoryBuilder(container: shared)
-    //    }
-    //    public static var factory: FactoryBuilder {
-    //        FactoryBuilder(container: shared)
-    //    }
-    //    public var factory: FactoryBuilder {
-    //        FactoryBuilder(container: self)
-    //    }
-// }
-
-//// MARK: Container Factory Builders
-//
-///// Wraps a container and provides a base for Factory scope builder functionality.
-//public struct FactoryBuilder {
-//    fileprivate let container: SharedContainer
-//}
-//
-///// Factory scope builders
-//extension FactoryBuilder {
-//    /// Helper function to return a Factory bound to the current container and with .cached scope.
-//    public func cached<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
-//        Factory(container: container, scope: .cached, key: key, factory)
-//    }
-//    /// Helper function to return a Factory bound to the current container and with a custom scope.
-//    public func custom<T>(_ scope: Scope, key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
-//        Factory(container: container, scope: scope, key: key, factory)
-//    }
-//    /// Helper function to return a Factory bound to the current container and with .graph scope.
-//    public func graph<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
-//        Factory(container: container, scope: .graph, key: key, factory)
-//    }
-//    /// Helper function to return a Factory bound to the current container and with .shared scope.
-//    public func shared<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
-//        Factory(container: container, scope: .shared, key: key, factory)
-//    }
-//    /// Helper function to return a Factory bound to the current container and with .singleton scope.
-//    public func singleton<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
-//        Factory(container: container, scope: .singleton, key: key, factory)
-//    }
-//    /// Helper function to return a Factory bound to the current container and with .unique scope.
-//    public func unique<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
-//        Factory(container: container, scope: .unique, key: key, factory)
-//    }
-//}
-

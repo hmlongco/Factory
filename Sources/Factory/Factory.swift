@@ -1,244 +1,403 @@
 //
-// Factory.swift
+//  Factory.swift
+//  Factory
 //
-// GitHub Repo and Documentation: https://github.com/hmlongco/Factory
-//
-// Copyright ©2022 Michael Long. All rights reserved.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
+//  Created by Michael Long on 1/15/23.
 //
 
 import Foundation
 
-/// Factory manages the dependency injection process for a given object or service.
-public struct Factory<T> {
+// MARK: - The Factory
 
-    /// Initializes with factory closure that returns a new instance of the desired type. The scope defines the lifetime of that instance.
-    public init(scope: SharedContainer.Scope? = .none, factory: @escaping () -> T) {
-        self.registration = Registration<Void, T>(id: UUID(), factory: factory, scope: scope)
+/// A Factory manages the dependency injection process for a specific object or service and produces an object of the desired type
+/// when required. This may be a brand new instance or Factory may return a previously cached value from the specified scope.
+///
+/// Let's define a Factory that returns an instance of `ServiceType`. To do that we need to extend a Factory `Container` and within
+/// that container we define a new computed variable of type `Factory<ServiceType>`. The type must be explicity defined, and is usually a
+/// protocol to which the returned dependency conforms.
+///
+/// extension Container {
+///     var service: Factory<ServiceType> {
+///         Factory(self) { MyService() }
+///     }
+/// }
+///
+/// Inside the computed variable we build our Factory, providing it with a refernce to its container and also with a factory closure that
+/// creates an instance of our object when needed. That Factory is then returned to the caller, usually to be evaluated (see `callAsFunction()`
+/// below). Every time we resolve this factory we'll get a new, unique instance of our object.
+///
+/// For convenience, containers also provide a `factory` function that will create the factory and do the binding for us.
+///
+/// extension Container {
+///     var service: Factory<ServiceType> {
+///         factory { MyService() }
+///     }
+/// }
+///
+/// Like SwftUI Views, Factory structs are lightweight and transitory. Ther're created when needed and then immediately discared once their purpose
+/// has been served.
+public struct Factory<T>: FactoryModifing {
+
+    /// Private initializer which creates a new Factory capable of managing dependencies of the desired type. Use a container's `factory` function
+    /// to create and return an instance of Factory.
+    ///
+    /// - Parameters:
+    ///   - container: The bound container that manages registrations and scope caching for this Factory.
+    ///   - scope: The cache (if any) used to manage the lifetime of the created object. Unique is the default. (no caching)
+    ///   - key: Hidden value used to differentiate different instances of the same type in the same container.
+    ///   - factory: A factory closure that produces an object of the desired type when required.
+    public init(_ container: SharedContainer, key: String = #function, _ factory: @escaping () -> T) {
+        self.registration = Registration<Void,T>(id: "\(container.self).\(key)", container: container, factory: factory)
     }
 
-    /// Resolves and returns an instance of the desired object type. This may be a new instance or one that was created previously and then cached,
-    /// depending on whether or not a scope was specified when the factory was created.
+    //    /// Deprecated initializer
+    //    @available(*, deprecated, message: "Container method syntax preferred")
+    //    public init(scope: Scope = .unique, _ factory: @escaping () -> T) {
+    //        self.id = "\(Container.shared.self).\(UUID().uuidString)"
+    //        self.container = Container.shared
+    //        self.factory = TypedFactory(factory: factory)
+    //        self.scope = scope
+    //    }
+
+    /// Evaluates the factory and returns an object or service of the desired type. The resolved instance may be brand new or Factory may
+    /// return a cached value from the specified scope.
     ///
-    /// Note return type could of T could still be <T?> depending on original Factory specification.
+    /// let service = container.service()
+    ///
+    /// - Returns: An object or service of the desired type.
     public func callAsFunction() -> T {
-        registration.resolve(())
+        registration.container.manager.resolve(registration, with: ())
     }
 
-    /// Registers a new factory that will be used to create and return an instance of the desired object type.
+    /// Registers a new factory closure capable of producing an object or service of the desired type. This factory overrides the original
+    /// factory closure and clears the associated scope so that the next time this factory is resolved Factory will evaluate the new
+    /// closure and return an instance of the newly registered object instead.
     ///
-    /// This registration overrides the original factory and its result will be returned on all new object resolutions. Registering a new
-    /// factory also clears the previous instance from the associated scope.
+    /// container.service.register {
+    ///     SomeService()
+    /// }
     ///
-    /// All registrations are stored in SharedContainer.Registrations.
+    /// This is how default functionality is overriden in order to change the nature of the system at runtime, and is the primary mechanism
+    /// used to provide mocks and testing doubles.
+    ///
+    /// The original factory closure is preserved, and may be restored by resetting the Factory to its original state.
+    ///
+    /// - Parameter factory: A new factory closure that produces an object of the desired type when needed.
     public func register(factory: @escaping () -> T) {
-        registration.register(factory: factory)
+        registration.container.manager.register(id: registration.id, factory: TypedFactory<Void,T>(factory: factory))
     }
 
-    /// Deletes any registered factory override and resets this Factory to use the factory closure specified during initialization. Also
-    /// resets the scope so that a new instance of the original type will be returned on the next resolution.
+    /// Internal parameters fort his Factory including id, container, the factory closure itself, the scope,
+    /// and others.
+    internal var registration: Registration<Void,T>
+
+}
+
+// MARK: ParameterFactory
+
+/// Factory capable of taking parameters at runtime
+public struct ParameterFactory<P,T>: FactoryModifing {
+
+    /// Initializes a factory capable of taking parameters at runtime.
+    public init(_ container: SharedContainer, key: String = #function, _ factory: @escaping (P) -> T) {
+        self.registration = Registration<P,T>(id: "\(container.self).\(key)", container: container, factory: factory)
+    }
+
+    /// Resolves a factory capable of taking parameters at runtime.
+    public func callAsFunction(_ parameters: P) -> T {
+        registration.container.manager.resolve(registration, with: parameters)
+    }
+
+    /// Registers a new factory capable of taking parameters at runtime.
+    public func register(factory: @escaping (P) -> T) {
+        registration.container.manager.register(id: registration.id, factory: TypedFactory<P,T>(factory: factory))
+    }
+
+    /// Required registrations
+    internal var registration: Registration<P,T>
+
+}
+
+// MARK: Factory Modifiers
+
+extension FactoryModifing {
+
+    /// Defines dependency scope to be cached
+    public var cached: Self {
+        map { $0.registration.scope = .cached }
+    }
+    /// Defines dependency scope to be graph
+    public var graph: Self {
+        map { $0.registration.scope = .graph }
+    }
+    /// Defines dependency scope to be shared
+    public var shared: Self {
+        map { $0.registration.scope = .shared }
+    }
+    /// Defines dependency scope to be singleton
+    public var singleton: Self {
+        map { $0.registration.scope = .singleton }
+    }
+    /// Defines dependency scope
+    public func custom(scope: Scope) -> Self {
+        map { $0.registration.scope = scope }
+    }
+
+    /// Resets the Factory's behavior to its original state, removing any registraions and clearing any cached items from the specified scope.
+    /// - Parameter options: options description
     public func reset(_ options: FactoryResetOptions = .all) {
-        registration.reset(options)
+        registration.container.manager.reset(options: options, for: registration.id)
     }
 
-    private let registration: Registration<Void, T>
+    /// Adds factory specific decorator
+    public func decorator(_ decorator: @escaping (_ instance: T) -> Void) -> Self {
+        map { $0.registration.decorator = decorator }
+    }
+
 }
 
-/// ParameterFactory manages the dependency injection process for a given object or service that needs one or more arguments
-/// passed to it during instantiation.
-public struct ParameterFactory<P, T> {
+// MARK: - Containers
 
-    /// Initializes with factory closure that returns a new instance of the desired type. The scope defines the lifetime of that instance.
-    public init(scope: SharedContainer.Scope? = .none, factory: @escaping (_ params: P) -> T) {
-        self.registration = Registration<P, T>(id: UUID(), factory: factory, scope: scope)
-    }
+/// Containers are used by Factory to manage object creation, object resolution, and object lifecycles in general.
+///
+/// Registrations and scope caches will persist as long as the associated container remains in scope.
+///
+/// SharedContainer defines the protocol all Containers must adopt.
+public protocol SharedContainer: AnyObject {
 
-    /// Resolves and returns an instance of the desired object type. This may be a new instance or one that was created previously and then cached,
-    /// depending on whether or not a scope was specified when the factory was created.
+    /// Defines a single "shared" container for that container type.
     ///
-    /// Note return type could of T could still be <T?> depending on original Factory specification.
-    public func callAsFunction(_ params: P) -> T {
-        registration.resolve(params)
-    }
+    /// This container is used by the various @Injected property wrappers to resolve the keyPath to a given Factory. Care should be taken in
+    /// mixed environments where you're passing container references AND using the @Injected property wrappers.
+    static var shared: Self { get }
 
-    /// Registers a new factory that will be used to create and return an instance of the desired object type.
-    ///
-    /// This registration overrides the original factory and its result will be returned on all new object resolutions. Registering a new
-    /// factory also clears the previous instance from the associated scope.
-    ///
-    /// All registered factories are stored in SharedContainer.Registrations.
-    public func register(factory: @escaping (_ params: P) -> T) {
-        registration.register(factory: factory)
-    }
+    /// Defines the ContainerManager used to manage registrations, resolutions, and scope caching for that container. Ecapsulating the code in
+    /// this fashion makes creating and using your own custom containers much simpler.
+    var manager: ContainerManager { get set }
 
-    /// Deletes any registered factory override and resets this Factory to use the factory closure specified during initialization. Also
-    /// resets the scope so that a new instance of the original type will be returned on the next resolution.
-    public func reset(_ options: FactoryResetOptions = .all) {
-        registration.reset(options)
-    }
-
-    private let registration: Registration<P, T>
 }
 
-/// Empty convenience class for user dependencies.
-public class Container: SharedContainer {
+/// Defines the default factory providers for containers
+extension SharedContainer {
+
+    /// Creates and returns a Factory struct associated with the `shared` container for this class. The default scope is `unique` unless otherwise
+    /// specified.
+    @inlinable public static func factory<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+        Factory(shared, key: "\(key).static)", factory)
+    }
+
+    /// Creates and returns a Factory struct associated with the current` container. The default scope is `unique` unless otherwise specified.
+    @inlinable public func factory<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+        Factory(self, key: key, factory)
+    }
+
+    /// Defines a decorator for the container. This decorator will see every dependency resolved by this container.
+    public func decorator(_ decorator: ((Any) -> ())?) {
+        manager.decorator = decorator
+    }
+
 }
 
-/// Base class for all containers.
-open class SharedContainer {
+/// The default "Convenience" Container
+public final class Container: SharedContainer {
+    // Define the default shared container.
+    public static var shared = Container()
+    // Define the container's manager.
+    public var manager = ContainerManager()
+}
 
-    public class Registrations {
+// MARK: - ContainerManager
 
-        /// Pushes the current set of registration overrides onto a stack. Useful when testing when you want to push the current set of registrations,
-        /// add your own, test, then pop the stack to restore the world to its original state.
-        public static func push() {
-            defer { globalRecursiveLock.unlock() }
-            globalRecursiveLock.lock()
-            stack.append(registrations)
+/// ContainerManager encapsulates and manages the registration, resolution, and scope caching mechanisms for a given container.
+public class ContainerManager {
+
+    /// Public initializer
+    public init() {}
+
+    /// Resolves a Factory, returning an instance of the desired type. All roads lead here.
+    ///
+    /// - Parameter factory: Factory wanting resolution.
+    /// - Returns: Instance of the desired type.
+    internal func resolve<P,T>(_ registration: Registration<P,T>, with parameters: P) -> T {
+        defer { globalRecursiveLock.unlock() }
+        globalRecursiveLock.lock()
+
+        if autoRegistrationCheck {
+            (registration.container as? AutoRegistering)?.autoRegister()
+            autoRegistrationCheck = false
         }
 
-        /// Pops a previously pushed registration stack. Does nothing if stack is empty.
-        public static func pop() {
-            defer { globalRecursiveLock.unlock() }
-            globalRecursiveLock.lock()
-            if let registrations = stack.popLast() {
-                self.registrations = registrations
-            }
+        let current: (P) -> T = (registrations[registration.id] as? TypedFactory<P,T>)?.factory ?? registration.factory
+
+#if DEBUG
+        let typeComponents = String(describing: T.self).components(separatedBy: CharacterSet(charactersIn: "<>"))
+        let typeName = typeComponents.count > 1 ? typeComponents[1] : typeComponents[0]
+        let typeIndex = globalDependencyChain.firstIndex(where: { $0 == typeName })
+        globalDependencyChain.append(typeName)
+        if let index = typeIndex {
+            let message = "circular dependency chain - \(globalDependencyChain[index...].joined(separator: " > "))"
+            globalDependencyChain = []
+            globalGraphResolutionDepth = 0
+            globalRecursiveLock = NSRecursiveLock()
+            triggerFatalError(message, #file, #line)
+        }
+#endif
+
+        // print("RESOLVING \(factory.id)")
+
+        globalGraphResolutionDepth += 1
+        let instance = registration.scope?.resolve(using: cache, id: registration.id, factory: { current(parameters) }) ?? current(parameters)
+        globalGraphResolutionDepth -= 1
+
+        if globalGraphResolutionDepth == 0 {
+            Scope.graph.cache.reset()
         }
 
-        /// Resets and deletes all registered factory overrides.
-        public static func reset() {
-            defer { globalRecursiveLock.unlock() }
-            globalRecursiveLock.lock()
-            registrations = [:]
-        }
+#if DEBUG
+        globalDependencyChain.removeLast()
+#endif
 
-        /// Public query mechanism for checking if registrations exist
-        public static var isEmpty: Bool {
-            defer { globalRecursiveLock.unlock() }
-            globalRecursiveLock.lock()
-            return registrations.isEmpty
-        }
+        registration.decorator?(instance)
+        decorator?(instance)
 
-        /// Internal registration function used by Factory
-        fileprivate static func register(id: UUID, factory: AnyFactory) {
-            registrations[id] = factory
-        }
+        return instance
+    }
 
-        /// Internal resolution function used by Factory
-        fileprivate static func factory(for id: UUID) -> AnyFactory? {
-            return registrations[id]
-        }
+    /// Registers a new factory closure capable of producing an object or service of the desired type. This factory overrides the original factory and
+    /// the next time this factory is resolved Factory will evaluate the newly registered factory instead.
+    /// - Parameters:
+    ///   - id: ID of associated Factory.
+    ///   - factory: Factory closure called to create a new instance of the service when needed.
+    internal func register(id: String, factory: AnyFactory) {
+        defer { globalRecursiveLock.unlock() }
+        globalRecursiveLock.lock()
+        registrations[id] = factory
+        cache.removeValue(forKey: id)
+    }
 
-        /// Internal reset function used by Factory
-        fileprivate static func reset(for id: UUID) {
+    /// Support function resets the behavior for a specific Factory to its original state, removing any assocatioed registraions and clearing
+    /// any cached instances from the specified scope.
+    /// - Parameters:
+    ///   - options: Reset option: .all, .registration, .scope, .none
+    ///   - id: ID of item to remove from the appropriate cache.
+    internal func reset(options: FactoryResetOptions, for id: String) {
+        guard options != .none else { return }
+        defer { globalRecursiveLock.unlock() }
+        globalRecursiveLock.lock()
+        switch options {
+        case .registration:
             registrations.removeValue(forKey: id)
-        }
-
-        private static var registrations: [UUID: AnyFactory] = .init(minimumCapacity: 64)
-        private static var stack: [[UUID: AnyFactory]] = []
-
-    }
-
-    /// Defines an abstract base implementation of a scope cache.
-    public class Scope {
-
-        fileprivate init() {
-            defer { globalRecursiveLock.unlock() }
-            globalRecursiveLock.lock()
-            Self.scopes.append(self)
-        }
-
-        /// Resets the cache. Any factory using this cache will return a new instance after the cache is reset.
-        public func reset() {
-            defer { globalRecursiveLock.unlock() }
-            globalRecursiveLock.lock()
-            clearCacheIfNeeded()
-        }
-
-        /// Public query mechanism for cache empty
-        public var isEmpty: Bool {
-            defer { globalRecursiveLock.unlock() }
-            globalRecursiveLock.lock()
-            return cache.isEmpty
-        }
-
-        /// Internal cache resolution function used by Factory Registration
-        internal func resolve<T>(id: UUID, factory: () -> T) -> T {
-            if let cached: T = cached(id: id) {
-                return cached
-            }
-            let instance: T = factory()
-            if let box = box(instance) {
-                cache[id] = box
-            }
-            return instance
-        }
-
-        /// Internal function returns cached value if exists
-        fileprivate func cached<T>(id: UUID) -> T? {
-            if let box = cache[id] as? StrongBox<T> {
-                return box.boxed
-            }
-            return nil
-        }
-
-        /// Internal function correctly boxes cache value depending upon scope type
-        fileprivate func box<T>(_ instance: T) -> AnyBox? {
-            if let optional = instance as? OptionalProtocol {
-                return optional.hasWrappedValue ? StrongBox<T>(boxed: instance) : nil
-            }
-            return StrongBox<T>(boxed: instance)
-        }
-
-        /// Internal reset function used by Factory
-        internal final func reset(for id: UUID) {
+        case .scope:
+            cache.removeValue(forKey: id)
+        default:
+            registrations.removeValue(forKey: id)
             cache.removeValue(forKey: id)
         }
-
-        /// Internal function to clear cache if needed
-        internal func clearCacheIfNeeded() {
-            if !cache.isEmpty {
-                cache = [:]
-            }
-        }
-
-        private var cache: [UUID: AnyBox] = .init(minimumCapacity: 64)
-
     }
 
-    /// Defines decorator functions that will be called when a factory is resolved.
-    public struct Decorator {
+    /// Support closure decorates all factory resolutions for this container.
+    internal var decorator: ((Any) -> ())?
 
-        /// Decorator function called when a factory registration is resolved. Useful for logging.
-        public static var decorate: ((_ dependency: Any) -> Void)?
+    // Internals
+    internal typealias FactoryMap = [String:AnyFactory]
 
+    internal var autoRegistrationCheck = true
+    internal lazy var registrations: FactoryMap = .init(minimumCapacity: 32)
+    internal lazy var cache: Scope.Cache = Scope.Cache()
+    internal lazy var stack: [(FactoryMap, Scope.Cache.CacheMap, Bool)] = []
+}
+
+
+extension ContainerManager {
+
+    /// Resets the Container to its original state, removing all registrations and clearing the scope cache.
+    public func reset(options: FactoryResetOptions = .all) {
+        guard options != .none else {
+            return
+        }
+        defer { globalRecursiveLock.unlock() }
+        globalRecursiveLock.lock()
+        switch options {
+        case .registration:
+            registrations = [:]
+        case .scope:
+            cache.reset()
+        default:
+            registrations = [:]
+            cache.reset()
+        }
+    }
+
+    /// Clears any cached values associated with a specific scope.
+    public func reset(scope: Scope) {
+        defer { globalRecursiveLock.unlock() }
+        globalRecursiveLock.lock()
+        cache.reset(scope: scope)
+    }
+
+    /// Test function pushes the current registration and cache states
+    public func push() {
+        defer { globalRecursiveLock.unlock() }
+        globalRecursiveLock.lock()
+        stack.append((registrations, cache.cache, autoRegistrationCheck))
+    }
+
+    /// Test function pops and restores a previously pushed registration and cache state
+    public func pop() {
+        defer { globalRecursiveLock.unlock() }
+        globalRecursiveLock.lock()
+        if let state = stack.popLast() {
+            registrations = state.0
+            cache.cache = state.1
+            autoRegistrationCheck = state.2
+        }
     }
 
 }
 
-extension SharedContainer.Scope {
+// MARK: - Scopes
+
+public class Scope {
+
+    fileprivate init() {}
+
+    /// Internal function returns cached value if it exists. Otherwise it creates a new instance and caches that value for later reference.
+    internal func resolve<T>(using cache: Cache, id: String, factory: @escaping () -> T) -> T {
+        if let cached: T = unboxed(box: cache.value(forKey: id)) {
+            return cached
+        }
+        let instance = factory()
+        if let box = box(instance) {
+            cache.set(value: box, forKey: id)
+        }
+        return instance
+    }
+
+    /// Internal function returns unboxed value if it exists
+    fileprivate func unboxed<T>(box: AnyBox?) -> T? {
+        if let box = box as? StrongBox<T> {
+            return box.boxed
+        }
+        return nil
+    }
+
+    /// Internal function correctly boxes value depending upon scope type
+    fileprivate func box<T>(_ instance: T) -> AnyBox? {
+        if let optional = instance as? OptionalProtocol {
+            return optional.hasWrappedValue ? StrongBox<T>(scopeID: scopeID, boxed: instance) : nil
+        }
+        return StrongBox<T>(scopeID: scopeID, boxed: instance)
+    }
+
+    internal let scopeID: UUID = UUID()
+
+}
+
+extension Scope {
 
     /// Defines a cached scope. The same instance will be returned by the factory until the cache is reset.
     public static let cached = Cached()
-    public final class Cached: SharedContainer.Scope {
+    public final class Cached: Scope {
         public override init() {
             super.init()
         }
@@ -248,21 +407,27 @@ extension SharedContainer.Scope {
     ///
     /// This scope is managed and cleared by the main resolution function at the end of each resolution cycle.
     public static let graph = Graph()
-    public final class Graph: SharedContainer.Scope {
+    public final class Graph: Scope {
         public override init() {
             super.init()
         }
+        internal override func resolve<T>(using cache: Cache, id: String, factory: @escaping () -> T) -> T {
+            // ignores passed cache
+            return super.resolve(using: self.cache, id: id, factory: factory)
+        }
+        /// Private shared cache
+        internal var cache = Cache()
     }
 
     /// Defines a shared (weak) scope. The same instance will be returned by the factory as long as someone maintains a strong reference.
     public static let shared = Shared()
-    public final class Shared: SharedContainer.Scope {
+    public final class Shared: Scope {
         public override init() {
             super.init()
         }
         /// Internal function returns cached value if exists
-        internal override func cached<T>(id: UUID) -> T? {
-            if let box = cache[id] as? WeakBox, let instance = box.boxed as? T {
+        fileprivate override func unboxed<T>(box: AnyBox?) -> T? {
+            if let box = box as? WeakBox, let instance = box.boxed as? T {
                 if let optional = instance as? OptionalProtocol {
                     if optional.hasWrappedValue {
                         return instance
@@ -277,10 +442,10 @@ extension SharedContainer.Scope {
         fileprivate override func box<T>(_ instance: T) -> AnyBox? {
             if let optional = instance as? OptionalProtocol {
                 if let unwrapped = optional.wrappedValue, type(of: unwrapped) is AnyObject.Type {
-                    return WeakBox(boxed: unwrapped as AnyObject)
+                    return WeakBox(scopeID: scopeID, boxed: unwrapped as AnyObject)
                 }
             } else if type(of: instance as Any) is AnyObject.Type {
-                return WeakBox(boxed: instance as AnyObject)
+                return WeakBox(scopeID: scopeID, boxed: instance as AnyObject)
             }
             return nil
         }
@@ -288,58 +453,107 @@ extension SharedContainer.Scope {
 
     /// Defines the singleton scope. The same instance will always be returned by the factory.
     public static let singleton = Singleton()
-    public final class Singleton: SharedContainer.Scope {
+    public final class Singleton: Scope {
         public override init() {
             super.init()
         }
     }
 
-    /// Resets all scope caches.
-    public static func reset(includingSingletons: Bool = false) {
-        defer { globalRecursiveLock.unlock() }
-        globalRecursiveLock.lock()
-        Self.scopes.forEach {
-            if !($0 is Singleton) || includingSingletons {
-                $0.clearCacheIfNeeded()
-            }
-        }
-    }
-
-    private static var scopes: [SharedContainer.Scope] = []
+    /// Defines an unique scope. Which is no scope. Without a scope cache a new instance will always be
+    /// returned by the factory.
+    public static let unique: Scope? = nil
 
 }
 
-#if swift(>=5.1)
-/// Convenience property wrapper takes a factory and creates an instance of the desired type.
-@propertyWrapper public struct Injected<T> {
-    private var factory: Factory<T>
-    private var dependency: T
-    public init(_ factory: Factory<T>) {
-        self.factory = factory
-        self.dependency = factory()
+extension Scope {
+
+    internal class Cache {
+
+        @inlinable func value(forKey key: String) -> AnyBox? {
+            cache[key]
+        }
+        @inlinable func set(value: AnyBox, forKey key: String)  {
+            cache[key] = value
+        }
+        @inlinable func removeValue(forKey key: String) {
+            cache.removeValue(forKey: key)
+        }
+        /// Internal function to clear cache if needed
+        @inlinable func reset() {
+            if !cache.isEmpty {
+                cache = [:]
+            }
+        }
+        internal func isEmpty(scope: Scope) -> Bool {
+            cache.filter { $1.scopeID == scope.scopeID }.isEmpty
+        }
+        internal func reset(scope: Scope) {
+            cache = cache.filter { $1.scopeID != scope.scopeID }
+        }
+        typealias CacheMap = [String:AnyBox]
+        var cache: [String:AnyBox] = .init(minimumCapacity: 32)
     }
+
+}
+
+/// MARK: - Automatic registrations
+
+public protocol AutoRegistering {
+    func autoRegister()
+}
+
+// MARK: - Property wrappers
+
+#if swift(>=5.1)
+
+/// Convenience property wrapper takes a factory and resolves an instance of the desired type.
+/// Property wrapper keyPaths resolve to the "shared" container required for each Container type.
+@propertyWrapper public struct Injected<T> {
+
+    private var dependency: T
+
+    /// Initializes the property wrapper. The dependency is resolved on initialization.
+    /// - Parameter keyPath: KeyPath to a Factory on the default Container.
+    public init(_ keyPath: KeyPath<Container, Factory<T>>) {
+        self.dependency = Container.shared[keyPath: keyPath]()
+    }
+
+    /// Initializes the property wrapper. The dependency is resolved on initialization.
+    /// - Parameter keyPath: KeyPath to a Factory on the specfied Container.
+    public init<C:SharedContainer>(_ keyPath: KeyPath<C, Factory<T>>) {
+        self.dependency = C.shared[keyPath: keyPath]()
+    }
+
+    /// Manages the wrapped dependency.
     public var wrappedValue: T {
         get { return dependency }
         mutating set { dependency = newValue }
     }
-    public var projectedValue: Injected<T> {
-        get { return self }
-        mutating set { self = newValue }
-    }
-    public mutating func resolve(reset options: FactoryResetOptions = .none) {
-        factory.reset(options)
-        dependency = factory()
-    }
 }
 
-/// Convenience property wrapper takes a factory and creates an instance of the desired type the first time the wrapped value is requested.
+/// Convenience property wrapper takes a factory and resolves an instance of the desired type the first time the wrapped value is requested.
+///
+/// Note that LazyInjected maintains a reference to the Factory, and, as such, to the Factory's Container. This means that Container will never
+/// go out of scope as long as this property wrapper exists.
 @propertyWrapper public struct LazyInjected<T> {
+
     private var factory: Factory<T>
     private var dependency: T!
     private var initialize = true
-    public init(_ factory: Factory<T>) {
-        self.factory = factory
+
+    /// Initializes the property wrapper. The dependency isn't resolved until the wrapped value is accessed for the first time.
+    /// - Parameter keyPath: KeyPath to a Factory on the default Container.
+    public init(_ keyPath: KeyPath<Container, Factory<T>>) {
+        self.factory = Container.shared[keyPath: keyPath]
     }
+
+    /// Initializes the property wrapper. The dependency isn't resolved until the wrapped value is accessed for the first time.
+    /// - Parameter keyPath: KeyPath to a Factory on the specfied Container.
+    public init<C:SharedContainer>(_ keyPath: KeyPath<C, Factory<T>>) {
+        self.factory = C.shared[keyPath: keyPath]
+    }
+
+    /// Manages the wrapped dependency, which is resolved when this value is accessed for the first time.
     public var wrappedValue: T {
         mutating get {
             if initialize {
@@ -351,10 +565,14 @@ extension SharedContainer.Scope {
             dependency = newValue
         }
     }
+
+    /// Unwraps the property wrapper granting access to the resolve/reset function.
     public var projectedValue: LazyInjected<T> {
         get { return self }
         mutating set { self = newValue }
     }
+
+    /// Allows the user to force a Factory resolution.
     public mutating func resolve(reset options: FactoryResetOptions = .none) {
         factory.reset(options)
         dependency = factory()
@@ -362,13 +580,30 @@ extension SharedContainer.Scope {
     }
 }
 
+/// Convenience property wrapper takes a factory and resolves an instance of the desired type the first time the wrapped value is requested. This
+/// wrapper maintains a weak reference to the object in question, so it must exist elsewhere.
+///
+/// Note that WeakLazyInjected maintains a reference to the Factory, and, as such, to the Factory's Container. This means that Container will never
+/// go out of scope as long as this property wrapper exists.
 @propertyWrapper public struct WeakLazyInjected<T> {
+
     private var factory: Factory<T>
     private weak var dependency: AnyObject?
     private var initialize = true
-    public init(_ factory: Factory<T>) {
-        self.factory = factory
+
+    /// Initializes the property wrapper. The dependency isn't resolved until the wrapped value is accessed for the first time.
+    /// - Parameter keyPath: KeyPath to a Factory on the default Container.
+    public init(_ keyPath: KeyPath<Container, Factory<T>>) {
+        self.factory = Container.shared[keyPath: keyPath]
     }
+
+    /// Initializes the property wrapper. The dependency isn't resolved until the wrapped value is accessed for the first time.
+    /// - Parameter keyPath: KeyPath to a Factory on the specfied Container.
+    public init<C:SharedContainer>(_ keyPath: KeyPath<C, Factory<T>>) {
+        self.factory = C.shared[keyPath: keyPath]
+    }
+
+    /// Manages the wrapped dependency, which is resolved when this value is accessed for the first time.
     public var wrappedValue: T? {
         mutating get {
             if initialize {
@@ -380,10 +615,14 @@ extension SharedContainer.Scope {
             dependency = newValue as AnyObject
         }
     }
+
+    /// Unwraps the property wrapper granting access to the resolve/reset function.
     public var projectedValue: WeakLazyInjected<T> {
         get { return self }
         mutating set { self = newValue }
     }
+
+    /// Allows the user to force a Factory resolution.
     public mutating func resolve(reset options: FactoryResetOptions = .none) {
         factory.reset(options)
         dependency = factory() as AnyObject
@@ -393,101 +632,6 @@ extension SharedContainer.Scope {
 
 #endif
 
-/// Enable automatic registrations
-public protocol AutoRegistering {
-    static func registerAllServices()
-}
-
-extension Container {
-    /// Statically allocated var performs automatic registration check one time and one time only.
-    fileprivate static var autoRegistrationCheck: Void  = {
-        (Container.self as? AutoRegistering.Type)?.registerAllServices()
-    }()
-}
-
-/// Internal box protocol for factories
-private protocol AnyFactory {}
-
-/// Typed factory container
-private struct TypedFactory<P, T>: AnyFactory {
-    let factory: (P) -> T
-}
-
-/// Internal registration manager for factories.
-private struct Registration<P, T> {
-
-    let id: UUID
-    let factory: (P) -> T
-    let scope: SharedContainer.Scope?
-
-    /// Resolves registration returning cached value from scope or new instance from factory. This is pretty much the heart of Factory.
-    func resolve(_ params: P) -> T {
-        defer { globalRecursiveLock.unlock() }
-        globalRecursiveLock.lock()
-
-        let _ = Container.autoRegistrationCheck
-        
-        let currentFactory: (P) -> T = (SharedContainer.Registrations.factory(for: id) as? TypedFactory<P, T>)?.factory ?? factory
-
-        #if DEBUG
-        let typeComponents = String(describing: T.self).components(separatedBy: CharacterSet(charactersIn: "<>"))
-        let typeName = typeComponents.count > 1 ? typeComponents[1] : typeComponents[0]
-        let typeIndex = globalDependencyChain.firstIndex(where: { $0 == typeName })
-        globalDependencyChain.append(typeName)
-        if let index = typeIndex {
-            let message = "circular dependency chain - \(globalDependencyChain[index...].joined(separator: " > "))"
-            globalDependencyChain = []
-            globalGraphResolutionDepth = 0
-            globalRecursiveLock = NSRecursiveLock()
-            triggerFatalError(message, #file, #line)
-        }
-        #endif
-
-        globalGraphResolutionDepth += 1
-        let instance: T = scope?.resolve(id: id, factory: { currentFactory(params) }) ?? currentFactory(params)
-        globalGraphResolutionDepth -= 1
-
-        if globalGraphResolutionDepth == 0 {
-            SharedContainer.Scope.graph.clearCacheIfNeeded()
-        }
-
-        #if DEBUG
-        globalDependencyChain.removeLast()
-        #endif
-
-        SharedContainer.Decorator.decorate?(instance)
-
-        return instance
-    }
-
-    /// Registers a factory override and resets cache.
-    func register(factory: @escaping (_ params: P) -> T) {
-        defer { globalRecursiveLock.unlock() }
-        globalRecursiveLock.lock()
-        SharedContainer.Registrations.register(id: id, factory: TypedFactory<P, T>(factory: factory))
-        scope?.reset(for: id)
-    }
-
-    /// Removes a factory override and resets cache.
-    func reset(_ options: FactoryResetOptions) {
-        guard options != .none else {
-            return
-        }
-        defer { globalRecursiveLock.unlock() }
-        globalRecursiveLock.lock()
-        switch options {
-        case .registration:
-            SharedContainer.Registrations.reset(for: id)
-        case .scope:
-            scope?.reset(for: id)
-        default:
-            SharedContainer.Registrations.reset(for: id)
-            scope?.reset(for: id)
-        }
-    }
-
-}
-
 /// Reset options for factory and registrations
 public enum FactoryResetOptions {
     case all
@@ -495,6 +639,8 @@ public enum FactoryResetOptions {
     case registration
     case scope
 }
+
+// MARK: - Internal Variables
 
 /// Master recursive lock
 private var globalRecursiveLock = NSRecursiveLock()
@@ -507,17 +653,57 @@ private var globalGraphResolutionDepth = 0
 private var globalDependencyChain: [String] = []
 #endif
 
+// MARK: - Internal Protocols and Types
+
+// Internal protocol with functionality common to all Factory's
+internal protocol FactoryModifing {
+    associatedtype P
+    associatedtype T
+    var registration: Registration<P,T> { get set }
+}
+
+extension FactoryModifing {
+    /// Allows builder-style mutation of self
+    fileprivate func map (_ mutate: (inout Self) -> Void) -> Self {
+        var mutable = self
+        mutate(&mutable)
+        return mutable
+    }
+}
+
+// Internal shared registration type for Factory and ParameterFactory
+internal struct Registration<P,T> {
+    /// Internal id used to manage registrations and cached values. Usually looks something like "MyApp.Container.service".
+    var id: String
+    /// A strong reference to the container supporting this Factory.
+    var container: SharedContainer
+    /// The originally registered factory closure used to produce an object of the desired type.
+    var factory: (P) -> T
+    /// The scope responsible for managing the lifecycle of any objects created by this Factory.
+    var scope: Scope?
+    /// Decorator will be passed fully constructed instance for further configuration.
+    var decorator: ((T) -> Void)?
+}
+
+// Internal Factory type
+internal protocol AnyFactory {
+}
+
+internal struct TypedFactory<P,T>: AnyFactory {
+    let factory: (P) -> T
+}
+
 /// Internal protocol used to evaluate optional types for caching
-public protocol OptionalProtocol {
+internal protocol OptionalProtocol {
     var hasWrappedValue: Bool { get }
     var wrappedValue: Any? { get }
 }
 
 extension Optional: OptionalProtocol {
-    @inlinable public var hasWrappedValue: Bool {
+    @inlinable internal var hasWrappedValue: Bool {
         wrappedValue != nil
     }
-    @inlinable public var wrappedValue: Any? {
+    @inlinable internal var wrappedValue: Any? {
         if case .some(let value) = self {
             return value
         }
@@ -526,15 +712,19 @@ extension Optional: OptionalProtocol {
 }
 
 /// Internal box protocol for scope functionality
-private protocol AnyBox {}
+internal protocol AnyBox {
+    var scopeID: UUID { get }
+}
 
-/// Strong box for cached and singleton scopes
-private struct StrongBox<T>: AnyBox {
+/// Strong box for strong references to a type
+internal struct StrongBox<T>: AnyBox {
+    let scopeID: UUID
     let boxed: T
 }
 
 /// Weak box for shared scope
 private struct WeakBox: AnyBox {
+    let scopeID: UUID
     weak var boxed: AnyObject?
 }
 

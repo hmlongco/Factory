@@ -4,13 +4,13 @@ import XCTest
 typealias OpenURLFunction = (_ url: URL) -> Bool
 
 extension Container {
-    static let openURL = Factory<OpenURLFunction> {
-        { _ in false }
+    var openURL: Factory<OpenURLFunction> {
+        factory { { _ in false } }
     }
 }
 
 private class MyViewModel {
-    @Injected(Container.openURL) var openURL
+    @Injected(\.openURL) var openURL
     func open(site: String) {
         _ = openURL(URL(string: site)!)
     }
@@ -19,7 +19,7 @@ private class MyViewModel {
 class OpenURLFunctionMock {
     var openedURL: URL?
     init() {
-        Container.openURL.register {
+        Container.shared.openURL.register {
             { [weak self] url in
                 self?.openedURL = url
                 return false
@@ -32,14 +32,13 @@ final class FactoryFunctionalTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        Container.Registrations.reset()
-        Container.Scope.reset()
+        Container.shared = Container()
     }
 
 
     func testOpenFuctionality() throws {
         var openedURL: URL?
-        Container.openURL.register {
+        Container.shared.openURL.register {
             { url in
                 openedURL = url
                 return false

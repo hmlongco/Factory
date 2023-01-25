@@ -2,30 +2,33 @@ import XCTest
 @testable import Factory
 
 class Services1 {
-    @Injected(Container.myServiceType) var service
-    @Injected(Container.mockService) var mock
+    @Injected(\.myServiceType) var service
+    @Injected(\.mockService) var mock
+    @Injected(\CustomContainer.test) var test
     init() {}
 }
 
 class Services2 {
-    @LazyInjected(Container.myServiceType) var service
-    @LazyInjected(Container.mockService) var mock
+    @LazyInjected(\.myServiceType) var service
+    @LazyInjected(\.mockService) var mock
+    @LazyInjected(\CustomContainer.test) var test
     init() {}
 }
 
 class Services3 {
-    @WeakLazyInjected(Container.sharedService) var service
-    @WeakLazyInjected(Container.mockService) var mock
+    @WeakLazyInjected(\.sharedService) var service
+    @WeakLazyInjected(\.mockService) var mock
+    @WeakLazyInjected(\CustomContainer.test) var test
     init() {}
 }
 
 class Services5 {
-    @Injected(Container.optionalService) var service
+    @Injected(\.optionalService) var service
     init() {}
 }
 
 class ServicesP {
-    @LazyInjected(Container.servicesC) var service
+    @LazyInjected(\.servicesC) var service
     let name = "Parent"
     init() {}
     func test() -> String? {
@@ -34,7 +37,8 @@ class ServicesP {
 }
 
 class ServicesC {
-    @WeakLazyInjected(Container.servicesP) var service: ServicesP?
+    @WeakLazyInjected(\.servicesP) var service: ServicesP?
+    @WeakLazyInjected(\CustomContainer.test) var testService
     init() {}
     let name = "Child"
     func test() -> String? {
@@ -43,11 +47,11 @@ class ServicesC {
 }
 
 extension Container {
-    fileprivate static var services1 = Factory { Services1() }
-    fileprivate static var services2 = Factory { Services2() }
-    fileprivate static var services3 = Factory { Services3() }
-    fileprivate static var servicesP = Factory(scope: .shared) { ServicesP() }
-    fileprivate static var servicesC = Factory(scope: .shared) { ServicesC() }
+    fileprivate var services1: Factory<Services1> { factory { Services1() } }
+    fileprivate var services2: Factory<Services2> { factory { Services2() } }
+    fileprivate var services3: Factory<Services3> { factory { Services3() } }
+    fileprivate var servicesP: Factory<ServicesP> { factory { ServicesP() }.shared }
+    fileprivate var servicesC: Factory<ServicesC> { factory { ServicesC() }.shared }
 }
 
 protocol ProtocolP: AnyObject {
@@ -56,7 +60,7 @@ protocol ProtocolP: AnyObject {
 }
 
 class ProtocolClassP: ProtocolP {
-    let child = Container.protocolC()
+    let child = Container.shared.protocolC()
     let name = "Parent"
     init() {}
     func test() -> String? {
@@ -80,35 +84,39 @@ class ProtocolClassC: ProtocolC {
 }
 
 extension Container {
-    fileprivate static var protocolP = Factory<ProtocolP> (scope: .shared) {
-        let p = ProtocolClassP()
-        p.child.parent = p
-        return p
+    fileprivate var protocolP: Factory<ProtocolP> {
+        factory {
+            let p = ProtocolClassP()
+            p.child.parent = p
+            return p
+        }
+        .shared
     }
-    fileprivate static var protocolC = Factory<ProtocolC> (scope: .shared) {
-        ProtocolClassC()
+    fileprivate var protocolC: Factory<ProtocolC> {
+        factory { ProtocolClassC() }
+            .shared
     }
 }
-
 
 final class FactoryInjectionTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        Container.Registrations.reset()
-        Container.Scope.reset()
+        Container.shared = Container()
     }
 
     func testBasicInjection() throws {
         let services = Services1()
-        XCTAssertTrue(services.service.text() == "MyService")
-        XCTAssertTrue(services.mock.text() == "MockService")
+        XCTAssertEqual(services.service.text(), "MyService")
+        XCTAssertEqual(services.mock.text(), "MockService")
+        XCTAssertEqual(services.test.text(), "MyService")
     }
 
     func testLazyInjection() throws {
         let services = Services2()
-        XCTAssertTrue(services.service.text() == "MyService")
-        XCTAssertTrue(services.mock.text() == "MockService")
+        XCTAssertEqual(services.service.text(), "MyService")
+        XCTAssertEqual(services.mock.text(), "MockService")
+        XCTAssertEqual(services.test.text(), "MyService")
     }
 
     func testLazyInjectionOccursOnce() throws {
@@ -124,17 +132,19 @@ final class FactoryInjectionTests: XCTestCase {
     }
 
     func testWeakLazyInjection() throws {
-        var parent: ServicesP? = Container.servicesP()
-        let child = Container.servicesC()
-        XCTAssertTrue(parent?.test() == "Child")
-        XCTAssertTrue(child.test() == "Parent")
+        var parent: ServicesP? = Container.shared.servicesP()
+        let child = Container.shared.servicesC()
+        let test = CustomContainer.shared.test()
+        XCTAssertEqual(parent?.test(), "Child")
+        XCTAssertEqual(child.test(), "Parent")
+        XCTAssertEqual(child.testService?.text(), test.text())
         parent = nil
         XCTAssertNil(child.test())
     }
 
     func testWeakLazyInjectionProtocol() throws {
-        var parent: ProtocolP? = Container.protocolP()
-        let child: ProtocolC? = Container.protocolC()
+        var parent: ProtocolP? = Container.shared.protocolP()
+        let child: ProtocolC? = Container.shared.protocolC()
         XCTAssertTrue(parent?.test() == "Child")
         XCTAssertTrue(child?.test() == "Parent")
         parent = nil
@@ -142,7 +152,7 @@ final class FactoryInjectionTests: XCTestCase {
     }
 
     func testInjectionSet() throws {
-        let service = Container.services1()
+        let service = Container.shared.services1()
         let oldId = service.service.id
         let newService = MyService()
         let newId = newService.id
@@ -152,7 +162,7 @@ final class FactoryInjectionTests: XCTestCase {
     }
 
     func testLazyInjectionSet() throws {
-        let service = Container.services2()
+        let service = Container.shared.services2()
         let oldId = service.service.id
         let newService = MyService()
         let newId = newService.id
@@ -162,9 +172,9 @@ final class FactoryInjectionTests: XCTestCase {
     }
 
     func testWeakLazyInjectionSet() throws {
-        let strongReference: MyService? = Container.sharedService()
+        let strongReference: MyServiceType? = Container.shared.sharedService()
         XCTAssertNotNil(strongReference)
-        let service = Container.services3()
+        let service = Container.shared.services3()
         let oldId = service.service?.id
         let newService = MyService()
         let newId = newService.id
@@ -173,18 +183,18 @@ final class FactoryInjectionTests: XCTestCase {
         XCTAssertTrue(service.service?.id == newId)
     }
 
-    func testInjectionResolve() throws {
-        let object = Container.services1()
-        let oldId = object.service.id
-        // force resolution
-        object.$service.resolve()
-        // should have new instance
-        let newId = object.service.id
-        XCTAssertTrue(oldId != newId)
-    }
+//    func testInjectionResolve() throws {
+//        let object = Container.shared.services1()
+//        let oldId = object.service.id
+//        // force resolution
+//        object.$service.resolve()
+//        // should have new instance
+//        let newId = object.service.id
+//        XCTAssertTrue(oldId != newId)
+//    }
 
     func testLazyInjectionResolve() throws {
-        let object = Container.services2()
+        let object = Container.shared.services2()
         let oldId = object.service.id
         // force resolution
         object.$service.resolve()
@@ -194,11 +204,11 @@ final class FactoryInjectionTests: XCTestCase {
     }
 
     func testWeakLazyInjectionResolve() throws {
-        var strongReference: MyService? = Container.sharedService()
+        var strongReference: MyServiceType? = Container.shared.sharedService()
         XCTAssertNotNil(strongReference)
         let oldId = strongReference?.id
 
-        let service = Container.services3()
+        let service = Container.shared.services3()
         let newID = service.service?.id
         XCTAssertTrue(oldId == newID)
 

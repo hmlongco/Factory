@@ -28,6 +28,7 @@
 		4CCC84442868CFBF00B474F7 /* Networking.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4CCC843E2868CF8900B474F7 /* Networking.framework */; };
 		4CCC84452868CFBF00B474F7 /* Networking.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 4CCC843E2868CF8900B474F7 /* Networking.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		4CEBB8CE2977C4CC001E2B77 /* RegistrationMockup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CEBB8CD2977C4CC001E2B77 /* RegistrationMockup.swift */; };
+		4CEBB8D029803A9E001E2B77 /* DIContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CEBB8CF29803A9E001E2B77 /* DIContainer.swift */; };
 		4CEEC349284927EE00C979B3 /* FactoryDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CEEC348284927EE00C979B3 /* FactoryDemoApp.swift */; };
 		4CEEC34B284927EE00C979B3 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CEEC34A284927EE00C979B3 /* ContentView.swift */; };
 		4CEEC34D284927EF00C979B3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4CEEC34C284927EF00C979B3 /* Assets.xcassets */; };
@@ -112,6 +113,7 @@
 		4CCC840D2868CF5B00B474F7 /* Common.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Common.xcodeproj; path = Common/Common.xcodeproj; sourceTree = "<group>"; };
 		4CCC84382868CF8900B474F7 /* Networking.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Networking.xcodeproj; path = Networking/Networking.xcodeproj; sourceTree = "<group>"; };
 		4CEBB8CD2977C4CC001E2B77 /* RegistrationMockup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationMockup.swift; sourceTree = "<group>"; };
+		4CEBB8CF29803A9E001E2B77 /* DIContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DIContainer.swift; sourceTree = "<group>"; };
 		4CEEC345284927EE00C979B3 /* FactoryDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FactoryDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4CEEC348284927EE00C979B3 /* FactoryDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FactoryDemoApp.swift; sourceTree = "<group>"; };
 		4CEEC34A284927EE00C979B3 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -173,6 +175,7 @@
 				4CB1C41229749CFB00E7097A /* ContentView.swift */,
 				4CB1C41F29749E5A00E7097A /* ContentViewModel.swift */,
 				4CB1C41C29749D2400E7097A /* Factory.swift */,
+				4CEBB8CF29803A9E001E2B77 /* DIContainer.swift */,
 				4CB1C41429749CFC00E7097A /* Assets.xcassets */,
 				4CB1C41629749CFC00E7097A /* Preview Content */,
 				4CEBB8CD2977C4CC001E2B77 /* RegistrationMockup.swift */,
@@ -463,6 +466,7 @@
 				4CB1C41E29749D8900E7097A /* Services.swift in Sources */,
 				4CB1C41129749CFB00E7097A /* NewFactoryDemoApp.swift in Sources */,
 				4CB1C41D29749D2400E7097A /* Factory.swift in Sources */,
+				4CEBB8D029803A9E001E2B77 /* DIContainer.swift in Sources */,
 				4CB1C42229749EB500E7097A /* NewFactoryDemoApp+Injected.swift in Sources */,
 				4CB1C42029749E5A00E7097A /* ContentViewModel.swift in Sources */,
 				4CEBB8CE2977C4CC001E2B77 /* RegistrationMockup.swift in Sources */,

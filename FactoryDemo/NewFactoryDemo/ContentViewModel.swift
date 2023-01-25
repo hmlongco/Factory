@@ -9,8 +9,8 @@ import Foundation
 
 class ContentViewModel: ObservableObject {
 
-    // Old factory static service Locator
-    let oldSchool = Container.oldSchool()
+    // New factory static service Locator
+    let newSchool = Container.newSchool()
 
     // New shared service Locator
     let service = Container.shared.constructedService()
@@ -81,4 +81,6 @@ class ContentViewModel: ObservableObject {
         // container.testCircularDependencies()
     }
 
+    let ditest = DITest()
+    
 }

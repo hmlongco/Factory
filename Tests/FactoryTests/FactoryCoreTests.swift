@@ -5,101 +5,131 @@ final class FactoryCoreTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        Container.Registrations.reset()
-        Container.Scope.reset()
+        Container.shared = Container()
     }
 
     func testBasicResolution() throws {
-        let service1 = Container.myServiceType()
+        let service1 = Container.shared.myServiceType()
         XCTAssertTrue(service1.text() == "MyService")
-        let service2 = Container.mockService()
+        let service2 = Container.shared.mockService()
         XCTAssertTrue(service2.text() == "MockService")
     }
 
-    func testBasicResolutionOverride() throws {
+    func testBasicStaticResolution() throws {
         let service1 = Container.myServiceType()
         XCTAssertTrue(service1.text() == "MyService")
-        Container.myServiceType.register(factory: { MockService() })
-        let service2 = Container.myServiceType()
+    }
+
+    func testBasicResolutionOverride() throws {
+        let service1 = Container.shared.myServiceType()
+        XCTAssertTrue(service1.text() == "MyService")
+        Container.shared.myServiceType.register(factory: { MockService() })
+        let service2 = Container.shared.myServiceType()
         XCTAssertTrue(service2.text() == "MockService")
     }
 
     func testBasicResolutionOverrideReset() throws {
-        Container.myServiceType.register { MockService() }
-        let service1 = Container.myServiceType()
+        Container.shared.myServiceType.register { MockService() }
+        let service1 = Container.shared.myServiceType()
         XCTAssertTrue(service1.text() == "MockService")
-        Container.myServiceType.reset()
-        let service2 = Container.myServiceType()
+        Container.shared.myServiceType.reset()
+        let service2 = Container.shared.myServiceType()
         XCTAssertTrue(service2.text() == "MyService")
     }
 
     func testOptionalResolution() throws {
-        let service1: MyServiceType? = Container.optionalService()
+        let service1: MyServiceType? = Container.shared.optionalService()
         XCTAssertTrue(service1?.text() == "MyService")
-        Container.optionalService.register { nil }
-        let service2: MyServiceType? = Container.optionalService()
+        Container.shared.optionalService.register { nil }
+        let service2: MyServiceType? = Container.shared.optionalService()
         XCTAssertNil(service2)
-        Container.optionalService.register { MockService() }
-        let service3: MyServiceType? = Container.optionalService()
+        Container.shared.optionalService.register { MockService() }
+        let service3: MyServiceType? = Container.shared.optionalService()
         XCTAssertTrue(service3?.text() == "MockService")
     }
 
     func testExplicitlyUnrwappedOptionalResolution() throws {
-        Container.optionalService.register { MyService() }
-        let service1: MyServiceType = Container.optionalService()!
+        Container.shared.optionalService.register { MyService() }
+        let service1: MyServiceType = Container.shared.optionalService()!
         XCTAssertTrue(service1.text() == "MyService")
     }
 
     func testPromisedRegistrationAndOptionalResolution() throws {
-        let service1: MyServiceType? = Container.promisedService()
+        let service1: MyServiceType? = Container.shared.promisedService()
         XCTAssertTrue(service1?.text() == nil)
-        Container.promisedService.register { MyService() }
-        let service2: MyServiceType? = Container.promisedService()
+        Container.shared.promisedService.register { MyService() }
+        let service2: MyServiceType? = Container.shared.promisedService()
         XCTAssertTrue(service2?.text() == "MyService")
     }
 
     func testResetOptions() {
         func registerAndResolve() {
-            Container.cachedService.register {
+            Container.shared.cachedService.register {
                 MyService()
             }
-            let _ = Container.cachedService()
+            let _ = Container.shared.cachedService()
         }
 
-        XCTAssertTrue(Container.Registrations.isEmpty)
-        XCTAssertTrue(Container.Scope.cached.isEmpty)
+        XCTAssertTrue(Container.shared.manager.registrations.isEmpty)
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty(scope: .cached))
 
         registerAndResolve()
 
-        Container.cachedService.reset(.none)
+        Container.shared.cachedService.reset(.none)
 
-        XCTAssertFalse(Container.Registrations.isEmpty)
-        XCTAssertFalse(Container.Scope.cached.isEmpty)
+        XCTAssertFalse(Container.shared.manager.registrations.isEmpty)
+        XCTAssertFalse(Container.shared.manager.cache.isEmpty(scope: .cached))
 
-        Container.cachedService.reset(.all)
+        Container.shared.cachedService.reset(.all)
 
-        XCTAssertTrue(Container.Registrations.isEmpty)
-        XCTAssertTrue(Container.Scope.cached.isEmpty)
-
-        registerAndResolve()
-
-        Container.cachedService.reset(.registration)
-
-        XCTAssertTrue(Container.Registrations.isEmpty)
-        XCTAssertFalse(Container.Scope.cached.isEmpty)
+        XCTAssertTrue(Container.shared.manager.registrations.isEmpty)
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty(scope: .cached))
 
         registerAndResolve()
 
-        Container.cachedService.reset(.scope)
+        Container.shared.manager.reset(options: .none)
 
-        XCTAssertFalse(Container.Registrations.isEmpty)
-        XCTAssertTrue(Container.Scope.cached.isEmpty)
+        XCTAssertFalse(Container.shared.manager.registrations.isEmpty)
+        XCTAssertFalse(Container.shared.manager.cache.isEmpty(scope: .cached))
 
+        Container.shared.cachedService.reset(.registration)
+
+        XCTAssertTrue(Container.shared.manager.registrations.isEmpty)
+        XCTAssertFalse(Container.shared.manager.cache.isEmpty(scope: .cached))
+
+        registerAndResolve()
+
+        Container.shared.cachedService.reset(.scope)
+
+        XCTAssertFalse(Container.shared.manager.registrations.isEmpty)
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty(scope: .cached))
+
+        Container.shared.manager.reset(options: .registration)
+
+        XCTAssertTrue(Container.shared.manager.registrations.isEmpty)
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty(scope: .cached))
+
+        registerAndResolve()
+
+        Container.shared.manager.reset(options: .scope)
+
+        XCTAssertFalse(Container.shared.manager.registrations.isEmpty)
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty(scope: .cached))
+
+    }
+
+    func testDecorators() {
+        CustomContainer.shared = CustomContainer()
+        XCTAssertEqual(CustomContainer.count, 0)
+        XCTAssertEqual(CustomContainer.shared.count, 0)
+        let _ = CustomContainer.shared.decorated()
+        XCTAssertEqual(CustomContainer.count, 2)
+        XCTAssertEqual(CustomContainer.shared.count, 2)
     }
 
     func testCircularDependencyFailure() {
         expectFatalError(expectedMessage: "circular dependency chain - RecursiveA > RecursiveB > RecursiveC > RecursiveA") {
-            let _ = Container.recursiveA()
+            let _ = Container.shared.recursiveA()
         }
     }
 
