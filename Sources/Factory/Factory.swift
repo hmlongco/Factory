@@ -34,8 +34,8 @@ import Foundation
 ///     }
 /// }
 ///
-/// Like SwftUI Views, Factory structs are lightweight and transitory. Ther're created when needed and then immediately discared once their purpose
-/// has been served.
+/// Like SwftUI Views, Factory structs and modifiers are lightweight and transitory. Ther're created when needed
+/// and then immediately discared once their purpose has been served.
 public struct Factory<T>: FactoryModifing {
 
     /// Private initializer which creates a new Factory capable of managing dependencies of the desired type. Use a container's `factory` function
@@ -99,21 +99,34 @@ public struct Factory<T>: FactoryModifing {
 public struct ParameterFactory<P,T>: FactoryModifing {
 
     /// Initializes a factory capable of taking parameters at runtime.
+    ///
+    /// var parameterService: ParameterFactory<Int, ParameterService> {
+    ///     ParameterFactory(self) { ParameterService(value: $0) }
+    /// }
+    ///
     public init(_ container: SharedContainer, key: String = #function, _ factory: @escaping (P) -> T) {
         self.registration = Registration<P,T>(id: "\(container.self).\(key)", container: container, factory: factory)
     }
 
     /// Resolves a factory capable of taking parameters at runtime.
+    ///
+    /// let service = container.parameterService(16)
+    ///
     public func callAsFunction(_ parameters: P) -> T {
         registration.container.manager.resolve(registration, with: parameters)
     }
 
     /// Registers a new factory capable of taking parameters at runtime.
+    ///
+    /// container.parameterService.register { n in
+    ///     ParameterService(value: n)
+    /// }
+    ///
     public func register(factory: @escaping (P) -> T) {
         registration.container.manager.register(id: registration.id, factory: TypedFactory<P,T>(factory: factory))
     }
 
-    /// Required registrations
+    /// Required registration
     internal var registration: Registration<P,T>
 
 }
@@ -310,7 +323,7 @@ public class ContainerManager {
 
 extension ContainerManager {
 
-    /// Resets the Container to its original state, removing all registrations and clearing the scope cache.
+    /// Resets the Container to its original state, removing all registrations and clearing all scope caches.
     public func reset(options: FactoryResetOptions = .all) {
         guard options != .none else {
             return
@@ -362,7 +375,7 @@ public class Scope {
     fileprivate init() {}
 
     /// Internal function returns cached value if it exists. Otherwise it creates a new instance and caches that value for later reference.
-    internal func resolve<T>(using cache: Cache, id: String, factory: @escaping () -> T) -> T {
+    internal func resolve<T>(using cache: Cache, id: String, factory: () -> T) -> T {
         if let cached: T = unboxed(box: cache.value(forKey: id)) {
             return cached
         }
@@ -411,7 +424,7 @@ extension Scope {
         public override init() {
             super.init()
         }
-        internal override func resolve<T>(using cache: Cache, id: String, factory: @escaping () -> T) -> T {
+        internal override func resolve<T>(using cache: Cache, id: String, factory: () -> T) -> T {
             // ignores passed cache
             return super.resolve(using: self.cache, id: id, factory: factory)
         }
@@ -459,16 +472,11 @@ extension Scope {
         }
     }
 
-    /// Defines an unique scope. Which is no scope. Without a scope cache a new instance will always be
-    /// returned by the factory.
-    public static let unique: Scope? = nil
-
 }
 
 extension Scope {
 
     internal class Cache {
-
         @inlinable func value(forKey key: String) -> AnyBox? {
             cache[key]
         }
@@ -484,15 +492,17 @@ extension Scope {
                 cache = [:]
             }
         }
-        internal func isEmpty(scope: Scope) -> Bool {
-            cache.filter { $1.scopeID == scope.scopeID }.isEmpty
-        }
         internal func reset(scope: Scope) {
             cache = cache.filter { $1.scopeID != scope.scopeID }
         }
         typealias CacheMap = [String:AnyBox]
         var cache: [String:AnyBox] = .init(minimumCapacity: 32)
-    }
+        #if DEBUG
+        internal var isEmpty: Bool {
+            cache.isEmpty
+        }
+        #endif
+   }
 
 }
 

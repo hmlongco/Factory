@@ -101,11 +101,11 @@ final class FactoryScopeTests: XCTestCase {
         // Has base to graph scope
         let graph1 = Container.shared.graphWrapper()
         XCTAssertTrue(graph1.service1.id == graph1.service2.id)
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty(scope: .graph))
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
         // No base to the graph scope
         let graph2 = GraphWrapper()
         XCTAssertTrue(graph2.service1.id != graph2.service2.id)
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty(scope: .graph))
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
     }
 
     func testExplicitProtocolSharedScope() throws {
@@ -248,36 +248,36 @@ final class FactoryScopeTests: XCTestCase {
 
     func testNilScopedServiceCaching() throws {
         Container.shared.nilCachedService.reset()
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty(scope: .cached))
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
         let service1 = Container.shared.nilCachedService()
         XCTAssertNil(service1)
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty(scope: .cached)) // nothing caches
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty) // nothing caches
         let service2 = Container.shared.nilCachedService()
         XCTAssertNil(service2)
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty(scope: .cached)) // nothing caches
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty) // nothing caches
         Container.shared.nilCachedService.register {
             MyService()
         }
         let service3 = Container.shared.nilCachedService()
         XCTAssertNotNil(service3)
-        XCTAssertFalse(Container.shared.manager.cache.isEmpty(scope: .cached)) // cached value
+        XCTAssertFalse(Container.shared.manager.cache.isEmpty) // cached value
         Container.shared.nilCachedService.register {
             nil
         }
         let service4 = Container.shared.nilCachedService()
         XCTAssertNil(service4) // cache was reset by registration
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty(scope: .cached)) // nothing cached
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty) // nothing cached
     }
 
     func testNilSharedServiceCaching() throws {
         Container.shared.nilSharedService.reset()
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty(scope: .shared))
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
         let service1 = Container.shared.nilSharedService()
         XCTAssertNil(service1)
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty(scope: .shared)) // nothing caches
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty) // nothing caches
         let service2 = Container.shared.nilSharedService()
         XCTAssertNil(service2)
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty(scope: .shared)) // nothing caches
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty) // nothing caches
         Container.shared.nilSharedService.register {
             MyService()
         }
@@ -286,24 +286,24 @@ final class FactoryScopeTests: XCTestCase {
         let service4 = Container.shared.nilSharedService()
         XCTAssertNotNil(service4)
         XCTAssertTrue(service3?.id == service4?.id)
-        XCTAssertFalse(Container.shared.manager.cache.isEmpty(scope: .shared)) // cached value
+        XCTAssertFalse(Container.shared.manager.cache.isEmpty) // cached value
         Container.shared.nilSharedService.register {
             nil
         }
         let service5 = Container.shared.nilSharedService()
         XCTAssertNil(service5) // cache was reset by registration
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty(scope: .shared)) // nothing cached
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty) // nothing cached
     }
 
     func testImplementsGraphScope() throws {
         // Has base to graph scope
         let consumer = Container.shared.consumer()
         XCTAssertTrue(consumer.ids.id == consumer.values.id)
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty(scope: .graph))
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
         // No base to the graph scope
         let consumer2 = ProtocolConsumer()
         XCTAssertTrue(consumer2.ids.id != consumer2.values.id)
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty(scope: .graph))
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
     }
 
 }

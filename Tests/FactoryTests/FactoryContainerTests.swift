@@ -2,11 +2,18 @@ import XCTest
 @testable import Factory
 
 
-final class FactoryRegistrationTests: XCTestCase {
+final class FactoryContainerTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
         Container.shared = Container()
+        CustomContainer.shared = CustomContainer()
+    }
+
+    func testDecorators() {
+        CustomContainer.count = 0
+        let _ = CustomContainer.shared.decorated()
+        XCTAssertEqual(CustomContainer.shared.count, 2)
     }
 
     func testPushPop() throws {

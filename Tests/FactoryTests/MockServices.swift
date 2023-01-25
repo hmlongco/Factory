@@ -181,9 +181,9 @@ final class CustomContainer: SharedContainer, AutoRegistering {
     static var shared = CustomContainer()
     static var count = 0
     var count = 0
-    var test: Factory<MyService> {
+    var test: Factory<MyServiceType> {
         factory {
-            MyService()
+            MockServiceN(32)
         }
         .shared
     }

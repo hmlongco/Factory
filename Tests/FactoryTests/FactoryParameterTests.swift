@@ -30,12 +30,12 @@ final class FactoryParameterTests: XCTestCase {
     }
 
     func testScopedParameterServiceReset() throws {
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty(scope: .cached))
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
         let service1 = Container.shared.scopedParameterService(6)
         XCTAssertTrue(service1.value == 6)
-        XCTAssertFalse(Container.shared.manager.cache.isEmpty(scope: .cached))
+        XCTAssertFalse(Container.shared.manager.cache.isEmpty)
         Container.shared.scopedParameterService.reset()
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty(scope: .cached))
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
     }
 
 }

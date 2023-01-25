@@ -109,14 +109,14 @@ final class FactoryInjectionTests: XCTestCase {
         let services = Services1()
         XCTAssertEqual(services.service.text(), "MyService")
         XCTAssertEqual(services.mock.text(), "MockService")
-        XCTAssertEqual(services.test.text(), "MyService")
+        XCTAssertEqual(services.test.text(), "MockService32")
     }
 
     func testLazyInjection() throws {
         let services = Services2()
         XCTAssertEqual(services.service.text(), "MyService")
         XCTAssertEqual(services.mock.text(), "MockService")
-        XCTAssertEqual(services.test.text(), "MyService")
+        XCTAssertEqual(services.test.text(), "MockService32")
     }
 
     func testLazyInjectionOccursOnce() throws {

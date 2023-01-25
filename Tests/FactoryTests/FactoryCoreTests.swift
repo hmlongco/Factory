@@ -6,6 +6,7 @@ final class FactoryCoreTests: XCTestCase {
     override func setUp() {
         super.setUp()
         Container.shared = Container()
+        CustomContainer.shared = CustomContainer()
     }
 
     func testBasicResolution() throws {
@@ -71,59 +72,56 @@ final class FactoryCoreTests: XCTestCase {
         }
 
         XCTAssertTrue(Container.shared.manager.registrations.isEmpty)
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty(scope: .cached))
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
 
         registerAndResolve()
 
         Container.shared.cachedService.reset(.none)
 
         XCTAssertFalse(Container.shared.manager.registrations.isEmpty)
-        XCTAssertFalse(Container.shared.manager.cache.isEmpty(scope: .cached))
+        XCTAssertFalse(Container.shared.manager.cache.isEmpty)
 
         Container.shared.cachedService.reset(.all)
 
         XCTAssertTrue(Container.shared.manager.registrations.isEmpty)
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty(scope: .cached))
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
 
         registerAndResolve()
 
         Container.shared.manager.reset(options: .none)
 
         XCTAssertFalse(Container.shared.manager.registrations.isEmpty)
-        XCTAssertFalse(Container.shared.manager.cache.isEmpty(scope: .cached))
+        XCTAssertFalse(Container.shared.manager.cache.isEmpty)
 
         Container.shared.cachedService.reset(.registration)
 
         XCTAssertTrue(Container.shared.manager.registrations.isEmpty)
-        XCTAssertFalse(Container.shared.manager.cache.isEmpty(scope: .cached))
+        XCTAssertFalse(Container.shared.manager.cache.isEmpty)
 
         registerAndResolve()
 
         Container.shared.cachedService.reset(.scope)
 
         XCTAssertFalse(Container.shared.manager.registrations.isEmpty)
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty(scope: .cached))
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
 
         Container.shared.manager.reset(options: .registration)
 
         XCTAssertTrue(Container.shared.manager.registrations.isEmpty)
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty(scope: .cached))
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
 
         registerAndResolve()
 
         Container.shared.manager.reset(options: .scope)
 
         XCTAssertFalse(Container.shared.manager.registrations.isEmpty)
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty(scope: .cached))
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
 
     }
 
-    func testDecorators() {
-        CustomContainer.shared = CustomContainer()
-        XCTAssertEqual(CustomContainer.count, 0)
+    func testFactoryDecorators() {
         XCTAssertEqual(CustomContainer.shared.count, 0)
         let _ = CustomContainer.shared.decorated()
-        XCTAssertEqual(CustomContainer.count, 2)
         XCTAssertEqual(CustomContainer.shared.count, 2)
     }
 
