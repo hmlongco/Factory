@@ -24,7 +24,9 @@ Ready to get started?
 ### The Basics
 
 - <doc:GettingStarted>
+- <doc:Containers>
+- <doc:Scopes>
 
 ### Advanced Topics
 
-- <doc:GettingStarted>
+- <doc:ResolutionCycles>
