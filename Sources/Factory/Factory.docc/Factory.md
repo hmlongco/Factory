@@ -1,6 +1,6 @@
 # ``Factory``
 
-A lightweight container-based dependency injection system for Swift.
+A new approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
 ## Overview
 

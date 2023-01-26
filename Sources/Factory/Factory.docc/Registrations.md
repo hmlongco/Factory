@@ -1,21 +1,31 @@
 # Sample Registrations
 
+### Basic
+Example of basic registration in a Factory 2.0 container
+
 ```swift
-// Example of basic registration in a Factory 2.0 container
 extension Container {
     var service: Factory<MyServiceType> {
         Factory(self) { MyService() }
     }
 }
+```
 
-// Example of basic factory registration using convenience function
+### Convenience
+Example of basic factory registration using convenience function
+
+```swift
 extension Container {
     var convenientService: Factory<MyServiceType> {
         factory { MyService() }
     }
 }
+```
 
-// Examples of scoped services in a Factory 2.0 container
+### Scopes
+Examples of scoped services in a Factory 2.0 container
+
+```swift
 extension Container {
     var standardService: Factory<MyServiceType> {
         factory { MyService() } // unique
@@ -32,8 +42,12 @@ extension Container {
             .shared
     }
 }
+```
 
-// Example of service with constructor injection that requires another services
+### Constructor Injection
+Example of service with constructor injection that requires another services
+
+```swift
 extension Container {
     var constructedService: Factory<MyConstructedService> {
         factory {
@@ -41,15 +55,23 @@ extension Container {
         }
     }
 }
+```
 
-// Example of parameterized functional registration in a Factory 2.0 container
+### Parameters
+Example of parameterized functional registration in a Factory 2.0 container
+
+```swift
 extension Container {
     func parameterized(_ n: Int) -> Factory<ParameterService> {
         factory { ParameterService(count: n) }
     }
 }
+```
 
-// Example of correctly handling multiple instances of the same type
+### Same Types
+Example of correctly handling multiple instances of the same type
+
+```swift
 extension Container {
     var string1: Factory<String> {
         factory { "String 1" }

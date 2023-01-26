@@ -126,7 +126,7 @@ final class FactoryCoreTests: XCTestCase {
     }
 
     func testCircularDependencyFailure() {
-        expectFatalError(expectedMessage: "circular dependency chain - RecursiveA > RecursiveB > RecursiveC > RecursiveA") {
+        expectFatalError(expectedMessage: "circular dependency chain - FactoryTests.RecursiveA > FactoryTests.RecursiveB > FactoryTests.RecursiveC > FactoryTests.RecursiveA") {
             let _ = Container.shared.recursiveA()
         }
     }

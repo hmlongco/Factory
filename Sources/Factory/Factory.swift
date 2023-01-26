@@ -267,7 +267,7 @@ public class ContainerManager {
         let current: (P) -> T = (registrations[registration.id] as? TypedFactory<P,T>)?.factory ?? registration.factory
 
         #if DEBUG
-        let typeComponents = String(describing: T.self).components(separatedBy: CharacterSet(charactersIn: "<>"))
+        let typeComponents = String(reflecting: T.self).components(separatedBy: CharacterSet(charactersIn: "<>"))
         let typeName = typeComponents.count > 1 ? typeComponents[1] : typeComponents[0]
         let typeIndex = globalDependencyChain.firstIndex(where: { $0 == typeName })
         globalDependencyChain.append(typeName)
@@ -398,7 +398,7 @@ extension ContainerManager {
 /// including `Singleton`, `Cached`, `Graph`, and `Shared`.
 ///
 /// When a scope is associated with a Factory the first time the dependency is resolved a reference to that object
-/// is cached. The next time that Factory is resolved a reference to the original the cached object will be returned.
+/// is cached. The next time that Factory is resolved a reference to the originally cached object will be returned.
 ///
 /// That behavior can vary according to the scope type (e.g. Shared or Graph)
 /// ```swift
@@ -411,7 +411,7 @@ extension ContainerManager {
 /// Scopes work hand in hand with Containers to managed object lifecycles. If the container ever goes our of scope, so
 /// will all of its cached references.
 ///
-/// If no scope is associated with a given Factory then the scope is considered to be `Unique` and a new instance
+/// If no scope is associated with a given Factory then the scope is considered to be unique and a new instance
 /// of the dependency will be created each and every time that factory is resolved.
 public class Scope {
 
@@ -613,6 +613,8 @@ public protocol AutoRegistering {
     /// Manages the wrapped dependency, which is resolved when this value is accessed for the first time.
     public var wrappedValue: T {
         mutating get {
+            defer { globalRecursiveLock.unlock() }
+            globalRecursiveLock.lock()
             if initialize {
                 resolve()
             }
@@ -663,6 +665,8 @@ public protocol AutoRegistering {
     /// Manages the wrapped dependency, which is resolved when this value is accessed for the first time.
     public var wrappedValue: T? {
         mutating get {
+            defer { globalRecursiveLock.unlock() }
+            globalRecursiveLock.lock()
             if initialize {
                 resolve()
             }
