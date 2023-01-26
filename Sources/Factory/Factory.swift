@@ -430,7 +430,7 @@ private struct Registration<P, T> {
         let currentFactory: (P) -> T = (SharedContainer.Registrations.factory(for: id) as? TypedFactory<P, T>)?.factory ?? factory
 
         #if DEBUG
-        let typeComponents = String(describing: T.self).components(separatedBy: CharacterSet(charactersIn: "<>"))
+        let typeComponents = String(reflecting: T.self).components(separatedBy: CharacterSet(charactersIn: "<>"))
         let typeName = typeComponents.count > 1 ? typeComponents[1] : typeComponents[0]
         let typeIndex = globalDependencyChain.firstIndex(where: { $0 == typeName })
         globalDependencyChain.append(typeName)
