@@ -15,25 +15,25 @@ import Foundation
 /// Let's define a Factory that returns an instance of `ServiceType`. To do that we need to extend a Factory `Container` and within
 /// that container we define a new computed variable of type `Factory<ServiceType>`. The type must be explicity defined, and is usually a
 /// protocol to which the returned dependency conforms.
-///
+/// ```swift
 /// extension Container {
 ///     var service: Factory<ServiceType> {
 ///         Factory(self) { MyService() }
 ///     }
 /// }
-///
+/// ```
 /// Inside the computed variable we build our Factory, providing it with a refernce to its container and also with a factory closure that
 /// creates an instance of our object when needed. That Factory is then returned to the caller, usually to be evaluated (see `callAsFunction()`
 /// below). Every time we resolve this factory we'll get a new, unique instance of our object.
 ///
 /// For convenience, containers also provide a `factory` function that will create the factory and do the binding for us.
-///
+/// ```swift
 /// extension Container {
 ///     var service: Factory<ServiceType> {
 ///         factory { MyService() }
 ///     }
 /// }
-///
+/// ```
 /// Like SwftUI Views, Factory structs and modifiers are lightweight and transitory. Ther're created when needed
 /// and then immediately discared once their purpose has been served.
 public struct Factory<T>: FactoryModifing {
@@ -61,9 +61,9 @@ public struct Factory<T>: FactoryModifing {
 
     /// Evaluates the factory and returns an object or service of the desired type. The resolved instance may be brand new or Factory may
     /// return a cached value from the specified scope.
-    ///
+    /// ```swift
     /// let service = container.service()
-    ///
+    /// ```
     /// - Returns: An object or service of the desired type.
     public func callAsFunction() -> T {
         registration.container.manager.resolve(registration, with: ())
@@ -72,13 +72,16 @@ public struct Factory<T>: FactoryModifing {
     /// Registers a new factory closure capable of producing an object or service of the desired type. This factory overrides the original
     /// factory closure and clears the associated scope so that the next time this factory is resolved Factory will evaluate the new
     /// closure and return an instance of the newly registered object instead.
-    ///
+    /// ```swift
     /// container.service.register {
     ///     SomeService()
     /// }
-    ///
+    /// ```
     /// This is how default functionality is overriden in order to change the nature of the system at runtime, and is the primary mechanism
     /// used to provide mocks and testing doubles.
+    ///
+    /// Registration "overrides" are stored in the associated container. If the container ever goes our of scope, so
+    /// will all of its registrations.
     ///
     /// The original factory closure is preserved, and may be restored by resetting the Factory to its original state.
     ///
@@ -99,29 +102,29 @@ public struct Factory<T>: FactoryModifing {
 public struct ParameterFactory<P,T>: FactoryModifing {
 
     /// Initializes a factory capable of taking parameters at runtime.
-    ///
+    /// ```swift
     /// var parameterService: ParameterFactory<Int, ParameterService> {
     ///     ParameterFactory(self) { ParameterService(value: $0) }
     /// }
-    ///
+    /// ```
     public init(_ container: SharedContainer, key: String = #function, _ factory: @escaping (P) -> T) {
         self.registration = Registration<P,T>(id: "\(container.self).\(key)", container: container, factory: factory)
     }
 
     /// Resolves a factory capable of taking parameters at runtime.
-    ///
+    /// ```swift
     /// let service = container.parameterService(16)
-    ///
+    /// ```
     public func callAsFunction(_ parameters: P) -> T {
         registration.container.manager.resolve(registration, with: parameters)
     }
 
     /// Registers a new factory capable of taking parameters at runtime.
-    ///
+    /// ```swift
     /// container.parameterService.register { n in
     ///     ParameterService(value: n)
     /// }
-    ///
+    /// ```
     public func register(factory: @escaping (P) -> T) {
         registration.container.manager.register(id: registration.id, factory: TypedFactory<P,T>(factory: factory))
     }
@@ -193,13 +196,14 @@ public protocol SharedContainer: AnyObject {
 /// Defines the default factory providers for containers
 extension SharedContainer {
 
-    /// Creates and returns a Factory struct associated with the `shared` container for this class. The default scope is `unique` unless otherwise
-    /// specified.
+    /// Creates and returns a Factory struct associated with the `shared` container for this class. The default scope is
+    /// `unique` unless otherwise pecified.
     @inlinable public static func factory<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
         Factory(shared, key: "\(key).static)", factory)
     }
 
-    /// Creates and returns a Factory struct associated with the current` container. The default scope is `unique` unless otherwise specified.
+    /// Creates and returns a Factory struct associated with the current` container. The default scope is
+    /// `unique` unless otherwise specified.
     @inlinable public func factory<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
         Factory(self, key: key, factory)
     }
@@ -211,7 +215,27 @@ extension SharedContainer {
 
 }
 
-/// The default "Convenience" Container
+/// Containers are used by Factory to manage object creation, object resolution, and object lifecycles in general.
+///
+/// Factory's are defined within container extensions, and must be provided with a reference to that container on
+/// initialization.
+/// ```swift
+/// extension Container {
+///     var service: Factory<ServiceType> {
+///         Factory(self) { MyService() }
+///     }
+/// }
+/// ```
+/// Registrations and scope caches will persist as long as the associated container remains in scope.
+///
+/// This is the default Container provided for your convenience by Factory. If you'd like to define your own, use the
+/// following as a template.
+/// ```swift
+/// public final class MyContainer: SharedContainer {
+///      public static var shared = MyContainer()
+///      public var manager = ContainerManager()
+/// }
+/// ```
 public final class Container: SharedContainer {
     // Define the default shared container.
     public static var shared = Container()
@@ -242,7 +266,7 @@ public class ContainerManager {
 
         let current: (P) -> T = (registrations[registration.id] as? TypedFactory<P,T>)?.factory ?? registration.factory
 
-#if DEBUG
+        #if DEBUG
         let typeComponents = String(describing: T.self).components(separatedBy: CharacterSet(charactersIn: "<>"))
         let typeName = typeComponents.count > 1 ? typeComponents[1] : typeComponents[0]
         let typeIndex = globalDependencyChain.firstIndex(where: { $0 == typeName })
@@ -254,7 +278,7 @@ public class ContainerManager {
             globalRecursiveLock = NSRecursiveLock()
             triggerFatalError(message, #file, #line)
         }
-#endif
+        #endif
 
         // print("RESOLVING \(factory.id)")
 
@@ -266,9 +290,9 @@ public class ContainerManager {
             Scope.graph.cache.reset()
         }
 
-#if DEBUG
+        #if DEBUG
         globalDependencyChain.removeLast()
-#endif
+        #endif
 
         registration.decorator?(instance)
         decorator?(instance)
@@ -370,6 +394,25 @@ extension ContainerManager {
 
 // MARK: - Scopes
 
+/// Scopes are used to define the liefetime of resolved dependencies. Factory provides several scope types,
+/// including `Singleton`, `Cached`, `Graph`, and `Shared`.
+///
+/// When a scope is associated with a Factory the first time the dependency is resolved a reference to that object
+/// is cached. The next time that Factory is resolved a reference to the original the cached object will be returned.
+///
+/// That behavior can vary according to the scope type (e.g. Shared or Graph)
+/// ```swift
+/// extension Container {
+///     var service: Factory<ServiceType> {
+///         factory { MyService() }.singleton
+///     }
+/// }
+/// ```
+/// Scopes work hand in hand with Containers to managed object lifecycles. If the container ever goes our of scope, so
+/// will all of its cached references.
+///
+/// If no scope is associated with a given Factory then the scope is considered to be `Unique` and a new instance
+/// of the dependency will be created each and every time that factory is resolved.
 public class Scope {
 
     fileprivate init() {}
@@ -408,18 +451,20 @@ public class Scope {
 
 extension Scope {
 
-    /// Defines a cached scope. The same instance will be returned by the factory until the cache is reset.
+    /// A reference to the default cached scope manager.
     public static let cached = Cached()
+    /// Defines a cached scope. The same instance will be returned by the factory until the cache is reset.
     public final class Cached: Scope {
         public override init() {
             super.init()
         }
     }
 
+    /// A reference to the default graph scope manager.
+    public static let graph = Graph()
     /// Defines the graph scope. A single instance of a given type will be returned during a given resolution cycle.
     ///
     /// This scope is managed and cleared by the main resolution function at the end of each resolution cycle.
-    public static let graph = Graph()
     public final class Graph: Scope {
         public override init() {
             super.init()
@@ -432,8 +477,9 @@ extension Scope {
         internal var cache = Cache()
     }
 
-    /// Defines a shared (weak) scope. The same instance will be returned by the factory as long as someone maintains a strong reference.
+    /// A reference to the default shared scope manager.
     public static let shared = Shared()
+    /// Defines a shared (weak) scope. The same instance will be returned by the factory as long as someone maintains a strong reference.
     public final class Shared: Scope {
         public override init() {
             super.init()
@@ -464,8 +510,9 @@ extension Scope {
         }
     }
 
-    /// Defines the singleton scope. The same instance will always be returned by the factory.
+    /// A reference to the default singleton scope manager.
     public static let singleton = Singleton()
+    /// Defines the singleton scope. The same instance will always be returned by the factory.
     public final class Singleton: Scope {
         public override init() {
             super.init()
