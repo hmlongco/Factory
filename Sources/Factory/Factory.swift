@@ -47,7 +47,7 @@ public struct Factory<T>: FactoryModifing {
     ///   - key: Hidden value used to differentiate different instances of the same type in the same container.
     ///   - factory: A factory closure that produces an object of the desired type when required.
     public init(_ container: SharedContainer, key: String = #function, _ factory: @escaping () -> T) {
-        self.registration = Registration<Void,T>(id: "\(container.self).\(key)", container: container, factory: factory)
+        self.registration = FactoryRegistration<Void,T>(id: "\(container.self).\(key)", container: container, factory: factory)
     }
 
     //    /// Deprecated initializer
@@ -92,7 +92,7 @@ public struct Factory<T>: FactoryModifing {
 
     /// Internal parameters fort his Factory including id, container, the factory closure itself, the scope,
     /// and others.
-    internal var registration: Registration<Void,T>
+    public var registration: FactoryRegistration<Void,T>
 
 }
 
@@ -108,7 +108,7 @@ public struct ParameterFactory<P,T>: FactoryModifing {
     /// }
     /// ```
     public init(_ container: SharedContainer, key: String = #function, _ factory: @escaping (P) -> T) {
-        self.registration = Registration<P,T>(id: "\(container.self).\(key)", container: container, factory: factory)
+        self.registration = FactoryRegistration<P,T>(id: "\(container.self).\(key)", container: container, factory: factory)
     }
 
     /// Resolves a factory capable of taking parameters at runtime.
@@ -130,7 +130,7 @@ public struct ParameterFactory<P,T>: FactoryModifing {
     }
 
     /// Required registration
-    internal var registration: Registration<P,T>
+    public var registration: FactoryRegistration<P,T>
 
 }
 
@@ -255,7 +255,7 @@ public class ContainerManager {
     ///
     /// - Parameter factory: Factory wanting resolution.
     /// - Returns: Instance of the desired type.
-    internal func resolve<P,T>(_ registration: Registration<P,T>, with parameters: P) -> T {
+    internal func resolve<P,T>(_ registration: FactoryRegistration<P,T>, with parameters: P) -> T {
         defer { globalRecursiveLock.unlock() }
         globalRecursiveLock.lock()
 
@@ -717,10 +717,10 @@ private var globalDependencyChain: [String] = []
 // MARK: - Internal Protocols and Types
 
 // Internal protocol with functionality common to all Factory's
-internal protocol FactoryModifing {
+public protocol FactoryModifing {
     associatedtype P
     associatedtype T
-    var registration: Registration<P,T> { get set }
+    var registration: FactoryRegistration<P,T> { get set }
 }
 
 extension FactoryModifing {
@@ -732,18 +732,18 @@ extension FactoryModifing {
     }
 }
 
-// Internal shared registration type for Factory and ParameterFactory
-internal struct Registration<P,T> {
-    /// Internal id used to manage registrations and cached values. Usually looks something like "MyApp.Container.service".
-    var id: String
+// Shared registration type for Factory and ParameterFactory
+public struct FactoryRegistration<P,T> {
+    /// Id used to manage registrations and cached values. Usually looks something like "MyApp.Container.service".
+    internal var id: String
     /// A strong reference to the container supporting this Factory.
-    var container: SharedContainer
+    internal var container: SharedContainer
     /// The originally registered factory closure used to produce an object of the desired type.
-    var factory: (P) -> T
+    internal var factory: (P) -> T
     /// The scope responsible for managing the lifecycle of any objects created by this Factory.
-    var scope: Scope?
+    internal var scope: Scope?
     /// Decorator will be passed fully constructed instance for further configuration.
-    var decorator: ((T) -> Void)?
+    internal var decorator: ((T) -> Void)?
 }
 
 // Internal Factory type
@@ -778,7 +778,7 @@ internal protocol AnyBox {
 }
 
 /// Strong box for strong references to a type
-internal struct StrongBox<T>: AnyBox {
+private struct StrongBox<T>: AnyBox {
     let scopeID: UUID
     let boxed: T
 }

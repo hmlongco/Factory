@@ -11,27 +11,27 @@ import Factory
 // Circular
 
 class CircularA {
-    @Injected(Container.circularB) var circularB
+    @Injected(\.circularB) var circularB
 }
 
 class CircularB {
-    @Injected(Container.circularC) var circularC
+    @Injected(\.circularC) var circularC
 }
 
 class CircularC {
-    @Injected(Container.circularA) var circularA
+    @Injected(\.circularA) var circularA
 }
 
 extension Container {
 
-    static var circularA = Factory<CircularA> { CircularA() }
-    static var circularB = Factory<CircularB> { CircularB() }
-    static var circularC = Factory<CircularC> { CircularC() }
+    var circularA: Factory<CircularA> { factory { CircularA() } }
+    var circularB: Factory<CircularB> { factory { CircularB() } }
+    var circularC: Factory<CircularC> { factory { CircularC() } }
 
-    static var optionalA = Factory<CircularA?> { CircularA() }
+    var optionalA: Factory<CircularA?> { factory { CircularA() } }
 
     static func testCircularDependencies() {
-        let a = Container.circularA()
+        let a = Container.shared.circularA()
         print(a)
     }
 }

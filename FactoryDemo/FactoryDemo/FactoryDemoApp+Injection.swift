@@ -11,42 +11,52 @@ import Common
 import SwiftUI
 
 extension Container {
-    static let simpleService = Factory { SimpleService() }
+    var simpleService: Factory<SimpleService> { factory { SimpleService() } }
 }
 
 extension Container {
-    static let contentViewModel = Factory { ContentModuleViewModel() }
+    var contentViewModel: Factory<ContentModuleViewModel> { factory { ContentModuleViewModel() } }
 }
 
 extension SharedContainer {
-    static let myServiceType = Factory<MyServiceType> { MyService() }
-    static let sharedService = Factory<MyServiceType>(scope: .shared) { MyService() }
+    var myServiceType: Factory<MyServiceType> { factory { MyService() } }
+    var sharedService: Factory<MyServiceType> { factory { MyService() }.shared }
 }
 
-class OrderContainer: SharedContainer {
-    static let optionalService = Factory<SimpleService?> { nil }
-    static let constructedService = Factory { MyConstructedService(service: myServiceType()) }
-    static let additionalService = Factory(scope: .session) { SimpleService() }
+final class OrderContainer: SharedContainer {
+    static var shared = OrderContainer()
+
+    var optionalService: Factory<SimpleService?> { factory { nil } }
+
+    var constructedService: Factory<MyConstructedService> {
+        factory { MyConstructedService(service: self.myServiceType()) }
+    }
+
+    var additionalService: Factory<SimpleService> {
+        factory { SimpleService() }
+            .custom(scope: .session)
+    }
+    var manager = ContainerManager()
 }
 
 extension OrderContainer {
-    static func argumentService(count: Int) -> Factory<ParameterService> {
-        Factory { ParameterService(count: count) }
+    var argumentService: ParameterFactory<Int, ParameterService> {
+        ParameterFactory(self) { count in ParameterService(count: count) }
     }
 }
 
-extension SharedContainer.Scope {
+extension Scope {
     static var session = Cached()
 }
 
-extension SharedContainer {
-    static func setupMocks() {
+extension Container {
+    func setupMocks() {
         myServiceType.register { MockServiceN(4) }
 
-        OrderContainer.optionalService.register { SimpleService() }
+        OrderContainer.shared.optionalService.register { SimpleService() }
 
 #if DEBUG
-        Decorator.decorate = {
+        decorator {
             print("FACTORY: \(type(of: $0)) (\(Int(bitPattern: ObjectIdentifier($0 as AnyObject))))")
         }
 #endif
@@ -70,12 +80,14 @@ class Multiple: AServiceType, BServiceType {
 }
 
 extension Container {
-    private static var multiple = Factory<AServiceType&BServiceType> { Multiple() }
-    static var aService = Factory<AServiceType> { multiple() }
-    static var bService = Factory<BServiceType> { multiple() }
+    private var multiple: Factory<AServiceType&BServiceType> {
+        factory { Multiple() }
+    }
+    var aService: Factory<AServiceType> { factory { self.multiple() } }
+    var bService: Factory<BServiceType> { factory { self.multiple() } }
 }
 
 class MultipleDemo {
-    var aService: AServiceType = Container.aService()
-    var bService: BServiceType = Container.bService()
+    var aService: AServiceType = Container.shared.aService()
+    var bService: BServiceType = Container.shared.bService()
 }

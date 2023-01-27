@@ -9,13 +9,13 @@ import Foundation
 import Factory
 
 extension Container {
-    static var myActor = Factory { SomeActor() }
-    static var mainActorFuncTest = Factory { MainActorFuncTest() }
+    var myActor: Factory<SomeActor> { factory { SomeActor() } }
+    var mainActorFuncTest: Factory<MainActorFuncTest> { factory { MainActorFuncTest() } }
 
 }
 
 extension Container {
-    static var mainActorTest = Factory { MainActorTest() }
+    var mainActorTest: Factory<MainActorTest> { factory { MainActorTest() } }
 }
 
 @MainActor
@@ -41,10 +41,10 @@ actor SomeActor {
 
 class SomeActorParent {
 
-    @Injected(Container.myActor) var myActor
+    @Injected(\.myActor) var myActor
 
-    let myTest1 = Container.mainActorFuncTest()
-    let myTest2 = Container.mainActorTest()
+    let myTest1 = Container.shared.mainActorFuncTest()
+    let myTest2 = Container.shared.mainActorTest()
 
     @MainActor
     func test() async {

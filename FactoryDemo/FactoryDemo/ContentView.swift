@@ -34,11 +34,11 @@ struct ContentView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         Group {
-            let _ = Container.myServiceType.register { MockServiceN(4) }
+            let _ = Container.shared.myServiceType.register { MockServiceN(4) }
             let model1 = ContentModuleViewModel()
             ContentView(model: model1)
 
-            let _ = Container.myServiceType.register { MockServiceN(8) }
+            let _ = Container.shared.myServiceType.register { MockServiceN(8) }
             let model2 = ContentModuleViewModel()
             ContentView(model: model2)
         }

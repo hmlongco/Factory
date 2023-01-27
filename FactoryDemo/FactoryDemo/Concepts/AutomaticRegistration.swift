@@ -10,11 +10,11 @@ import Factory
 
 extension Container: AutoRegistering {
 
-    static let autoRegisteredService = Factory<MyServiceType?> {
-        nil
+    var autoRegisteredService: Factory<MyServiceType?> {
+        factory { nil }
     }
 
-    public static func registerAllServices() {
+    public func autoRegister() {
 
         print("AUTOREGISTRATION!!!")
 
