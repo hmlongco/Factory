@@ -18,9 +18,11 @@ A migration document is in the works, but for now here's some information on Fac
 
 ## Containers
 
-Containers in Factory 1.X were essentially namespaces, and not actual object instances that could be passed around. That made the syntax cleaner, but the tradeoff resulted in a lack of functionality and prevented Factory from being used in anything other than a Service Locator context.
+Containers in Factory 1.X were essentially namespaces, and not actual object instances that could be passed around. That made the overall syntax cleaner, but the tradeoff resulted in a lack of functionality and the static class definitions prevented Factory from being used in anything other than a Service Locator role.
 
-That changed in Factory 2.0. Instead of defining Factory's as static variables on a class, they're now defined and returned as computed variables on the container itself. Let's take a look.
+That changed in Factory 2.0. Instead of defining Factory's as static variables on a class, they're now defined and returned as computed variables on the container itself. And instances of a given container can be created and shared as needed.
+
+Let's take a look.
 
 ## Defining a Factory
 
@@ -36,11 +38,13 @@ extension Container {
 }
 ```
 
-To accomplish that we needed to extend a Factory ``Container``. Within that container we define a new computed variable of type `Factory<ServiceType>`. This type must be explicity defined, and is usually a protocol to which the returned dependency conforms.
+To accomplish that we needed to extend a Factory ``Container``. Fortunately, Factory provides one of those for us, so we'll use it.
+
+Within that container we define a new computed variable of type `Factory<ServiceType>`. This type must be explicity defined, and is usually a protocol to which the returned dependency conforms.
 
 Inside the computed variable we construct our Factory, providing it with a refernce to its container (self) and also with a factory closure that's used tp create an instance of our object when needed. That Factory is then returned to the caller, usually to be evaluated (see ``Factory/callAsFunction()``). Every time we resolve this particular factory we'll get a new, unique instance of our object.
 
-For convenience, containers also provide a dhortcut `factory` function that will create the factory and do the binding for us.
+For convenience, containers also provide a dhortcut `factory` function that creates the factory and does the binding for us.
 
 ```swift
 extension Container {
@@ -50,8 +54,17 @@ extension Container {
 }
 ```
 
-Like SwftUI Views, Factory structs and modifiers are lightweight and transitory. Ther're created when needed
-and then immediately discared once their purpose has been served.
+Just for reference, here's the Factory 1.x version.
+
+```swift
+extension Container {
+    static var service = Factory<ServiceType> {
+        MyService()
+    }
+}
+```
+
+Like SwftUI Views, Factory structs and modifiers are lightweight and transitory. In Factory 2.0 they're created when needed and then immediately discarded once their purpose has been served.
 
 ## Resolving a Factory
 
