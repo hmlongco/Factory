@@ -10,7 +10,7 @@ Welcome to the new version of Factory! Factory 2.0 offers true dependency inject
 
 If you download this branch you'll find initial DocC Documentation for the project, as well as working unit tests and a working code sample.
 
-The Factory source is also fairly heavily documented.
+The Factory source code is also fairly heavily documented.
 
 ## Migration
 
@@ -19,6 +19,8 @@ A migration document is in the works, but for now here's some information on Fac
 ## Containers
 
 Containers in Factory 1.X were essentially namespaces, and not actual object instances that could be passed around. That changed in Factory 2.0. 
+
+Instead of defining Factory's as static variables on a class, they're now defined as computed variables on the container itself. Let's take a look.
 
 ## Defining a Factory
 
