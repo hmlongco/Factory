@@ -18,7 +18,7 @@ A migration document is in the works, but for now here's some information on Fac
 
 ## Containers
 
-Containers in Factory 1.X were essentially namespaces, and not actual object instances that could be passed around. 
+Containers in Factory 1.X were essentially namespaces, and not actual object instances that could be passed around. That made the syntax cleaner, but the tradeoff resulted in a lack of functionality and prevented Factory from being used in anything other than a Service Locator context.
 
 That changed in Factory 2.0. Instead of defining Factory's as static variables on a class, they're now defined and returned as computed variables on the container itself. Let's take a look.
 
