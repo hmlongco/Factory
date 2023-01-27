@@ -2,6 +2,12 @@
 
 A new approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
+## Factory 2.0
+
+Note that Factory is evolving, and a working version of Factory 2.0 is now in the develop branch. Factory 2.0 offers true dependency injection container support as well as several other new features.
+
+** This is a breaking change from 1.0. **
+
 ## Why Something New?
 
 The first dependency injection system I wrote was [Resolver](https://github.com/hmlongco/Resolver). That open source project, while quite powerful and still in use in many applications, suffered from a few drawbacks.
