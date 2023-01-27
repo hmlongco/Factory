@@ -6,7 +6,7 @@ A new approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
 Welcome to the new version of Factory! Factory 2.0 offers true dependency injection container support as well as several other new features.
 
-** This is a breaking change from 1.X.X. **
+**This is a breaking change from 1.X.X.**
 
 If you download this branch you'll find initial DocC Documentation for the project, as well as working unit tests and a working code sample.
 
@@ -18,9 +18,9 @@ A migration document is in the works, but for now here's some information on Fac
 
 ## Containers
 
-Containers in Factory 1.X were essentially namespaces, and not actual object instances that could be passed around. That changed in Factory 2.0. 
+Containers in Factory 1.X were essentially namespaces, and not actual object instances that could be passed around. 
 
-Instead of defining Factory's as static variables on a class, they're now defined as computed variables on the container itself. Let's take a look.
+That changed in Factory 2.0. Instead of defining Factory's as static variables on a class, they're now defined and returned as computed variables on the container itself. Let's take a look.
 
 ## Defining a Factory
 
@@ -60,13 +60,13 @@ To resolve a Factory and obtain an object or service of the desired type, one si
 ```swift
 let service = Container.shared.service()
 ```
+The resolved instance may be brand new or Factory may return a cached value from the specified ``Scope``.
+
 If you're passing an instance of a container around to your views or view models, just call it directly.
 
 ```swift
 let service = container.service()
 ```
-The resolved instance may be brand new or Factory may return a cached value from the specified ``Scope``.
-
 Finally, you can also use the @Injected property wrapper. It now uses keyPaths to indicate the desired dependency.
 
 ```swift
