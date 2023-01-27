@@ -58,8 +58,11 @@ Finally, you can also use the @Injected property wrapper and specify a keyPaths 
 ```swift
 @Injected(\.service) var service: ServiceType
 ```
-The @Injected property wrapper looks for dependencies in the shared container, so this example is functionally identical to the `Container.shared.service()` example above.
+Unless otherwise specified, the @Injected property wrapper looks for dependencies in the standard shared container provided by Factory, so the above example is functionally identical to the `Container.shared.service()` example shown earlier. Here's one pointing to your own container.
 
+```swift
+@Injected(\MyCustomContainer.service) var service: ServiceType
+```
 ### Registering a new Factory closure
 
 What happens if we want to change the behavior of a Factory? What if the system requires changes during runtime, or what if we want our factory to provide mocks and testing doubles? 
