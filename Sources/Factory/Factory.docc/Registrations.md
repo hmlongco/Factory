@@ -17,7 +17,7 @@ Example of basic factory registration using convenience function
 ```swift
 extension Container {
     var convenientService: Factory<MyServiceType> {
-        factory { MyService() }
+        self { MyService() }
     }
 }
 ```
@@ -28,16 +28,16 @@ Examples of scoped services in a Factory 2.0 container
 ```swift
 extension Container {
     var standardService: Factory<MyServiceType> {
-        factory { MyService() } // unique
+        self { MyService() } // unique
     }
     var cachedService: Factory<MyServiceType> {
-        factory { MyService() }.cached
+        self { MyService() }.cached
     }
     var singletonService: Factory<SimpleService> {
-        factory { SimpleService() }.singleton
+        self { SimpleService() }.singleton
     }
     var sharedService: Factory<MyServiceType> {
-        factory { MyService() }
+        self { MyService() }
             .decorator { print("DECORATING \($0.id)") }
             .shared
     }
@@ -50,7 +50,7 @@ Example of service with constructor injection that requires another services
 ```swift
 extension Container {
     var constructedService: Factory<MyConstructedService> {
-        factory {
+        self {
             MyConstructedService(service: self.cachedService())
         }
     }
@@ -63,7 +63,7 @@ Example of parameterized functional registration in a Factory 2.0 container
 ```swift
 extension Container {
     func parameterized(_ n: Int) -> Factory<ParameterService> {
-        factory { ParameterService(count: n) }
+        self { ParameterService(count: n) }
     }
 }
 ```
@@ -74,16 +74,16 @@ Example of correctly handling multiple instances of the same type
 ```swift
 extension Container {
     var string1: Factory<String> {
-        factory { "String 1" }
+        self { "String 1" }
     }
     var string2: Factory<String> {
-        factory { "String 2" }
+        self { "String 2" }
     }
     var string3: Factory<String> {
-        factory { "String 3" }
+        self { "String 3" }
     }
     var string4: Factory<String> {
-        factory { "String 4" }
+        self { "String 4" }
     }
 }
 ```

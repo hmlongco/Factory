@@ -32,7 +32,7 @@ For convenience, containers also provide a shortcut `factory` function that will
 ```swift
 extension Container {
     var service: Factory<ServiceType> {
-        factory { MyService() }
+        self { MyService() }
     }
 }
 ```

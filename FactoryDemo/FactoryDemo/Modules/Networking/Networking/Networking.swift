@@ -14,7 +14,7 @@ public protocol NetworkType {
 }
 
 extension Container {
-    public var networkType: Factory<NetworkType> { factory { Network() } }
+    public var networkType: Factory<NetworkType> { self { Network() } }
 }
 
 extension Container {

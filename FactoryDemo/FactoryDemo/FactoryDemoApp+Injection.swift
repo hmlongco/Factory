@@ -11,29 +11,31 @@ import Common
 import SwiftUI
 
 extension Container {
-    var simpleService: Factory<SimpleService> { factory { SimpleService() } }
+    var simpleService: Factory<SimpleService> {
+        Factory(self) { SimpleService() }
+    }
 }
 
 extension Container {
-    var contentViewModel: Factory<ContentModuleViewModel> { factory { ContentModuleViewModel() } }
+    var contentViewModel: Factory<ContentModuleViewModel> { self { ContentModuleViewModel() } }
 }
 
 extension SharedContainer {
-    var myServiceType: Factory<MyServiceType> { factory { MyService() } }
-    var sharedService: Factory<MyServiceType> { factory { MyService() }.shared }
+    var myServiceType: Factory<MyServiceType> { self { MyService() } }
+    var sharedService: Factory<MyServiceType> { self { MyService() }.shared }
 }
 
 final class OrderContainer: SharedContainer {
     static var shared = OrderContainer()
 
-    var optionalService: Factory<SimpleService?> { factory { nil } }
+    var optionalService: Factory<SimpleService?> { self { nil } }
 
     var constructedService: Factory<MyConstructedService> {
-        factory { MyConstructedService(service: self.myServiceType()) }
+        self { MyConstructedService(service: self.myServiceType()) }
     }
 
     var additionalService: Factory<SimpleService> {
-        factory { SimpleService() }
+        self { SimpleService() }
             .custom(scope: .session)
     }
     var manager = ContainerManager()
@@ -42,6 +44,13 @@ final class OrderContainer: SharedContainer {
 extension OrderContainer {
     var argumentService: ParameterFactory<Int, ParameterService> {
         ParameterFactory(self) { count in ParameterService(count: count) }
+    }
+
+}
+
+extension OrderContainer {
+    var selfService: Factory<MyServiceType> {
+        self { MyService() }
     }
 }
 
@@ -81,10 +90,10 @@ class Multiple: AServiceType, BServiceType {
 
 extension Container {
     private var multiple: Factory<AServiceType&BServiceType> {
-        factory { Multiple() }
+        self { Multiple() }
     }
-    var aService: Factory<AServiceType> { factory { self.multiple() } }
-    var bService: Factory<BServiceType> { factory { self.multiple() } }
+    var aService: Factory<AServiceType> { self { self.multiple() } }
+    var bService: Factory<BServiceType> { self { self.multiple() } }
 }
 
 class MultipleDemo {

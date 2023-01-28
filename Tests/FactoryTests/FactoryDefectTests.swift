@@ -101,8 +101,8 @@ fileprivate class TestLazyInjectionOccursOnce {
 }
 
 extension Container {
-    fileprivate var lockingTestA: Factory<LockingTestA> { factory { LockingTestA() }.singleton }
-    fileprivate var lockingTestB: Factory<LockingTestB> { factory { LockingTestB() }.singleton }
+    fileprivate var lockingTestA: Factory<LockingTestA> { self { LockingTestA() }.singleton }
+    fileprivate var lockingTestB: Factory<LockingTestB> { self { LockingTestB() }.singleton }
 }
 
 // classes for recursive resolution test

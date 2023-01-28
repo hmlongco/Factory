@@ -88,38 +88,38 @@ class ParameterService: MyServiceType {
 }
 
 extension Container {
-    static var myServiceType: Factory<MyServiceType> { factory { MyService() } }
+    static var myServiceType: Factory<MyServiceType> { shared { MyService() } }
 
-    var myServiceType: Factory<MyServiceType> { factory { MyService() } }
-    var myServiceType2: Factory<MyServiceType> { factory { MyService() } }
+    var myServiceType: Factory<MyServiceType> { self { MyService() } }
+    var myServiceType2: Factory<MyServiceType> { self { MyService() } }
 
-    var mockService: Factory<MockService> { factory { MockService() } }
+    var mockService: Factory<MockService> { self { MockService() } }
 
-    var cachedService: Factory<MyService> { factory { MyService() }.cached }
-    var cachedOptionalService: Factory<MyServiceType?> { factory { MyService() }.cached }
-    var cachedEmptyOptionalService: Factory<MyServiceType?> { factory { nil }.cached }
+    var cachedService: Factory<MyService> { self { MyService() }.cached }
+    var cachedOptionalService: Factory<MyServiceType?> { self { MyService() }.cached }
+    var cachedEmptyOptionalService: Factory<MyServiceType?> { self { nil }.cached }
 
-    var sharedService: Factory<MyServiceType> { factory { MyService() }.shared }
-    var sharedExplicitProtocol: Factory<MyServiceType> { factory { MyService() }.shared }
-    var sharedInferredProtocol: Factory<MyServiceType> { factory { MyService() as MyServiceType }.shared }
-    var sharedOptionalProtocol: Factory<MyServiceType?> { factory { MyService() }.shared }
+    var sharedService: Factory<MyServiceType> { self { MyService() }.shared }
+    var sharedExplicitProtocol: Factory<MyServiceType> { self { MyService() }.shared }
+    var sharedInferredProtocol: Factory<MyServiceType> { self { MyService() as MyServiceType }.shared }
+    var sharedOptionalProtocol: Factory<MyServiceType?> { self { MyService() }.shared }
 
-    var optionalService: Factory<MyServiceType?> { factory { MyService() } }
-    var optionalValueService: Factory<MyServiceType?> { factory { ValueService() } }
+    var optionalService: Factory<MyServiceType?> { self { MyService() } }
+    var optionalValueService: Factory<MyServiceType?> { self { ValueService() } }
 
-    var singletonService: Factory<MyServiceType> { factory { MyService() }.singleton }
+    var singletonService: Factory<MyServiceType> { self { MyService() }.singleton }
 
-    var nilSService: Factory<MyServiceType?> { factory { nil } }
-    var nilCachedService: Factory<MyServiceType?> { factory { nil }.cached }
-    var nilSharedService: Factory<MyServiceType?> { factory { nil }.shared }
+    var nilSService: Factory<MyServiceType?> { self { nil } }
+    var nilCachedService: Factory<MyServiceType?> { self { nil }.cached }
+    var nilSharedService: Factory<MyServiceType?> { self { nil }.shared }
 
-    var sessionService: Factory<MyService> { factory { MyService() }.custom(scope: .session) }
+    var sessionService: Factory<MyService> { self { MyService() }.custom(scope: .session) }
 
-    var valueService: Factory<ValueService> { factory { ValueService() }.cached }
-    var sharedValueService: Factory<ValueService> { factory { ValueService() }.shared }
-    var sharedValueProtocol: Factory<ValueService> { factory { ValueService() }.shared }
+    var valueService: Factory<ValueService> { self { ValueService() }.cached }
+    var sharedValueService: Factory<ValueService> { self { ValueService() }.shared }
+    var sharedValueProtocol: Factory<ValueService> { self { ValueService() }.shared }
 
-    var promisedService: Factory<MyServiceType?> { factory { nil } }
+    var promisedService: Factory<MyServiceType?> { self { nil } }
 
 }
 
@@ -142,9 +142,9 @@ extension Scope {
 // Class for recursive scope test
 
 extension Container {
-    var recursiveA: Factory<RecursiveA?> { factory { RecursiveA() } }
-    var recursiveB: Factory<RecursiveB?> { factory { RecursiveB() } }
-    var recursiveC: Factory<RecursiveC?> { factory { RecursiveC() } }
+    var recursiveA: Factory<RecursiveA?> { self { RecursiveA() } }
+    var recursiveB: Factory<RecursiveB?> { self { RecursiveB() } }
+    var recursiveC: Factory<RecursiveC?> { self { RecursiveC() } }
 }
 
 // Classes for graph scope tests
@@ -156,8 +156,8 @@ class GraphWrapper {
 }
 
 extension Container {
-    var graphWrapper: Factory<GraphWrapper> { factory { GraphWrapper() } }
-    var graphService: Factory<MyService> { factory { MyService() }.graph }
+    var graphWrapper: Factory<GraphWrapper> { self { GraphWrapper() } }
+    var graphService: Factory<MyService> { self { MyService() }.graph }
 }
 
 // Classes for implements scope tests
@@ -169,10 +169,10 @@ class ProtocolConsumer {
 }
 
 extension Container {
-    var consumer: Factory<ProtocolConsumer> { factory { ProtocolConsumer() } }
-    var idProvider: Factory<IDProviding> { factory { self.commonProvider() } }
-    var valueProvider: Factory<ValueProviding> { factory { self.commonProvider() } }
-    private var commonProvider: Factory<MyService> { factory { MyService() }.graph }
+    var consumer: Factory<ProtocolConsumer> { self { ProtocolConsumer() } }
+    var idProvider: Factory<IDProviding> { self { self.commonProvider() } }
+    var valueProvider: Factory<ValueProviding> { self { self.commonProvider() } }
+    private var commonProvider: Factory<MyService> { self { MyService() }.graph }
 }
 
 // Custom Conatiner
@@ -182,13 +182,13 @@ final class CustomContainer: SharedContainer, AutoRegistering {
     static var count = 0
     var count = 0
     var test: Factory<MyServiceType> {
-        factory {
+        self {
             MockServiceN(32)
         }
         .shared
     }
     var decorated: Factory<MyService> {
-        factory {
+        self {
             MyService()
         }
         .decorator { _ in

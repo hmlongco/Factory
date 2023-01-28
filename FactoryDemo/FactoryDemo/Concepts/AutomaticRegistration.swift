@@ -11,7 +11,7 @@ import Factory
 extension Container: AutoRegistering {
 
     var autoRegisteredService: Factory<MyServiceType?> {
-        factory { nil }
+        self { nil }
     }
 
     public func autoRegister() {

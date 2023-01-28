@@ -26,11 +26,11 @@ import Foundation
 /// creates an instance of our object when needed. That Factory is then returned to the caller, usually to be evaluated (see `callAsFunction()`
 /// below). Every time we resolve this factory we'll get a new, unique instance of our object.
 ///
-/// For convenience, containers also provide a `factory` function that will create the factory and do the binding for us.
+/// For convenience, containers also provide a shortcut function that will create the factory and do the binding for us.
 /// ```swift
 /// extension Container {
 ///     var service: Factory<ServiceType> {
-///         factory { MyService() }
+///         self { MyService() }
 ///     }
 /// }
 /// ```
@@ -196,15 +196,9 @@ public protocol SharedContainer: AnyObject {
 /// Defines the default factory providers for containers
 extension SharedContainer {
 
-    /// Creates and returns a Factory struct associated with the `shared` container for this class. The default scope is
-    /// `unique` unless otherwise pecified.
-    @inlinable public static func factory<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
-        Factory(shared, key: "\(key).static)", factory)
-    }
-
     /// Creates and returns a Factory struct associated with the current` container. The default scope is
     /// `unique` unless otherwise specified.
-    @inlinable public func factory<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+    @inlinable public func callAsFunction<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
         Factory(self, key: key, factory)
     }
 
@@ -404,7 +398,7 @@ extension ContainerManager {
 /// ```swift
 /// extension Container {
 ///     var service: Factory<ServiceType> {
-///         factory { MyService() }.singleton
+///         self { MyService() }.singleton
 ///     }
 /// }
 /// ```

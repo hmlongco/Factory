@@ -9,13 +9,13 @@ import Foundation
 import Factory
 
 extension Container {
-    var myActor: Factory<SomeActor> { factory { SomeActor() } }
-    var mainActorFuncTest: Factory<MainActorFuncTest> { factory { MainActorFuncTest() } }
+    var myActor: Factory<SomeActor> { self { SomeActor() } }
+    var mainActorFuncTest: Factory<MainActorFuncTest> { self { MainActorFuncTest() } }
 
 }
 
 extension Container {
-    var mainActorTest: Factory<MainActorTest> { factory { MainActorTest() } }
+    var mainActorTest: Factory<MainActorTest> { self { MainActorTest() } }
 }
 
 @MainActor

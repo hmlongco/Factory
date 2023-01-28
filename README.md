@@ -49,7 +49,7 @@ For convenience, containers also provide a dhortcut `factory` function that crea
 ```swift
 extension Container {
     var service: Factory<ServiceType> {
-        factory { MyService() }
+        self { MyService() }
     }
 }
 ```
@@ -110,12 +110,14 @@ Scopes behave as they did before, although they're now defined using a modifier 
 ```swift
 extension Container {
     var sharedService: Factory<ServiceType> {
-        factory { MyService() }.shared
+        self { MyService() }.shared
     }
 }
 ```
 
-## More
+## Documentation
+
+Current documentation can be found here: [Factory Documentation](https://hmlongco.github.io/Factory/documentation/factory).
 
 There's more coming, but I can only write so fast, so stay tuned.
 
