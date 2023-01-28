@@ -44,7 +44,7 @@ Within that container we define a new computed variable of type `Factory<Service
 
 Inside the computed variable we construct our Factory, providing it with a refernce to its container (self) and also with a factory closure that's used tp create an instance of our object when needed. That Factory is then returned to the caller, usually to be evaluated (see ``Factory/callAsFunction()``). Every time we resolve this particular factory we'll get a new, unique instance of our object.
 
-For convenience, containers also provide a dhortcut `factory` function that creates the factory and does the binding for us.
+Containers also provide a convenient shortcut that will do the factory creation and binding to `self` for us.
 
 ```swift
 extension Container {
