@@ -22,12 +22,12 @@ extension Container {
 
 To accomplish that we need to extend a Factory ``Container``. Within that container we define a new computed variable of type `Factory<ServiceType>`. This type must be explicity defined, and is usually a protocol to which the returned dependency conforms.
 
-Inside the computed variable we construct our Factory, providing it with a refernce to its container (self) and also with a factory closure that's used tp create an instance of our object when needed. That Factory is then returned to the caller, usually to be evaluated (see ``Factory/callAsFunction()``). Every time we resolve this particular factory we'll get a new, unique instance of our object.
+Inside the computed variable we construct our Factory, providing it with a refernce to its container (self) and also with a factory closure that's used tp create an instance of our object when needed. That Factory is then returned to the caller, usually to be evaluated (see ``Factory/callAsFunction()``). Every time we resolve resolve the returned factory we'll get a new, unique instance of our object.
 
 
 Like SwftUI Views, Factory structs and modifiers are lightweight and transitory value types. Ther're created when needed and then immediately discarded once their purpose has been served.
 
-For convenience, containers also provide a shortcut `factory` function that will create the factory and do the binding for us.
+Containers also provide a convenient shortcut that will do the factory creation and binding to `self` for us.
 
 ```swift
 extension Container {

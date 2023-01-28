@@ -26,7 +26,7 @@ import Foundation
 /// creates an instance of our object when needed. That Factory is then returned to the caller, usually to be evaluated (see `callAsFunction()`
 /// below). Every time we resolve this factory we'll get a new, unique instance of our object.
 ///
-/// For convenience, containers also provide a shortcut function that will create the factory and do the binding for us.
+/// Containers also provide a convenient shortcut that will do the factory creation and binding to `self` for us.
 /// ```swift
 /// extension Container {
 ///     var service: Factory<ServiceType> {
