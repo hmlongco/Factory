@@ -17,25 +17,25 @@ extension Container {
 }
 
 extension Container {
-    var contentViewModel: Factory<ContentModuleViewModel> { self { ContentModuleViewModel() } }
+    var contentViewModel: Factory<ContentModuleViewModel> { make { ContentModuleViewModel() } }
 }
 
 extension SharedContainer {
-    var myServiceType: Factory<MyServiceType> { self { MyService() } }
-    var sharedService: Factory<MyServiceType> { self { MyService() }.shared }
+    var myServiceType: Factory<MyServiceType> { make { MyService() } }
+    var sharedService: Factory<MyServiceType> { make { MyService() }.shared }
 }
 
 final class OrderContainer: SharedContainer {
     static var shared = OrderContainer()
 
-    var optionalService: Factory<SimpleService?> { self { nil } }
+    var optionalService: Factory<SimpleService?> { make { nil } }
 
     var constructedService: Factory<MyConstructedService> {
-        self { MyConstructedService(service: self.myServiceType()) }
+        make { MyConstructedService(service: self.myServiceType()) }
     }
 
     var additionalService: Factory<SimpleService> {
-        self { SimpleService() }
+        make { SimpleService() }
             .custom(scope: .session)
     }
     var manager = ContainerManager()
@@ -43,14 +43,14 @@ final class OrderContainer: SharedContainer {
 
 extension OrderContainer {
     var argumentService: ParameterFactory<Int, ParameterService> {
-        ParameterFactory(self) { count in ParameterService(count: count) }
+        make { count in ParameterService(count: count) }
     }
 
 }
 
 extension OrderContainer {
     var selfService: Factory<MyServiceType> {
-        self { MyService() }
+        make { MyService() }
     }
 }
 
@@ -90,13 +90,21 @@ class Multiple: AServiceType, BServiceType {
 
 extension Container {
     private var multiple: Factory<AServiceType&BServiceType> {
-        self { Multiple() }
+        make { Multiple() }
     }
-    var aService: Factory<AServiceType> { self { self.multiple() } }
-    var bService: Factory<BServiceType> { self { self.multiple() } }
+    var aService: Factory<AServiceType> { make { self.multiple() } }
+    var bService: Factory<BServiceType> { make { self.multiple() } }
 }
 
 class MultipleDemo {
     var aService: AServiceType = Container.shared.aService()
     var bService: BServiceType = Container.shared.bService()
+}
+
+extension SharedContainer {
+    @inlinable public func scope<T>(_ scope: Scope?, key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+        Factory(self, key: key, factory).custom(scope: scope)
+    }
+
+    var someOtherService: Factory<MyServiceType> { scope(.shared) { MyService() } }
 }

@@ -47,11 +47,11 @@ class ServicesC {
 }
 
 extension Container {
-    fileprivate var services1: Factory<Services1> { self { Services1() } }
-    fileprivate var services2: Factory<Services2> { self { Services2() } }
-    fileprivate var services3: Factory<Services3> { self { Services3() } }
-    fileprivate var servicesP: Factory<ServicesP> { self { ServicesP() }.shared }
-    fileprivate var servicesC: Factory<ServicesC> { self { ServicesC() }.shared }
+    fileprivate var services1: Factory<Services1> { make { Services1() } }
+    fileprivate var services2: Factory<Services2> { make { Services2() } }
+    fileprivate var services3: Factory<Services3> { make { Services3() } }
+    fileprivate var servicesP: Factory<ServicesP> { make { ServicesP() }.shared }
+    fileprivate var servicesC: Factory<ServicesC> { make { ServicesC() }.shared }
 }
 
 protocol ProtocolP: AnyObject {
@@ -85,7 +85,7 @@ class ProtocolClassC: ProtocolC {
 
 extension Container {
     fileprivate var protocolP: Factory<ProtocolP> {
-        self {
+        make {
             let p = ProtocolClassP()
             p.child.parent = p
             return p
@@ -93,7 +93,7 @@ extension Container {
         .shared
     }
     fileprivate var protocolC: Factory<ProtocolC> {
-        self { ProtocolClassC() }
+        make { ProtocolClassC() }
             .shared
     }
 }

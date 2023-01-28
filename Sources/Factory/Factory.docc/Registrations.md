@@ -17,7 +17,7 @@ Example of basic factory registration using convenience function
 ```swift
 extension Container {
     var convenientService: Factory<MyServiceType> {
-        self { MyService() }
+        make { MyService() }
     }
 }
 ```
@@ -28,16 +28,16 @@ Examples of scoped services in a Factory 2.0 container
 ```swift
 extension Container {
     var standardService: Factory<MyServiceType> {
-        self { MyService() } // unique
+        make { MyService() } // unique
     }
     var cachedService: Factory<MyServiceType> {
-        self { MyService() }.cached
+        make { MyService() }.cached
     }
     var singletonService: Factory<SimpleService> {
-        self { SimpleService() }.singleton
+        make { SimpleService() }.singleton
     }
     var sharedService: Factory<MyServiceType> {
-        self { MyService() }
+        make { MyService() }
             .decorator { print("DECORATING \($0.id)") }
             .shared
     }
@@ -50,7 +50,7 @@ Example of service with constructor injection that requires another services
 ```swift
 extension Container {
     var constructedService: Factory<MyConstructedService> {
-        self {
+        make {
             MyConstructedService(service: self.cachedService())
         }
     }
@@ -63,7 +63,7 @@ Example of parameterized functional registration in a Factory 2.0 container
 ```swift
 extension Container {
     func parameterized(_ n: Int) -> Factory<ParameterService> {
-        self { ParameterService(count: n) }
+        make { ParameterService(count: n) }
     }
 }
 ```
@@ -74,16 +74,16 @@ Example of correctly handling multiple instances of the same type
 ```swift
 extension Container {
     var string1: Factory<String> {
-        self { "String 1" }
+        make { "String 1" }
     }
     var string2: Factory<String> {
-        self { "String 2" }
+        make { "String 2" }
     }
     var string3: Factory<String> {
-        self { "String 3" }
+        make { "String 3" }
     }
     var string4: Factory<String> {
-        self { "String 4" }
+        make { "String 4" }
     }
 }
 ```

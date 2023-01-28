@@ -26,11 +26,11 @@ import Foundation
 /// creates an instance of our object when needed. That Factory is then returned to the caller, usually to be evaluated (see `callAsFunction()`
 /// below). Every time we resolve this factory we'll get a new, unique instance of our object.
 ///
-/// Containers also provide a convenient shortcut that will do the factory creation and binding to `self` for us.
+/// Containers also provide a convenient shortcut to make our factory and do our binding for us.
 /// ```swift
 /// extension Container {
 ///     var service: Factory<ServiceType> {
-///         self { MyService() }
+///         make { MyService() }
 ///     }
 /// }
 /// ```
@@ -38,8 +38,7 @@ import Foundation
 /// and then immediately discared once their purpose has been served.
 public struct Factory<T>: FactoryModifing {
 
-    /// Private initializer which creates a new Factory capable of managing dependencies of the desired type. Use a container's `factory` function
-    /// to create and return an instance of Factory.
+    /// Initializer which creates a new Factory capable of managing dependencies of the desired type.
     ///
     /// - Parameters:
     ///   - container: The bound container that manages registrations and scope caching for this Factory.
@@ -61,17 +60,39 @@ public struct Factory<T>: FactoryModifing {
 
     /// Evaluates the factory and returns an object or service of the desired type. The resolved instance may be brand new or Factory may
     /// return a cached value from the specified scope.
+    ///
+    /// To resolve the Factory  one simply calls the Factory as a function. Here we use the `shared` container that's provided for each
+    /// and every container type.
+    /// ```swift
+    /// let service = Container.shared.service()
+    /// ```
+    /// The resolved instance may be brand new or Factory may return a cached value from the specified ``Scope``.
+    ///
+    /// If you're passing an instance of a container around to your views or view models, just call it directly.
     /// ```swift
     /// let service = container.service()
+    /// ```
+    /// Finally, you can also use the @Injected property wrapper and specify a keyPaths to the desired dependency.
+    /// ```swift
+    /// @Injected(\.service) var service: ServiceType
+    /// ```
+    /// Unless otherwise specified, the @Injected property wrapper looks for dependencies in the standard shared container provided by Factory,
+    /// so the above example is functionally identical to the `Container.shared.service()` example shown earlier. Here's one pointing to
+    /// your own container.
+    /// ```swift
+    /// @Injected(\MyCustomContainer.service) var service: ServiceType
     /// ```
     /// - Returns: An object or service of the desired type.
     public func callAsFunction() -> T {
         registration.container.manager.resolve(registration, with: ())
     }
 
-    /// Registers a new factory closure capable of producing an object or service of the desired type. This factory overrides the original
-    /// factory closure and clears the associated scope so that the next time this factory is resolved Factory will evaluate the new
-    /// closure and return an instance of the newly registered object instead.
+    /// Registers a new factory closure capable of producing an object or service of the desired type.
+    ///
+    /// This factory overrides the original factory closure and clears the associated scope so that the next time this factory is resolved
+    /// Factory will evaluate the new closure and return an instance of the newly registered object instead.
+    ///
+    /// Here's an example of registering a new Factory closure.
     /// ```swift
     /// container.service.register {
     ///     SomeService()
@@ -155,7 +176,7 @@ extension FactoryModifing {
         map { $0.registration.scope = .singleton }
     }
     /// Defines dependency scope
-    public func custom(scope: Scope) -> Self {
+    public func custom(scope: Scope?) -> Self {
         map { $0.registration.scope = scope }
     }
 
@@ -197,9 +218,15 @@ public protocol SharedContainer: AnyObject {
 extension SharedContainer {
 
     /// Creates and returns a Factory struct associated with the current` container. The default scope is
-    /// `unique` unless otherwise specified.
-    @inlinable public func callAsFunction<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+    /// `unique` unless otherwise specified using a scope modifier.
+    @inlinable public func make<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
         Factory(self, key: key, factory)
+    }
+
+    /// Creates and returns a ParameterFactory struct associated with the current` container. The default scope is
+    /// `unique` unless otherwise specified using a scope modifier.
+    @inlinable public func make<P,T>(key: String = #function, _ factory: @escaping (P) -> T) -> ParameterFactory<P,T> {
+        ParameterFactory(self, key: key, factory)
     }
 
     /// Defines a decorator for the container. This decorator will see every dependency resolved by this container.
@@ -398,7 +425,7 @@ extension ContainerManager {
 /// ```swift
 /// extension Container {
 ///     var service: Factory<ServiceType> {
-///         self { MyService() }.singleton
+///         make { MyService() }.singleton
 ///     }
 /// }
 /// ```
@@ -510,6 +537,18 @@ extension Scope {
     public final class Singleton: Scope {
         public override init() {
             super.init()
+        }
+    }
+
+    /// A reference to the default unique scope manager.
+    public static let unique = Unique()
+    /// Defines the unique scope. A new instance will always be returned by the factory.
+    public final class Unique: Scope {
+        public override init() {
+            super.init()
+        }
+        internal override func resolve<T>(using cache: Cache, id: String, factory: () -> T) -> T {
+            factory()
         }
     }
 

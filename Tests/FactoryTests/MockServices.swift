@@ -88,48 +88,48 @@ class ParameterService: MyServiceType {
 }
 
 extension Container {
-    static var myServiceType: Factory<MyServiceType> { shared { MyService() } }
+    static var myServiceType: Factory<MyServiceType> { shared.make { MyService() } }
 
-    var myServiceType: Factory<MyServiceType> { self { MyService() } }
-    var myServiceType2: Factory<MyServiceType> { self { MyService() } }
+    var myServiceType: Factory<MyServiceType> { make { MyService() } }
+    var myServiceType2: Factory<MyServiceType> { make { MyService() } }
 
-    var mockService: Factory<MockService> { self { MockService() } }
+    var mockService: Factory<MockService> { make { MockService() } }
 
-    var cachedService: Factory<MyService> { self { MyService() }.cached }
-    var cachedOptionalService: Factory<MyServiceType?> { self { MyService() }.cached }
-    var cachedEmptyOptionalService: Factory<MyServiceType?> { self { nil }.cached }
+    var cachedService: Factory<MyService> { make { MyService() }.cached }
+    var cachedOptionalService: Factory<MyServiceType?> { make { MyService() }.cached }
+    var cachedEmptyOptionalService: Factory<MyServiceType?> { make { nil }.cached }
 
-    var sharedService: Factory<MyServiceType> { self { MyService() }.shared }
-    var sharedExplicitProtocol: Factory<MyServiceType> { self { MyService() }.shared }
-    var sharedInferredProtocol: Factory<MyServiceType> { self { MyService() as MyServiceType }.shared }
-    var sharedOptionalProtocol: Factory<MyServiceType?> { self { MyService() }.shared }
+    var sharedService: Factory<MyServiceType> { make { MyService() }.shared }
+    var sharedExplicitProtocol: Factory<MyServiceType> { make { MyService() }.shared }
+    var sharedInferredProtocol: Factory<MyServiceType> { make { MyService() }.shared }
+    var sharedOptionalProtocol: Factory<MyServiceType?> { make { MyService() }.shared }
 
-    var optionalService: Factory<MyServiceType?> { self { MyService() } }
-    var optionalValueService: Factory<MyServiceType?> { self { ValueService() } }
+    var optionalService: Factory<MyServiceType?> { make { MyService() } }
+    var optionalValueService: Factory<MyServiceType?> { make { ValueService() } }
 
-    var singletonService: Factory<MyServiceType> { self { MyService() }.singleton }
+    var singletonService: Factory<MyServiceType> { make { MyService() }.singleton }
 
-    var nilSService: Factory<MyServiceType?> { self { nil } }
-    var nilCachedService: Factory<MyServiceType?> { self { nil }.cached }
-    var nilSharedService: Factory<MyServiceType?> { self { nil }.shared }
+    var nilSService: Factory<MyServiceType?> { make { nil } }
+    var nilCachedService: Factory<MyServiceType?> { make { nil }.cached }
+    var nilSharedService: Factory<MyServiceType?> { make { nil }.shared }
 
-    var sessionService: Factory<MyService> { self { MyService() }.custom(scope: .session) }
+    var sessionService: Factory<MyService> { make { MyService() }.custom(scope: .session) }
 
-    var valueService: Factory<ValueService> { self { ValueService() }.cached }
-    var sharedValueService: Factory<ValueService> { self { ValueService() }.shared }
-    var sharedValueProtocol: Factory<ValueService> { self { ValueService() }.shared }
+    var valueService: Factory<ValueService> { make { ValueService() }.cached }
+    var sharedValueService: Factory<ValueService> { make { ValueService() }.shared }
+    var sharedValueProtocol: Factory<ValueService> { make { ValueService() }.shared }
 
-    var promisedService: Factory<MyServiceType?> { self { nil } }
+    var promisedService: Factory<MyServiceType?> { make { nil } }
 
 }
 
 // For parameter tests
 extension Container {
     var parameterService: ParameterFactory<Int, ParameterService> {
-        ParameterFactory(self) { ParameterService(value: $0) }
+        make { ParameterService(value: $0) }
     }
     var scopedParameterService: ParameterFactory<Int, ParameterService> {
-        ParameterFactory(self) { ParameterService(value: $0) }.cached
+        make { ParameterService(value: $0) }.cached
     }
 }
 
@@ -142,9 +142,9 @@ extension Scope {
 // Class for recursive scope test
 
 extension Container {
-    var recursiveA: Factory<RecursiveA?> { self { RecursiveA() } }
-    var recursiveB: Factory<RecursiveB?> { self { RecursiveB() } }
-    var recursiveC: Factory<RecursiveC?> { self { RecursiveC() } }
+    var recursiveA: Factory<RecursiveA?> { make { RecursiveA() } }
+    var recursiveB: Factory<RecursiveB?> { make { RecursiveB() } }
+    var recursiveC: Factory<RecursiveC?> { make { RecursiveC() } }
 }
 
 // Classes for graph scope tests
@@ -156,8 +156,8 @@ class GraphWrapper {
 }
 
 extension Container {
-    var graphWrapper: Factory<GraphWrapper> { self { GraphWrapper() } }
-    var graphService: Factory<MyService> { self { MyService() }.graph }
+    var graphWrapper: Factory<GraphWrapper> { make { GraphWrapper() } }
+    var graphService: Factory<MyService> { make { MyService() }.graph }
 }
 
 // Classes for implements scope tests
@@ -169,10 +169,10 @@ class ProtocolConsumer {
 }
 
 extension Container {
-    var consumer: Factory<ProtocolConsumer> { self { ProtocolConsumer() } }
-    var idProvider: Factory<IDProviding> { self { self.commonProvider() } }
-    var valueProvider: Factory<ValueProviding> { self { self.commonProvider() } }
-    private var commonProvider: Factory<MyService> { self { MyService() }.graph }
+    var consumer: Factory<ProtocolConsumer> { make { ProtocolConsumer() } }
+    var idProvider: Factory<IDProviding> { make { self.commonProvider() } }
+    var valueProvider: Factory<ValueProviding> { make { self.commonProvider() } }
+    private var commonProvider: Factory<MyService> { make { MyService() }.graph }
 }
 
 // Custom Conatiner
@@ -182,13 +182,13 @@ final class CustomContainer: SharedContainer, AutoRegistering {
     static var count = 0
     var count = 0
     var test: Factory<MyServiceType> {
-        self {
+        make {
             MockServiceN(32)
         }
         .shared
     }
     var decorated: Factory<MyService> {
-        self {
+        make {
             MyService()
         }
         .decorator { _ in
