@@ -8,10 +8,17 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/hmlongco/Factory.git", :tag => "#{s.version}" }
   s.source_files  = "Classes", "Sources/Factory/*.swift"
   s.swift_version = '5.1'
-  s.framework    = "SystemConfiguration"
+  s.framework = "SystemConfiguration"
 
   s.ios.deployment_target = "11.0"
+  s.ios.framework = "SystemConfiguration"
+
   s.tvos.deployment_target = "13.0"
+  s.tvos.framework = "SystemConfiguration"
+
   s.osx.deployment_target = "10.14"
+  s.osx.framework = "SystemConfiguration"
+
   s.watchos.deployment_target = "6.0"
+  s.watchos.framework = "SystemConfiguration"
 end
