@@ -88,7 +88,7 @@ class ParameterService: MyServiceType {
 }
 
 extension Container {
-    static var myServiceType: Factory<MyServiceType> { shared.make { MyService() } }
+    static var myServiceType: Factory<MyServiceType> { make { MyService() } }
 
     var myServiceType: Factory<MyServiceType> { make { MyService() } }
     var myServiceType2: Factory<MyServiceType> { make { MyService() } }

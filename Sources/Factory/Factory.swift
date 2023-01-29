@@ -229,6 +229,18 @@ extension SharedContainer {
         ParameterFactory(self, key: key, factory)
     }
 
+    /// Creates and returns a Factory struct associated with the current` container. The default scope is
+    /// `unique` unless otherwise specified using a scope modifier.
+    @inlinable public static func make<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+        Factory(shared, key: key, factory)
+    }
+
+    /// Creates and returns a ParameterFactory struct associated with the current` container. The default scope is
+    /// `unique` unless otherwise specified using a scope modifier.
+    @inlinable public static func make<P,T>(key: String = #function, _ factory: @escaping (P) -> T) -> ParameterFactory<P,T> {
+        ParameterFactory(shared, key: key, factory)
+    }
+
     /// Defines a decorator for the container. This decorator will see every dependency resolved by this container.
     public func decorator(_ decorator: ((Any) -> ())?) {
         manager.decorator = decorator
