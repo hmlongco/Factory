@@ -3,7 +3,6 @@
 ### 1.3.6
 
 * Circular dependency check bugfix for duplicate class names in multiple modules
-* Add WatchOS to podspec
 
 ### 1.3.5
 
