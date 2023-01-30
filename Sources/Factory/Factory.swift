@@ -30,7 +30,7 @@ import Foundation
 /// ```swift
 /// extension Container {
 ///     var service: Factory<ServiceType> {
-///         make { MyService() }
+///         makes { MyService() }
 ///     }
 /// }
 /// ```
@@ -159,23 +159,23 @@ public struct ParameterFactory<P,T>: FactoryModifing {
 
 extension FactoryModifing {
 
-    /// Defines dependency scope to be cached
+    /// Defines Factory's dependency scope to be cached
     public var cached: Self {
         map { $0.registration.scope = .cached }
     }
-    /// Defines dependency scope to be graph
+    /// Defines Factory's dependency scope to be graph
     public var graph: Self {
         map { $0.registration.scope = .graph }
     }
-    /// Defines dependency scope to be shared
+    /// Defines Factory's dependency scope to be shared
     public var shared: Self {
         map { $0.registration.scope = .shared }
     }
-    /// Defines dependency scope to be singleton
+    /// Defines Factory's dependency scope to be singleton
     public var singleton: Self {
         map { $0.registration.scope = .singleton }
     }
-    /// Defines dependency scope
+    /// Defines a custom dependency scope for this Factory
     public func custom(scope: Scope?) -> Self {
         map { $0.registration.scope = scope }
     }
@@ -211,7 +211,6 @@ public protocol SharedContainer: AnyObject {
     /// Defines the ContainerManager used to manage registrations, resolutions, and scope caching for that container. Ecapsulating the code in
     /// this fashion makes creating and using your own custom containers much simpler.
     var manager: ContainerManager { get set }
-
 }
 
 /// Defines the default factory providers for containers
@@ -219,25 +218,25 @@ extension SharedContainer {
 
     /// Creates and returns a Factory struct associated with the current` container. The default scope is
     /// `unique` unless otherwise specified using a scope modifier.
-    @inlinable public func make<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+    @inlinable public func makes<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
         Factory(self, key: key, factory)
     }
 
     /// Creates and returns a ParameterFactory struct associated with the current` container. The default scope is
     /// `unique` unless otherwise specified using a scope modifier.
-    @inlinable public func make<P,T>(key: String = #function, _ factory: @escaping (P) -> T) -> ParameterFactory<P,T> {
+    @inlinable public func makes<P,T>(key: String = #function, _ factory: @escaping (P) -> T) -> ParameterFactory<P,T> {
         ParameterFactory(self, key: key, factory)
     }
 
     /// Creates and returns a Factory struct associated with the current` container. The default scope is
     /// `unique` unless otherwise specified using a scope modifier.
-    @inlinable public static func make<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+    @inlinable public static func makes<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
         Factory(shared, key: key, factory)
     }
 
     /// Creates and returns a ParameterFactory struct associated with the current` container. The default scope is
     /// `unique` unless otherwise specified using a scope modifier.
-    @inlinable public static func make<P,T>(key: String = #function, _ factory: @escaping (P) -> T) -> ParameterFactory<P,T> {
+    @inlinable public static func makes<P,T>(key: String = #function, _ factory: @escaping (P) -> T) -> ParameterFactory<P,T> {
         ParameterFactory(shared, key: key, factory)
     }
 
@@ -270,9 +269,9 @@ extension SharedContainer {
 /// }
 /// ```
 public final class Container: SharedContainer {
-    // Define the default shared container.
+    /// Define the default shared container.
     public static var shared = Container()
-    // Define the container's manager.
+    /// Define the container's manager.
     public var manager = ContainerManager()
 }
 
@@ -437,7 +436,7 @@ extension ContainerManager {
 /// ```swift
 /// extension Container {
 ///     var service: Factory<ServiceType> {
-///         make { MyService() }.singleton
+///         makes { MyService() }.singleton
 ///     }
 /// }
 /// ```
@@ -600,6 +599,17 @@ extension Scope {
 
 /// MARK: - Automatic registrations
 
+/// Add protocol to a container to support first-time registration of needed dependencies prior to first resolution on that container.
+///
+/// extension Container: AutoRegistering {
+///     func autoRegister() {
+///         someService.register {
+///             CrossModuleService()
+///         }
+///     }
+/// }
+///
+/// Note each instance of each container maintains its own autoRegistration state.
 public protocol AutoRegistering {
     func autoRegister()
 }
@@ -738,7 +748,7 @@ public protocol AutoRegistering {
 
 #endif
 
-/// Reset options for factory and registrations
+/// Reset options for Factory's and Container's
 public enum FactoryResetOptions {
     case all
     case none
@@ -761,7 +771,7 @@ private var globalDependencyChain: [String] = []
 
 // MARK: - Internal Protocols and Types
 
-// Internal protocol with functionality common to all Factory's
+/// Internal protocol with functionality common to all Factory's. Used to add scope and decorator modifiers to Factory.
 public protocol FactoryModifing {
     associatedtype P
     associatedtype T
@@ -777,7 +787,7 @@ extension FactoryModifing {
     }
 }
 
-// Shared registration type for Factory and ParameterFactory
+/// Shared registration type for Factory and ParameterFactory. Used internally to pass information from Factory to ContainerMaanger.
 public struct FactoryRegistration<P,T> {
     /// Id used to manage registrations and cached values. Usually looks something like "MyApp.Container.service".
     internal var id: String

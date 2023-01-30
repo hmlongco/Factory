@@ -3,6 +3,8 @@
 ### 2.0.0
 
 * Adds true Factory containers for container-based dependency resolution
+* Adds container-based scopes
+* Add per Factory decorators
 * Fixes ciricular dependency check when same class name used in seprate modules.
 
 ### 1.3.5

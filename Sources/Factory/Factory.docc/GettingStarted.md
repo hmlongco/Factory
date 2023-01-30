@@ -32,7 +32,7 @@ Containers also provide a convenient shortcut that will do the factory creation 
 ```swift
 extension Container {
     var service: Factory<ServiceType> {
-        make { MyService() }
+        makes { MyService() }
     }
 }
 ```

@@ -49,7 +49,7 @@ Containers also provide a convenient shortcut to make our factory and do our bin
 ```swift
 extension Container {
     var service: Factory<ServiceType> {
-        make { MyService() }
+        makes { MyService() }
     }
 }
 ```
@@ -110,7 +110,7 @@ Scopes behave as they did before, although they're now defined using a modifier 
 ```swift
 extension Container {
     var sharedService: Factory<ServiceType> {
-        make { MyService() }.shared
+        makes { MyService() }.shared
     }
 }
 ```
