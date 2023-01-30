@@ -42,7 +42,7 @@ To accomplish that we needed to extend a Factory ``Container``. Fortunately, Fac
 
 Within that container we define a new computed variable of type `Factory<ServiceType>`. This type must be explicity defined, and is usually a protocol to which the returned dependency conforms.
 
-Inside the computed variable we construct our Factory, providing it with a refernce to its container (self) and also with a factory closure that's used tp create an instance of our object when needed. That Factory is then returned to the caller, usually to be evaluated (see ``Factory/callAsFunction()``). Every time we resolve the returned factory we'll get a new, unique instance of our object.
+Inside the computed variable we construct our Factory, providing it with a reference to its container (self) and also with a factory closure that's used to create an instance of our object when needed. That Factory is then returned to the caller, usually to be evaluated (see ``Factory/callAsFunction()``). Every time we resolve the returned factory we'll get a new, unique instance of our object.
 
 Containers also provide a convenient shortcut to make our factory and do our binding for us.
 
@@ -68,7 +68,7 @@ Like SwftUI Views, Factory structs and modifiers are lightweight and transitory.
 
 ## Resolving a Factory
 
-To resolve a Factory and obtain an object or service of the desired type, one simply calls the Factory as s function. Here we use the `shared` container that's provided for each and every container type. 
+To resolve a Factory and obtain an object or service of the desired type, one simply calls the Factory as a function. Here we use the `shared` container that's provided for each and every container type. 
 
 ```swift
 let service = Container.shared.service()
@@ -101,7 +101,7 @@ container.service.register {
 
 This new factory closure overrides the original factory closure and clears the associated scope so that the next time this factory is resolved Factory will evaluate the new closure and return an instance of the newly registered object instead.
 
-> Warning: Registration "overrides" and scope caches are stored in the associated container. If the container ever goes out of scope, so will all of its registrations.
+> **Warning**: Registration "overrides" and scope caches are stored in the associated container. If the container ever goes out of scope, so will all of its registrations.
 
 ## Scopes
 
@@ -131,7 +131,7 @@ Factory is designed, implemented, documented, and maintained by [Michael Long](h
 
 * LinkedIn: [@hmlong](https://www.linkedin.com/in/hmlong/)
 * Medium: [@michaellong](https://medium.com/@michaellong)
-* Twitter: @hmlco
+* Twitter: [@hmlco](https://twitter.com/hmlco)
 
 Michael was also one of Google's [Open Source Peer Reward](https://opensource.googleblog.com/2021/09/announcing-latest-open-source-peer-bonus-winners.html) winners in 2021 for his work on Resolver.
 
