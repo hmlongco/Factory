@@ -13,6 +13,8 @@
 		4C4ED1F828FDADB3009E41A5 /* FunctionInjection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C4ED1F728FDADB3009E41A5 /* FunctionInjection.swift */; };
 		4C6EB40628D792D400D17E7D /* Alternatives.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C6EB40528D792D400D17E7D /* Alternatives.swift */; };
 		4C928B7E291568CD00679CBF /* InjectedObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C928B7D291568CD00679CBF /* InjectedObject.swift */; };
+		4C947C332988A13800815704 /* ContainerDemoViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C947C322988A13800815704 /* ContainerDemoViewModel.swift */; };
+		4C947C342988A1A100815704 /* ContainerDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C6914432988A05D0083A78F /* ContainerDemoView.swift */; };
 		4CA2240028CFC49900944456 /* Actors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CA223FF28CFC49900944456 /* Actors.swift */; };
 		4CC679202966749400FFBB6C /* FactoryDemoUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CC6791F2966749400FFBB6C /* FactoryDemoUITests.swift */; };
 		4CCC84412868CFBA00B474F7 /* Common.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4CCC84132868CF5C00B474F7 /* Common.framework */; };
@@ -87,8 +89,10 @@
 		4C46E062295642B100185E6E /* GenericAPIs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericAPIs.swift; sourceTree = "<group>"; };
 		4C46E0652956433200185E6E /* CircularDependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircularDependencies.swift; sourceTree = "<group>"; };
 		4C4ED1F728FDADB3009E41A5 /* FunctionInjection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FunctionInjection.swift; sourceTree = "<group>"; };
+		4C6914432988A05D0083A78F /* ContainerDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerDemoView.swift; sourceTree = "<group>"; };
 		4C6EB40528D792D400D17E7D /* Alternatives.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Alternatives.swift; sourceTree = "<group>"; };
 		4C928B7D291568CD00679CBF /* InjectedObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InjectedObject.swift; sourceTree = "<group>"; };
+		4C947C322988A13800815704 /* ContainerDemoViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContainerDemoViewModel.swift; sourceTree = "<group>"; };
 		4CA223FF28CFC49900944456 /* Actors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Actors.swift; sourceTree = "<group>"; };
 		4CC6791D2966749400FFBB6C /* FactoryDemoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FactoryDemoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4CC6791F2966749400FFBB6C /* FactoryDemoUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FactoryDemoUITests.swift; sourceTree = "<group>"; };
@@ -202,6 +206,8 @@
 				4CEEC35B2849309C00C979B3 /* FactoryDemoApp+Injection.swift */,
 				4CEEC34A284927EE00C979B3 /* ContentView.swift */,
 				4CEEC35F2849311000C979B3 /* ContentViewModel.swift */,
+				4C6914432988A05D0083A78F /* ContainerDemoView.swift */,
+				4C947C322988A13800815704 /* ContainerDemoViewModel.swift */,
 				4CEEC35D284930DB00C979B3 /* Services.swift */,
 				4CEEC34C284927EF00C979B3 /* Assets.xcassets */,
 				4C46E064295642BC00185E6E /* Concepts */,
@@ -389,9 +395,11 @@
 			files = (
 				4CEEC34B284927EE00C979B3 /* ContentView.swift in Sources */,
 				4CA2240028CFC49900944456 /* Actors.swift in Sources */,
+				4C947C342988A1A100815704 /* ContainerDemoView.swift in Sources */,
 				4CEEC35E284930DB00C979B3 /* Services.swift in Sources */,
 				4C928B7E291568CD00679CBF /* InjectedObject.swift in Sources */,
 				4C4ED1F828FDADB3009E41A5 /* FunctionInjection.swift in Sources */,
+				4C947C332988A13800815704 /* ContainerDemoViewModel.swift in Sources */,
 				4C46E063295642B100185E6E /* GenericAPIs.swift in Sources */,
 				4CEEC349284927EE00C979B3 /* FactoryDemoApp.swift in Sources */,
 				4C3F6FE92932C5F80084A647 /* AutomaticRegistration.swift in Sources */,

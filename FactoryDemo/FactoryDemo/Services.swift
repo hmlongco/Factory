@@ -53,7 +53,7 @@ public class MockServiceN: MyServiceType {
     }
 }
 
-class ParameterService {
+class ParameterService: MyServiceType {
     public let id = UUID()
     public let count: Int
     init(count: Int) {
@@ -64,7 +64,7 @@ class ParameterService {
     }
 }
 
-class MyConstructedService {
+class MyConstructedService: MyServiceType {
 
     public let id = UUID()
 

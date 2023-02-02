@@ -175,6 +175,10 @@ extension FactoryModifing {
     public var singleton: Self {
         map { $0.registration.scope = .singleton }
     }
+    /// Explictly defines unique scope
+    public var unique: Self {
+        map { $0.registration.scope = nil }
+    }
     /// Defines a custom dependency scope for this Factory
     public func custom(scope: Scope?) -> Self {
         map { $0.registration.scope = scope }
@@ -245,6 +249,12 @@ extension SharedContainer {
         manager.decorator = decorator
     }
 
+    /// Defines a with function to allow container transformation on assignment.
+    @discardableResult
+    public func with(_ transform: (Self) -> Void) -> Self {
+        transform(self)
+        return self
+    }
 }
 
 /// Containers are used by Factory to manage object creation, object resolution, and object lifecycles in general.
@@ -272,7 +282,9 @@ public final class Container: SharedContainer {
     /// Define the default shared container.
     public static var shared = Container()
     /// Define the container's manager.
-    public var manager = ContainerManager()
+    public var manager: ContainerManager = ContainerManager()
+    /// Public initializer
+    public init() {}
 }
 
 // MARK: - ContainerManager
@@ -369,7 +381,6 @@ public class ContainerManager {
 
     // Internals
     internal typealias FactoryMap = [String:AnyFactory]
-
     internal var autoRegistrationCheck = true
     internal lazy var registrations: FactoryMap = .init(minimumCapacity: 32)
     internal lazy var cache: Scope.Cache = Scope.Cache()
@@ -551,23 +562,25 @@ extension Scope {
         }
     }
 
-    /// A reference to the default unique scope manager.
-    public static let unique = Unique()
-    /// Defines the unique scope. A new instance will always be returned by the factory.
-    public final class Unique: Scope {
-        public override init() {
-            super.init()
-        }
-        internal override func resolve<T>(using cache: Cache, id: String, factory: () -> T) -> T {
-            factory()
-        }
-    }
+//    /// A reference to the default unique scope manager.
+//    public static let unique = Unique()
+//    /// Defines the unique scope. A new instance will always be returned by the factory.
+//    public final class Unique: Scope {
+//        public override init() {
+//            super.init()
+//        }
+//        internal override func resolve<T>(using cache: Cache, id: String, factory: () -> T) -> T {
+//            factory()
+//        }
+//    }
 
 }
 
 extension Scope {
 
     internal class Cache {
+        typealias CacheMap = [String:AnyBox]
+        /// Internal support functions
         @inlinable func value(forKey key: String) -> AnyBox? {
             cache[key]
         }
@@ -577,17 +590,16 @@ extension Scope {
         @inlinable func removeValue(forKey key: String) {
             cache.removeValue(forKey: key)
         }
+        internal func reset(scope: Scope) {
+            cache = cache.filter { $1.scopeID != scope.scopeID }
+        }
         /// Internal function to clear cache if needed
         @inlinable func reset() {
             if !cache.isEmpty {
                 cache = [:]
             }
         }
-        internal func reset(scope: Scope) {
-            cache = cache.filter { $1.scopeID != scope.scopeID }
-        }
-        typealias CacheMap = [String:AnyBox]
-        var cache: [String:AnyBox] = .init(minimumCapacity: 32)
+        var cache: CacheMap = .init(minimumCapacity: 32)
         #if DEBUG
         internal var isEmpty: Bool {
             cache.isEmpty
@@ -622,17 +634,20 @@ public protocol AutoRegistering {
 /// Property wrapper keyPaths resolve to the "shared" container required for each Container type.
 @propertyWrapper public struct Injected<T> {
 
+    private var reference: BoxedFactoryReference
     private var dependency: T
 
     /// Initializes the property wrapper. The dependency is resolved on initialization.
     /// - Parameter keyPath: KeyPath to a Factory on the default Container.
     public init(_ keyPath: KeyPath<Container, Factory<T>>) {
+        self.reference = FactoryReference<Container, T>(keypath: keyPath)
         self.dependency = Container.shared[keyPath: keyPath]()
     }
 
     /// Initializes the property wrapper. The dependency is resolved on initialization.
     /// - Parameter keyPath: KeyPath to a Factory on the specfied Container.
     public init<C:SharedContainer>(_ keyPath: KeyPath<C, Factory<T>>) {
+        self.reference = FactoryReference<C, T>(keypath: keyPath)
         self.dependency = C.shared[keyPath: keyPath]()
     }
 
@@ -640,6 +655,23 @@ public protocol AutoRegistering {
     public var wrappedValue: T {
         get { return dependency }
         mutating set { dependency = newValue }
+    }
+
+    /// Unwraps the property wrapper granting access to the resolve/reset function.
+    public var projectedValue: Injected<T> {
+        get { return self }
+        mutating set { self = newValue }
+    }
+
+    /// Grants access to the internal Factory.
+    public var factory: Factory<T> {
+        reference.factory()
+    }
+
+    /// Allows the user to force a Factory resolution.
+    public mutating func resolve(reset options: FactoryResetOptions = .none) {
+        factory.reset(options)
+        dependency = factory()
     }
 }
 
@@ -649,20 +681,20 @@ public protocol AutoRegistering {
 /// go out of scope as long as this property wrapper exists.
 @propertyWrapper public struct LazyInjected<T> {
 
-    private var factory: Factory<T>
+    private var reference: BoxedFactoryReference
     private var dependency: T!
     private var initialize = true
 
     /// Initializes the property wrapper. The dependency isn't resolved until the wrapped value is accessed for the first time.
     /// - Parameter keyPath: KeyPath to a Factory on the default Container.
     public init(_ keyPath: KeyPath<Container, Factory<T>>) {
-        self.factory = Container.shared[keyPath: keyPath]
+        self.reference = FactoryReference<Container, T>(keypath: keyPath)
     }
 
     /// Initializes the property wrapper. The dependency isn't resolved until the wrapped value is accessed for the first time.
     /// - Parameter keyPath: KeyPath to a Factory on the specfied Container.
     public init<C:SharedContainer>(_ keyPath: KeyPath<C, Factory<T>>) {
-        self.factory = C.shared[keyPath: keyPath]
+        self.reference = FactoryReference<C, T>(keypath: keyPath)
     }
 
     /// Manages the wrapped dependency, which is resolved when this value is accessed for the first time.
@@ -686,6 +718,11 @@ public protocol AutoRegistering {
         mutating set { self = newValue }
     }
 
+    /// Grants access to the internal Factory.
+    public var factory: Factory<T> {
+        reference.factory()
+    }
+
     /// Allows the user to force a Factory resolution.
     public mutating func resolve(reset options: FactoryResetOptions = .none) {
         factory.reset(options)
@@ -701,20 +738,20 @@ public protocol AutoRegistering {
 /// go out of scope as long as this property wrapper exists.
 @propertyWrapper public struct WeakLazyInjected<T> {
 
-    private var factory: Factory<T>
+    private var reference: BoxedFactoryReference
     private weak var dependency: AnyObject?
     private var initialize = true
 
     /// Initializes the property wrapper. The dependency isn't resolved until the wrapped value is accessed for the first time.
     /// - Parameter keyPath: KeyPath to a Factory on the default Container.
     public init(_ keyPath: KeyPath<Container, Factory<T>>) {
-        self.factory = Container.shared[keyPath: keyPath]
+        self.reference = FactoryReference<Container, T>(keypath: keyPath)
     }
 
     /// Initializes the property wrapper. The dependency isn't resolved until the wrapped value is accessed for the first time.
     /// - Parameter keyPath: KeyPath to a Factory on the specfied Container.
     public init<C:SharedContainer>(_ keyPath: KeyPath<C, Factory<T>>) {
-        self.factory = C.shared[keyPath: keyPath]
+        self.reference = FactoryReference<C, T>(keypath: keyPath)
     }
 
     /// Manages the wrapped dependency, which is resolved when this value is accessed for the first time.
@@ -738,11 +775,32 @@ public protocol AutoRegistering {
         mutating set { self = newValue }
     }
 
+    /// Grants access to the internal Factory.
+    public var factory: Factory<T> {
+        reference.factory()
+    }
+
     /// Allows the user to force a Factory resolution.
     public mutating func resolve(reset options: FactoryResetOptions = .none) {
         factory.reset(options)
         dependency = factory() as AnyObject
         initialize = false
+    }
+}
+
+/// Boxed wrapper to provide a Factory when asked
+internal protocol BoxedFactoryReference {
+    func factory<T>() -> Factory<T>
+}
+
+/// Helps resolve a reference to an injected factory without actually storing a Factory along with a hard, reference-counted pointer to its container
+internal struct FactoryReference<C: SharedContainer, T>: BoxedFactoryReference {
+    /// The stored factory keypath on the conainter
+    let keypath: KeyPath<C, Factory<T>>
+    /// Resolves the current shared container on the given type and returns the Factory references by the keyPath.
+    /// Note that types matched going in, so it should be safe to explicitly cast it coming back out.
+    func factory<T>() -> Factory<T> {
+        C.shared[keyPath: keypath] as! Factory<T>
     }
 }
 

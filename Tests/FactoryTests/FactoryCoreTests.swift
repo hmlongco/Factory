@@ -65,8 +65,11 @@ final class FactoryCoreTests: XCTestCase {
 
     func testResetOptions() {
         func registerAndResolve() {
-            Container.shared.cachedService.register {
-                MyService()
+            // Sneak in code coverage on with as well
+            Container.shared.with {
+                $0.cachedService.register {
+                    MyService()
+                }
             }
             let _ = Container.shared.cachedService()
         }

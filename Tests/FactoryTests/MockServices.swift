@@ -119,12 +119,17 @@ extension Container {
     var sharedValueService: Factory<ValueService> { makes { ValueService() }.shared }
     var sharedValueProtocol: Factory<ValueService> { makes { ValueService() }.shared }
 
+    var uniqueServiceType: Factory<MyServiceType> { makes { MyService() }.unique }
+
     var promisedService: Factory<MyServiceType?> { makes { nil } }
 
 }
 
 // For parameter tests
 extension Container {
+    static var parameterService: ParameterFactory<Int, ParameterService> {
+        makes { ParameterService(value: $0) }
+    }
     var parameterService: ParameterFactory<Int, ParameterService> {
         makes { ParameterService(value: $0) }
     }

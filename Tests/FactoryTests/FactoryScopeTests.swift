@@ -14,6 +14,12 @@ final class FactoryScopeTests: XCTestCase {
         XCTAssertTrue(service1.id != service2.id)
     }
 
+    func testExplicitUniqueScope() throws {
+        let service1 = Container.shared.uniqueServiceType()
+        let service2 = Container.shared.uniqueServiceType()
+        XCTAssertTrue(service1.id != service2.id)
+    }
+
     func testCachedScope() throws {
         let service1 = Container.shared.cachedService()
         let service2 = Container.shared.cachedService()

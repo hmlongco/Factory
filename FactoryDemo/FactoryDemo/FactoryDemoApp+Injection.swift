@@ -11,21 +11,19 @@ import Common
 import SwiftUI
 
 extension Container {
+
     var simpleService: Factory<SimpleService> {
         Factory(self) { SimpleService() }
     }
-}
 
-extension Container {
     var simpleService2: Factory<SimpleService> {
         .init(self) { SimpleService() }
     }
-}
 
-extension Container {
     var simpleService3: Factory<SimpleService> {
         makes { SimpleService() }
     }
+
 }
 
 extension Container {
@@ -34,10 +32,11 @@ extension Container {
 
 extension SharedContainer {
     var myServiceType: Factory<MyServiceType> { Factory(self) { MyService() } }
+    var sharedService: Factory<MyServiceType> { Factory(self) { MyService() }.shared }
 }
 
-final class OrderContainer: SharedContainer {
-    static var shared = OrderContainer()
+final class DemoContainer: ObservableObject, SharedContainer {
+    static var shared = DemoContainer()
 
     var optionalService: Factory<SimpleService?> { Factory(self) { nil } }
 
@@ -54,18 +53,26 @@ final class OrderContainer: SharedContainer {
     var manager = ContainerManager()
 }
 
-extension OrderContainer {
+extension DemoContainer {
     var argumentService: ParameterFactory<Int, ParameterService> {
         makes { count in ParameterService(count: count) }
     }
-
 }
 
-extension OrderContainer {
+extension DemoContainer {
     var selfService: Factory<MyServiceType> {
         makes { MyService() }
     }
 }
+
+#if DEBUG
+extension DemoContainer {
+    static var mock1: DemoContainer {
+        shared.myServiceType.register { ParameterService(count: 3) }
+        return shared
+    }
+}
+#endif
 
 extension Scope {
     static var session = Cached()
@@ -75,7 +82,7 @@ extension Container {
     func setupMocks() {
         myServiceType.register { MockServiceN(4) }
 
-        OrderContainer.shared.optionalService.register { SimpleService() }
+        DemoContainer.shared.optionalService.register { SimpleService() }
 
 #if DEBUG
         decorator {
@@ -88,25 +95,29 @@ extension Container {
 // implements
 
 public protocol AServiceType {
+    var id: UUID { get }
     func text() -> String
 }
 
 public protocol BServiceType {
+    var id: UUID { get }
     func text() -> String
 }
 
-class Multiple: AServiceType, BServiceType {
+class ImplementsAB: AServiceType, BServiceType {
+    var id: UUID = UUID()
     func text() -> String {
         return "Multiple"
     }
 }
 
 extension Container {
-    private var multiple: Factory<AServiceType&BServiceType> {
-        Factory(self) { Multiple() }
+    private var implementsAB: Factory<AServiceType&BServiceType> {
+        makes { ImplementsAB() }.graph
     }
-    var aService: Factory<AServiceType> { makes { self.multiple() } }
-    var bService: Factory<BServiceType> { makes { self.multiple() } }
+    var aService: Factory<AServiceType> { makes { self.implementsAB() } }
+    var bService: Factory<BServiceType> { makes { self.implementsAB() } }
+    var multiple: Factory<MultipleDemo> { makes { MultipleDemo() } }
 }
 
 class MultipleDemo {

@@ -183,15 +183,15 @@ final class FactoryInjectionTests: XCTestCase {
         XCTAssertTrue(service.service?.id == newId)
     }
 
-//    func testInjectionResolve() throws {
-//        let object = Container.shared.services1()
-//        let oldId = object.service.id
-//        // force resolution
-//        object.$service.resolve()
-//        // should have new instance
-//        let newId = object.service.id
-//        XCTAssertTrue(oldId != newId)
-//    }
+    func testInjectionResolve() throws {
+        let object = Container.shared.services1()
+        let oldId = object.service.id
+        // force resolution
+        object.$service.resolve()
+        // should have new instance
+        let newId = object.service.id
+        XCTAssertTrue(oldId != newId)
+    }
 
     func testLazyInjectionResolve() throws {
         let object = Container.shared.services2()

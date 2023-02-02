@@ -26,49 +26,12 @@ class ContentModuleViewModel: ObservableObject {
     }
 
     func testFactory() {
-        // test 1
-        print("\nMODULES: Testing registration on factory, type == MyCommonType")
-        Container.shared.commonType.register {
-            MyCommonType()
-        }
-        let network1 = Container.shared.networkType() // uses CommonType iternally
-        network1.test()
-
-        // test 2 - should reset and log Common
-        print("\nMODULES: Testing reset to see original type, type == Common")
-        Container.shared.manager.reset()
-        let network2 = Container.shared.networkType() // uses CommonType iternally
-        network2.test()
-
-        // test 3
-        print("\nMODULES: Testing registration on shared container, type == MyCommonType")
-        Container.shared.commonType.register {
-            MyCommonType() as CommonType
-        }
-        let network3 = Container.shared.networkType() // uses CommonType iternally
-        network3.test()
-
-        // test 4
-        print("\nMODULES: Testing cross-module registration change on Container, type == CommonNetworkType")
-        Container.shared.networkSetup()
-        let network4 = Container.shared.networkType()
-        network4.test()
-
-        // test 5
-        print("\nMODULES: Testing registration on optional promised factory, type == MyCommonType")
-        Container.shared.promisedType.register {
-            MyCommonType()
-        }
-        let network5 = Container.shared.promisedType()
-        network5?.test()
-
-        // test 6
-        //        print("\nMODULES: Testing registration on unsafe factory, type == MyCommonType")
-        //        Container.shared.unsafeType.register {
-        //            MyCommonType()
-        //        }
-        //        let network6 = Container.shared.unsafeType()
-        //        network6.test()
+        $service.resolve(reset: .all)
+        
+        let m1 = MultipleDemo()
+        print("MultipleDemo - W/O ROOT \(m1.aService.id == m1.bService.id)")
+        let m2 = Container.shared.multiple()
+        print("MultipleDemo - W/ROOT \(m2.aService.id == m2.bService.id)")
     }
 
 }
@@ -102,14 +65,14 @@ class ContentViewModel3: ObservableObject {
 }
 
 class ContentViewModel4: ObservableObject {
-    private lazy var service = OrderContainer.shared.constructedService()
+    private lazy var service = DemoContainer.shared.constructedService()
     func text() -> String {
         service.text()
     }
 }
 
 class ContentViewModel6: ObservableObject {
-    private let service = OrderContainer.shared.argumentService(8)
+    private let service = DemoContainer.shared.argumentService(8)
     func text() -> String {
         service.text()
     }
@@ -130,7 +93,7 @@ class ContentViewModel8: ObservableObject {
 }
 
 class ContentViewModel9: ObservableObject {
-    private let service = OrderContainer.shared.optionalService()
+    private let service = DemoContainer.shared.optionalService()
     func text() -> String {
         service?.text() ?? "HELP!"
     }

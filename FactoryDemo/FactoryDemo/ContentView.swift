@@ -25,6 +25,7 @@ struct ContentView: View {
             Button("Trigger Circular Dependency Crash") {
                 Container.testCircularDependencies()
             }
+            ContainerDemoView()
         }
         .padding()
     }

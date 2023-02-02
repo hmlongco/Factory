@@ -16,6 +16,7 @@ struct FactoryDemoApp: App {
             NavigationView {
                 ContentView()
             }
+            .environmentObject(DemoContainer.shared)
             .navigationViewStyle(StackNavigationViewStyle())
         }
     }

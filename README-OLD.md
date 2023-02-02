@@ -423,7 +423,7 @@ Here's an article that goes into the technique in more detail: [Factory and Func
 In a large project you might want to segregate factories into additional, smaller containers.
 
 ```swift
-class OrderContainer: SharedContainer {
+class DemoContainer: SharedContainer {
     static let optionalService = Factory<SimpleService?> { nil }
     static let constructedService = Factory { MyConstructedService(service: myServiceType()) }
     static let additionalService = Factory(scope: .session) { SimpleService() }
@@ -432,7 +432,7 @@ class OrderContainer: SharedContainer {
 Just define a new container derived from `SharedContainer` and add your factories there. You can have as many as you wish, and even derive other containers from your own. 
 
 ```swift
-class PaymentsContainer: OrderContainer {
+class PaymentsContainer: DemoContainer {
     static let paymentsServiceType = Factory<PaymentsServiceType> { PaymentsService(service: myServiceType()) }
 }
 ```
@@ -441,7 +441,7 @@ While a container *tree* makes dependency resolutions easier, don't forget that 
 
 ```swift
 class PaymentsContainer: SharedContainer {
-    static let anotherService = Factory { AnotherService(OrderContainer.optionalService()) }
+    static let anotherService = Factory { AnotherService(DemoContainer.optionalService()) }
 }
 ```
 It's important to note that in Factory a custom container is not really a "container" in the traditional sense. It's a name space, used to group similar or related factories together. All registrations and scopes are still managed by the parent `SharedContainer` class on which all containers are based.
