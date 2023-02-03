@@ -13,6 +13,9 @@ import Networking
 class ContentModuleViewModel: ObservableObject {
 
     @Injected(\.myServiceType) private var service
+    @Injected(\.networkType) private var network
+
+    private let simpleService = Container.shared.simpleService()
 
     @Published var name: String = "Michael"
 
@@ -26,7 +29,7 @@ class ContentModuleViewModel: ObservableObject {
     }
 
     func testFactory() {
-        $service.resolve(reset: .all)
+        $network.resolve(reset: .all)
         
         let m1 = MultipleDemo()
         print("MultipleDemo - W/O ROOT \(m1.aService.id == m1.bService.id)")

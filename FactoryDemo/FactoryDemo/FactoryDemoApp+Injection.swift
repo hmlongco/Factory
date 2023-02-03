@@ -50,6 +50,7 @@ final class DemoContainer: ObservableObject, SharedContainer {
         makes { SimpleService() }
             .custom(scope: .session)
     }
+
     var manager = ContainerManager()
 }
 
