@@ -793,11 +793,12 @@ internal protocol BoxedFactoryReference {
     func factory<T>() -> Factory<T>
 }
 
-/// Helps resolve a reference to an injected factory without actually storing a Factory along with a hard, reference-counted pointer to its container
+/// Helps resolve a reference to an injected factory's shared container without actually storing a Factory along
+/// with its hard, reference-counted pointer to that container.
 internal struct FactoryReference<C: SharedContainer, T>: BoxedFactoryReference {
     /// The stored factory keypath on the conainter
     let keypath: KeyPath<C, Factory<T>>
-    /// Resolves the current shared container on the given type and returns the Factory references by the keyPath.
+    /// Resolves the current shared container on the given type and returns the Factory referenced by the keyPath.
     /// Note that types matched going in, so it's safe to explicitly cast it coming back out.
     func factory<T>() -> Factory<T> {
         C.shared[keyPath: keypath] as! Factory<T>
