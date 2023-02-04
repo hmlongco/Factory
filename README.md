@@ -76,14 +76,14 @@ We can also use the `shared` container that's provided for each and every contai
 ```swift
 let service = Container.shared.service()
 ```
-Note that this approach is similar to the `let service = Container.service()` methodology used in Factory 1.0.
+Note that this is fundamentally the same `let service = Container.service()` Service Locator pattern used in Factory 1.0.
 
 Finally, you can also use the @Injected property wrapper. It now uses keyPaths to indicate the desired dependency.
 
 ```swift
 @Injected(\.service) var service: ServiceType
 ```
-The @Injected property wrapper looks for dependencies in the shared container, so this example is functionally identical to the `Container.shared.service()` example above.
+The @Injected property wrapper looks for dependencies in the shared container, so this example is functionally identical to the `Container.shared.service()` version shown above.
 
 ## Registering a new Factory closure
 
@@ -103,15 +103,20 @@ This new factory closure overrides the original factory closure and clears the a
 
 ## Scopes
 
-Scopes behave as they did before, although they're now defined using a modifier syntax on the Factory.
+Scopes behave as they did before, although they're now defined using a modifier syntax on the Factory. 
 
 ```swift
 extension Container {
     var sharedService: Factory<ServiceType> {
         makes { MyService() }.shared
     }
-}
+    var decoratedSharedService: Factory<MyServiceType> {
+        makes { MyService() }
+            .decorator { print("DECORATING \($0.id)") }
+            .shared
+    }
 ```
+Factory 2.0 also provides addtional modifiers, like the per-factory decorator shown above.
 
 ## Documentation
 
