@@ -1,7 +1,7 @@
 # Sample Registrations
 
 ### Basic
-Example of basic registration in a Factory 2.0 container
+Example of basic registration in a Factory 2.0 container.
 
 ```swift
 extension Container {
@@ -12,7 +12,7 @@ extension Container {
 ```
 
 ### Convenience
-Example of basic factory registration using convenience function
+Example of basic factory registration using convenience function.
 
 ```swift
 extension Container {
@@ -23,7 +23,7 @@ extension Container {
 ```
 
 ### Scopes
-Examples of scoped services in a Factory 2.0 container
+Examples of scoped services in a Factory 2.0 container.
 
 ```swift
 extension Container {
@@ -45,7 +45,7 @@ extension Container {
 ```
 
 ### Constructor Injection
-Example of service with constructor injection that requires another services
+Example of service with constructor injection that requires another service as a parameter. To obtain that dependency we simply ask the Factory dedicated to that service to provide one for us.
 
 ```swift
 extension Container {
@@ -58,7 +58,7 @@ extension Container {
 ```
 
 ### Parameters
-Example of parameterized functional registration in a Factory 2.0 container
+Example of parameterized functional registration in a Factory 2.0 container.
 
 ```swift
 extension Container {
@@ -69,7 +69,7 @@ extension Container {
 ```
 
 ### Same Types
-Example of correctly handling multiple instances of the same type
+Example of correctly handling multiple instances of the same type.
 
 ```swift
 extension Container {

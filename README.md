@@ -38,19 +38,17 @@ extension Container {
 }
 ```
 
-To accomplish that we needed to extend a Factory ``Container``. Fortunately, Factory provides one of those for us, so we'll use it.
+To accomplish that we needed to extend a Factory ``Container``. Fortunately, Factory provided one of those for us, so we used it.
 
-Within that container we define a new computed variable of type `Factory<ServiceType>`. This type must be explicity defined, and is usually a protocol to which the returned dependency conforms.
+Within that container we defined a new computed variable of type `Factory<ServiceType>`. This type must be explicity defined, and is usually a protocol to which the returned dependency conforms.
 
-Inside the computed variable we construct our Factory, providing it with a reference to its container (self) and also with a factory closure that's used to create an instance of our object when needed. That Factory is then returned to the caller, usually to be evaluated (see ``Factory/callAsFunction()``). Every time we resolve the returned factory we'll get a new, unique instance of our object.
+Inside the computed variable we constructed our Factory, providing it with a reference to its container (self) and also with a factory closure that's used to create an instance of our object when needed. That Factory is then returned to the caller, usually to be evaluated (see ``Factory/callAsFunction()``). Every time we resolve the returned factory we'll get a new, unique instance of our object.
 
-Containers also provide a convenient shortcut to make our factory and do our binding for us.
+Containers also provide a convenient shortcut that makes our factory and does our binding for us.
 
 ```swift
 extension Container {
-    var service: Factory<ServiceType> {
-        makes { MyService() }
-    }
+    var service: Factory<ServiceType> { makes { MyService() } }
 }
 ```
 
@@ -58,9 +56,7 @@ Just for reference, here's the Factory 1.x version.
 
 ```swift
 extension Container {
-    static var service = Factory<ServiceType> {
-        MyService()
-    }
+    static var service = Factory<ServiceType> { MyService() }
 }
 ```
 
@@ -68,18 +64,20 @@ Like SwftUI Views, Factory structs and modifiers are lightweight and transitory.
 
 ## Resolving a Factory
 
-To resolve a Factory and obtain an object or service of the desired type, one simply calls the Factory as a function. Here we use the `shared` container that's provided for each and every container type. 
-
-```swift
-let service = Container.shared.service()
-```
-The resolved instance may be brand new or Factory may return a cached value from the specified ``Scope``.
-
-If you're passing an instance of a container around to your views or view models, just call it directly.
+To resolve a Factory and obtain an object or service of the desired type, one simply calls the Factory as a function. If you're passing an instance of a container around to your views or view models, just call it directly.
 
 ```swift
 let service = container.service()
 ```
+The resolved instance may be brand new or Factory may return a cached value from the specified ``Scope``.
+
+We can also use the `shared` container that's provided for each and every container type.
+
+```swift
+let service = Container.shared.service()
+```
+Note that this approach is similar to the `let service = Container.service()` methodology used in Factory 1.0.
+
 Finally, you can also use the @Injected property wrapper. It now uses keyPaths to indicate the desired dependency.
 
 ```swift

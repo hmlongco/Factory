@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4C386E6D298EDE960018FB55 /* Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C386E6C298EDE960018FB55 /* Helpers.swift */; };
 		4C3F6FE92932C5F80084A647 /* AutomaticRegistration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C3F6FE82932C5F80084A647 /* AutomaticRegistration.swift */; };
 		4C46E063295642B100185E6E /* GenericAPIs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C46E062295642B100185E6E /* GenericAPIs.swift */; };
 		4C46E0662956433200185E6E /* CircularDependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C46E0652956433200185E6E /* CircularDependencies.swift */; };
@@ -85,6 +86,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4C386E6C298EDE960018FB55 /* Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Helpers.swift; sourceTree = "<group>"; };
 		4C3F6FE82932C5F80084A647 /* AutomaticRegistration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutomaticRegistration.swift; sourceTree = "<group>"; };
 		4C46E062295642B100185E6E /* GenericAPIs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericAPIs.swift; sourceTree = "<group>"; };
 		4C46E0652956433200185E6E /* CircularDependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircularDependencies.swift; sourceTree = "<group>"; };
@@ -139,6 +141,7 @@
 				4C46E0652956433200185E6E /* CircularDependencies.swift */,
 				4C4ED1F728FDADB3009E41A5 /* FunctionInjection.swift */,
 				4C46E062295642B100185E6E /* GenericAPIs.swift */,
+				4C386E6C298EDE960018FB55 /* Helpers.swift */,
 				4C928B7D291568CD00679CBF /* InjectedObject.swift */,
 			);
 			path = Concepts;
@@ -406,6 +409,7 @@
 				4CEEC35C2849309C00C979B3 /* FactoryDemoApp+Injection.swift in Sources */,
 				4C46E0662956433200185E6E /* CircularDependencies.swift in Sources */,
 				4C6EB40628D792D400D17E7D /* Alternatives.swift in Sources */,
+				4C386E6D298EDE960018FB55 /* Helpers.swift in Sources */,
 				4CEEC3602849311000C979B3 /* ContentViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

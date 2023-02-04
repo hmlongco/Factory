@@ -38,25 +38,16 @@ import Foundation
 /// and then immediately discared once their purpose has been served.
 public struct Factory<T>: FactoryModifing {
 
-    /// Initializer which creates a new Factory capable of managing dependencies of the desired type.
+    /// Creates a new Factory capable of managing dependencies of the desired type.
     ///
     /// - Parameters:
-    ///   - container: The bound container that manages registrations and scope caching for this Factory.
-    ///   - scope: The cache (if any) used to manage the lifetime of the created object. Unique is the default. (no caching)
+    ///   - container: The bound container that manages registrations and scope caching for this Factory. The scope helper functions bind the
+    ///   current container as well defining te scope.
     ///   - key: Hidden value used to differentiate different instances of the same type in the same container.
     ///   - factory: A factory closure that produces an object of the desired type when required.
     public init(_ container: SharedContainer, key: String = #function, _ factory: @escaping () -> T) {
         self.registration = FactoryRegistration<Void,T>(id: "\(container.self).\(key)", container: container, factory: factory)
     }
-
-    //    /// Deprecated initializer
-    //    @available(*, deprecated, message: "Container method syntax preferred")
-    //    public init(scope: Scope = .unique, _ factory: @escaping () -> T) {
-    //        self.id = "\(Container.shared.self).\(UUID().uuidString)"
-    //        self.container = Container.shared
-    //        self.factory = TypedFactory(factory: factory)
-    //        self.scope = scope
-    //    }
 
     /// Evaluates the factory and returns an object or service of the desired type. The resolved instance may be brand new or Factory may
     /// return a cached value from the specified scope.
@@ -184,15 +175,15 @@ extension FactoryModifing {
         map { $0.registration.scope = scope }
     }
 
+    /// Adds factory specific decorator
+    public func decorator(_ decorator: @escaping (_ instance: T) -> Void) -> Self {
+        map { $0.registration.decorator = decorator }
+    }
+
     /// Resets the Factory's behavior to its original state, removing any registraions and clearing any cached items from the specified scope.
     /// - Parameter options: options description
     public func reset(_ options: FactoryResetOptions = .all) {
         registration.container.manager.reset(options: options, for: registration.id)
-    }
-
-    /// Adds factory specific decorator
-    public func decorator(_ decorator: @escaping (_ instance: T) -> Void) -> Self {
-        map { $0.registration.decorator = decorator }
     }
 
 }
@@ -561,18 +552,6 @@ extension Scope {
             super.init()
         }
     }
-
-//    /// A reference to the default unique scope manager.
-//    public static let unique = Unique()
-//    /// Defines the unique scope. A new instance will always be returned by the factory.
-//    public final class Unique: Scope {
-//        public override init() {
-//            super.init()
-//        }
-//        internal override func resolve<T>(using cache: Cache, id: String, factory: () -> T) -> T {
-//            factory()
-//        }
-//    }
 
 }
 
