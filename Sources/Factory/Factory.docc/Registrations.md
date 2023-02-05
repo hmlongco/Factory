@@ -1,7 +1,11 @@
 # Sample Registrations
 
+## Examples
+
+There are many ways to register dependencies with Factory. Here are a few examples.
+
 ### Basic
-Example of basic registration in a Factory 2.0 container.
+Example of a full, formal dependency registration in a Factory 2.0 container.
 
 ```swift
 extension Container {
@@ -12,7 +16,7 @@ extension Container {
 ```
 
 ### Convenience
-Example of basic factory registration using convenience function.
+Example of a basic factory registration using `makes` convenience function.
 
 ```swift
 extension Container {

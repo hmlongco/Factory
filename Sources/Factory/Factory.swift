@@ -7,7 +7,7 @@
 
 import Foundation
 
-// MARK: - The Factory
+// MARK: - Factory
 
 /// A Factory manages the dependency injection process for a specific object or service and produces an object of the desired type
 /// when required. This may be a brand new instance or Factory may return a previously cached value from the specified scope.
@@ -148,6 +148,13 @@ public struct ParameterFactory<P,T>: FactoryModifing {
 
 // MARK: Factory Modifiers
 
+/// Public protocol with functionality common to all Factory's. Used to add scope and decorator modifiers to Factory.
+public protocol FactoryModifing {
+    associatedtype P
+    associatedtype T
+    var registration: FactoryRegistration<P,T> { get set }
+}
+
 extension FactoryModifing {
 
     /// Defines Factory's dependency scope to be cached
@@ -182,18 +189,59 @@ extension FactoryModifing {
 
     /// Resets the Factory's behavior to its original state, removing any registraions and clearing any cached items from the specified scope.
     /// - Parameter options: options description
-    public func reset(_ options: FactoryResetOptions = .all) {
+    public func reset(_ options: ContainerManager.ResetOptions = .all) {
         registration.container.manager.reset(options: options, for: registration.id)
     }
 
+}
+
+extension FactoryModifing {
+    /// Allows builder-style mutation of self
+    fileprivate func map (_ mutate: (inout Self) -> Void) -> Self {
+        var mutable = self
+        mutate(&mutable)
+        return mutable
+    }
 }
 
 // MARK: - Containers
 
 /// Containers are used by Factory to manage object creation, object resolution, and object lifecycles in general.
 ///
+/// Factory's are defined within container extensions, and must be provided with a reference to that container on
+/// initialization.
+/// ```swift
+/// extension Container {
+///     var service: Factory<ServiceType> {
+///         Factory(self) { MyService() }
+///     }
+/// }
+/// ```
 /// Registrations and scope caches will persist as long as the associated container remains in scope.
 ///
+/// This is the default Container provided for your convenience by Factory. If you'd like to define your own, use the
+/// following as a template.
+/// ```swift
+/// public final class MyContainer: SharedContainer {
+///      public static var shared = MyContainer()
+///      public var manager = ContainerManager()
+/// }
+/// ```
+public final class Container: SharedContainer {
+
+    /// Define the default shared container.
+    public static var shared = Container()
+
+    /// Define the container's manager.
+    public var manager: ContainerManager = ContainerManager()
+
+    /// Public initializer
+    public init() {}
+
+}
+
+// MARK: - SharedContainer
+
 /// SharedContainer defines the protocol all Containers must adopt.
 public protocol SharedContainer: AnyObject {
 
@@ -248,36 +296,6 @@ extension SharedContainer {
     }
 }
 
-/// Containers are used by Factory to manage object creation, object resolution, and object lifecycles in general.
-///
-/// Factory's are defined within container extensions, and must be provided with a reference to that container on
-/// initialization.
-/// ```swift
-/// extension Container {
-///     var service: Factory<ServiceType> {
-///         Factory(self) { MyService() }
-///     }
-/// }
-/// ```
-/// Registrations and scope caches will persist as long as the associated container remains in scope.
-///
-/// This is the default Container provided for your convenience by Factory. If you'd like to define your own, use the
-/// following as a template.
-/// ```swift
-/// public final class MyContainer: SharedContainer {
-///      public static var shared = MyContainer()
-///      public var manager = ContainerManager()
-/// }
-/// ```
-public final class Container: SharedContainer {
-    /// Define the default shared container.
-    public static var shared = Container()
-    /// Define the container's manager.
-    public var manager: ContainerManager = ContainerManager()
-    /// Public initializer
-    public init() {}
-}
-
 // MARK: - ContainerManager
 
 /// ContainerManager encapsulates and manages the registration, resolution, and scope caching mechanisms for a given container.
@@ -285,6 +303,73 @@ public class ContainerManager {
 
     /// Public initializer
     public init() {}
+
+    /// Internal closure decorates all factory resolutions for this container.
+    internal var decorator: ((Any) -> ())?
+    internal var autoRegistrationCheck = true
+    internal typealias FactoryMap = [String:AnyFactory]
+    internal lazy var registrations: FactoryMap = .init(minimumCapacity: 32)
+    internal lazy var cache: Scope.Cache = Scope.Cache()
+    internal lazy var stack: [(FactoryMap, Scope.Cache.CacheMap, Bool)] = []
+
+}
+
+extension ContainerManager {
+
+    /// Reset options for Factory's and Container's
+    public enum ResetOptions {
+        case all
+        case none
+        case registration
+        case scope
+    }
+
+    /// Resets the Container to its original state, removing all registrations and clearing all scope caches.
+    public func reset(options: ResetOptions = .all) {
+        guard options != .none else {
+            return
+        }
+        defer { globalRecursiveLock.unlock() }
+        globalRecursiveLock.lock()
+        switch options {
+        case .registration:
+            registrations = [:]
+        case .scope:
+            cache.reset()
+        default:
+            registrations = [:]
+            cache.reset()
+        }
+    }
+
+    /// Clears any cached values associated with a specific scope.
+    public func reset(scope: Scope) {
+        defer { globalRecursiveLock.unlock() }
+        globalRecursiveLock.lock()
+        cache.reset(scope: scope)
+    }
+
+    /// Test function pushes the current registration and cache states
+    public func push() {
+        defer { globalRecursiveLock.unlock() }
+        globalRecursiveLock.lock()
+        stack.append((registrations, cache.cache, autoRegistrationCheck))
+    }
+
+    /// Test function pops and restores a previously pushed registration and cache state
+    public func pop() {
+        defer { globalRecursiveLock.unlock() }
+        globalRecursiveLock.lock()
+        if let state = stack.popLast() {
+            registrations = state.0
+            cache.cache = state.1
+            autoRegistrationCheck = state.2
+        }
+    }
+
+}
+
+extension ContainerManager {
 
     /// Resolves a Factory, returning an instance of the desired type. All roads lead here.
     ///
@@ -352,7 +437,7 @@ public class ContainerManager {
     /// - Parameters:
     ///   - options: Reset option: .all, .registration, .scope, .none
     ///   - id: ID of item to remove from the appropriate cache.
-    internal func reset(options: FactoryResetOptions, for id: String) {
+    internal func reset(options: ResetOptions, for id: String) {
         guard options != .none else { return }
         defer { globalRecursiveLock.unlock() }
         globalRecursiveLock.lock()
@@ -364,63 +449,6 @@ public class ContainerManager {
         default:
             registrations.removeValue(forKey: id)
             cache.removeValue(forKey: id)
-        }
-    }
-
-    /// Support closure decorates all factory resolutions for this container.
-    internal var decorator: ((Any) -> ())?
-
-    // Internals
-    internal typealias FactoryMap = [String:AnyFactory]
-    internal var autoRegistrationCheck = true
-    internal lazy var registrations: FactoryMap = .init(minimumCapacity: 32)
-    internal lazy var cache: Scope.Cache = Scope.Cache()
-    internal lazy var stack: [(FactoryMap, Scope.Cache.CacheMap, Bool)] = []
-}
-
-
-extension ContainerManager {
-
-    /// Resets the Container to its original state, removing all registrations and clearing all scope caches.
-    public func reset(options: FactoryResetOptions = .all) {
-        guard options != .none else {
-            return
-        }
-        defer { globalRecursiveLock.unlock() }
-        globalRecursiveLock.lock()
-        switch options {
-        case .registration:
-            registrations = [:]
-        case .scope:
-            cache.reset()
-        default:
-            registrations = [:]
-            cache.reset()
-        }
-    }
-
-    /// Clears any cached values associated with a specific scope.
-    public func reset(scope: Scope) {
-        defer { globalRecursiveLock.unlock() }
-        globalRecursiveLock.lock()
-        cache.reset(scope: scope)
-    }
-
-    /// Test function pushes the current registration and cache states
-    public func push() {
-        defer { globalRecursiveLock.unlock() }
-        globalRecursiveLock.lock()
-        stack.append((registrations, cache.cache, autoRegistrationCheck))
-    }
-
-    /// Test function pops and restores a previously pushed registration and cache state
-    public func pop() {
-        defer { globalRecursiveLock.unlock() }
-        globalRecursiveLock.lock()
-        if let state = stack.popLast() {
-            registrations = state.0
-            cache.cache = state.1
-            autoRegistrationCheck = state.2
         }
     }
 
@@ -487,6 +515,7 @@ extension Scope {
 
     /// A reference to the default cached scope manager.
     public static let cached = Cached()
+
     /// Defines a cached scope. The same instance will be returned by the factory until the cache is reset.
     public final class Cached: Scope {
         public override init() {
@@ -496,6 +525,7 @@ extension Scope {
 
     /// A reference to the default graph scope manager.
     public static let graph = Graph()
+
     /// Defines the graph scope. A single instance of a given type will be returned during a given resolution cycle.
     ///
     /// This scope is managed and cleared by the main resolution function at the end of each resolution cycle.
@@ -513,6 +543,7 @@ extension Scope {
 
     /// A reference to the default shared scope manager.
     public static let shared = Shared()
+
     /// Defines a shared (weak) scope. The same instance will be returned by the factory as long as someone maintains a strong reference.
     public final class Shared: Scope {
         public override init() {
@@ -546,6 +577,7 @@ extension Scope {
 
     /// A reference to the default singleton scope manager.
     public static let singleton = Singleton()
+
     /// Defines the singleton scope. The same instance will always be returned by the factory.
     public final class Singleton: Scope {
         public override init() {
@@ -648,7 +680,7 @@ public protocol AutoRegistering {
     }
 
     /// Allows the user to force a Factory resolution.
-    public mutating func resolve(reset options: FactoryResetOptions = .none) {
+    public mutating func resolve(reset options: ContainerManager.ResetOptions = .none) {
         factory.reset(options)
         dependency = factory()
     }
@@ -703,7 +735,7 @@ public protocol AutoRegistering {
     }
 
     /// Allows the user to force a Factory resolution.
-    public mutating func resolve(reset options: FactoryResetOptions = .none) {
+    public mutating func resolve(reset options: ContainerManager.ResetOptions = .none) {
         factory.reset(options)
         dependency = factory()
         initialize = false
@@ -760,7 +792,7 @@ public protocol AutoRegistering {
     }
 
     /// Allows the user to force a Factory resolution.
-    public mutating func resolve(reset options: FactoryResetOptions = .none) {
+    public mutating func resolve(reset options: ContainerManager.ResetOptions = .none) {
         factory.reset(options)
         dependency = factory() as AnyObject
         initialize = false
@@ -786,14 +818,6 @@ internal struct FactoryReference<C: SharedContainer, T>: BoxedFactoryReference {
 
 #endif
 
-/// Reset options for Factory's and Container's
-public enum FactoryResetOptions {
-    case all
-    case none
-    case registration
-    case scope
-}
-
 // MARK: - Internal Variables
 
 /// Master recursive lock
@@ -808,22 +832,6 @@ private var globalDependencyChain: [String] = []
 #endif
 
 // MARK: - Internal Protocols and Types
-
-/// Internal protocol with functionality common to all Factory's. Used to add scope and decorator modifiers to Factory.
-public protocol FactoryModifing {
-    associatedtype P
-    associatedtype T
-    var registration: FactoryRegistration<P,T> { get set }
-}
-
-extension FactoryModifing {
-    /// Allows builder-style mutation of self
-    fileprivate func map (_ mutate: (inout Self) -> Void) -> Self {
-        var mutable = self
-        mutate(&mutable)
-        return mutable
-    }
-}
 
 /// Shared registration type for Factory and ParameterFactory. Used internally to pass information from Factory to ContainerMaanger.
 public struct FactoryRegistration<P,T> {
