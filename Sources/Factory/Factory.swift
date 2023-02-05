@@ -1,8 +1,27 @@
 //
-//  Factory.swift
-//  Factory
+// Factory.swift
 //
-//  Created by Michael Long on 1/15/23.
+// GitHub Repo and Documentation: https://github.com/hmlongco/Factory
+//
+// Copyright © 2022 Michael Long. All rights reserved.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 //
 
 import Foundation
@@ -204,12 +223,14 @@ extension FactoryModifing {
     }
 }
 
-// MARK: - Containers
+// MARK: - Container
 
-/// Containers are used by Factory to manage object creation, object resolution, and object lifecycles in general.
+/// This is the default Container provided for your convenience by Factory.
 ///
-/// Factory's are defined within container extensions, and must be provided with a reference to that container on
-/// initialization.
+/// Containers are used by Factory to manage object creation, object resolution, and object lifecycles in general. Registrations and scope
+/// caches will persist as long as the associated container remains in scope.
+///
+/// Factory's are defined within container extensions, and must be provided with a reference to that container on initialization.
 /// ```swift
 /// extension Container {
 ///     var service: Factory<ServiceType> {
@@ -217,10 +238,7 @@ extension FactoryModifing {
 ///     }
 /// }
 /// ```
-/// Registrations and scope caches will persist as long as the associated container remains in scope.
-///
-/// This is the default Container provided for your convenience by Factory. If you'd like to define your own, use the
-/// following as a template.
+/// If you'd like to define your own containers, use the following as a template.
 /// ```swift
 /// public final class MyContainer: SharedContainer {
 ///      public static var shared = MyContainer()
@@ -454,7 +472,7 @@ extension ContainerManager {
 
 }
 
-// MARK: - Scopes
+// MARK: - Scope
 
 /// Scopes are used to define the liefetime of resolved dependencies. Factory provides several scope types,
 /// including `Singleton`, `Cached`, `Graph`, and `Shared`.
@@ -620,7 +638,7 @@ extension Scope {
 
 }
 
-/// MARK: - Automatic registrations
+/// MARK: - Automatic Registrations
 
 /// Add protocol to a container to support first-time registration of needed dependencies prior to first resolution on that container.
 ///

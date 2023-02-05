@@ -67,7 +67,7 @@ Unless otherwise specified, the @Injected property wrapper looks for dependencie
 
 What happens if we want to change the behavior of a Factory? What if the system requires changes during runtime, or what if we want our factory to provide mocks and testing doubles? 
 
-It's easy. Just register a new closure with the Factory.
+It's easy. Just register a new closure with the existing Factory.
 
 ```swift
 container.service.register {
@@ -78,3 +78,14 @@ container.service.register {
 This new factory closure overrides the original factory closure and clears the associated scope so that the next time this factory is resolved Factory will evaluate the new closure and return an instance of the newly registered object instead.
 
 > Warning: Registration "overrides" and scope caches are stored in the associated container. If that container ever goes out of scope, so will all of its registrations and cached objects.
+
+For more examples of container passing and Factory resolutions see: <doc:Resolutions>.
+
+## Topics
+
+### Examples
+
+Some code samples demonstration various ways to regsiter and resolve Factory's.
+
+- <doc:Registrations>
+- <doc:Resolutions>
