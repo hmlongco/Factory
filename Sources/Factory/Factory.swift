@@ -32,7 +32,7 @@ import Foundation
 /// when required. This may be a brand new instance or Factory may return a previously cached value from the specified scope.
 ///
 /// Let's define a Factory that returns an instance of `ServiceType`. To do that we need to extend a Factory `Container` and within
-/// that container we define a new computed variable of type `Factory<ServiceType>`. The type must be explicity defined, and is usually a
+/// that container we define a new computed variable of type `Factory<ServiceType>`. The type must be explicitly defined, and is usually a
 /// protocol to which the returned dependency conforms.
 /// ```swift
 /// extension Container {
@@ -41,7 +41,7 @@ import Foundation
 ///     }
 /// }
 /// ```
-/// Inside the computed variable we build our Factory, providing it with a refernce to its container and also with a factory closure that
+/// Inside the computed variable we build our Factory, providing it with a reference to its container and also with a factory closure that
 /// creates an instance of our object when needed. That Factory is then returned to the caller, usually to be evaluated (see `callAsFunction()`
 /// below). Every time we resolve this factory we'll get a new, unique instance of our object.
 ///
@@ -53,15 +53,15 @@ import Foundation
 ///     }
 /// }
 /// ```
-/// Like SwftUI Views, Factory structs and modifiers are lightweight and transitory. Ther're created when needed
-/// and then immediately discared once their purpose has been served.
+/// Like SwiftUI Views, Factory structs and modifiers are lightweight and transitory. They're created when needed
+/// and then immediately discarded once their purpose has been served.
 public struct Factory<T>: FactoryModifing {
 
     /// Creates a new Factory capable of managing dependencies of the desired type.
     ///
     /// - Parameters:
     ///   - container: The bound container that manages registrations and scope caching for this Factory. The scope helper functions bind the
-    ///   current container as well defining te scope.
+    ///   current container as well defining the scope.
     ///   - key: Hidden value used to differentiate different instances of the same type in the same container.
     ///   - factory: A factory closure that produces an object of the desired type when required.
     public init(_ container: SharedContainer, key: String = #function, _ factory: @escaping () -> T) {
@@ -108,7 +108,7 @@ public struct Factory<T>: FactoryModifing {
     ///     SomeService()
     /// }
     /// ```
-    /// This is how default functionality is overriden in order to change the nature of the system at runtime, and is the primary mechanism
+    /// This is how default functionality is overridden in order to change the nature of the system at runtime, and is the primary mechanism
     /// used to provide mocks and testing doubles.
     ///
     /// Registration "overrides" are stored in the associated container. If the container ever goes our of scope, so
@@ -192,7 +192,7 @@ extension FactoryModifing {
     public var singleton: Self {
         map { $0.registration.scope = .singleton }
     }
-    /// Explictly defines unique scope
+    /// Explicitly defines unique scope
     public var unique: Self {
         map { $0.registration.scope = nil }
     }
@@ -206,7 +206,7 @@ extension FactoryModifing {
         map { $0.registration.decorator = decorator }
     }
 
-    /// Resets the Factory's behavior to its original state, removing any registraions and clearing any cached items from the specified scope.
+    /// Resets the Factory's behavior to its original state, removing any registrations and clearing any cached items from the specified scope.
     /// - Parameter options: options description
     public func reset(_ options: ContainerManager.ResetOptions = .all) {
         registration.container.manager.reset(options: options, for: registration.id)
@@ -269,7 +269,7 @@ public protocol SharedContainer: AnyObject {
     /// mixed environments where you're passing container references AND using the @Injected property wrappers.
     static var shared: Self { get }
 
-    /// Defines the ContainerManager used to manage registrations, resolutions, and scope caching for that container. Ecapsulating the code in
+    /// Defines the ContainerManager used to manage registrations, resolutions, and scope caching for that container. Encapsulating the code in
     /// this fashion makes creating and using your own custom containers much simpler.
     var manager: ContainerManager { get set }
 }
@@ -277,25 +277,25 @@ public protocol SharedContainer: AnyObject {
 /// Defines the default factory providers for containers
 extension SharedContainer {
 
-    /// Creates and returns a Factory struct associated with the current` container. The default scope is
+    /// Creates and returns a Factory struct associated with the current container. The default scope is
     /// `unique` unless otherwise specified using a scope modifier.
     @inlinable public func makes<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
         Factory(self, key: key, factory)
     }
 
-    /// Creates and returns a ParameterFactory struct associated with the current` container. The default scope is
+    /// Creates and returns a ParameterFactory struct associated with the current container. The default scope is
     /// `unique` unless otherwise specified using a scope modifier.
     @inlinable public func makes<P,T>(key: String = #function, _ factory: @escaping (P) -> T) -> ParameterFactory<P,T> {
         ParameterFactory(self, key: key, factory)
     }
 
-    /// Creates and returns a Factory struct associated with the current` container. The default scope is
+    /// Creates and returns a Factory struct associated with the current container. The default scope is
     /// `unique` unless otherwise specified using a scope modifier.
     @inlinable public static func makes<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
         Factory(shared, key: key, factory)
     }
 
-    /// Creates and returns a ParameterFactory struct associated with the current` container. The default scope is
+    /// Creates and returns a ParameterFactory struct associated with the current container. The default scope is
     /// `unique` unless otherwise specified using a scope modifier.
     @inlinable public static func makes<P,T>(key: String = #function, _ factory: @escaping (P) -> T) -> ParameterFactory<P,T> {
         ParameterFactory(shared, key: key, factory)
@@ -450,7 +450,7 @@ extension ContainerManager {
         cache.removeValue(forKey: id)
     }
 
-    /// Support function resets the behavior for a specific Factory to its original state, removing any assocatioed registraions and clearing
+    /// Support function resets the behavior for a specific Factory to its original state, removing any associated registrations and clearing
     /// any cached instances from the specified scope.
     /// - Parameters:
     ///   - options: Reset option: .all, .registration, .scope, .none
@@ -474,7 +474,7 @@ extension ContainerManager {
 
 // MARK: - Scope
 
-/// Scopes are used to define the liefetime of resolved dependencies. Factory provides several scope types,
+/// Scopes are used to define the lifetime of resolved dependencies. Factory provides several scope types,
 /// including `Singleton`, `Cached`, `Graph`, and `Shared`.
 ///
 /// When a scope is associated with a Factory the first time the dependency is resolved a reference to that object
@@ -674,7 +674,7 @@ public protocol AutoRegistering {
     }
 
     /// Initializes the property wrapper. The dependency is resolved on initialization.
-    /// - Parameter keyPath: KeyPath to a Factory on the specfied Container.
+    /// - Parameter keyPath: KeyPath to a Factory on the specified Container.
     public init<C:SharedContainer>(_ keyPath: KeyPath<C, Factory<T>>) {
         self.reference = FactoryReference<C, T>(keypath: keyPath)
         self.dependency = C.shared[keyPath: keyPath]()
@@ -721,7 +721,7 @@ public protocol AutoRegistering {
     }
 
     /// Initializes the property wrapper. The dependency isn't resolved until the wrapped value is accessed for the first time.
-    /// - Parameter keyPath: KeyPath to a Factory on the specfied Container.
+    /// - Parameter keyPath: KeyPath to a Factory on the specified Container.
     public init<C:SharedContainer>(_ keyPath: KeyPath<C, Factory<T>>) {
         self.reference = FactoryReference<C, T>(keypath: keyPath)
     }
@@ -778,7 +778,7 @@ public protocol AutoRegistering {
     }
 
     /// Initializes the property wrapper. The dependency isn't resolved until the wrapped value is accessed for the first time.
-    /// - Parameter keyPath: KeyPath to a Factory on the specfied Container.
+    /// - Parameter keyPath: KeyPath to a Factory on the specified Container.
     public init<C:SharedContainer>(_ keyPath: KeyPath<C, Factory<T>>) {
         self.reference = FactoryReference<C, T>(keypath: keyPath)
     }
@@ -825,7 +825,7 @@ internal protocol BoxedFactoryReference {
 /// Helps resolve a reference to an injected factory's shared container without actually storing a Factory along
 /// with its hard, reference-counted pointer to that container.
 internal struct FactoryReference<C: SharedContainer, T>: BoxedFactoryReference {
-    /// The stored factory keypath on the conainter
+    /// The stored factory keypath on the container
     let keypath: KeyPath<C, Factory<T>>
     /// Resolves the current shared container on the given type and returns the Factory referenced by the keyPath.
     /// Note that types matched going in, so it's safe to explicitly cast it coming back out.
@@ -851,7 +851,7 @@ private var globalDependencyChain: [String] = []
 
 // MARK: - Internal Protocols and Types
 
-/// Shared registration type for Factory and ParameterFactory. Used internally to pass information from Factory to ContainerMaanger.
+/// Shared registration type for Factory and ParameterFactory. Used internally to pass information from Factory to ContainerManager.
 public struct FactoryRegistration<P,T> {
     /// Id used to manage registrations and cached values. Usually looks something like "MyApp.Container.service".
     internal var id: String
