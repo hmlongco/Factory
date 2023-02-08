@@ -29,4 +29,4 @@ Ready to get started?
 
 ### Advanced Topics
 
-- <doc:ResolutionCycles>
+- <doc:AdvancedTopics>

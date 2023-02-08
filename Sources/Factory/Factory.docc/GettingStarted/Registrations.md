@@ -1,7 +1,5 @@
 # Sample Registrations
 
-## Examples
-
 There are many ways to register dependencies with Factory. Here are a few examples.
 
 ### Basic
