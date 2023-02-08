@@ -55,6 +55,8 @@ import Foundation
 /// ```
 /// Like SwiftUI Views, Factory structs and modifiers are lightweight and transitory. They're created when needed
 /// and then immediately discarded once their purpose has been served.
+///
+/// Other operations exist for Factory. See ``FactoryModifing``.
 public struct Factory<T>: FactoryModifing {
 
     /// Creates a new Factory capable of managing dependencies of the desired type.
@@ -169,39 +171,90 @@ public struct ParameterFactory<P,T>: FactoryModifing {
 
 /// Public protocol with functionality common to all Factory's. Used to add scope and decorator modifiers to Factory.
 public protocol FactoryModifing {
+    /// The parameter type of the Factory, if any. Will be `Void` on the standard Factory.
     associatedtype P
+    /// The return type of the Factory's dependency.
     associatedtype T
+    /// Internal information that desribes this Factory.
     var registration: FactoryRegistration<P,T> { get set }
 }
 
 extension FactoryModifing {
 
-    /// Defines Factory's dependency scope to be cached
-    public var cached: Self {
+    /// Defines this Factory's dependency scope to be cached. See ``Scope/Cached-swift.class``.
+    /// ```swift
+    /// var service: Factory<ServiceType> {
+    ///     makes { MyService() }
+    ///         .cached
+    /// }
+    /// ```
+   public var cached: Self {
         map { $0.registration.scope = .cached }
     }
-    /// Defines Factory's dependency scope to be graph
+    /// Defines this Factory's dependency scope to be graph. See ``Scope/Graph-swift.class``.
+    /// ```swift
+    /// var service: Factory<ServiceType> {
+    ///     makes { MyService() }
+    ///         .graph
+    /// }
+    /// ```
     public var graph: Self {
         map { $0.registration.scope = .graph }
     }
-    /// Defines Factory's dependency scope to be shared
+    /// Defines this Factory's dependency scope to be shared. See ``Scope/Graph-swift.class``.
+    /// ```swift
+    /// var service: Factory<ServiceType> {
+    ///     makes { MyService() }
+    ///         .shared
+    /// }
+    /// ```
     public var shared: Self {
         map { $0.registration.scope = .shared }
     }
-    /// Defines Factory's dependency scope to be singleton
+    /// Defines this Factory's dependency scope to be singleton. See ``Scope/Singleton-swift.class``.
+    /// ```swift
+    /// var service: Factory<ServiceType> {
+    ///     makes { MyService() }
+    ///         .singleton
+    /// }
+    /// ```
     public var singleton: Self {
         map { $0.registration.scope = .singleton }
     }
-    /// Explicitly defines unique scope
+    /// Explicitly defines unique scope. See ``Scope``.
+    /// ```swift
+    /// var service: Factory<ServiceType> {
+    ///     makes { MyService() }
+    /// }
+    /// ```
+    /// While you can add the modifier, Factory's are unique by default.
     public var unique: Self {
         map { $0.registration.scope = nil }
     }
-    /// Defines a custom dependency scope for this Factory
+    /// Defines a custom dependency scope for this Factory. See ``Scope``.
+    /// ```swift
+    /// var service: Factory<ServiceType> {
+    ///     makes { MyService() }
+    ///         .custom(scope: .session)
+    /// }
+    /// ```
     public func custom(scope: Scope?) -> Self {
         map { $0.registration.scope = scope }
     }
 
-    /// Adds factory specific decorator
+    /// Adds a factory specific decorator. The decorator will be *always* be called with the resolved dependency
+    /// for further examination or manipulation.
+    ///
+    /// This includes previously created items that may have been cached by a scope.
+    /// ```swift
+    /// var decoratedService: Factory<ParentChildService> {
+    ///    makes { ParentChildService() }
+    ///        .decorated {
+    ///            $0.child.parent = $0
+    ///        }
+    /// }
+    /// ```
+    /// As shown, decorator can come in handy when you need to perform some operation or manipulation after the fact.
     public func decorator(_ decorator: @escaping (_ instance: T) -> Void) -> Self {
         map { $0.registration.decorator = decorator }
     }
@@ -227,8 +280,7 @@ extension FactoryModifing {
 
 /// This is the default Container provided for your convenience by Factory.
 ///
-/// Containers are used by Factory to manage object creation, object resolution, and object lifecycles in general. Registrations and scope
-/// caches will persist as long as the associated container remains in scope.
+/// Containers are used by Factory to manage object creation, object resolution, and object lifecycles in general.
 ///
 /// Factory's are defined within container extensions, and must be provided with a reference to that container on initialization.
 /// ```swift
@@ -238,13 +290,24 @@ extension FactoryModifing {
 ///     }
 /// }
 /// ```
-/// If you'd like to define your own containers, use the following as a template.
+///  Registrations and scope caches will persist as long as the associated container remains in scope.
+///
+///  ## Custom Containers
+/// If you'd like to define your own containers, use the following as a template. A contaimer must derive from ``SharedContainer``,
+/// have its own ``ContainerManager`` and implement a static `shared` instance.
 /// ```swift
 /// public final class MyContainer: SharedContainer {
 ///      public static var shared = MyContainer()
 ///      public var manager = ContainerManager()
 /// }
+///
+/// extension MyContainer {
+///     var someService: Factory<ServiceType> {
+///         makes { MyService() }
+///     }
+/// }
 /// ```
+/// Property wrappers like @Injected always reference the `shared` container.
 public final class Container: SharedContainer {
 
     /// Define the default shared container.
@@ -317,6 +380,13 @@ extension SharedContainer {
 // MARK: - ContainerManager
 
 /// ContainerManager encapsulates and manages the registration, resolution, and scope caching mechanisms for a given container.
+///
+/// Every container requires a ContainerManager.
+///
+/// ContainerManager also implements several functions tha can be used to reset the container
+/// to a pristine state, as well as push/pop methods that can save and restore the current state.
+///
+/// Those functions are designed primarily for testing.
 public class ContainerManager {
 
     /// Public initializer
@@ -336,9 +406,13 @@ extension ContainerManager {
 
     /// Reset options for Factory's and Container's
     public enum ResetOptions {
+        /// Resets registration and scope caches
         case all
+        /// Performs no reset
         case none
+        /// Resets registrations on this container
         case registration
+        /// Resets all scope caches on this container
         case scope
     }
 
@@ -357,10 +431,11 @@ extension ContainerManager {
         default:
             registrations = [:]
             cache.reset()
+            autoRegistrationCheck = false
         }
     }
 
-    /// Clears any cached values associated with a specific scope.
+    /// Clears any cached values associated with a specific scope, leaving the other scope caches intact.
     public func reset(scope: Scope) {
         defer { globalRecursiveLock.unlock() }
         globalRecursiveLock.lock()
@@ -640,8 +715,11 @@ extension Scope {
 
 /// MARK: - Automatic Registrations
 
-/// Add protocol to a container to support first-time registration of needed dependencies prior to first resolution on that container.
+/// Adds an registration "hook" to a `Container`.
 ///
+/// Add this protocol to a container to support first-time registration of needed dependencies prior to first resolution
+/// of a dependency on that container.
+/// ```swift
 /// extension Container: AutoRegistering {
 ///     func autoRegister() {
 ///         someService.register {
@@ -649,8 +727,12 @@ extension Scope {
 ///         }
 ///     }
 /// }
+///```
+/// The `autoRegister` function is called on each instantiated container prior to
+/// the first resolution of a Factory on that container.
 ///
-/// Note each instance of each container maintains its own autoRegistration state.
+/// > Warning: Calling `container.manager.reset(options: .all)` restores the container to it's initial state
+/// and autoRegister will be called again if it exists.
 public protocol AutoRegistering {
     func autoRegister()
 }
@@ -660,7 +742,21 @@ public protocol AutoRegistering {
 #if swift(>=5.1)
 
 /// Convenience property wrapper takes a factory and resolves an instance of the desired type.
-/// Property wrapper keyPaths resolve to the "shared" container required for each Container type.
+///
+/// Property wrappers implement an annotation pattern to resolving dependencies, similar to using
+/// EnvironmentObject in SwiftUI.
+/// ```swift
+/// class MyViewModel {
+///    @Injected(\.myService) var service
+///    @Injected(\MyCustomContainer.myService) var service
+/// }
+/// ```
+/// The provided keypath resolves to a Factory definition on the `shared` container required for each Container type.
+/// The short version of the keyPath resolves to the default container, while the expanded version
+/// allows you to point an instance on your own customer container type.
+///
+/// > Note: The @Injected property wrapper will be resolved on **intialization**. In the above example
+/// the referenced dependencies will be acquired when the parent class is created.
 @propertyWrapper public struct Injected<T> {
 
     private var reference: BoxedFactoryReference
@@ -697,7 +793,7 @@ public protocol AutoRegistering {
         reference.factory()
     }
 
-    /// Allows the user to force a Factory resolution.
+    /// Allows the user to force a Factory resolution at their descretion.
     public mutating func resolve(reset options: ContainerManager.ResetOptions = .none) {
         factory.reset(options)
         dependency = factory()
@@ -706,8 +802,19 @@ public protocol AutoRegistering {
 
 /// Convenience property wrapper takes a factory and resolves an instance of the desired type the first time the wrapped value is requested.
 ///
-/// Note that LazyInjected maintains a reference to the Factory, and, as such, to the Factory's Container. This means that Container will never
-/// go out of scope as long as this property wrapper exists.
+/// Property wrappers implement an annotation pattern to resolving dependencies, similar to using
+/// EnvironmentObject in SwiftUI.
+/// ```swift
+/// class MyViewModel {
+///    @LazyInjected(\.myService) var service
+///    @LazyInjected(\MyCustomContainer.myService) var service
+/// }
+/// ```
+/// The provided keypath resolves to a Factory definition on the `shared` container required for each Container type.
+/// The short version of the keyPath resolves to the default container, while the expanded version
+/// allows you to point an instance on your own customer container type.
+///
+/// > Note: Lazy injection is resolved the first time the dependency is referenced by the code, and **not** on initilization.
 @propertyWrapper public struct LazyInjected<T> {
 
     private var reference: BoxedFactoryReference
@@ -752,7 +859,7 @@ public protocol AutoRegistering {
         reference.factory()
     }
 
-    /// Allows the user to force a Factory resolution.
+    /// Allows the user to force a Factory resolution at their descretion.
     public mutating func resolve(reset options: ContainerManager.ResetOptions = .none) {
         factory.reset(options)
         dependency = factory()
@@ -760,11 +867,25 @@ public protocol AutoRegistering {
     }
 }
 
-/// Convenience property wrapper takes a factory and resolves an instance of the desired type the first time the wrapped value is requested. This
-/// wrapper maintains a weak reference to the object in question, so it must exist elsewhere.
+/// Convenience property wrapper takes a factory and resolves an instance of the desired type the first time the wrapped value is requested.
 ///
-/// Note that WeakLazyInjected maintains a reference to the Factory, and, as such, to the Factory's Container. This means that Container will never
-/// go out of scope as long as this property wrapper exists.
+/// This wrapper maintains a weak reference to the object in question, so it must exist elsewhere.t
+/// It's useful for delegate patterns and parent/child relationships.
+///
+/// Property wrappers implement an annotation pattern to resolving dependencies, similar to using
+/// EnvironmentObject in SwiftUI.
+///
+/// ```swift
+/// class MyViewModel {
+///    @LazyInjected(\.myService) var service
+///    @LazyInjected(\MyCustomContainer.myService) var service
+/// }
+/// ```
+/// The provided keypath resolves to a Factory definition on the `shared` container required for each Container type.
+/// The short version of the keyPath resolves to the default container, while the expanded version
+/// allows you to point an instance on your own customer container type.
+///
+/// > Note: Lazy injection is resolved the first time the dependency is referenced by the code, **not** on initilization.
 @propertyWrapper public struct WeakLazyInjected<T> {
 
     private var reference: BoxedFactoryReference
@@ -809,7 +930,7 @@ public protocol AutoRegistering {
         reference.factory()
     }
 
-    /// Allows the user to force a Factory resolution.
+    /// Allows the user to force a Factory resolution at their descretion.
     public mutating func resolve(reset options: ContainerManager.ResetOptions = .none) {
         factory.reset(options)
         dependency = factory() as AnyObject
