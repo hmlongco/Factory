@@ -292,22 +292,7 @@ extension FactoryModifing {
 /// ```
 ///  Registrations and scope caches will persist as long as the associated container remains in scope.
 ///
-///  ## Custom Containers
-/// If you'd like to define your own containers, use the following as a template. A contaimer must derive from ``SharedContainer``,
-/// have its own ``ContainerManager`` and implement a static `shared` instance.
-/// ```swift
-/// public final class MyContainer: SharedContainer {
-///      public static var shared = MyContainer()
-///      public var manager = ContainerManager()
-/// }
-///
-/// extension MyContainer {
-///     var someService: Factory<ServiceType> {
-///         makes { MyService() }
-///     }
-/// }
-/// ```
-/// Property wrappers like @Injected always reference the `shared` container.
+///  See <doc:Containers> for more information.
 public final class Container: SharedContainer {
 
     /// Define the default shared container.
@@ -324,6 +309,8 @@ public final class Container: SharedContainer {
 // MARK: - SharedContainer
 
 /// SharedContainer defines the protocol all Containers must adopt.
+///
+///  See <doc:Containers> for more information.
 public protocol SharedContainer: AnyObject {
 
     /// Defines a single "shared" container for that container type.
