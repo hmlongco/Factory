@@ -94,7 +94,24 @@ final class FactoryDefectTests: XCTestCase {
         XCTAssertTrue(service2?.id != service3?.id)
     }
 
+    // CircularDependencyCheck failing when Factory depends upon Factory depends upon Factory of the same type
+    func testCircularDependencyFailure() {
+        expectNonFatalError() {
+            let _ = Container.shared.circularFailure1()
+        }
+        expectNonFatalError() {
+            let _ = Container.shared.circularFailure1()
+        }
+    }
+
 }
+
+extension Container {
+    fileprivate var circularFailure1: Factory<MyService> { makes { self.circularFailure2() } }
+    fileprivate var circularFailure2: Factory<MyService> { makes { self.circularFailure3() } }
+    fileprivate var circularFailure3: Factory<MyService> { makes { MyService() } }
+}
+
 
 fileprivate class TestLazyInjectionOccursOnce {
     @LazyInjected(\.nilSService) var service

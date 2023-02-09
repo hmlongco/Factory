@@ -379,6 +379,9 @@ public class ContainerManager {
     /// Public initializer
     public init() {}
 
+    /// Public variable exposing dependency chain test maximum
+    public var dependencyChainTestMax: Int = 10
+
     /// Internal closure decorates all factory resolutions for this container.
     internal var decorator: ((Any) -> ())?
     internal var autoRegistrationCheck = true
@@ -472,11 +475,18 @@ extension ContainerManager {
         let typeIndex = globalDependencyChain.firstIndex(where: { $0 == typeName })
         globalDependencyChain.append(typeName)
         if let index = typeIndex {
-            let message = "circular dependency chain - \(globalDependencyChain[index...].joined(separator: " > "))"
-            globalDependencyChain = []
-            globalGraphResolutionDepth = 0
-            globalRecursiveLock = NSRecursiveLock()
-            triggerFatalError(message, #file, #line)
+            let chain = globalDependencyChain[index...]
+            let message = "circular dependency chain - \(chain.joined(separator: " > "))"
+            if globalDependencyChainMessages.filter({ $0 == message }).count == dependencyChainTestMax {
+                globalDependencyChain = []
+                globalDependencyChainMessages = []
+                globalGraphResolutionDepth = 0
+                globalRecursiveLock = NSRecursiveLock()
+                triggerFatalError(message, #file, #line)
+            } else {
+                globalDependencyChain = [typeName]
+                globalDependencyChainMessages.append(message)
+            }
         }
         #endif
 
@@ -488,10 +498,15 @@ extension ContainerManager {
 
         if globalGraphResolutionDepth == 0 {
             Scope.graph.cache.reset()
+            #if DEBUG
+            globalDependencyChainMessages = []
+            #endif
         }
 
         #if DEBUG
-        globalDependencyChain.removeLast()
+        if !globalDependencyChain.isEmpty {
+            globalDependencyChain.removeLast()
+        }
         #endif
 
         registration.decorator?(instance)
@@ -953,8 +968,9 @@ private var globalRecursiveLock = NSRecursiveLock()
 private var globalGraphResolutionDepth = 0
 
 #if DEBUG
-/// Internal array used to check for circular dependency cycles
+/// Internal variables used to check for circular dependency cycles
 private var globalDependencyChain: [String] = []
+private var globalDependencyChainMessages: [String] = []
 #endif
 
 // MARK: - Internal Protocols and Types
