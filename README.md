@@ -8,6 +8,10 @@ Note that Factory is evolving, and a working version of Factory 2.0 is now in th
 
 ** This is a breaking change from 1.0. **
 
+Discussion and comments on the changes are occurring in [Discussions](https://github.com/hmlongco/Factory/discussions). Go there if you have something to say or if you want to stay up to date.
+
+We now resume our originally scheduled README...
+
 ## Why Something New?
 
 The first dependency injection system I wrote was [Resolver](https://github.com/hmlongco/Resolver). That open source project, while quite powerful and still in use in many applications, suffered from a few drawbacks.
