@@ -4,13 +4,17 @@ Containers are the cornerstone of Factory 2.0. What are they and how do we use t
 
 ## Overview
 
-In Factory 1.0 a "Container" was just a namespace. In 2.0 Containers can be created, referenced, passed around, and deallocated as needed.
-
 Containers are used by Factory to manage object creation, object resolution, and object lifecycles in general.
+
+In Factory 1.0 with its statically defined Factory's a "container" was really just a convenient namespace. But in Factory 2.0 a container is a distinct object that can be referenced, passed around, and deallocated as needed. 
+
+You can even create separate instances of the same container type, each with its own registrations and scope caches.
+
+Factory 2.0 supports true container-based dependency injection.
 
 ## Containers and Factory's
 
-Factory's are defined within container extensions, and must be provided with a reference to that container on initialization.
+Factory's are usually defined within container extensions, and must be provided with a reference to that container on initialization.
 ```swift
 extension Container {
     var service: Factory<ServiceType> {
@@ -18,7 +22,7 @@ extension Container {
     }
 }
 ```
-Containers also provides a set of "helper" functions that will make a properly bound Factory for us. 
+That mechanism's a bit formal, so containers also provide a set of shorthand functions that will make properly bound Factory's for us. The following definition provides the same result as the one above.
 ```swift
 extension Container {
     var convenientService: Factory<MyServiceType> {
@@ -56,8 +60,6 @@ Or you can use the "shared" container as an application root container and pass 
 
 ## Passing Containers
 
-Containers can be passed along from object to object.
-
 Here's an example of passing an instance of a container to a view model and then initializing a service from that container.
 ```swift
 class ContentViewModel {
@@ -71,7 +73,7 @@ Addtional examples and methods can be seen on the <doc:Resolutions> page.
 
 ## SharedContainer
 
-Each ``Container`` defined conforms to the ``SharedContainer`` protocol. That basically means that one must have its own ``ContainerManager`` and implement a static `shared` instance.
+All containers conform to the ``SharedContainer`` protocol. That basically means that each one must have its own ``ContainerManager`` and implement a static `shared` instance.
 
 SharedContainer also defines some common functionality for each container, like the afrementioned `makes` convenience function.
 
@@ -91,7 +93,7 @@ let common2 = MyContainer.shared.commonService()
 ```
 
 ## Custom Containers
-If you'd like to define your own container class you can! Just use the following as a template. 
+If you'd like to define your own container class you can. Just use the following as a template. 
 
 ```swift
 public final class MyContainer: SharedContainer {
@@ -105,7 +107,7 @@ extension MyContainer {
     }
 }
 ```
-A contaimer must derive from ``SharedContainer``, have its own ``ContainerManager``, implement a static `shared` instance, and be marked `final`.
+As mentioned, a contaimer must derive from ``SharedContainer``, have its own ``ContainerManager``, and implement a static `shared` instance. It also must be marked `final`.
 
 
 ## Injected Property Wrappers
@@ -123,25 +125,78 @@ See ``Injected``, ``LazyInjected``, and ``WeakLazyInjected`` for more.
 
 ## Registration and Scope Management
 
-As mentioned earlier, registrations and scopes are managed by the container on which the dependency was created. 
+As mentioned earlier, registrations and scopes are managed by the container on which the dependency was created. Adding a registration or clearing a scope cache on one container has no effect on any other container.
+
+```swift
+let containerA = MyContainer()
+containerA.register.cachedService { MockService() }
+
+// Will have a MockService
+let service1 = containerA.cachedService() 
+
+// Will have a new or prevously cached instance of ServiceType
+let service2 = MyContainer.shared.cachedService() 
+```
+## Resetting a Container
+
+All of the registrations overrides and scope caches on Container can be reset if desired. We can also reset registrations and scope caches specifically, leaving the other intact.
+```swift
+// Reset everything
+Container.shared.manager.reset()
+
+// Reset all registrations, restoring original factories but leaving caches intact
+Container.shared.manager.reset(options: .registration)
+
+// Reset all scope caches, leaving registrations intact
+Container.shared.manager.reset(options: .scope)
+```
+You can also reset a specific scope cache while leaving the others intact.
+```swift
+Container.shared.manager.reset(scope: .cached)
+```
+Note that resetting registrations also resets the container's auto registration flag.
+
+## Pushing and Popping State
+
+As with Factory 1.0, the state of a container's registrations and scope caches can be saved (pushed), and then restored (popped).
+```swift
+// Save the current state
+Container.shared.manager.push()
+
+// Make a change
+Container.shared.someService.register { MockService() }
+
+// Pop the change and restore the manager's state to what it was before the registration.
+Container.shared.manager.pop()
+
+// Gets the original or previously registered service.
+let service = Container.shared.someService()
+```
+This can be handy in an unit test environment. Keep in mind that push/pop uses a stack, so it's possible to push and pop as many times as are needed.
+
+## Releasing a Container
 
 > Warning: If a container ever goes out of scope, so will all of its registrations and cached objects.
 
 To demonstrate, let's see what happens when we create and assign a new container to `MyContainer.shared`. Doing so releases the provious container, along with any registrations or objects that container may have cached. We'll use the `cachedService` Factory we defined above.
 
 ```swift
-// Creates a service.
+// Create an instance of our cached service.
 let service1 = MyContainer.shared.cachedService()
 
-// Now get it again, getting the same instance of our service from the cached scope.
+// Repeat, which returns the same cached instance we obtained in service1.
 let service2 = MyContainer.shared.cachedService()
+assert(service1.id == service2.id)
 
-// Replace the shared container
+// Replace the existing shared container with a new one.
 MyContainer.shared = MyContainer()
 
-// Trying again gets a new instance since the old scope cache was released.
+// Trying again gets a new instance since the old container and cache was released.
 let service3 = MyContainer.shared.cachedService()
+assert(service1.id != service3.id)
 
-// Doing it one last time will give us the same cached instance we have in service3.
+// Repeat and receive the same cached instance we obtained in service3.
 let service4 = MyContainer.shared.cachedService()
+assert(service3.id == service4.id)
 ```
+From a certain point of view, replacing a container with a new one is the ultimate reset mechanism.

@@ -405,7 +405,6 @@ extension ContainerManager {
         /// Resets all scope caches on this container
         case scope
     }
-
     /// Resets the Container to its original state, removing all registrations and clearing all scope caches.
     public func reset(options: ResetOptions = .all) {
         guard options != .none else {
@@ -416,6 +415,7 @@ extension ContainerManager {
         switch options {
         case .registration:
             registrations = [:]
+            autoRegistrationCheck = false
         case .scope:
             cache.reset()
         default:
