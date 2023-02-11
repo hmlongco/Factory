@@ -124,6 +124,10 @@ Current documentation can be found here: [Factory Documentation](https://hmlongc
 
 There's more coming, but I can only write so fast, so stay tuned.
 
+## Discussion
+
+Discussion and comments on the changes are occurring in [Discussions](https://github.com/hmlongco/Factory/discussions). Go there if you have something to say or if you want to stay up to date.
+
 ## License
 
 Factory is available under the MIT license. See the LICENSE file for more info.
