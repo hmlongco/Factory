@@ -6,7 +6,8 @@ Defining a Factory, resolving it, and changing the default behavior.
 
 ``Factory/Factory`` manages the dependency injection process for a specific object or service and produces an object of the desired type when required. 
 
-### Defining a Factory
+
+## Defining a Factory
 
 Most container-based dependency injection systems require you to define that a given dependency is available for injection and many require some sort of factory or mechanism that will provide a new instance of the service when needed.
 
@@ -39,31 +40,35 @@ extension Container {
 
 For more examples of Factory definitions that define scopes, use constructor injection, and do parameter passing, see: <doc:Registrations>.
 
-### Resolving a Factory
+## Resolving a Factory
 
 To resolve a Factory and obtain an object or service of the desired type, one simply calls the Factory as s function. Here we use the `shared` container that's provided for each and every container type. 
-
 ```swift
-let service = Container.shared.service()
+class ContentViewModel: ObservableObject {
+    private let myService = Container.shared.service()
+    ...
+}
 ```
 The resolved instance may be brand new or Factory may return a cached value from the specified ``Scope``.
 
 If you're passing an instance of a container around to your views or view models, just call it directly.
 
 ```swift
-let service = container.service()
+private let service = container.service()
 ```
-Finally, you can also use the @Injected property wrapper and specify a keyPaths to the desired dependency.
+Finally, we could have also uses an @Injected property wrapper and specified a keyPath to the desired dependency.
 
 ```swift
-@Injected(\.service) var service: ServiceType
+@Injected(\.service) var service
 ```
-Unless otherwise specified, the @Injected property wrapper looks for dependencies in the standard shared container provided by Factory, so the above example is functionally identical to the `Container.shared.service()` example shown earlier. Here's one pointing to your own container.
+Unless otherwise specified, the @Injected property wrapper looks for dependencies in the standard shared container provided by Factory, so the above is functionally identical to the `Container.shared.service()` example shown earlier. Here's one pointing to your own container.
 
 ```swift
 @Injected(\MyCustomContainer.service) var service: ServiceType
 ```
-### Registering a new Factory closure
+For more examples see: <doc:Resolutions>.
+
+## Registering a new Factory closure
 
 What happens if we want to change the behavior of a Factory? What if the system requires changes during runtime, or what if we want our factory to provide mocks and testing doubles? 
 
@@ -77,9 +82,52 @@ container.service.register {
 
 This new factory closure overrides the original factory closure and clears the associated scope so that the next time this factory is resolved Factory will evaluate the new closure and return an instance of the newly registered object instead.
 
-> Warning: Registration "overrides" and scope caches are stored in the associated container. If that container ever goes out of scope, so will all of its registrations and cached objects.
+## Mocking and Testing
 
-For more examples of container passing and Factory resolutions see: <doc:Resolutions>.
+If we go back and look at our original view model code one might wonder why we've gone to all of this trouble? Why not simply say `let myService = MyService()` and be done with it? 
+
+Or keep the container idea, but write something similar to this…
+
+```swift
+extension Container {
+    static var myService: MyServiceType { MyService() }
+}
+```
+
+Well, the primary benefit one gains from using a container-based dependency injection system is that we're able to change the behavior of the system as needed. Consider the following code:
+
+```swift
+struct ContentView: View {
+    @StateObject var model = ContentViewModel()
+    var body: some View {
+        Text(model.text())
+            .padding()
+    }
+}
+```
+
+Our ContentView uses our view model, which is assigned to a StateObject. Great. But now we want to preview our code. How do we change the behavior of `ContentViewModel` so that its `MyService` dependency isn't making live API calls during development? 
+
+It's easy. Just replace `MyService` with a mock that also conforms to `MyServiceType`.
+
+```swift
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        let _ = Container.shared.myService.register { MockService2() }
+        ContentView()
+    }
+}
+```
+
+Note the line in our preview code where we’re gone back to our container and registered a new closure on our factory. This function overrides the default factory closure.
+
+Now when our preview is displayed `ContentView` creates a `ContentViewModel` which in turn has a dependency on `myService` using shared container. 
+
+And when the wrapper asks the factory for an instance of `MyServiceType` it now gets a `MockService2` instead of the `MyService` type originally defined.
+
+This is a powerful concept that lets us reach deep into a chain of dependencies and alter the behavior of a system as needed.
+
+See <doc:Testing> for more information.
 
 ## Topics
 

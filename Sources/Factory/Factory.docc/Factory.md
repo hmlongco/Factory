@@ -26,7 +26,12 @@ Ready to get started?
 - <doc:GettingStarted>
 - <doc:Containers>
 - <doc:Scopes>
+- <doc:Migration>
 
 ### Advanced Topics
 
-- <doc:AdvancedTopics>
+- <doc:Previews>
+- <doc:Testing>
+- <doc:Optionals>
+- <doc:Functional>
+- <doc:Chains>

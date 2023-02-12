@@ -93,7 +93,9 @@ let common2 = MyContainer.shared.commonService()
 ```
 
 ## Custom Containers
-If you'd like to define your own container class you can. Just use the following as a template. 
+In a large project you might want to segregate factories into additional, smaller containers. 
+
+Definiing your own container class is simple. Just use the following as a template. 
 
 ```swift
 public final class MyContainer: SharedContainer {
@@ -109,6 +111,15 @@ extension MyContainer {
 ```
 As mentioned, a contaimer must derive from ``SharedContainer``, have its own ``ContainerManager``, and implement a static `shared` instance. It also must be marked `final`.
 
+Don't forget that if need be you can reach across containers simply by specifying the full container.factory path.
+
+```swift
+extension PaymentsContainer {
+    let anotherService = Factory<AnotherService> { 
+        makes { AnotherService(using: Container.shared.optionalService()) }
+    }
+}
+```
 
 ## Injected Property Wrappers
 
@@ -125,7 +136,7 @@ See ``Injected``, ``LazyInjected``, and ``WeakLazyInjected`` for more.
 
 ## Registration and Scope Management
 
-As mentioned earlier, registrations and scopes are managed by the container on which the dependency was created. Adding a registration or clearing a scope cache on one container has no effect on any other container.
+As mentioned earlier, factory registrations and scopes are managed by the container on which the dependency was created. Adding a registration or clearing a scope cache on one container has no effect on any other container.
 
 ```swift
 let containerA = MyContainer()
@@ -137,13 +148,31 @@ let service1 = containerA.cachedService()
 // Will have a new or prevously cached instance of ServiceType
 let service2 = MyContainer.shared.cachedService() 
 ```
+## AutoRegister
+
+From time to time you may find that you need to register or change some instances prior to application initialization. If so you can do the following.
+```swift
+extension Container: AutoRegistering {
+    func autoRegister() {
+        someService.register { ModuleB.SomeService() }
+    }
+}
+```
+Just make `Container` conform to ``AutoRegistering`` and provide the `autoRegister` function. This function will be called *once* prior to the very first Factory service resolution on that container.
+
+Note that this can come in handy when you want to register instances of objects obtained across differe modules.
+
 ## Resetting a Container
 
-All of the registrations overrides and scope caches on Container can be reset if desired. We can also reset registrations and scope caches specifically, leaving the other intact.
-```swift
-// Reset everything
-Container.shared.manager.reset()
+Using register on a factory lets us change the state of the system. But what if we need to revert back to the original behavior?
 
+Simple. Just reset it to bring back the original factory closure. Or, if desired, you can reset *everything* back to square one with a single command.
+```Swift
+container.myService.reset() // resets this factory only
+container.manager.reset() // clears all registrations and caches
+```
+We can also reset registrations and scope caches specifically, leaving the other intact.
+```swift
 // Reset all registrations, restoring original factories but leaving caches intact
 Container.shared.manager.reset(options: .registration)
 

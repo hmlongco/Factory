@@ -28,9 +28,12 @@ import Foundation
 
 // MARK: - Factory
 
-/// A Factory manages the dependency injection process for a specific object or service and produces an object of the desired type
-/// when required. This may be a brand new instance or Factory may return a previously cached value from the specified scope.
+/// A Factory manages the dependency injection process for a specific object or service.
 ///
+/// It's used to produce an object of the desired type when required. This may be a brand new instance or Factory may
+/// return a previously cached value from the specified scope.
+///
+/// ## Defining a Factory
 /// Let's define a Factory that returns an instance of `ServiceType`. To do that we need to extend a Factory `Container` and within
 /// that container we define a new computed variable of type `Factory<ServiceType>`. The type must be explicitly defined, and is usually a
 /// protocol to which the returned dependency conforms.
@@ -45,7 +48,8 @@ import Foundation
 /// creates an instance of our object when needed. That Factory is then returned to the caller, usually to be evaluated (see `callAsFunction()`
 /// below). Every time we resolve this factory we'll get a new, unique instance of our object.
 ///
-/// Containers also provide a convenient shortcut to make our factory and do our binding for us.
+/// ## Convenience
+/// Containers provide a convenient shortcut that will make our factory and do our binding for us.
 /// ```swift
 /// extension Container {
 ///     var service: Factory<ServiceType> {
@@ -53,8 +57,11 @@ import Foundation
 ///     }
 /// }
 /// ```
-/// Like SwiftUI Views, Factory structs and modifiers are lightweight and transitory. They're created when needed
-/// and then immediately discarded once their purpose has been served.
+///
+/// ## Transient
+/// If you're concerned about building Factory's on the fly, don't be. Like SwiftUI Views, Factory structs and modifiers
+/// are lightweight and transitory. They're created when needed and then immediately discarded once their purpose has
+/// been served.
 ///
 /// Other operations exist for Factory. See ``FactoryModifing``.
 public struct Factory<T>: FactoryModifing {
@@ -132,6 +139,44 @@ public struct Factory<T>: FactoryModifing {
 // MARK: ParameterFactory
 
 /// Factory capable of taking parameters at runtime
+///
+/// Like it or not, some services require one or more parameters to be passed to them in order to be initialized correctly. In that case use `ParameterFactory`.
+///
+/// We define a ParameterFactory exactly as we do a normal factory with two exceptions: we need to specfic the
+/// parameter type, and we need to consume the passed parameter in our factory closure.
+/// ```swift
+/// extension Container {
+///     var parameterService: ParameterFactory<Int, MyServiceType> {
+///        makes { ParameterService(value: $0) }
+///     }
+/// }
+/// ```
+/// Resolving it is straightforward. Just pass the paramter to the Factory.
+/// ```Swift
+/// let myService = Container.shared.parameterService(n)
+/// ```
+/// One caveat is that you can't use the `@Injected` property wrapper with `ParameterFactory` as there's no way to get
+/// the needed parameters to the property wrapper before the wrapper is initialized. That being the case, you'll
+/// probably need to reference the container directly and do something similar to the following.
+///  ```swift
+///  class MyClass {
+///      var myService: MyServiceType
+///      init(_ n: Int) {
+///          myService = Container.shared.parameterService(n)
+///      }
+///  }
+/// ```
+/// If you need to pass more than one parameter just use a tuple, dictionary, or struct.
+/// ```swift
+/// var tupleService: ParameterFactory<(Int, Int), MultipleParameterService> {
+///     makes { (a, b) in
+///         MultipleParameterService(a: a, b: b)
+///     }
+/// }
+/// ```
+/// Finally, if you define a scope keep in mind that the first argument passed will be used to create the dependency
+/// and *that* dependency will be cached. Since the cached object will be returned from now on any arguments passed in
+/// later requests will be ignored until the factory or scope is reset.
 public struct ParameterFactory<P,T>: FactoryModifing {
 
     /// Initializes a factory capable of taking parameters at runtime.
@@ -736,6 +781,8 @@ extension Scope {
 /// > Warning: Calling `container.manager.reset(options: .all)` restores the container to it's initial state
 /// and autoRegister will be called again if it exists.
 public protocol AutoRegistering {
+    /// User provided function that supports first-time registration of needed dependencies prior to first resolution
+    /// of a dependency on that container.
     func autoRegister()
 }
 
