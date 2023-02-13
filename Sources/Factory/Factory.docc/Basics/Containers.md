@@ -185,6 +185,8 @@ Container.shared.manager.reset(scope: .cached)
 ```
 Note that resetting registrations also resets the container's auto registration flag.
 
+> Important: Resetting a container or scope has no effect whatsoever on anything that's alreay been resolved by Factory. It only ensures that the *next* time a Factory is asked to resolve a dependency that dependency will be a new instance.
+
 ## Pushing and Popping State
 
 As with Factory 1.0, the state of a container's registrations and scope caches can be saved (pushed), and then restored (popped).

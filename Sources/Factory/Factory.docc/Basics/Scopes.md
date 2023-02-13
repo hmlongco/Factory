@@ -100,6 +100,18 @@ Scope caches are maintained by the Factory's container.
 
 See the "Releasing a Container" discussion in <doc:Containers> for more information.
 
+## Reset
+
+As shown above, individual scope caches can be reset (cleared) if needed.
+```swift
+Container.shared.manager.reset(scope: .cached)
+```
+Or you can reset the cache for every scope in a given container.
+```swift
+Container.shared.manager.reset(options: .scope)
+```
+> Important: Resetting a container or scope has no effect whatsoever on anything that's alreay been resolved by Factory. It only ensures that the *next* time a Factory is asked to resolve a dependency that dependency will be a new instance.
+
 ## Topics
 
 ### Scope Class Definitions
