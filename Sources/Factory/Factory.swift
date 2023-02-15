@@ -45,15 +45,15 @@ import Foundation
 /// }
 /// ```
 /// Inside the computed variable we build our Factory, providing it with a reference to its container and also with a factory closure that
-/// creates an instance of our object when needed. That Factory is then returned to the caller, usually to be evaluated (see `callAsFunction()`
+/// creates an instance of our object when required. That Factory is then returned to the caller, usually to be evaluated (see `callAsFunction()`
 /// below). Every time we resolve this factory we'll get a new, unique instance of our object.
 ///
 /// ## Convenience
-/// Containers provide a convenient shortcut that will make our factory and do our binding for us.
+/// We can slso ask our container to make a properly bound factory for us.
 /// ```swift
 /// extension Container {
 ///     var service: Factory<ServiceType> {
-///         makes { MyService() }
+///         self { MyService() }
 ///     }
 /// }
 /// ```
@@ -147,7 +147,7 @@ public struct Factory<T>: FactoryModifing {
 /// ```swift
 /// extension Container {
 ///     var parameterService: ParameterFactory<Int, MyServiceType> {
-///        makes { ParameterService(value: $0) }
+///        self { ParameterService(value: $0) }
 ///     }
 /// }
 /// ```
@@ -169,7 +169,7 @@ public struct Factory<T>: FactoryModifing {
 /// If you need to pass more than one parameter just use a tuple, dictionary, or struct.
 /// ```swift
 /// var tupleService: ParameterFactory<(Int, Int), MultipleParameterService> {
-///     makes { (a, b) in
+///     self { (a, b) in
 ///         MultipleParameterService(a: a, b: b)
 ///     }
 /// }
@@ -229,7 +229,7 @@ extension FactoryModifing {
     /// Defines this Factory's dependency scope to be cached. See ``Scope/Cached-swift.class``.
     /// ```swift
     /// var service: Factory<ServiceType> {
-    ///     makes { MyService() }
+    ///     self { MyService() }
     ///         .cached
     /// }
     /// ```
@@ -239,7 +239,7 @@ extension FactoryModifing {
     /// Defines this Factory's dependency scope to be graph. See ``Scope/Graph-swift.class``.
     /// ```swift
     /// var service: Factory<ServiceType> {
-    ///     makes { MyService() }
+    ///     self { MyService() }
     ///         .graph
     /// }
     /// ```
@@ -249,7 +249,7 @@ extension FactoryModifing {
     /// Defines this Factory's dependency scope to be shared. See ``Scope/Graph-swift.class``.
     /// ```swift
     /// var service: Factory<ServiceType> {
-    ///     makes { MyService() }
+    ///     self { MyService() }
     ///         .shared
     /// }
     /// ```
@@ -259,7 +259,7 @@ extension FactoryModifing {
     /// Defines this Factory's dependency scope to be singleton. See ``Scope/Singleton-swift.class``.
     /// ```swift
     /// var service: Factory<ServiceType> {
-    ///     makes { MyService() }
+    ///     self { MyService() }
     ///         .singleton
     /// }
     /// ```
@@ -269,7 +269,7 @@ extension FactoryModifing {
     /// Explicitly defines unique scope. See ``Scope``.
     /// ```swift
     /// var service: Factory<ServiceType> {
-    ///     makes { MyService() }
+    ///     self { MyService() }
     /// }
     /// ```
     /// While you can add the modifier, Factory's are unique by default.
@@ -279,7 +279,7 @@ extension FactoryModifing {
     /// Defines a custom dependency scope for this Factory. See ``Scope``.
     /// ```swift
     /// var service: Factory<ServiceType> {
-    ///     makes { MyService() }
+    ///     self { MyService() }
     ///         .custom(scope: .session)
     /// }
     /// ```
@@ -293,7 +293,7 @@ extension FactoryModifing {
     /// This includes previously created items that may have been cached by a scope.
     /// ```swift
     /// var decoratedService: Factory<ParentChildService> {
-    ///    makes { ParentChildService() }
+    ///    self { ParentChildService() }
     ///        .decorated {
     ///            $0.child.parent = $0
     ///        }
@@ -374,26 +374,24 @@ extension SharedContainer {
 
     /// Creates and returns a Factory struct associated with the current container. The default scope is
     /// `unique` unless otherwise specified using a scope modifier.
-    @inlinable public func makes<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+    @inlinable public func callAsFunction<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+        Factory(self, key: key, factory)
+    }
+
+    /// Not sure about this one yet.
+    @inlinable public func make<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
         Factory(self, key: key, factory)
     }
 
     /// Creates and returns a ParameterFactory struct associated with the current container. The default scope is
     /// `unique` unless otherwise specified using a scope modifier.
-    @inlinable public func makes<P,T>(key: String = #function, _ factory: @escaping (P) -> T) -> ParameterFactory<P,T> {
+    @inlinable public func callAsFunction<P,T>(key: String = #function, _ factory: @escaping (P) -> T) -> ParameterFactory<P,T> {
         ParameterFactory(self, key: key, factory)
     }
 
-    /// Creates and returns a Factory struct associated with the current container. The default scope is
-    /// `unique` unless otherwise specified using a scope modifier.
-    @inlinable public static func makes<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
-        Factory(shared, key: key, factory)
-    }
-
-    /// Creates and returns a ParameterFactory struct associated with the current container. The default scope is
-    /// `unique` unless otherwise specified using a scope modifier.
-    @inlinable public static func makes<P,T>(key: String = #function, _ factory: @escaping (P) -> T) -> ParameterFactory<P,T> {
-        ParameterFactory(shared, key: key, factory)
+    /// Not sure about this one yet.
+    @inlinable public func make<P,T>(key: String = #function, _ factory: @escaping (P) -> T) -> ParameterFactory<P,T> {
+        ParameterFactory(self, key: key, factory)
     }
 
     /// Defines a decorator for the container. This decorator will see every dependency resolved by this container.
@@ -606,7 +604,7 @@ extension ContainerManager {
 /// ```swift
 /// extension Container {
 ///     var service: Factory<ServiceType> {
-///         makes { MyService() }.singleton
+///         self { MyService() }.singleton
 ///     }
 /// }
 /// ```

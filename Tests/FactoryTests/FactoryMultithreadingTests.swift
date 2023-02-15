@@ -152,11 +152,11 @@ fileprivate class E {
 
 fileprivate final class MultiThreadedContainer: SharedContainer {
     fileprivate static var shared = MultiThreadedContainer()
-    fileprivate var a: Factory<A> { makes { A(b: self.b()) } }
-    fileprivate var b: Factory<B> { makes { B(c: self.c()) } }
-    fileprivate var c: Factory<C> { makes { C(d: self.d()) } }
-    fileprivate var d: Factory<D> { makes { D() }.cached }
-    fileprivate var e: Factory<E> { makes { E() } }
+    fileprivate var a: Factory<A> { self { A(b: self.b()) } }
+    fileprivate var b: Factory<B> { self { B(c: self.c()) } }
+    fileprivate var c: Factory<C> { self { C(d: self.d()) } }
+    fileprivate var d: Factory<D> { self { D() }.cached }
+    fileprivate var e: Factory<E> { self { E() } }
     var manager = ContainerManager()
 }
 

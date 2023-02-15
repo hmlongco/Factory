@@ -24,11 +24,11 @@ class CircularC {
 
 extension Container {
 
-    var circularA: Factory<CircularA> { makes { CircularA() } }
-    var circularB: Factory<CircularB> { makes { CircularB() } }
-    var circularC: Factory<CircularC> { makes { CircularC() } }
+    var circularA: Factory<CircularA> { self { CircularA() } }
+    var circularB: Factory<CircularB> { self { CircularB() } }
+    var circularC: Factory<CircularC> { self { CircularC() } }
 
-    var optionalA: Factory<CircularA?> { makes { CircularA() } }
+    var optionalA: Factory<CircularA?> { self { CircularA() } }
 
     static func testCircularDependencies() {
         let a = Container.shared.circularA()

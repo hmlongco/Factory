@@ -107,9 +107,9 @@ final class FactoryDefectTests: XCTestCase {
 }
 
 extension Container {
-    fileprivate var circularFailure1: Factory<MyService> { makes { self.circularFailure2() } }
-    fileprivate var circularFailure2: Factory<MyService> { makes { self.circularFailure3() } }
-    fileprivate var circularFailure3: Factory<MyService> { makes { MyService() } }
+    fileprivate var circularFailure1: Factory<MyService> { self { self.circularFailure2() } }
+    fileprivate var circularFailure2: Factory<MyService> { self { self.circularFailure3() } }
+    fileprivate var circularFailure3: Factory<MyService> { self { MyService() } }
 }
 
 
@@ -118,8 +118,8 @@ fileprivate class TestLazyInjectionOccursOnce {
 }
 
 extension Container {
-    fileprivate var lockingTestA: Factory<LockingTestA> { makes { LockingTestA() }.singleton }
-    fileprivate var lockingTestB: Factory<LockingTestB> { makes { LockingTestB() }.singleton }
+    fileprivate var lockingTestA: Factory<LockingTestA> { self { LockingTestA() }.singleton }
+    fileprivate var lockingTestB: Factory<LockingTestB> { self { LockingTestB() }.singleton }
 }
 
 // classes for recursive resolution test

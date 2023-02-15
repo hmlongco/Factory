@@ -22,6 +22,7 @@ class ContentModuleViewModel: ObservableObject {
     init() {
         print("ContentModuleViewModel Initialized")
         testFactory()
+
     }
 
     func text() -> String {

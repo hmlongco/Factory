@@ -21,7 +21,15 @@ extension Container {
     }
 
     var simpleService3: Factory<SimpleService> {
-        makes { SimpleService() }
+        self { SimpleService() }
+    }
+
+    var simpleService4: Factory<SimpleService> {
+        make { SimpleService() }
+    }
+
+    var simpleService6: Factory<SimpleService> {
+        unique { SimpleService() }
     }
 
 }
@@ -41,13 +49,13 @@ final class DemoContainer: ObservableObject, SharedContainer {
     var optionalService: Factory<SimpleService?> { Factory(self) { nil } }
 
     var constructedService: Factory<MyConstructedService> {
-        makes {
+        self {
             MyConstructedService(service: self.myServiceType())
         }
     }
 
     var additionalService: Factory<SimpleService> {
-        makes { SimpleService() }
+        self { SimpleService() }
             .custom(scope: .session)
     }
 
@@ -56,13 +64,13 @@ final class DemoContainer: ObservableObject, SharedContainer {
 
 extension DemoContainer {
     var argumentService: ParameterFactory<Int, ParameterService> {
-        makes { count in ParameterService(count: count) }
+        self { count in ParameterService(count: count) }
     }
 }
 
 extension DemoContainer {
     var selfService: Factory<MyServiceType> {
-        makes { MyService() }
+        self { MyService() }
     }
 }
 
@@ -114,11 +122,11 @@ class ImplementsAB: AServiceType, BServiceType {
 
 extension Container {
     private var implementsAB: Factory<AServiceType&BServiceType> {
-        makes { ImplementsAB() }.graph
+        self { ImplementsAB() }.graph
     }
-    var aService: Factory<AServiceType> { makes { self.implementsAB() } }
-    var bService: Factory<BServiceType> { makes { self.implementsAB() } }
-    var multiple: Factory<MultipleDemo> { makes { MultipleDemo() } }
+    var aService: Factory<AServiceType> { self { self.implementsAB() } }
+    var bService: Factory<BServiceType> { self { self.implementsAB() } }
+    var multiple: Factory<MultipleDemo> { self { MultipleDemo() } }
 }
 
 class MultipleDemo {

@@ -19,7 +19,7 @@ Add a singleton modifier to the Factory.
 ```swift
 extension Container {
     var myService: Factory<MyServiceType> { 
-        makes { MyService() }.singleton
+        self { MyService() }.singleton
     }
 }
 ```
@@ -46,10 +46,10 @@ extension Scope {
 
 extension Container {
     var authenticatedUser: Factory<AuthenticatedUser> { 
-        makes { AuthenticatedUser() }.session
+        self { AuthenticatedUser() }.session
     }
     var profileImageCache: Factory<ProfileImageCache> { 
-        makes { ProfileImageCache() }.session 
+        self { ProfileImageCache() }.session 
     }
 }
 ```
@@ -76,10 +76,10 @@ class ProtocolConsumer {
 The `ProtocolConsumer` wants two different protocols. But it doesn't know that a single class provides both services. (Nor should it care.) Take a look at the referenced factories.
 ```swift
 extension Container {
-    var consumer: Factory { makes { ProtocolConsumer() } }
-    var idProvider: Factory<IDProviding> { makes { commonProviding() } }
-    var valueProvider: Factory<ValueProviding> { makes { commonProviding() }.graph }
-    private var commonProviding: Factory(scope: .graph) { makes { MyService() }.graph }
+    var consumer: Factory<ProtocolConsumer> { self { ProtocolConsumer() } }
+    var idProvider: Factory<IDProviding> { self { commonProviding() } }
+    var valueProvider: Factory<ValueProviding> { self { commonProviding() } }
+    private var commonProviding: Factory<MyService> { self { MyService() }.graph }
 }
 ```
 Both provider factories reference the same factory. When Factory is asked for an instance of `consumer`, both providers will receive the same instance of `MyService`.

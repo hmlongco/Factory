@@ -68,3 +68,17 @@ class ContentViewModel: ObservableObject {
 
 }
 ```
+
+### Initialization from Passed Container
+Passing a required parameter to a factory for resolution.
+```swift
+class ContentViewModel: ObservableObject {
+
+    let parameterService: ParameterService
+
+    init(container: Container, value: Int) {
+        service2 = container.parameterService(value)
+    }
+
+}
+```

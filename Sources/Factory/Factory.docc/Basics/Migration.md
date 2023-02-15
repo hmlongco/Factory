@@ -34,11 +34,11 @@ Within that container we defined a new computed variable of type `Factory<Servic
 
 Inside the computed variable we constructed our Factory, providing it with a reference to its container (self) and also with a factory closure that's used to create an instance of our object when needed. That Factory is then returned to the caller, usually to be evaluated (see ``Factory/callAsFunction()``). Every time we resolve the returned factory we'll get a new, unique instance of our object.
 
-Containers also provide a convenient shortcut that makes our factory and does our binding for us.
+We can also ask the enclosing container to make our factory for us.
 
 ```swift
 extension Container {
-    var service: Factory<ServiceType> { makes { MyService() } }
+    var service: Factory<ServiceType> { self { MyService() } }
 }
 ```
 Just for reference, here's the Factory 1.x and 2.0 version side by side.
@@ -49,9 +49,10 @@ extension Container {
     static var service = Factory<ServiceType> { MyService() }
 
     // Factory 2.0
-    var service: Factory<ServiceType> { makes { MyService() } }
+    var service: Factory<ServiceType> { self { MyService() } }
 }
 ```
+The new version is one character longer. Hey. I tried... ;)
 
 Like SwftUI Views, Factory structs and modifiers are lightweight and transitory. In Factory 2.0 they're created when needed and then immediately discarded once their purpose has been served.
 
@@ -112,10 +113,10 @@ Scopes behave exactly as they did before, although they're now defined using a m
 ```swift
 extension Container {
     var sharedService: Factory<ServiceType> {
-        makes { MyService() }.shared
+        self { MyService() }.shared
     }
     var decoratedSharedService: Factory<MyServiceType> {
-        makes { MyService() }
+        self { MyService() }
             .decorator { print("DECORATING \($0.id)") }
             .shared
     }

@@ -44,11 +44,11 @@ Within that container we defined a new computed variable of type `Factory<Servic
 
 Inside the computed variable we constructed our Factory, providing it with a reference to its container (self) and also with a factory closure that's used to create an instance of our object when needed. That Factory is then returned to the caller, usually to be evaluated (see ``Factory/callAsFunction()``). Every time we resolve the returned factory we'll get a new, unique instance of our object.
 
-Containers also provide a convenient shortcut that makes our factory and does our binding for us.
+We can slso ask the enclosing container to make a properly bound factory for us.
 
 ```swift
 extension Container {
-    var service: Factory<ServiceType> { makes { MyService() } }
+    var service: Factory<ServiceType> { self { MyService() } }
 }
 ```
 
@@ -108,10 +108,10 @@ Scopes behave as they did before, although they're now defined using a modifier 
 ```swift
 extension Container {
     var sharedService: Factory<ServiceType> {
-        makes { MyService() }.shared
+        self { MyService() }.shared
     }
     var decoratedSharedService: Factory<MyServiceType> {
-        makes { MyService() }
+        self { MyService() }
             .decorator { print("DECORATING \($0.id)") }
             .shared
     }

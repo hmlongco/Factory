@@ -28,12 +28,12 @@ Inside the computed variable we construct our Factory, providing it with a refer
 
 Like SwftUI Views, Factory structs and modifiers are lightweight and transitory value types. Ther're created when needed and then immediately discarded once their purpose has been served.
 
-Containers also provide a convenient shortcut that will do the factory creation and binding to `self` for us.
+We can also ask the enclosing container to make our factory for us.
 
 ```swift
 extension Container {
     var service: Factory<ServiceType> {
-        makes { MyService() }
+        self { MyService() }
     }
 }
 ```

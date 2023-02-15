@@ -14,7 +14,9 @@ Factory 2.0 supports true container-based dependency injection.
 
 ## Containers and Factory's
 
-Factory's are usually defined within container extensions, and must be provided with a reference to that container on initialization.
+A Factory definition is a computed property defined within a container extension. Each Factory needs a reference to its container, and also requires a factory closure that will produce our dependency when asked to do so.
+
+Put it all together, and you have the following:
 ```swift
 extension Container {
     var service: Factory<ServiceType> {
@@ -22,11 +24,11 @@ extension Container {
     }
 }
 ```
-That mechanism's a bit formal, so containers also provide a set of shorthand functions that will make properly bound Factory's for us. The following definition provides the same result as the one above.
+We can also ask the enclosing container to make our Factory for us. The following definition provides the same result as the one above.
 ```swift
 extension Container {
-    var convenientService: Factory<MyServiceType> {
-        makes { MyService() }
+    var service: Factory<MyServiceType> {
+        self { MyService() }
     }
 }
 ```
@@ -82,7 +84,7 @@ Note that you can extend SharedContainer with your own Factory's.
 ```swift
 extension SharedContainer {
     var commonSerice: Factory<ServiceType> {
-        makes { MyService() }
+        self { MyService() }
     }
 }
 ```
@@ -105,7 +107,7 @@ public final class MyContainer: SharedContainer {
 
 extension MyContainer {
     var cachedService: Factory<ServiceType> {
-        makes { MyService() }.cached
+        self { MyService() }.cached
     }
 }
 ```
@@ -116,7 +118,7 @@ Don't forget that if need be you can reach across containers simply by specifyin
 ```swift
 extension PaymentsContainer {
     let anotherService = Factory<AnotherService> { 
-        makes { AnotherService(using: Container.shared.optionalService()) }
+        self { AnotherService(using: Container.shared.optionalService()) }
     }
 }
 ```
