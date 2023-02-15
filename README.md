@@ -44,7 +44,7 @@ Within that container we defined a new computed variable of type `Factory<Servic
 
 Inside the computed variable we constructed our Factory, providing it with a reference to its container (self) and also with a factory closure that's used to create an instance of our object when needed. That Factory is then returned to the caller, usually to be evaluated (see ``Factory/callAsFunction()``). Every time we resolve the returned factory we'll get a new, unique instance of our object.
 
-We can slso ask the enclosing container to make a properly bound factory for us.
+We can also ask the enclosing container to make a properly bound factory for us.
 
 ```swift
 extension Container {
@@ -59,6 +59,7 @@ extension Container {
     static var service = Factory<ServiceType> { MyService() }
 }
 ```
+The 2.0 version is one character longer. (Sorry)
 
 Like SwftUI Views, Factory structs and modifiers are lightweight and transitory. In Factory 2.0 they're created when needed and then immediately discarded once their purpose has been served.
 
