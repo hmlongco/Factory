@@ -32,10 +32,10 @@ class ContentModuleViewModel: ObservableObject {
     func testFactory() {
         $network.resolve(reset: .all)
         
-        let m1 = MultipleDemo()
-        print("MultipleDemo - W/O ROOT \(m1.aService.id == m1.bService.id)")
-        let m2 = Container.shared.multiple()
-        print("MultipleDemo - W/ROOT \(m2.aService.id == m2.bService.id)")
+        let m1 = CycleDemo()
+        print("CycleDemo - W/O ROOT \(m1.aService === m1.bService)")
+        let m2 = Container.shared.cycleDemo()
+        print("CycleDemo - W/ROOT \(m2.aService === m2.bService)")
     }
 
 }

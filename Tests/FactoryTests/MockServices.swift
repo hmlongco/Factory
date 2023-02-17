@@ -207,6 +207,11 @@ final class CustomContainer: SharedContainer, AutoRegistering {
         self.decorator { _ in
             Self.count += 1
         }
+#if DEBUG
+        decorator {
+            print("FACTORY: \(type(of: $0)) (\(Int(bitPattern: ObjectIdentifier($0 as AnyObject))))")
+        }
+#endif
     }
     var manager = ContainerManager()
 }

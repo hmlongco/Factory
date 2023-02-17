@@ -34,4 +34,5 @@ Ready to get started?
 - <doc:Testing>
 - <doc:Optionals>
 - <doc:Functional>
+- <doc:Cycle>
 - <doc:Chains>

@@ -93,45 +93,60 @@ extension Container {
 
         DemoContainer.shared.optionalService.register { SimpleService() }
 
-#if DEBUG
-        decorator {
-            print("FACTORY: \(type(of: $0)) (\(Int(bitPattern: ObjectIdentifier($0 as AnyObject))))")
-        }
-#endif
     }
 }
 
 // implements
 
-public protocol AServiceType {
-    var id: UUID { get }
-    func text() -> String
+class CycleDemo {
+    @Injected(\.aService) var aService: AServiceType
+    @Injected(\.bService) var bService: BServiceType
 }
 
-public protocol BServiceType {
+public protocol AServiceType: AnyObject {
     var id: UUID { get }
+}
+
+public protocol BServiceType: AnyObject {
     func text() -> String
 }
 
 class ImplementsAB: AServiceType, BServiceType {
+    @Injected(\.networkService) var networkService
     var id: UUID = UUID()
     func text() -> String {
-        return "Multiple"
+        "Multiple"
     }
+}
+
+class NetworkService {
+    @LazyInjected(\.preferences) var preferences
+    func load() {}
+}
+
+class Preferences {
+    func load() {}
 }
 
 extension Container {
+    var cycleDemo: Factory<CycleDemo> {
+        self { CycleDemo() }
+    }
+    var aService: Factory<AServiceType> {
+        self { self.implementsAB() }
+    }
+    var bService: Factory<BServiceType> {
+        self { self.implementsAB() }
+    }
+    var networkService: Factory<NetworkService> {
+        self { NetworkService() }
+    }
+    var preferences: Factory<Preferences> {
+        self { Preferences() }
+    }
     private var implementsAB: Factory<AServiceType&BServiceType> {
         self { ImplementsAB() }.graph
     }
-    var aService: Factory<AServiceType> { self { self.implementsAB() } }
-    var bService: Factory<BServiceType> { self { self.implementsAB() } }
-    var multiple: Factory<MultipleDemo> { self { MultipleDemo() } }
-}
-
-class MultipleDemo {
-    var aService: AServiceType = Container.shared.aService()
-    var bService: BServiceType = Container.shared.bService()
 }
 
 extension SharedContainer {
@@ -141,3 +156,4 @@ extension SharedContainer {
 //
 //    var someOtherService: Factory<MyServiceType> { scope(.shared) { MyService() } }
 }
+

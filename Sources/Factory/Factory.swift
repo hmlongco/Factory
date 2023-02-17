@@ -533,7 +533,7 @@ extension ContainerManager {
         }
         #endif
 
-        // print("RESOLVING \(factory.id)")
+//        print("RESOLVING \(registration.id)")
 
         globalGraphResolutionDepth += 1
         let instance = registration.scope?.resolve(using: cache, id: registration.id, factory: { current(parameters) }) ?? current(parameters)

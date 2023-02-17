@@ -92,6 +92,8 @@ In the above example, the `consumer` object is the root. Factory is asked for a 
 
 If you were to instantiate an instance of `ProtocolConsumer` yourself, each one of ProtocolConsumer's Injected property wrappers would initialize sequentually on the same thread, resulting in two separate and distinct resolution cycles.
 
+See: <doc:Cycle> for more on this.
+
 ## Lifecycles
 
 Scope caches are maintained by the Factory's container.
