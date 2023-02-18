@@ -425,6 +425,9 @@ public class ContainerManager {
     /// Public variable exposing dependency chain test maximum
     public var dependencyChainTestMax: Int = 10
 
+    /// Public var enabling factory resolution trace statements in debug mode.
+    public var trace: Bool = false
+
     /// Internal closure decorates all factory resolutions for this container.
     internal var decorator: ((Any) -> ())?
     internal var autoRegistrationCheck = true
@@ -448,6 +451,7 @@ extension ContainerManager {
         /// Resets all scope caches on this container
         case scope
     }
+
     /// Resets the Container to its original state, removing all registrations and clearing all scope caches.
     public func reset(options: ResetOptions = .all) {
         guard options != .none else {
@@ -531,9 +535,12 @@ extension ContainerManager {
                 globalDependencyChainMessages.append(message)
             }
         }
-        #endif
 
-//        print("RESOLVING \(registration.id)")
+        if trace {
+            let spaces = String(repeating: " ", count: globalGraphResolutionDepth * 4)
+            print("FACTORY: \(spaces)\(registration.id)")
+        }
+        #endif
 
         globalGraphResolutionDepth += 1
         let instance = registration.scope?.resolve(using: cache, id: registration.id, factory: { current(parameters) }) ?? current(parameters)
@@ -549,6 +556,13 @@ extension ContainerManager {
         #if DEBUG
         if !globalDependencyChain.isEmpty {
             globalDependencyChain.removeLast()
+        }
+
+        if trace {
+            let type = type(of: instance)
+            let address = Int(bitPattern: ObjectIdentifier(instance as AnyObject))
+            let spaces = String(repeating: " ", count: globalGraphResolutionDepth * 4)
+            print("FACTORY: \(spaces)\(registration.id) = \(type) \(address)")
         }
         #endif
 
