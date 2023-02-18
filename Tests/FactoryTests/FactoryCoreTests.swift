@@ -138,4 +138,26 @@ final class FactoryCoreTests: XCTestCase {
         }
     }
 
+    func testTrace() {
+        var logged: [String] = []
+        Container.shared.manager.trace.toggle()
+        let _ = Container.shared.optionalService()
+        Container.shared.manager.logger = {
+            logged.append($0)
+        }
+        let _ = Container.shared.consumer()
+        Container.shared.manager.trace.toggle()
+        Container.shared.manager.logger = {
+            print($0)
+        }
+        XCTAssertEqual(logged.count, 5)
+        if logged.count == 5 {
+            XCTAssert(logged[0].contains("consumer"))
+            XCTAssert(logged[1].contains("idProvider"))
+            XCTAssert(logged[2].contains("commonProvider"))
+            XCTAssert(logged[3].contains("valueProvider"))
+            XCTAssert(logged[4].contains("commonProvider"))
+        }
+    }
+
 }

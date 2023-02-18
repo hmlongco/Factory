@@ -527,33 +527,15 @@ extension ContainerManager {
 
         #if DEBUG
         if dependencyChainTestMax > 0 {
-            let typeComponents = String(reflecting: T.self).components(separatedBy: CharacterSet(charactersIn: "<>"))
-            let typeName = typeComponents.count > 1 ? typeComponents[1] : typeComponents[0]
-            let typeIndex = globalDependencyChain.firstIndex(where: { $0 == typeName })
-            globalDependencyChain.append(typeName)
-            if let index = typeIndex {
-                let chain = globalDependencyChain[index...]
-                let message = "circular dependency chain - \(chain.joined(separator: " > "))"
-                if globalDependencyChainMessages.filter({ $0 == message }).count == dependencyChainTestMax {
-                    globalDependencyChain = []
-                    globalDependencyChainMessages = []
-                    globalGraphResolutionDepth = 0
-                    globalRecursiveLock = NSRecursiveLock()
-                    globalTraceResolutions = []
-                    triggerFatalError(message, #file, #line)
-                } else {
-                    globalDependencyChain = [typeName]
-                    globalDependencyChainMessages.append(message)
-                }
-            }
+            circularDependencyChainCheck(for: String(reflecting: T.self))
         }
 
-        let traceIndex = globalTraceResolutions.count
+        let traceLevel = globalTraceResolutions.count
         var traceNew = false
         if trace {
             let wrapped = current
             current = {
-                traceNew = true
+                traceNew = true // detects if new instance created
                 return wrapped($0)
             }
             globalTraceResolutions.append("")
@@ -582,7 +564,7 @@ extension ContainerManager {
             let address = Int(bitPattern: ObjectIdentifier(instance as AnyObject))
             let new = traceNew ? "N" : "C"
             let traced = "\(globalGraphResolutionDepth): \(indent)\(registration.id) = \(type) \(new):\(address)"
-            globalTraceResolutions[traceIndex] = traced
+            globalTraceResolutions[traceLevel] = traced
             if globalGraphResolutionDepth == 0 {
                 globalTraceResolutions.forEach { self.logger($0) }
                 globalTraceResolutions = []
@@ -628,6 +610,29 @@ extension ContainerManager {
         }
     }
 
+    #if DEBUG
+    internal func circularDependencyChainCheck(for typeName: String) {
+        let typeComponents = typeName.components(separatedBy: CharacterSet(charactersIn: "<>"))
+        let typeName = typeComponents.count > 1 ? typeComponents[1] : typeComponents[0]
+        let typeIndex = globalDependencyChain.firstIndex(where: { $0 == typeName })
+        globalDependencyChain.append(typeName)
+        if let index = typeIndex {
+            let chain = globalDependencyChain[index...]
+            let message = "circular dependency chain - \(chain.joined(separator: " > "))"
+            if globalDependencyChainMessages.filter({ $0 == message }).count == dependencyChainTestMax {
+                globalDependencyChain = []
+                globalDependencyChainMessages = []
+                globalGraphResolutionDepth = 0
+                globalRecursiveLock = NSRecursiveLock()
+                globalTraceResolutions = []
+                triggerFatalError(message, #file, #line)
+            } else {
+                globalDependencyChain = [typeName]
+                globalDependencyChainMessages.append(message)
+            }
+        }
+    }
+    #endif
 }
 
 // MARK: - Scope
