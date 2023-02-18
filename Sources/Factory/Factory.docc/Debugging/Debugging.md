@@ -23,6 +23,18 @@ Container.shared.manager.trace.toggle()
 ```
 Turning on a trace can be helpful in testing when you want to get an idea of an object's dependency tree. 
 
+Note that enabling trace logging enables it for *all* containers.
+
+## Logging
+
+Trace logs are usually just printed to the system log, but you can change that behavior if needed.
+```swift
+Container.shared.manager.logger = {
+    MyLogger.debug("Factory: \($0)")
+}
+```
+Note this changes the logging behavior for *all* containers.
+
 ## Circular Dependency Chain Detection
 
 What's a circular dependency? Let's say that A needs B to be constructed, and B needs a C. But what happens if C was defined such that it needs an A? 
