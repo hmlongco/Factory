@@ -145,7 +145,7 @@ extension Container {
         self { Preferences() }
     }
     private var implementsAB: Factory<AServiceType&BServiceType> {
-        self { ImplementsAB() }.graph
+        self { ImplementsAB() }.singleton
     }
 }
 

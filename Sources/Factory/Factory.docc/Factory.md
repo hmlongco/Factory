@@ -28,11 +28,15 @@ Ready to get started?
 - <doc:Scopes>
 - <doc:Migration>
 
-### Advanced Topics
+### Development and Testing
 
 - <doc:Previews>
 - <doc:Testing>
+- <doc:Debugging>
+- <doc:Chains>
+
+### Advanced Topics
+
+- <doc:Cycle>
 - <doc:Optionals>
 - <doc:Functional>
-- <doc:Cycle>
-- <doc:Chains>

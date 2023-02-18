@@ -425,8 +425,17 @@ public class ContainerManager {
     /// Public variable exposing dependency chain test maximum
     public var dependencyChainTestMax: Int = 10
 
-    /// Public var enabling factory resolution trace statements in debug mode.
-    public var trace: Bool = false
+    /// Public var enabling factory resolution trace statements in debug mode for ALL containers.
+    public var trace: Bool {
+        get { globalTraceFlag }
+        set { globalTraceFlag = newValue }
+    }
+
+    /// Public access to logging facility in debug mode for ALL containers.
+    public var logger: (String) -> Void {
+        get { globalLogger }
+        set { globalLogger = newValue }
+    }
 
     /// Internal closure decorates all factory resolutions for this container.
     internal var decorator: ((Any) -> ())?
@@ -514,31 +523,40 @@ extension ContainerManager {
             autoRegistrationCheck = false
         }
 
-        let current: (P) -> T = (registrations[registration.id] as? TypedFactory<P,T>)?.factory ?? registration.factory
+        var current: (P) -> T = (registrations[registration.id] as? TypedFactory<P,T>)?.factory ?? registration.factory
 
         #if DEBUG
-        let typeComponents = String(reflecting: T.self).components(separatedBy: CharacterSet(charactersIn: "<>"))
-        let typeName = typeComponents.count > 1 ? typeComponents[1] : typeComponents[0]
-        let typeIndex = globalDependencyChain.firstIndex(where: { $0 == typeName })
-        globalDependencyChain.append(typeName)
-        if let index = typeIndex {
-            let chain = globalDependencyChain[index...]
-            let message = "circular dependency chain - \(chain.joined(separator: " > "))"
-            if globalDependencyChainMessages.filter({ $0 == message }).count == dependencyChainTestMax {
-                globalDependencyChain = []
-                globalDependencyChainMessages = []
-                globalGraphResolutionDepth = 0
-                globalRecursiveLock = NSRecursiveLock()
-                triggerFatalError(message, #file, #line)
-            } else {
-                globalDependencyChain = [typeName]
-                globalDependencyChainMessages.append(message)
+        if dependencyChainTestMax > 0 {
+            let typeComponents = String(reflecting: T.self).components(separatedBy: CharacterSet(charactersIn: "<>"))
+            let typeName = typeComponents.count > 1 ? typeComponents[1] : typeComponents[0]
+            let typeIndex = globalDependencyChain.firstIndex(where: { $0 == typeName })
+            globalDependencyChain.append(typeName)
+            if let index = typeIndex {
+                let chain = globalDependencyChain[index...]
+                let message = "circular dependency chain - \(chain.joined(separator: " > "))"
+                if globalDependencyChainMessages.filter({ $0 == message }).count == dependencyChainTestMax {
+                    globalDependencyChain = []
+                    globalDependencyChainMessages = []
+                    globalGraphResolutionDepth = 0
+                    globalRecursiveLock = NSRecursiveLock()
+                    globalTraceResolutions = []
+                    triggerFatalError(message, #file, #line)
+                } else {
+                    globalDependencyChain = [typeName]
+                    globalDependencyChainMessages.append(message)
+                }
             }
         }
 
+        let traceIndex = globalTraceResolutions.count
+        var traceNew = false
         if trace {
-            let spaces = String(repeating: " ", count: globalGraphResolutionDepth * 4)
-            print("FACTORY: \(spaces)\(registration.id)")
+            let wrapped = current
+            current = {
+                traceNew = true
+                return wrapped($0)
+            }
+            globalTraceResolutions.append("")
         }
         #endif
 
@@ -559,10 +577,16 @@ extension ContainerManager {
         }
 
         if trace {
+            let indent = String(repeating: " ", count: globalGraphResolutionDepth * 4)
             let type = type(of: instance)
             let address = Int(bitPattern: ObjectIdentifier(instance as AnyObject))
-            let spaces = String(repeating: " ", count: globalGraphResolutionDepth * 4)
-            print("FACTORY: \(spaces)\(registration.id) = \(type) \(address)")
+            let new = traceNew ? "N" : "C"
+            let traced = "\(globalGraphResolutionDepth): \(indent)\(registration.id) = \(type) \(new):\(address)"
+            globalTraceResolutions[traceIndex] = traced
+            if globalGraphResolutionDepth == 0 {
+                globalTraceResolutions.forEach { self.logger($0) }
+                globalTraceResolutions = []
+            }
         }
         #endif
 
@@ -1027,9 +1051,12 @@ private var globalRecursiveLock = NSRecursiveLock()
 private var globalGraphResolutionDepth = 0
 
 #if DEBUG
-/// Internal variables used to check for circular dependency cycles
+/// Internal variables used for debugging
 private var globalDependencyChain: [String] = []
 private var globalDependencyChainMessages: [String] = []
+private var globalTraceFlag: Bool = false
+private var globalTraceResolutions: [String] = []
+private var globalLogger: (String) -> Void = { print($0) }
 #endif
 
 // MARK: - Internal Protocols and Types

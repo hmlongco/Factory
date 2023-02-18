@@ -41,7 +41,7 @@ class NetworkService {
 }
 
 class Preferences {
-    // some code
+    // just a demo class
 }
 ```
 CycleDemo is a class that depends on two protocols, both of which are implemented in ImplementsAB. That class, in turn, requires a NetworkService. And that service wants a preferences object.
@@ -60,14 +60,14 @@ extension Container {
     var bService: Factory<BServiceType> {
         self { self.implementsAB() }
     }
+    private var implementsAB: Factory<AServiceType&BServiceType> {
+        self { ImplementsAB() }.graph
+    }
     var networkService: Factory<NetworkService> {
         self { NetworkService() }
     }
     var preferences: Factory<Preferences> {
         self { Preferences() }
-    }
-    private var implementsAB: Factory<AServiceType&BServiceType> {
-        self { ImplementsAB() }.graph
     }
 }
 ```
@@ -82,26 +82,22 @@ That Factory, in turn, asks Swift to make ImplementsAB, but again, *that* object
 
 Let's turn on Factory's trace function and see what we get. (Trace was edited for clarity.)
 ```
-Container.cycleDemo
-    Container.aService
-        Container.implementsAB
-            Container.networkService = NetworkService 105553165679776
-        Container.implementsAB = AServiceType & BServiceType 105553165679456
-    Container.aService = AServiceType 105553165679456
-    Container.bService
-        Container.implementsAB = AServiceType & BServiceType 105553165679456
-    Container.bService = BServiceType 105553165679456
-Container.cycleDemo = CycleDemo 105553152132608
+0: Container.cycleDemo = CycleDemo N:105553131389696
+1:     Container.aService = AServiceType N:105553119821680
+2:         Container.implementsAB = AServiceType & BServiceType N:105553119821680
+3:             Container.networkService = NetworkService N:105553119770688
+1:     Container.bService = BServiceType N:105553119821680
+2:         Container.implementsAB = AServiceType & BServiceType C:105553119821680
 ```
-Again, cycleDemo wants an aService from implementsAB, which wants a networkService. That's returned, and so an initialized ImplementsAB is returned, and finally aService is returned. Now cycleDemo wants an bService from implementsAB. 
+Again, cycleDemo wants an aService from implementsAB, which wants a networkService. That's created and returned, and now cycleDemo wants an bService from implementsAB. 
 
-But implementsAB was cached in the graph scope, and so the same instance (105553165679456) is returned (and which is why we don't see networkService resolved again).
+But implementsAB was cached in the graph scope, and so the same instance (105553119821680) is returned (and which is why we don't see networkService resolved again).
 
-And now, finally, Swift can return a fully initialized isntance of CycleDemo.
+And with that Swift provides us with a fully initialized isntance of CycleDemo and its dependencies.
 
 That's a resolution cycle.
 
-You ask for a dependency, and in the process it asks for it's dependencies, and so on, until everyone has what it needs to do its job.
+You ask for a dependency, and in the process it asks for its dependencies, and so on, until everyone has what it needs to do its job.
 
 When the initial result is returned that resolution cycle is over.
 
@@ -121,20 +117,16 @@ let demo = CycleDemo()
 ```
 Here's the trace.
 ```
-Container.aService
-    Container.implementsAB
-        Container.networkService = NetworkService 105553165679696
-    Container.implementsAB = AServiceType & BServiceType 105553165679616
-Container.aService = AServiceType 105553165679616
-Container.bService
-    Container.implementsAB
-        Container.networkService = NetworkService 105553165679856
-    Container.implementsAB = AServiceType & BServiceType 105553165679536
-Container.bService = BServiceType 105553165679536
+0: Container.aService = AServiceType N:105553119775792
+1:     Container.implementsAB = AServiceType & BServiceType N:105553119775792
+2:         Container.networkService = NetworkService N:105553119821280
+0: Container.bService = BServiceType N:105553119821360
+1:     Container.implementsAB = AServiceType & BServiceType N:105553119821360
+2:         Container.networkService = NetworkService N:105553119821600
 ```
 Since we didn't ask Factory to make CycleDemo for us we're not going to see it on the trace. But what we do see are **two** instances of networkService being resolved and two distinct instances of implementsAB. What gives?
 
-That's because aService and bService are two distinct property wrappers, and each one is going to be initialized separately.
+That's because aService and bService are two distinct property wrappers, and each one is going to be initialized separately. (Note the "0:" prefix which indicates the start of a new resolution cycle.)
 
 Why? Let's look at the class again.
 ```swift
@@ -143,7 +135,7 @@ class CycleDemo {
     @Injected(\.bService) var bService: BServiceType
 }
 ```
-When we ask Swift to make an instance of CycleDemo that object needs to initialize. So Swift first asks the aService property wrapper to initialize and it does. But this is the first time Factory was involved, so a resolution cycle starts... and ends.
+When we ask Swift to make an instance of CycleDemo that object needs to initialize its properties. So Swift first asks the aService property wrapper to initialize and it does. But this is the first time Factory was involved, so a resolution cycle starts... and ends.
 
 And then Swift asks the bService property wrapper to initialize and it does. And so a second resolution cycle starts... and ends.
 
@@ -151,14 +143,11 @@ Since a graph scope only caches object for the length of a single resolution cyc
 
 Swap out implementsAB's graph scope for, say, singleton, and you'd see the following:
 ```
-Container.aService
-    Container.implementsAB
-        Container.networkService = NetworkService 105553133599744
-    Container.implementsAB = AServiceType & BServiceType 105553133599904
-Container.aService = AServiceType 105553133599904
-Container.bService
-    Container.implementsAB = AServiceType & BServiceType 105553133599904
-Container.bService = BServiceType 105553133599904
+0: Container.aService = AServiceType N:105553118258000
+1:     Container.implementsAB = AServiceType & BServiceType N:105553118258000
+2:         Container.networkService = NetworkService N:105553118258480
+0: Container.bService = BServiceType N:105553118258000
+1:     Container.implementsAB = AServiceType & BServiceType C:105553118258000
 ```
 Which is what we'd expect.  (Note that now aService and bService are the same instance.)
 

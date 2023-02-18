@@ -29,6 +29,7 @@ extension Container: AutoRegistering {
 //        decorator {
 //            print("FACTORY: \(type(of: $0)) (\(Int(bitPattern: ObjectIdentifier($0 as AnyObject))))")
 //        }
+        manager.trace.toggle()
         #endif
     }
 
