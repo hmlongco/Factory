@@ -436,10 +436,16 @@ private struct Registration<P, T> {
         globalDependencyChain.append(typeName)
         if let index = typeIndex {
             let message = "circular dependency chain - \(globalDependencyChain[index...].joined(separator: " > "))"
-            globalDependencyChain = []
-            globalGraphResolutionDepth = 0
-            globalRecursiveLock = NSRecursiveLock()
-            triggerFatalError(message, #file, #line)
+            if globalDependencyChainMessages.filter({ $0 == message }).count == 10 {
+                globalDependencyChain = []
+                globalDependencyChainMessages = []
+                globalGraphResolutionDepth = 0
+                globalRecursiveLock = NSRecursiveLock()
+                triggerFatalError(message, #file, #line)
+            } else {
+                globalDependencyChain = [typeName]
+                globalDependencyChainMessages.append(message)
+            }
         }
         #endif
 
@@ -449,10 +455,15 @@ private struct Registration<P, T> {
 
         if globalGraphResolutionDepth == 0 {
             SharedContainer.Scope.graph.clearCacheIfNeeded()
+            #if DEBUG
+            globalDependencyChainMessages = []
+            #endif
         }
 
         #if DEBUG
-        globalDependencyChain.removeLast()
+        if !globalDependencyChain.isEmpty {
+            globalDependencyChain.removeLast()
+        }
         #endif
 
         SharedContainer.Decorator.decorate?(instance)
@@ -505,6 +516,7 @@ private var globalGraphResolutionDepth = 0
 #if DEBUG
 /// Internal array used to check for circular dependency cycles
 private var globalDependencyChain: [String] = []
+private var globalDependencyChainMessages: [String] = []
 #endif
 
 /// Internal protocol used to evaluate optional types for caching

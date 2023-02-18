@@ -1,5 +1,9 @@
 # Factory Changelog
 
+### 1.3.7
+
+* Circular dependency check bugfix for passthrough types
+
 ### 1.3.6
 
 * Circular dependency check bugfix for duplicate class names in multiple modules
