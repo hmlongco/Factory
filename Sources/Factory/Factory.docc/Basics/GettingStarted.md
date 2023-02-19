@@ -16,27 +16,19 @@ Factory, as you may have guessed from the name, is no exception. Here's a simple
 ```swift
 extension Container {
     var service: Factory<ServiceType> {
-        Factory(self) { MyService() }
+         self { MyService() }
     }
 }
 ```
 
-To accomplish that we need to extend a Factory ``Container``. Within that container we define a new computed variable of type `Factory<ServiceType>`. This type must be explicity defined, and is usually a protocol to which the returned dependency conforms.
+We extended a Factory `Container` and within that container we defined a new computed variable of type `Factory<ServiceType>`. The type must be explicitly defined, and is usually a
+protocol to which the returned dependency conforms.
 
-Inside the computed variable we construct our Factory, providing it with a refernce to its container (self) and also with a factory closure that's used tp create an instance of our object when needed. That Factory is then returned to the caller, usually to be evaluated (see ``Factory/callAsFunction()``). Every time we resolve resolve the returned factory we'll get a new, unique instance of our object.
+Inside the computed variable we asked the enclosing container to make our factory for us, providing it with the closure needed to create an instance of our object when required. 
 
+That Factory is then returned to the caller, usually to be evaluated (see ``Factory/callAsFunction()``). Every time we resolve this factory we'll get a new, unique instance of our object.
 
 Like SwftUI Views, Factory structs and modifiers are lightweight and transitory value types. Ther're created when needed and then immediately discarded once their purpose has been served.
-
-We can also ask the enclosing container to make our factory for us.
-
-```swift
-extension Container {
-    var service: Factory<ServiceType> {
-        self { MyService() }
-    }
-}
-```
 
 For more examples of Factory definitions that define scopes, use constructor injection, and do parameter passing, see: <doc:Registrations>.
 

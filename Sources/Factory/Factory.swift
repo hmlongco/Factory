@@ -40,23 +40,13 @@ import Foundation
 /// ```swift
 /// extension Container {
 ///     var service: Factory<ServiceType> {
-///         Factory(self) { MyService() }
-///     }
-/// }
-/// ```
-/// Inside the computed variable we build our Factory, providing it with a reference to its container and also with a factory closure that
-/// creates an instance of our object when required. That Factory is then returned to the caller, usually to be evaluated (see `callAsFunction()`
-/// below). Every time we resolve this factory we'll get a new, unique instance of our object.
-///
-/// ## Convenience
-/// We can slso ask our container to make a properly bound factory for us.
-/// ```swift
-/// extension Container {
-///     var service: Factory<ServiceType> {
 ///         self { MyService() }
 ///     }
 /// }
 /// ```
+/// Inside the computed variable we ask our container to make our factory for us, providing it a closure that
+/// creates an instance of our dependency when required. That Factory is then returned to the caller, usually to be evaluated (see `callAsFunction()`
+/// below). Every time we resolve this factory we'll get a new, unique instance of our object.
 ///
 /// ## Transient
 /// If you're concerned about building Factory's on the fly, don't be. Like SwiftUI Views, Factory structs and modifiers
@@ -66,14 +56,14 @@ import Foundation
 /// Other operations exist for Factory. See ``FactoryModifing``.
 public struct Factory<T>: FactoryModifing {
 
-    /// Creates a new Factory capable of managing dependencies of the desired type.
+    /// Private initializer creates a Factory capable of managing dependencies of the desired type.
     ///
     /// - Parameters:
     ///   - container: The bound container that manages registrations and scope caching for this Factory. The scope helper functions bind the
     ///   current container as well defining the scope.
     ///   - key: Hidden value used to differentiate different instances of the same type in the same container.
     ///   - factory: A factory closure that produces an object of the desired type when required.
-    public init(_ container: SharedContainer, key: String = #function, _ factory: @escaping () -> T) {
+    fileprivate init(_ container: SharedContainer, key: String = #function, _ factory: @escaping () -> T) {
         self.registration = FactoryRegistration<Void,T>(id: "\(container.self).\(key)", container: container, factory: factory)
     }
 
@@ -179,13 +169,13 @@ public struct Factory<T>: FactoryModifing {
 /// later requests will be ignored until the factory or scope is reset.
 public struct ParameterFactory<P,T>: FactoryModifing {
 
-    /// Initializes a factory capable of taking parameters at runtime.
+    /// Private initializer creates a factory capable of taking parameters at runtime.
     /// ```swift
     /// var parameterService: ParameterFactory<Int, ParameterService> {
     ///     ParameterFactory(self) { ParameterService(value: $0) }
     /// }
     /// ```
-    public init(_ container: SharedContainer, key: String = #function, _ factory: @escaping (P) -> T) {
+    fileprivate init(_ container: SharedContainer, key: String = #function, _ factory: @escaping (P) -> T) {
         self.registration = FactoryRegistration<P,T>(id: "\(container.self).\(key)", container: container, factory: factory)
     }
 
@@ -374,23 +364,23 @@ extension SharedContainer {
 
     /// Creates and returns a Factory struct associated with the current container. The default scope is
     /// `unique` unless otherwise specified using a scope modifier.
-    @inlinable public func callAsFunction<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+    public func callAsFunction<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
         Factory(self, key: key, factory)
     }
 
     /// Not sure about this one yet.
-    @inlinable public func make<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+    public func register<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
         Factory(self, key: key, factory)
     }
 
     /// Creates and returns a ParameterFactory struct associated with the current container. The default scope is
     /// `unique` unless otherwise specified using a scope modifier.
-    @inlinable public func callAsFunction<P,T>(key: String = #function, _ factory: @escaping (P) -> T) -> ParameterFactory<P,T> {
+    public func callAsFunction<P,T>(key: String = #function, _ factory: @escaping (P) -> T) -> ParameterFactory<P,T> {
         ParameterFactory(self, key: key, factory)
     }
 
     /// Not sure about this one yet.
-    @inlinable public func make<P,T>(key: String = #function, _ factory: @escaping (P) -> T) -> ParameterFactory<P,T> {
+    public func register<P,T>(key: String = #function, _ factory: @escaping (P) -> T) -> ParameterFactory<P,T> {
         ParameterFactory(self, key: key, factory)
     }
 

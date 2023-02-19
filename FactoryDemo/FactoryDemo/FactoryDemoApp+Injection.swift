@@ -13,40 +13,36 @@ import SwiftUI
 extension Container {
 
     var simpleService: Factory<SimpleService> {
-        Factory(self) { SimpleService() }
-    }
-
-    var simpleService2: Factory<SimpleService> {
-        .init(self) { SimpleService() }
-    }
-
-    var simpleService3: Factory<SimpleService> {
         self { SimpleService() }
     }
 
-    var simpleService4: Factory<SimpleService> {
-        make { SimpleService() }
+    var simpleService2: Factory<SimpleService> {
+        register { SimpleService() }
     }
 
-    var simpleService6: Factory<SimpleService> {
+    var simpleService3: Factory<SimpleService> {
         unique { SimpleService() }
+    }
+
+    var simpleService4: Factory<SimpleService> {
+        singleton { SimpleService() }
     }
 
 }
 
 extension Container {
-    var contentViewModel: Factory<ContentModuleViewModel> { Factory(self) { ContentModuleViewModel() } }
+    var contentViewModel: Factory<ContentModuleViewModel> { self { ContentModuleViewModel() } }
 }
 
 extension SharedContainer {
-    var myServiceType: Factory<MyServiceType> { Factory(self) { MyService() } }
-    var sharedService: Factory<MyServiceType> { Factory(self) { MyService() }.shared }
+    var myServiceType: Factory<MyServiceType> { self { MyService() } }
+    var sharedService: Factory<MyServiceType> { self { MyService() }.shared }
 }
 
 final class DemoContainer: ObservableObject, SharedContainer {
     static var shared = DemoContainer()
 
-    var optionalService: Factory<SimpleService?> { Factory(self) { nil } }
+    var optionalService: Factory<SimpleService?> { self { nil } }
 
     var constructedService: Factory<MyConstructedService> {
         self {

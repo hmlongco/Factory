@@ -33,30 +33,26 @@ Factory, as you may have guessed from the name, is no exception. Here's a simple
 ```swift
 extension Container {
     var service: Factory<ServiceType> {
-        Factory(self) { MyService() }
+        self { MyService() }
     }
 }
 ```
+We extended a Factory `Container` and within that container we defined a new computed variable of type `Factory<ServiceType>`. The type must be explicitly defined, and is usually a
+protocol to which the returned dependency conforms.
 
-To accomplish that we needed to extend a Factory ``Container``. Fortunately, Factory provided one of those for us, so we used it.
+Inside the computed variable we asked the enclosing container to make our factory for us, providing it with the closure needed to create an instance of our object when required. 
 
-Within that container we defined a new computed variable of type `Factory<ServiceType>`. This type must be explicity defined, and is usually a protocol to which the returned dependency conforms.
+That Factory is then returned to the caller, usually to be evaluated (see ``Factory/callAsFunction()``). Every time we resolve this factory we'll get a new, unique instance of our object.
 
-Inside the computed variable we constructed our Factory, providing it with a reference to its container (self) and also with a factory closure that's used to create an instance of our object when needed. That Factory is then returned to the caller, usually to be evaluated (see ``Factory/callAsFunction()``). Every time we resolve the returned factory we'll get a new, unique instance of our object.
-
-We can also ask the enclosing container to make a properly bound factory for us.
-
-```swift
-extension Container {
-    var service: Factory<ServiceType> { self { MyService() } }
-}
-```
-
-Just for reference, here's the Factory 1.x version.
+Just for reference, here's are the Factory 1.x and 2.0 registration definitions side by side.
 
 ```swift
 extension Container {
+    // Factory 1.x
     static var service = Factory<ServiceType> { MyService() }
+    
+    // Factory 2.0
+    var service: Factory<ServiceType> { self { MyService() }  
 }
 ```
 The 2.0 version is one character longer. (Sorry)

@@ -88,7 +88,7 @@ class ParameterService: MyServiceType {
 }
 
 extension Container {
-    static var myServiceType: Factory<MyServiceType> { Factory(shared) { MyService() } }
+    static var myServiceType: Factory<MyServiceType> { shared { MyService() } }
 
     var myServiceType: Factory<MyServiceType> { self { MyService() } }
     var myServiceType2: Factory<MyServiceType> { self { MyService() } }
@@ -128,7 +128,7 @@ extension Container {
 // For parameter tests
 extension Container {
     static var parameterService: ParameterFactory<Int, ParameterService> {
-        ParameterFactory(shared) { ParameterService(value: $0) }
+        shared { ParameterService(value: $0) }
     }
     var parameterService: ParameterFactory<Int, ParameterService> {
         self { ParameterService(value: $0) }

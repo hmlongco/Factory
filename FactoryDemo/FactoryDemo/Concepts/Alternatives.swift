@@ -86,14 +86,14 @@ extension NewSharedContainer {
     public func factory<T>(factory: @escaping () -> T) -> NewFactory<T> {
         NewFactory(self, factory)
     }
-    public func provides<T>(factory: @escaping () -> T) -> NewFactory<T> {
+    public func register<T>(factory: @escaping () -> T) -> NewFactory<T> {
         NewFactory(self, factory)
     }
 }
 
 extension NewSharedContainer {
     var service: NewFactory<MyServiceType> {
-        provides { MyService() }
+        register { MyService() }
     }
 }
 
@@ -109,21 +109,21 @@ extension NewContainer {
 
 extension NewContainer {
     var service: NewFactory<MyServiceType> {
-        provides { MyService() }
+        register { MyService() }
     }
     var cachedService: NewFactory<MyServiceType> {
-        provides { MyService() }
+        register { MyService() }
             .scope(.singleton)
     }
     var namedService: NewFactory<MyServiceType> {
-        provides { MyService() }
+        register { MyService() }
             .name("test")
     }
     var constructedService: NewFactory<MyConstructedService> {
-        provides { MyConstructedService(service: self.service()) }
+        register { MyConstructedService(service: self.service()) }
     }
     func parameterized(_ n: Int) -> NewFactory<ParameterService> {
-        provides { ParameterService(count: n) }
+        register { ParameterService(count: n) }
     }
 }
 
@@ -137,7 +137,7 @@ public final class MyContainer: NewSharedContainer {
 
 extension MyContainer {
     var anotherService: NewFactory<MyServiceType> {
-        provides { MyService() }
+        register { MyService() }
     }
 }
 

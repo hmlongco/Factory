@@ -4,7 +4,7 @@
 
 * Adds true Factory containers for container-based dependency resolution
 * Adds container-based scopes
-* Adds per Factory decorators
+* Adds decorators to containers and factories
 * Adds debug trace support
 * Fixes ciricular dependency check when same class name used in seprate modules.
 

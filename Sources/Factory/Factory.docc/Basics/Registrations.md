@@ -3,23 +3,7 @@
 There are many ways to register dependencies with Factory. Here are a few examples.
 
 ### Basic
-Example of a full, formal dependency registration in a Factory 2.0 container.
-
-```swift
-extension Container {
-    var service: Factory<MyServiceType> {
-        Factory(self) { MyService() }
-    }
-}
-```
-We can also save a few characters by using the shorthand initializer.
-```swift
-    var service: Factory<MyServiceType> {
-        .init(self) { MyService() }
-    }
-}
-```
-Or we can simply ask the enclosing container to make our factory for us.
+Example of a basic dependency registration in a Factory 2.0 container.
 
 ```swift
 extension Container {
@@ -28,7 +12,6 @@ extension Container {
     }
 }
 ```
-All three registration definitions produce the same result.
 
 ### Scopes
 Examples of defining scoped services in a Factory 2.0 container. 
@@ -104,7 +87,7 @@ Example of static Factory 2.0 registration container.
 ```swift
 extension Container {
     static var oldSchool: Factory<School> {
-        Factory(shared) { School() }
+        Self.shared { School() }
     }
 }
 
