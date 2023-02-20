@@ -13,11 +13,11 @@ public protocol CommonType {
 }
 
 extension Container {
-    public var commonType: Factory<CommonType> { self { Common() } }
+    public var commonType: Factory<CommonType> { unique { Common() } }
 }
 
 extension Container {
-    public var promisedType: Factory<CommonType?> { self { nil } }
+    public var promisedType: Factory<CommonType?> { unique { nil } }
 }
 
 //extension Container {

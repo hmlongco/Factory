@@ -88,53 +88,48 @@ class ParameterService: MyServiceType {
 }
 
 extension Container {
-    static var myServiceType: Factory<MyServiceType> { shared { MyService() } }
+    var myServiceType: Factory<MyServiceType> { unique { MyService() } }
+    var myServiceType2: Factory<MyServiceType> { unique { MyService() } }
 
-    var myServiceType: Factory<MyServiceType> { self { MyService() } }
-    var myServiceType2: Factory<MyServiceType> { self { MyService() } }
+    var mockService: Factory<MockService> { unique { MockService() } }
 
-    var mockService: Factory<MockService> { self { MockService() } }
+    var cachedService: Factory<MyService> { cached { MyService() } }
+    var cachedOptionalService: Factory<MyServiceType?> { cached { MyService() } }
+    var cachedEmptyOptionalService: Factory<MyServiceType?> { cached { nil } }
 
-    var cachedService: Factory<MyService> { self { MyService() }.cached }
-    var cachedOptionalService: Factory<MyServiceType?> { self { MyService() }.cached }
-    var cachedEmptyOptionalService: Factory<MyServiceType?> { self { nil }.cached }
+    var sharedService: Factory<MyServiceType> { shared { MyService() } }
+    var sharedExplicitProtocol: Factory<MyServiceType> { shared { MyService() } }
+    var sharedInferredProtocol: Factory<MyServiceType> { shared { MyService() } }
+    var sharedOptionalProtocol: Factory<MyServiceType?> { shared { MyService() } }
 
-    var sharedService: Factory<MyServiceType> { self { MyService() }.shared }
-    var sharedExplicitProtocol: Factory<MyServiceType> { self { MyService() }.shared }
-    var sharedInferredProtocol: Factory<MyServiceType> { self { MyService() }.shared }
-    var sharedOptionalProtocol: Factory<MyServiceType?> { self { MyService() }.shared }
+    var optionalService: Factory<MyServiceType?> { unique { MyService() } }
+    var optionalValueService: Factory<MyServiceType?> { unique { ValueService() } }
 
-    var optionalService: Factory<MyServiceType?> { self { MyService() } }
-    var optionalValueService: Factory<MyServiceType?> { self { ValueService() } }
+    var singletonService: Factory<MyServiceType> { singleton { MyService() } }
 
-    var singletonService: Factory<MyServiceType> { self { MyService() }.singleton }
+    var nilSService: Factory<MyServiceType?> { unique { nil } }
+    var nilCachedService: Factory<MyServiceType?> { cached { nil } }
+    var nilSharedService: Factory<MyServiceType?> { shared { nil } }
 
-    var nilSService: Factory<MyServiceType?> { self { nil } }
-    var nilCachedService: Factory<MyServiceType?> { self { nil }.cached }
-    var nilSharedService: Factory<MyServiceType?> { self { nil }.shared }
+    var sessionService: Factory<MyService> { scope(.session) { MyService() } }
 
-    var sessionService: Factory<MyService> { self { MyService() }.custom(scope: .session) }
+    var valueService: Factory<ValueService> { cached { ValueService() } }
+    var sharedValueService: Factory<ValueService> { shared { ValueService() } }
+    var sharedValueProtocol: Factory<ValueService> { shared { ValueService() } }
 
-    var valueService: Factory<ValueService> { self { ValueService() }.cached }
-    var sharedValueService: Factory<ValueService> { self { ValueService() }.shared }
-    var sharedValueProtocol: Factory<ValueService> { self { ValueService() }.shared }
+    var uniqueServiceType: Factory<MyServiceType> { unique { MyService() } }
 
-    var uniqueServiceType: Factory<MyServiceType> { self { MyService() }.unique }
-
-    var promisedService: Factory<MyServiceType?> { self { nil } }
+    var promisedService: Factory<MyServiceType?> { unique { nil } }
 
 }
 
 // For parameter tests
 extension Container {
-    static var parameterService: ParameterFactory<Int, ParameterService> {
-        shared { ParameterService(value: $0) }
-    }
     var parameterService: ParameterFactory<Int, ParameterService> {
-        self { ParameterService(value: $0) }
+        unique { ParameterService(value: $0) }
     }
     var scopedParameterService: ParameterFactory<Int, ParameterService> {
-        self { ParameterService(value: $0) }.cached
+        cached { ParameterService(value: $0) }
     }
 }
 
@@ -147,9 +142,9 @@ extension Scope {
 // Class for recursive scope test
 
 extension Container {
-    var recursiveA: Factory<RecursiveA?> { self { RecursiveA() } }
-    var recursiveB: Factory<RecursiveB?> { self { RecursiveB() } }
-    var recursiveC: Factory<RecursiveC?> { self { RecursiveC() } }
+    var recursiveA: Factory<RecursiveA?> { unique { RecursiveA() } }
+    var recursiveB: Factory<RecursiveB?> { unique { RecursiveB() } }
+    var recursiveC: Factory<RecursiveC?> { unique { RecursiveC() } }
 }
 
 // Classes for graph scope tests
@@ -161,8 +156,8 @@ class GraphWrapper {
 }
 
 extension Container {
-    var graphWrapper: Factory<GraphWrapper> { self { GraphWrapper() } }
-    var graphService: Factory<MyService> { self { MyService() }.graph }
+    var graphWrapper: Factory<GraphWrapper> { unique { GraphWrapper() } }
+    var graphService: Factory<MyService> { graph { MyService() } }
 }
 
 // Classes for implements scope tests
@@ -174,10 +169,10 @@ class ProtocolConsumer {
 }
 
 extension Container {
-    var consumer: Factory<ProtocolConsumer> { self { ProtocolConsumer() } }
-    var idProvider: Factory<IDProviding> { self { self.commonProvider() } }
-    var valueProvider: Factory<ValueProviding> { self { self.commonProvider() } }
-    private var commonProvider: Factory<MyService> { self { MyService() }.graph }
+    var consumer: Factory<ProtocolConsumer> { unique { ProtocolConsumer() } }
+    var idProvider: Factory<IDProviding> { unique { self.commonProvider() } }
+    var valueProvider: Factory<ValueProviding> { unique { self.commonProvider() } }
+    private var commonProvider: Factory<MyService> { graph { MyService() } }
 }
 
 // Custom Conatiner
@@ -187,13 +182,12 @@ final class CustomContainer: SharedContainer, AutoRegistering {
     static var count = 0
     var count = 0
     var test: Factory<MyServiceType> {
-        self {
+        shared {
             MockServiceN(32)
         }
-        .shared
     }
     var decorated: Factory<MyService> {
-        self {
+        unique {
             MyService()
         }
         .decorator { _ in

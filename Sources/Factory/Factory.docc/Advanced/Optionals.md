@@ -8,7 +8,7 @@ Consider the following optional factory.
 
 ```swift
 extension Container {
-    let userProviding = Factory<UserProviding?> { self { nil } }
+    let userProviding = Factory<UserProviding?> { unique { nil } }
 }
 
 func authenticated(with user: User) {

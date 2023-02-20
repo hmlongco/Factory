@@ -52,22 +52,22 @@ So let's look next at the Factory registrations.
 ```swift
 extension Container {
     var cycleDemo: Factory<CycleDemo> {
-        self { CycleDemo() }
+        unique { CycleDemo() }
     }
     var aService: Factory<AServiceType> {
-        self { self.implementsAB() }
+        unique { self.implementsAB() }
     }
     var bService: Factory<BServiceType> {
-        self { self.implementsAB() }
+        unique { self.implementsAB() }
     }
     private var implementsAB: Factory<AServiceType&BServiceType> {
-        self { ImplementsAB() }.graph
+        unique { ImplementsAB() }.graph
     }
     var networkService: Factory<NetworkService> {
-        self { NetworkService() }
+        unique { NetworkService() }
     }
     var preferences: Factory<Preferences> {
-        self { Preferences() }
+        unique { Preferences() }
     }
 }
 ```

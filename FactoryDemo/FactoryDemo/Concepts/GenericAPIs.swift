@@ -28,7 +28,7 @@ struct AccountLoader: AccountLoading {
 
 extension Container {
     var accountLoader: Factory<AccountLoading> {
-        self { AccountLoader() }
+        unique { AccountLoader() }
     }
 }
 
@@ -60,7 +60,7 @@ struct MockLoader<T> {
 
 extension Container {
     var genericAaccountLoader: Factory<AccountLoading> {
-        self { NetworkLoader<[Account]>(path: "/api/accounts") }
+        unique { NetworkLoader<[Account]>(path: "/api/accounts") }
     }
 }
 
@@ -96,7 +96,7 @@ struct AnyLoader<T> {
 
 extension Container {
     var anyAccountLoader: Factory<AnyLoader<[Account]>> {
-        self { AnyLoader(NetworkLoader(path: "/api/accounts")) }
+        unique { AnyLoader(NetworkLoader(path: "/api/accounts")) }
     }
 }
 
@@ -114,7 +114,7 @@ extension MockLoader<[Account]>: NewAccountLoading {}
 
 extension Container {
     var newAccountLoader: Factory<any NewAccountLoading> {
-        self { NetworkLoader<[Account]>(path: "/api/accounts") }
+        unique { NetworkLoader<[Account]>(path: "/api/accounts") }
     }
 }
 
@@ -138,7 +138,7 @@ class NetworkClassLoader<T>: AbstractClassLoader<T> {
 
 extension Container {
     var abstractAccountLoader: Factory<AbstractClassLoader<[Account]>> {
-        self { NetworkClassLoader<[Account]>(path: "/api/accounts") }
+        unique { NetworkClassLoader<[Account]>(path: "/api/accounts") }
     }
 }
 
@@ -146,7 +146,7 @@ typealias LoadFunction<T> = () -> T
 
 extension Container {
     var functionalAccountLoader: Factory<LoadFunction<[Account]>> {
-        self { NetworkClassLoader<[Account]>(path: "/api/accounts").load }
+        unique { NetworkClassLoader<[Account]>(path: "/api/accounts").load }
     }
 }
 

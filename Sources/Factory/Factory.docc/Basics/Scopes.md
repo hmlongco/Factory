@@ -10,16 +10,16 @@ And if not, the concept is easy to understand: Just how long should an instance 
 
 You've no doubt stuffed an instance of a class into a variable and created a singleton at some point in your career. This is an example of a scope. A single instance is created and then used and shared by all of the methods and functions in the app.
 
-This can easily be done in Factory just by adding a single modifier.
+This is easily done in Factory.
 
 ## Singleton
 
-Add a singleton modifier to the Factory.
+Just ask the container for a singleton factory.
 
 ```swift
 extension Container {
     var myService: Factory<MyServiceType> { 
-        self { MyService() }.singleton
+        singleton { MyService() }
     }
 }
 ```
@@ -35,6 +35,16 @@ Other common scopes are `cached` and `shared`.
 
 Cached items are persisted until the cache is reset, while shared items exist just as long as someone holds a strong reference to them. When the last reference goes away, the weakly held shared reference also goes away.
 
+```swift
+extension Container {
+    var cachedService: Factory<MyServiceType> { 
+        cached { MyService() }
+    }
+    var sharedService: Factory<MyServiceType> { 
+        shared { MyService() }
+    }
+}
+```
 ## Custom Scopes
 
 You can also add your own special purpose caches to the mix. Try this.
@@ -46,10 +56,10 @@ extension Scope {
 
 extension Container {
     var authenticatedUser: Factory<AuthenticatedUser> { 
-        self { AuthenticatedUser() }.session
+        scope(.session) { AuthenticatedUser() }
     }
     var profileImageCache: Factory<ProfileImageCache> { 
-        self { ProfileImageCache() }.session 
+        scope(.session) { ProfileImageCache() } 
     }
 }
 ```
@@ -76,10 +86,10 @@ class ProtocolConsumer {
 The `ProtocolConsumer` wants two different protocols. But it doesn't know that a single class provides both services. (Nor should it care.) Take a look at the referenced factories.
 ```swift
 extension Container {
-    var consumer: Factory<ProtocolConsumer> { self { ProtocolConsumer() } }
-    var idProvider: Factory<IDProviding> { self { commonProviding() } }
-    var valueProvider: Factory<ValueProviding> { self { commonProviding() } }
-    private var commonProviding: Factory<MyService> { self { MyService() }.graph }
+    var consumer: Factory<ProtocolConsumer> { unique { ProtocolConsumer() } }
+    var idProvider: Factory<IDProviding> { unique { commonProviding() } }
+    var valueProvider: Factory<ValueProviding> { unique { commonProviding() } }
+    private var commonProviding: Factory<MyService> { graph { MyService() } }
 }
 ```
 Both provider factories reference the same factory. When Factory is asked for an instance of `consumer`, both providers will receive the same instance of `MyService`.
@@ -123,11 +133,3 @@ Container.shared.manager.reset(options: .scope)
 - ``Scope/Graph-swift.class``
 - ``Scope/Shared-swift.class``
 - ``Scope/Singleton-swift.class``
-
-### Factory Scope Modifiers
-
-- ``FactoryModifing/cached``
-- ``FactoryModifing/graph``
-- ``FactoryModifing/shared``
-- ``FactoryModifing/singleton``
-- ``FactoryModifing/unique``

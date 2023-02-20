@@ -38,14 +38,14 @@ Factory, as you may have guessed from the name, is no exception. Here's a simple
 ```swift
 extension Container {
     var service: Factory<ServiceType> {
-        self { MyService() }
+        unique { MyService() }
     }
 }
 ```
 We extended a Factory `Container` and within that container we defined a new computed variable of type `Factory<ServiceType>`. The type must be explicitly defined, and is usually a
 protocol to which the returned dependency conforms.
 
-Inside the computed variable we asked the enclosing container to make our factory for us, providing it with the closure needed to create an instance of our object when required. 
+Inside the computed variable we call a function on the enclosing container to make our factory for us, providing it with the closure needed to create an instance of our object when required. 
 
 That Factory is then returned to the caller, usually to be evaluated (see ``Factory/callAsFunction()``). Every time we resolve this factory we'll get a new, unique instance of our object.
 
@@ -57,10 +57,10 @@ extension Container {
     static var service = Factory<ServiceType> { MyService() }
     
     // Factory 2.0
-    var service: Factory<ServiceType> { self { MyService() }  
+    var service: Factory<ServiceType> { unique { MyService() }  
 }
 ```
-The 2.0 version is one character longer. (Sorry)
+The 2.0 version is three characters longer. (Sorry)
 
 Like SwftUI Views, Factory structs and modifiers are lightweight and transitory. In Factory 2.0 they're created when needed and then immediately discarded once their purpose has been served.
 
@@ -110,10 +110,10 @@ Scopes behave as they did before, although they're now defined using a modifier 
 ```swift
 extension Container {
     var sharedService: Factory<ServiceType> {
-        self { MyService() }.shared
+        unique { MyService() }.shared
     }
     var decoratedSharedService: Factory<MyServiceType> {
-        self { MyService() }
+        unique { MyService() }
             .decorator { print("DECORATING \($0.id)") }
             .shared
     }

@@ -22,9 +22,9 @@ Factory, as you may have guessed from the name, is no exception. Here's a simple
 
 ```swift
 extension Container {
-var service: Factory<ServiceType> {
-self { MyService() }
-}
+    var service: Factory<ServiceType> {
+        unique { MyService() }
+    }
 }
 ```
 
@@ -44,11 +44,11 @@ extension Container {
     static var service = Factory<ServiceType> { MyService() }
     
     // Factory 2.0
-    var service: Factory<ServiceType> { self { MyService() }  
+    var service: Factory<ServiceType> { unique { MyService() } }
 }
 ```
 
-The new version is one character longer. Hey. I tried... ;)
+The new version is three characters longer. Hey. I tried... ;)
 
 Like SwftUI Views, Factory structs and modifiers are lightweight and transitory. In Factory 2.0 they're created when needed and then immediately discarded once their purpose has been served.
 
@@ -109,12 +109,11 @@ Scopes behave exactly as they did before, although they're now defined using a m
 ```swift
 extension Container {
     var sharedService: Factory<ServiceType> {
-        self { MyService() }.shared
+        unique { MyService() }.shared
     }
     var decoratedSharedService: Factory<MyServiceType> {
-        self { MyService() }
+        shared { MyService() }
             .decorator { print("DECORATING \($0.id)") }
-            .shared
     }
 }
 ```

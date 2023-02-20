@@ -14,7 +14,7 @@ typealias AccountProviding = () async throws -> [Account]
 
 extension Container {
     let accountProvider: Factory<AccountProviding> {
-        self {{ try await Network.get(path: "/accounts") }}
+        unique {{ try await Network.get(path: "/accounts") }}
     }
 }
 ```

@@ -40,7 +40,7 @@ import Foundation
 /// ```swift
 /// extension Container {
 ///     var service: Factory<ServiceType> {
-///         self { MyService() }
+///         unique { MyService() }
 ///     }
 /// }
 /// ```
@@ -63,8 +63,8 @@ public struct Factory<T>: FactoryModifing {
     ///   current container as well defining the scope.
     ///   - key: Hidden value used to differentiate different instances of the same type in the same container.
     ///   - factory: A factory closure that produces an object of the desired type when required.
-    fileprivate init(_ container: SharedContainer, key: String = #function, _ factory: @escaping () -> T) {
-        self.registration = FactoryRegistration<Void,T>(id: "\(container.self).\(key)", container: container, factory: factory)
+    fileprivate init(_ container: SharedContainer, key: String = #function, scope: Scope?, _ factory: @escaping () -> T) {
+        self.registration = FactoryRegistration<Void,T>(id: "\(container.self).\(key)", container: container, factory: factory, scope: scope)
     }
 
     /// Evaluates the factory and returns an object or service of the desired type. The resolved instance may be brand new or Factory may
@@ -137,7 +137,7 @@ public struct Factory<T>: FactoryModifing {
 /// ```swift
 /// extension Container {
 ///     var parameterService: ParameterFactory<Int, MyServiceType> {
-///        self { ParameterService(value: $0) }
+///        unique { ParameterService(value: $0) }
 ///     }
 /// }
 /// ```
@@ -159,7 +159,7 @@ public struct Factory<T>: FactoryModifing {
 /// If you need to pass more than one parameter just use a tuple, dictionary, or struct.
 /// ```swift
 /// var tupleService: ParameterFactory<(Int, Int), MultipleParameterService> {
-///     self { (a, b) in
+///     unique { (a, b) in
 ///         MultipleParameterService(a: a, b: b)
 ///     }
 /// }
@@ -175,8 +175,8 @@ public struct ParameterFactory<P,T>: FactoryModifing {
     ///     ParameterFactory(self) { ParameterService(value: $0) }
     /// }
     /// ```
-    fileprivate init(_ container: SharedContainer, key: String = #function, _ factory: @escaping (P) -> T) {
-        self.registration = FactoryRegistration<P,T>(id: "\(container.self).\(key)", container: container, factory: factory)
+    fileprivate init(_ container: SharedContainer, key: String = #function, scope: Scope?, _ factory: @escaping (P) -> T) {
+        self.registration = FactoryRegistration<P,T>(id: "\(container.self).\(key)", container: container, factory: factory, scope: scope)
     }
 
     /// Resolves a factory capable of taking parameters at runtime.
@@ -216,74 +216,13 @@ public protocol FactoryModifing {
 
 extension FactoryModifing {
 
-    /// Defines this Factory's dependency scope to be cached. See ``Scope/Cached-swift.class``.
-    /// ```swift
-    /// var service: Factory<ServiceType> {
-    ///     self { MyService() }
-    ///         .cached
-    /// }
-    /// ```
-   public var cached: Self {
-        map { $0.registration.scope = .cached }
-    }
-    /// Defines this Factory's dependency scope to be graph. See ``Scope/Graph-swift.class``.
-    /// ```swift
-    /// var service: Factory<ServiceType> {
-    ///     self { MyService() }
-    ///         .graph
-    /// }
-    /// ```
-    public var graph: Self {
-        map { $0.registration.scope = .graph }
-    }
-    /// Defines this Factory's dependency scope to be shared. See ``Scope/Graph-swift.class``.
-    /// ```swift
-    /// var service: Factory<ServiceType> {
-    ///     self { MyService() }
-    ///         .shared
-    /// }
-    /// ```
-    public var shared: Self {
-        map { $0.registration.scope = .shared }
-    }
-    /// Defines this Factory's dependency scope to be singleton. See ``Scope/Singleton-swift.class``.
-    /// ```swift
-    /// var service: Factory<ServiceType> {
-    ///     self { MyService() }
-    ///         .singleton
-    /// }
-    /// ```
-    public var singleton: Self {
-        map { $0.registration.scope = .singleton }
-    }
-    /// Explicitly defines unique scope. See ``Scope``.
-    /// ```swift
-    /// var service: Factory<ServiceType> {
-    ///     self { MyService() }
-    /// }
-    /// ```
-    /// While you can add the modifier, Factory's are unique by default.
-    public var unique: Self {
-        map { $0.registration.scope = nil }
-    }
-    /// Defines a custom dependency scope for this Factory. See ``Scope``.
-    /// ```swift
-    /// var service: Factory<ServiceType> {
-    ///     self { MyService() }
-    ///         .custom(scope: .session)
-    /// }
-    /// ```
-    public func custom(scope: Scope?) -> Self {
-        map { $0.registration.scope = scope }
-    }
-
     /// Adds a factory specific decorator. The decorator will be *always* be called with the resolved dependency
     /// for further examination or manipulation.
     ///
     /// This includes previously created items that may have been cached by a scope.
     /// ```swift
     /// var decoratedService: Factory<ParentChildService> {
-    ///    self { ParentChildService() }
+    ///    unique { ParentChildService() }
     ///        .decorated {
     ///            $0.child.parent = $0
     ///        }
@@ -316,12 +255,10 @@ extension FactoryModifing {
 /// This is the default Container provided for your convenience by Factory.
 ///
 /// Containers are used by Factory to manage object creation, object resolution, and object lifecycles in general.
-///
-/// Factory's are defined within container extensions, and must be provided with a reference to that container on initialization.
 /// ```swift
 /// extension Container {
 ///     var service: Factory<ServiceType> {
-///         Factory(self) { MyService() }
+///         unique { MyService() }
 ///     }
 /// }
 /// ```
@@ -359,29 +296,56 @@ public protocol SharedContainer: AnyObject {
     var manager: ContainerManager { get set }
 }
 
-/// Defines the default factory providers for containers
+/// Defines the default factory helpers for containers
 extension SharedContainer {
 
-    /// Creates and returns a Factory struct associated with the current container. The default scope is
-    /// `unique` unless otherwise specified using a scope modifier.
-    public func callAsFunction<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
-        Factory(self, key: key, factory)
+    /// Makes a Factory with cached scope.
+    public func cached<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+        Factory(self, key: key, scope: .cached, factory)
     }
-
-    /// Not sure about this one yet.
-    public func register<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
-        Factory(self, key: key, factory)
+    /// Makes a Factory with graph scope.
+    public func graph<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+        Factory(self, key: key, scope: .graph, factory)
     }
-
-    /// Creates and returns a ParameterFactory struct associated with the current container. The default scope is
-    /// `unique` unless otherwise specified using a scope modifier.
-    public func callAsFunction<P,T>(key: String = #function, _ factory: @escaping (P) -> T) -> ParameterFactory<P,T> {
-        ParameterFactory(self, key: key, factory)
+    /// Makes a Factory with a custom scope.
+    public func scope<T>(_ scope: Scope, key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+        Factory(self, key: key, scope: scope, factory)
     }
-
-    /// Not sure about this one yet.
-    public func register<P,T>(key: String = #function, _ factory: @escaping (P) -> T) -> ParameterFactory<P,T> {
-        ParameterFactory(self, key: key, factory)
+    /// Makes a Factory with shared scope.
+    public func shared<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+        Factory(self, key: key, scope: .shared, factory)
+    }
+    /// Makes a Factory with singleton scope.
+    public func singleton<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+        Factory(self, key: key, scope: .singleton, factory)
+    }
+    /// Makes a Factory with unique scope.
+    public func unique<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+        Factory(self, key: key, scope: .none, factory)
+    }
+    /// Makes a ParameterFactory with cached scope.
+    public func cached<P,T>(key: String = #function, _ parameterFactory: @escaping (P) -> T) -> ParameterFactory<P,T> {
+        ParameterFactory(self, key: key, scope: .cached, parameterFactory)
+    }
+    /// Makes a ParameterFactory with graph scope.
+    public func graph<P,T>(key: String = #function, _ parameterFactory: @escaping (P) -> T) -> ParameterFactory<P,T> {
+        ParameterFactory(self, key: key, scope: .graph, parameterFactory)
+    }
+    /// Makes a ParameterFactory with a custom scope.
+    public func scope<P,T>(_ scope: Scope, key: String = #function, _ parameterFactory: @escaping (P) -> T) -> ParameterFactory<P,T> {
+        ParameterFactory(self, key: key, scope:scope , parameterFactory)
+    }
+    /// Makes a ParameterFactory with shared scope.
+    public func shared<P,T>(key: String = #function, _ parameterFactory: @escaping (P) -> T) -> ParameterFactory<P,T> {
+        ParameterFactory(self, key: key, scope: .shared, parameterFactory)
+    }
+    /// Makes a ParameterFactory with singleton scope.
+    public func singleton<P,T>(key: String = #function, _ parameterFactory: @escaping (P) -> T) -> ParameterFactory<P,T> {
+        ParameterFactory(self, key: key, scope: .singleton, parameterFactory)
+    }
+    /// Makes a ParameterFactory with unique scope.
+    public func unique<P,T>(key: String = #function, _ parameterFactory: @escaping (P) -> T) -> ParameterFactory<P,T> {
+        ParameterFactory(self, key: key, scope: .none, parameterFactory)
     }
 
     /// Defines a decorator for the container. This decorator will see every dependency resolved by this container.
@@ -637,7 +601,7 @@ extension ContainerManager {
 /// ```swift
 /// extension Container {
 ///     var service: Factory<ServiceType> {
-///         self { MyService() }.singleton
+///         singleton { MyService() }
 ///     }
 /// }
 /// ```

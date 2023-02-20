@@ -13,11 +13,6 @@ final class FactoryParameterTests: XCTestCase {
         XCTAssertEqual(service1.value, 5)
     }
 
-    func testStaticParameterServiceResolutions() throws {
-        let service1 = Container.parameterService(5)
-        XCTAssertEqual(service1.value, 5)
-    }
-
     func testParameterRegistrationsAndResolutions() throws {
         let service1 = Container.shared.parameterService(5)
         XCTAssertTrue(service1.value == 5)

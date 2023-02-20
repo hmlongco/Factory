@@ -2,14 +2,6 @@
 
 There are many ways to use Factory to resolve dependencies. Here are a few examples.
 
-### Classic Factory from Static Class Member
-Initializing dependency from class. This is classic Service Locator pattern.
-```swift
-class ContentViewModel: ObservableObject {
-    let newSchool = Container.newSchool()
-}
-```
-
 ### Modern Factory from Shared Class Container
 Initializing dependency from shared class container. This is the classic Service Locator pattern updated for Factory 2.0.
 ```swift
@@ -69,7 +61,7 @@ class ContentViewModel: ObservableObject {
 }
 ```
 
-### Initialization from Passed Container
+### Parameter Initialization from Passed Container
 Passing a required parameter to a factory for resolution.
 ```swift
 class ContentViewModel: ObservableObject {
