@@ -62,6 +62,8 @@ public struct Factory<T>: FactoryModifing {
     ///   - container: The bound container that manages registrations and scope caching for this Factory. The scope helper functions bind the
     ///   current container as well defining the scope.
     ///   - key: Hidden value used to differentiate different instances of the same type in the same container.
+    ///   - scope: Defines the ``Scope`` used to manage instances of this dependency. Passing nil indicates no scope management is required and
+    ///   that a new instance should be returned each time this factory is resolved.
     ///   - factory: A factory closure that produces an object of the desired type when required.
     public init(_ container: SharedContainer, key: String = #function, scope: Scope? = nil, _ factory: @escaping () -> T) {
         self.registration = FactoryRegistration<Void,T>(id: "\(container.self).\(key)", container: container, factory: factory, scope: scope)
@@ -175,6 +177,13 @@ public struct ParameterFactory<P,T>: FactoryModifing {
     ///     unique { ParameterService(value: $0) }
     /// }
     /// ```
+    /// - Parameters:
+    ///   - container: The bound container that manages registrations and scope caching for this Factory. The scope helper functions bind the
+    ///   current container as well defining the scope.
+    ///   - key: Hidden value used to differentiate different instances of the same type in the same container.
+    ///   - scope: Defines the ``Scope`` used to manage instances of this dependency. Passing nil indicates no scope management is required and
+    ///   that a new instance should be returned each time this factory is resolved.
+    ///   - factory: A factory closure that produces an object of the desired type when required.
     public init(_ container: SharedContainer, key: String = #function, scope: Scope? = nil, _ factory: @escaping (P) -> T) {
         self.registration = FactoryRegistration<P,T>(id: "\(container.self).\(key)", container: container, factory: factory, scope: scope)
     }

@@ -56,4 +56,34 @@ final class FactoryContainerTests: XCTestCase {
         XCTAssertTrue(service3.text() == "MyService")
     }
 
+    func testConvenienceFucntions() throws {
+        XCTAssertNotNil(Container.shared.cachedCoverage)
+        XCTAssertNotNil(Container.shared.graphCoverage)
+        XCTAssertNotNil(Container.shared.scopeCoverage)
+        XCTAssertNotNil(Container.shared.sharedCoverage)
+        XCTAssertNotNil(Container.shared.singletonCoverage)
+        XCTAssertNotNil(Container.shared.uniqueCoverage)
+        XCTAssertNotNil(Container.shared.cachedCoverageParameter(1))
+        XCTAssertNotNil(Container.shared.graphCoverageParameter(1))
+        XCTAssertNotNil(Container.shared.scopeCoverageParameter(1))
+        XCTAssertNotNil(Container.shared.sharedCoverageParameter(1))
+        XCTAssertNotNil(Container.shared.singletonCoverageParameter(1))
+        XCTAssertNotNil(Container.shared.uniqueCoverageParameter(1))
+    }
+
+}
+
+private extension Container {
+    var cachedCoverage: Factory<MyService?> { cached { MyService() } }
+    var graphCoverage: Factory<MyService?> { graph { MyService() } }
+    var scopeCoverage: Factory<MyService?> { scope(.session) { MyService() } }
+    var sharedCoverage: Factory<MyService?> { shared { MyService() } }
+    var singletonCoverage: Factory<MyService?>  { singleton { MyService() } }
+    var uniqueCoverage: Factory<MyService?>  { unique { MyService() } }
+    var cachedCoverageParameter: ParameterFactory<Int, ParameterService?> { cached { ParameterService(value: $0) } }
+    var graphCoverageParameter: ParameterFactory<Int, ParameterService?> { graph { ParameterService(value: $0) } }
+    var scopeCoverageParameter: ParameterFactory<Int, ParameterService?> { scope(.session) { ParameterService(value: $0) } }
+    var sharedCoverageParameter: ParameterFactory<Int, ParameterService?> { shared { ParameterService(value: $0) } }
+    var singletonCoverageParameter: ParameterFactory<Int, ParameterService?> { singleton { ParameterService(value: $0) } }
+    var uniqueCoverageParameter: ParameterFactory<Int, ParameterService?>  { unique { ParameterService(value: $0) } }
 }
