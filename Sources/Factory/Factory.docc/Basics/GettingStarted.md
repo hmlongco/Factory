@@ -40,7 +40,7 @@ extension Container {
 
 So our computed variable needs to return a Factory. But Factory's are complex creatures. They need to communicate with their enclosing containers; and they need to know the scope of the object they're managing; and they need to be provided with a closure that can be called to create an instance of our dependency when required. 
 
-As such, a complete, formal Factory definition could have looked like this...
+As such, a complete, formal Factory definition would look like this...
 ```swift
 var service: Factory<ServiceType> {
     Factory(self, scope: .unique) { 
@@ -48,7 +48,7 @@ var service: Factory<ServiceType> {
     }
 }
 ```
-But we can do better. We just ask the enclosing container to make our factory for us, using a helper function that takes our closure and also defines our scope at the same time. 
+But we can do better. Just ask the enclosing container to make our factory for us, using a helper function that takes our closure and also defines our scope at the same time. 
 
 ```swift
 var service: Factory<ServiceType> {
@@ -88,7 +88,7 @@ If you're passing an instance of a container around to your views or view models
 ```swift
 private let service = container.service()
 ```
-Finally, we could have also uses an @Injected property wrapper and specified a keyPath to the desired dependency.
+Finally, we could have also used an @Injected property wrapper and specified a keyPath to the desired dependency.
 
 ```swift
 @Injected(\.service) var service

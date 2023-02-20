@@ -12,6 +12,19 @@ extension Container {
     }
 }
 ```
+This registered dependency returns a new, unique version of `MyServiceType` whenever it's asked to do so.
+
+You can also go ahead and use the full, formal definition, constructing the Factory yourself and passing it a reference to its enclosing container.
+```swift
+extension Container {
+    var service: Factory<MyServiceType> {
+        Factory(self) { MyService() }
+    }
+}
+```
+We prefer the more concise version, and that's what we'll use going forward.
+
+> Note: The container help functions are @inlinable and as such there's no performance penalty incurred when calling them.
 
 ### Scopes
 Examples of defining scoped services in a Factory 2.0 container. 
@@ -52,7 +65,7 @@ extension Container {
 ```
 
 ### Parameters
-Example of parameterized registration in a Factory 2.0 container.
+Like it or not, some services require one or more parameters to be passed to them in order to be initialized correctly. In that case use ``ParameterFactory``.
 ```swift
 extension Container {
     var parameterService: ParameterFactory<Int, ParameterService> {
@@ -80,4 +93,59 @@ extension Container {
         unique { "String 4" }
     }
 }
+```
+
+### Inside Custom Containers
+You've seen factory registrations done within container *extensions*, but it should also be noted that we can also create them within our own custom containers.
+```swift
+final class ServiceContainer: SharedContainer {
+    // CONFORMANCE
+    static var shared = ServiceContainer()
+    var manager = ContainerManager()
+    
+    // DEFINE FACTORY
+    var service1: Factory<MyServiceType> {
+        unique { MyService() }
+    }
+
+    // DON'T DO THIS
+    lazy var service2: Factory<MyServiceType> = unique {
+        MyService()
+    }
+}
+```
+Note the last "lazy" definition of `service2`. This may seem like a reasonable equivalent, but it hides a fatal flaw. Factory's are designed to be transient. They're lightweight structs created to do a job and then they're discarded.
+
+In order to accomplish this task, each Factory that's created needs to maintain a strong reference to its enclosing container. And now you should be able to see the problem.
+
+> Warning: Creating a "lazy" Factory and assigning it to it's enclosing class will create a reference cycle.
+
+Should you attempt to release such a container it will never go away, and you'll have a memory leak on your hands.
+
+### Static Factories
+Example of a static Factory 2.0 registration container.
+
+```swift
+extension Container {
+    static var oldSchool: Factory<School> {
+        Factory(shared) { School() }
+    }
+}
+
+let school = Container.oldSchool
+```
+Note that we referenced the class "shared" container. That container will manage the registrations and scopes for our Factory.
+
+While you *can* create static Factory's in this manner, such usage should be considered to be deprecated. Static factories are also no longer compatible with the various ``Injected`` property wrappers due to the lack of keyPaths.
+
+Better to simply define the Factory as a standard computed variable within a Container, and then access the "shared" version.
+
+```swift
+extension Container {
+    var newSchool: Factory<School> {
+        unique { School() }
+    }
+}
+
+let school = Container.shared.newSchool
 ```

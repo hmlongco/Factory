@@ -74,7 +74,7 @@ Addtional examples and methods can be seen on the <doc:Resolutions> page.
 
 All containers conform to the ``SharedContainer`` protocol. That basically means that each one must have its own ``ContainerManager`` and implement a static `shared` instance.
 
-SharedContainer also defines some common functionality for each container, like the afrementioned `makes` convenience function.
+SharedContainer also defines some common functionality for each container, like the `unique` convenience function we've seen used throughout.
 
 Note that you can extend SharedContainer with your own Factory's.
 

@@ -12,6 +12,7 @@ import Factory
 struct FactoryDemoApp: App {
     var body: some Scene {
         let _ = Container.shared.setupMocks()
+        let _ = ServiceContainer.test()
         WindowGroup {
             NavigationView {
                 ContentView()

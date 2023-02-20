@@ -44,9 +44,9 @@ import Foundation
 ///     }
 /// }
 /// ```
-/// Inside the computed variable we ask our container to make our factory for us, providing it a closure that
-/// creates an instance of our dependency when required. That Factory is then returned to the caller, usually to be evaluated (see `callAsFunction()`
-/// below). Every time we resolve this factory we'll get a new, unique instance of our object.
+/// Inside the computed variable we use a convenience function that asks our container to make our factory for us, while also providing it with
+/// a closure that creates an instance of our dependency when required. That Factory is then returned to the caller, usually to be evaluated
+/// (see `callAsFunction()` below). Every time we resolve this factory we'll get a new, unique instance of our object.
 ///
 /// ## Transient
 /// If you're concerned about building Factory's on the fly, don't be. Like SwiftUI Views, Factory structs and modifiers
@@ -56,14 +56,14 @@ import Foundation
 /// Other operations exist for Factory. See ``FactoryModifing``.
 public struct Factory<T>: FactoryModifing {
 
-    /// Private initializer creates a Factory capable of managing dependencies of the desired type.
+    /// Public initializer creates a Factory capable of managing dependencies of the desired type.
     ///
     /// - Parameters:
     ///   - container: The bound container that manages registrations and scope caching for this Factory. The scope helper functions bind the
     ///   current container as well defining the scope.
     ///   - key: Hidden value used to differentiate different instances of the same type in the same container.
     ///   - factory: A factory closure that produces an object of the desired type when required.
-    fileprivate init(_ container: SharedContainer, key: String = #function, scope: Scope?, _ factory: @escaping () -> T) {
+    public init(_ container: SharedContainer, key: String = #function, scope: Scope? = nil, _ factory: @escaping () -> T) {
         self.registration = FactoryRegistration<Void,T>(id: "\(container.self).\(key)", container: container, factory: factory, scope: scope)
     }
 
@@ -169,13 +169,13 @@ public struct Factory<T>: FactoryModifing {
 /// later requests will be ignored until the factory or scope is reset.
 public struct ParameterFactory<P,T>: FactoryModifing {
 
-    /// Private initializer creates a factory capable of taking parameters at runtime.
+    /// Public initializer creates a factory capable of taking parameters at runtime.
     /// ```swift
     /// var parameterService: ParameterFactory<Int, ParameterService> {
-    ///     ParameterFactory(self) { ParameterService(value: $0) }
+    ///     unique { ParameterService(value: $0) }
     /// }
     /// ```
-    fileprivate init(_ container: SharedContainer, key: String = #function, scope: Scope?, _ factory: @escaping (P) -> T) {
+    public init(_ container: SharedContainer, key: String = #function, scope: Scope? = nil, _ factory: @escaping (P) -> T) {
         self.registration = FactoryRegistration<P,T>(id: "\(container.self).\(key)", container: container, factory: factory, scope: scope)
     }
 
@@ -300,51 +300,51 @@ public protocol SharedContainer: AnyObject {
 extension SharedContainer {
 
     /// Makes a Factory with cached scope.
-    public func cached<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+    @inlinable public func cached<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
         Factory(self, key: key, scope: .cached, factory)
     }
     /// Makes a Factory with graph scope.
-    public func graph<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+    @inlinable public func graph<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
         Factory(self, key: key, scope: .graph, factory)
     }
     /// Makes a Factory with a custom scope.
-    public func scope<T>(_ scope: Scope, key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+    @inlinable public func scope<T>(_ scope: Scope, key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
         Factory(self, key: key, scope: scope, factory)
     }
     /// Makes a Factory with shared scope.
-    public func shared<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+    @inlinable public func shared<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
         Factory(self, key: key, scope: .shared, factory)
     }
     /// Makes a Factory with singleton scope.
-    public func singleton<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+    @inlinable public func singleton<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
         Factory(self, key: key, scope: .singleton, factory)
     }
     /// Makes a Factory with unique scope.
-    public func unique<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+    @inlinable public func unique<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
         Factory(self, key: key, scope: .none, factory)
     }
     /// Makes a ParameterFactory with cached scope.
-    public func cached<P,T>(key: String = #function, _ parameterFactory: @escaping (P) -> T) -> ParameterFactory<P,T> {
+    @inlinable public func cached<P,T>(key: String = #function, _ parameterFactory: @escaping (P) -> T) -> ParameterFactory<P,T> {
         ParameterFactory(self, key: key, scope: .cached, parameterFactory)
     }
     /// Makes a ParameterFactory with graph scope.
-    public func graph<P,T>(key: String = #function, _ parameterFactory: @escaping (P) -> T) -> ParameterFactory<P,T> {
+    @inlinable public func graph<P,T>(key: String = #function, _ parameterFactory: @escaping (P) -> T) -> ParameterFactory<P,T> {
         ParameterFactory(self, key: key, scope: .graph, parameterFactory)
     }
     /// Makes a ParameterFactory with a custom scope.
-    public func scope<P,T>(_ scope: Scope, key: String = #function, _ parameterFactory: @escaping (P) -> T) -> ParameterFactory<P,T> {
+    @inlinable public func scope<P,T>(_ scope: Scope, key: String = #function, _ parameterFactory: @escaping (P) -> T) -> ParameterFactory<P,T> {
         ParameterFactory(self, key: key, scope:scope , parameterFactory)
     }
     /// Makes a ParameterFactory with shared scope.
-    public func shared<P,T>(key: String = #function, _ parameterFactory: @escaping (P) -> T) -> ParameterFactory<P,T> {
+    @inlinable public func shared<P,T>(key: String = #function, _ parameterFactory: @escaping (P) -> T) -> ParameterFactory<P,T> {
         ParameterFactory(self, key: key, scope: .shared, parameterFactory)
     }
     /// Makes a ParameterFactory with singleton scope.
-    public func singleton<P,T>(key: String = #function, _ parameterFactory: @escaping (P) -> T) -> ParameterFactory<P,T> {
+    @inlinable public func singleton<P,T>(key: String = #function, _ parameterFactory: @escaping (P) -> T) -> ParameterFactory<P,T> {
         ParameterFactory(self, key: key, scope: .singleton, parameterFactory)
     }
     /// Makes a ParameterFactory with unique scope.
-    public func unique<P,T>(key: String = #function, _ parameterFactory: @escaping (P) -> T) -> ParameterFactory<P,T> {
+    @inlinable public func unique<P,T>(key: String = #function, _ parameterFactory: @escaping (P) -> T) -> ParameterFactory<P,T> {
         ParameterFactory(self, key: key, scope: .none, parameterFactory)
     }
 

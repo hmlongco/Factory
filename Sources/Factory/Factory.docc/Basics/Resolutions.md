@@ -2,13 +2,14 @@
 
 There are many ways to use Factory to resolve dependencies. Here are a few examples.
 
-### Modern Factory from Shared Class Container
-Initializing dependency from shared class container. This is the classic Service Locator pattern updated for Factory 2.0.
+### Shared Class Container
+Here we instantiate our dependency from a shared class container. 
 ```swift
 class ContentViewModel: ObservableObject {
     let service = Container.shared.constructedService()
 }
 ```
+This is the classic Service Locator pattern updated for Factory 2.0.
 
 ### Initialization from Passed Container
 Passing an instance of a container to our view model and initializing service from that container.
@@ -34,8 +35,7 @@ class ContentViewModel: ObservableObject {
     private lazy var service3: MyConstructedService = container.constructedService()
     private lazy var service4: MyServiceType = container.cachedService()
     private lazy var service5: SimpleService = container.singletonService()
-    private lazy var service6A: MyServiceType = container.sharedService()
-    private lazy var service6B: MyServiceType = container.sharedService()
+    private lazy var service6: MyServiceType = container.sharedService()
 
     init(container: Container) {
         self.container = container
@@ -60,8 +60,9 @@ class ContentViewModel: ObservableObject {
 
 }
 ```
+See ``Injected``, ``LazyInjected``, and ``WeakLazyInjected`` for more.
 
-### Parameter Initialization from Passed Container
+### Parameterized Initialization from Passed Container
 Passing a required parameter to a factory for resolution.
 ```swift
 class ContentViewModel: ObservableObject {
@@ -74,3 +75,13 @@ class ContentViewModel: ObservableObject {
 
 }
 ```
+See ``ParameterFactory`` for more details.
+
+### Classic Factory from Static Class Member
+Initializing dependency from class. This is classic Service Locator pattern but this pattern should be consider deprecated.
+```swift
+class ContentViewModel: ObservableObject {
+    let newSchool = Container.newSchool()
+}
+```
+This was discussed in greater detail in <doc:Registrations>
