@@ -125,9 +125,20 @@ public struct Factory<T>: FactoryModifing {
     ///
     /// The original factory closure is preserved, and may be restored by resetting the Factory to its original state.
     ///
-    /// - Parameter factory: A new factory closure that produces an object of the desired type when needed.
+    /// - Parameters:
+    ///  - factory: A new factory closure that produces an object of the desired type when needed.
+    /// Allows updating registered factory and scope.
     public func register(factory: @escaping () -> T) {
-        registration.container.manager.register(id: registration.id, factory: TypedFactory<Void,T>(factory: factory))
+        register(scope: nil, factory: factory)
+    }
+
+    /// Allows registering new factory closure and updating scope used after the fact.
+    /// - Parameters:
+    ///  - scope: Optional parameter that lets the registration redefine the scope used for this dependency.
+    ///  - factory: A new factory closure that produces an object of the desired type when needed.
+    public func register(scope: Scope?, factory: @escaping () -> T) {
+        let typedFactory = TypedFactory<P,T>(factory: factory, scope: scope)
+        registration.container.manager.register(id: registration.id, factory: typedFactory)
     }
 
     /// Internal parameters fort his Factory including id, container, the factory closure itself, the scope,
@@ -210,8 +221,19 @@ public struct ParameterFactory<P,T>: FactoryModifing {
     ///     ParameterService(value: n)
     /// }
     /// ```
+    /// - Parameters:
+    ///  - factory: A new factory closure that produces an object of the desired type when needed.
     public func register(factory: @escaping (P) -> T) {
-        registration.container.manager.register(id: registration.id, factory: TypedFactory<P,T>(factory: factory))
+        register(scope: nil, factory: factory)
+    }
+
+    /// Allows registering new factory closure and updating scope used after the fact.
+    /// - Parameters:
+    ///  - scope: Optional parameter that lets the registration redefine the scope used for this dependency.
+    ///  - factory: A new factory closure that produces an object of the desired type when needed.
+    public func register(scope: Scope?, factory: @escaping (P) -> T) {
+        let typedFactory = TypedFactory<P,T>(factory: factory, scope: scope)
+        registration.container.manager.register(id: registration.id, factory: typedFactory)
     }
 
     /// Required registration
@@ -584,7 +606,10 @@ extension ContainerManager {
             autoRegistrationCheck = false
         }
 
-        var current: (P) -> T = (registrations[registration.id] as? TypedFactory<P,T>)?.factory ?? registration.factory
+        let id = registration.id
+        let registeredFactory = registrations[id] as? TypedFactory<P,T>
+        let registeredScope = registeredFactory?.scope ?? registration.scope
+        var current: (P) -> T = registeredFactory?.factory ?? registration.factory
 
         #if DEBUG
         if dependencyChainTestMax > 0 {
@@ -604,7 +629,7 @@ extension ContainerManager {
         #endif
 
         globalGraphResolutionDepth += 1
-        let instance = registration.scope?.resolve(using: cache, id: registration.id, factory: { current(parameters) }) ?? current(parameters)
+        let instance = registeredScope?.resolve(using: cache, id: id, factory: { current(parameters) }) ?? current(parameters)
         globalGraphResolutionDepth -= 1
 
         if globalGraphResolutionDepth == 0 {
@@ -624,7 +649,7 @@ extension ContainerManager {
             let type = type(of: instance)
             let address = Int(bitPattern: ObjectIdentifier(instance as AnyObject))
             let new = traceNew ? "N" : "C"
-            let traced = "\(globalGraphResolutionDepth): \(indent)\(registration.id) = \(type) \(new):\(address)"
+            let traced = "\(globalGraphResolutionDepth): \(indent)\(id) = \(type) \(new):\(address)"
             globalTraceResolutions[traceLevel] = traced
             if globalGraphResolutionDepth == 0 {
                 globalTraceResolutions.forEach { self.logger($0) }
@@ -1098,7 +1123,7 @@ public protocol AutoRegistering {
 /// InjectedObject wraps obtains the dependency from the Factory keypath and provides it to a wrapped instance of StateObject.
 ///
 /// Dependent service must be of type ObservableObject. Updating object state will trigger view update.
-@available(OSX 11.0, iOS 14, tvOS 14.0, watchOS 7.0, *)
+@available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
 @frozen @propertyWrapper public struct InjectedObject<T>: DynamicProperty where T: ObservableObject {
     @StateObject fileprivate var dependency: T
     /// Initializes the property wrapper. The dependency is resolved on initialization.
@@ -1121,16 +1146,14 @@ public protocol AutoRegistering {
     }
 }
 
-@available(OSX 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
+@available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
 extension InjectedObject {
     /// Simple initializer with passed parameter bypassing injection.
+    ///
+    /// Still has issue with attempting to pass dependency into existing view when existing InjectedObject has keyPath.
+    /// https://forums.swift.org/t/allow-property-wrappers-with-multiple-arguments-to-defer-initialization-when-wrappedvalue-is-not-specified
     public init(_ wrappedValue: T) {
         self._dependency = StateObject(wrappedValue: wrappedValue)
-    }
-    /// Initializes with passed parameter bypassing injection. This is what should work in Swift but doesn't.
-    /// https://forums.swift.org/t/allow-property-wrappers-with-multiple-arguments-to-defer-initialization-when-wrappedvalue-is-not-specified
-    public init(wrappedValue thunk: @autoclosure @escaping () -> T) {
-        self._dependency = StateObject(wrappedValue: thunk())
     }
 }
 #endif
@@ -1193,6 +1216,7 @@ internal protocol AnyFactory {
 
 internal struct TypedFactory<P,T>: AnyFactory {
     let factory: (P) -> T
+    let scope: Scope?
 }
 
 /// Internal protocol used to evaluate optional types for caching

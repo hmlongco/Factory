@@ -7,6 +7,7 @@
 
 import Foundation
 import Factory
+import Common
 
 extension Container: AutoRegistering {
 
@@ -18,19 +19,32 @@ extension Container: AutoRegistering {
 
         print("AUTOREGISTRATION!!!")
 
-        autoRegisteredService.register {
-            MyService()
-        }
+        autoRegisteredService.register { MyService() }
+
+        // Letting external module initialize
+        networkSetup()
+
+        // Providing type external to module
+        promisedType.register { self.scopedCommonType() }
 
         #if DEBUG
         if ProcessInfo().arguments.contains("-mock1") {
             myServiceType.register { MockServiceN(1) }
         }
-//        decorator {
-//            print("FACTORY: \(type(of: $0)) (\(Int(bitPattern: ObjectIdentifier($0 as AnyObject))))")
-//        }
         // manager.trace.toggle()
         #endif
     }
 
+    private var scopedCommonType: Factory<CommonType> {
+        singleton { PromisedCommonType() }
+    }
+
+}
+
+
+private class PromisedCommonType: CommonType {
+    public init() {}
+    public func test() {
+        print("PromisedCommonType Test")
+    }
 }

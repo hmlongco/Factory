@@ -36,6 +36,8 @@ class ContentViewModel: ObservableObject {
         let m2 = Container.shared.cycleDemo()
         print("CycleDemo - W/ROOT \(m2.aService === m2.bService)")
 
+        let p1 = Container.shared.promisedType()
+        p1?.test()
     }
 
 }
