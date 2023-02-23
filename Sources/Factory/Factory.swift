@@ -360,6 +360,16 @@ public final class Container: SharedContainer {
 
 /// ManagedContainer defines the core protocol all Containers must adopt.
 ///
+/// If a container only supports ManagedContainer then the container must be instantiated and passed as an instance. Here's
+/// an example of passing such a container to a view model for dependency resolution.
+/// ```swift
+/// class ContentViewModel {
+///     let service: MyServiceType
+///     init(container: Container) {
+///         service = container.service()
+///     }
+/// }
+/// ```
 ///  See <doc:Containers> for more information.
 public protocol ManagedContainer: AnyObject {
 
@@ -440,6 +450,14 @@ extension ManagedContainer {
 // MARK: - SharedContainer
 
 /// SharedContainer defines the protocol all Containers must adopt if they want to support Service Locator style injection or support any of the injection property wrappers.
+///
+/// Here's an example of reaching out to a Conatiner's shared instance for dependency resolution.
+/// ```swift
+/// class ContentViewModel {
+///     let service: MyServiceType = Container.shared.service()
+/// }
+/// ```
+/// The default ``Container`` provided is a SharedContainer. It can be used in both roles as needed.
 ///
 ///  See <doc:Containers> for more information.
 public protocol SharedContainer: ManagedContainer {
@@ -1072,11 +1090,15 @@ public protocol AutoRegistering {
 }
 
 #if os(iOS) || os(macOS) || os(tvOS) || os(watchOS)
-/// Immediate injection property wrapper for SwiftUI ObservableObjects. This wrapper is meant for use in SwiftUI Views and exposes
-/// bindable objects similar to that of SwiftUI @StateObject and @EnvironmentObject.
+/// Immediate injection property wrapper for SwiftUI ObservableObjects.
+///
+/// This wrapper is meant for use in SwiftUI Views and exposes bindable objects similar to that of SwiftUI @StateObject
+/// and @EnvironmentObject.
+///
+/// InjectedObject wraps obtains the dependency from the Factory keypath and provides it to a wrapped instance of StateObject.
 ///
 /// Dependent service must be of type ObservableObject. Updating object state will trigger view update.
-@available(OSX 10.15, iOS 14, tvOS 14.0, watchOS 7.0, *)
+@available(OSX 11.0, iOS 14, tvOS 14.0, watchOS 7.0, *)
 @frozen @propertyWrapper public struct InjectedObject<T>: DynamicProperty where T: ObservableObject {
     @StateObject fileprivate var dependency: T
     /// Initializes the property wrapper. The dependency is resolved on initialization.
@@ -1099,7 +1121,7 @@ public protocol AutoRegistering {
     }
 }
 
-@available(OSX 10.15, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
+@available(OSX 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
 extension InjectedObject {
     /// Simple initializer with passed parameter bypassing injection.
     public init(_ wrappedValue: T) {

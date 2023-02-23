@@ -60,7 +60,7 @@ class ContentViewModel: ObservableObject {
 
 }
 ```
-See ``Injected``, ``LazyInjected``, and ``WeakLazyInjected`` for more.
+See ``Injected``, ``LazyInjected``, ``WeakLazyInjected``, and ``InjectedObject`` for more.
 
 ### Parameterized Initialization from Passed Container
 Passing a required parameter to a factory for resolution.

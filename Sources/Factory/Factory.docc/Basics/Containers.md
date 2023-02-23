@@ -131,7 +131,7 @@ class ContentViewModel: ObservableObject {
 ```
 We now have an instance of `cachedService` in our view model, as well as a reference to the same instance cached in `MyContainer.shared.manager`.
 
-See ``Injected``, ``LazyInjected``, and ``WeakLazyInjected`` for more.
+See ``Injected``, ``LazyInjected``, ``WeakLazyInjected``, and ``InjectedObject`` for more.
 
 ## Registration and Scope Management
 

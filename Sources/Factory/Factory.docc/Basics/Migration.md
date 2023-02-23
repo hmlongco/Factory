@@ -82,7 +82,7 @@ Finally, you can also use the @Injected property wrapper. That's changed too, an
 ```
 The @Injected property wrapper looks for dependencies in the shared container, so this example is functionally identical to the `Container.shared.service()` version shown above.
 
-See ``Injected``, ``LazyInjected``, and ``WeakLazyInjected`` for more.
+See ``Injected``, ``LazyInjected``, ``WeakLazyInjected``, and ``InjectedObject`` for more.
 
 ## Registering a new Factory closure
 
