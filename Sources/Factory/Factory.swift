@@ -24,7 +24,15 @@
 // THE SOFTWARE.
 //
 
+#if os(iOS)
+import UIKit
+import SwiftUI
+#elseif os(macOS) || os(tvOS) || os(watchOS)
 import Foundation
+import SwiftUI
+#else
+import Foundation
+#endif
 
 // MARK: - Factory
 
@@ -65,7 +73,7 @@ public struct Factory<T>: FactoryModifing {
     ///   - scope: Defines the ``Scope`` used to manage instances of this dependency. Passing nil indicates no scope management is required and
     ///   that a new instance should be returned each time this factory is resolved.
     ///   - factory: A factory closure that produces an object of the desired type when required.
-    public init(_ container: SharedContainer, key: String = #function, scope: Scope? = nil, _ factory: @escaping () -> T) {
+    public init(_ container: ManagedContainer, key: String = #function, scope: Scope? = nil, _ factory: @escaping () -> T) {
         self.registration = FactoryRegistration<Void,T>(id: "\(container.self).\(key)", container: container, factory: factory, scope: scope)
     }
 
@@ -184,7 +192,7 @@ public struct ParameterFactory<P,T>: FactoryModifing {
     ///   - scope: Defines the ``Scope`` used to manage instances of this dependency. Passing nil indicates no scope management is required and
     ///   that a new instance should be returned each time this factory is resolved.
     ///   - factory: A factory closure that produces an object of the desired type when required.
-    public init(_ container: SharedContainer, key: String = #function, scope: Scope? = nil, _ factory: @escaping (P) -> T) {
+    public init(_ container: ManagedContainer, key: String = #function, scope: Scope? = nil, _ factory: @escaping (P) -> T) {
         self.registration = FactoryRegistration<P,T>(id: "\(container.self).\(key)", container: container, factory: factory, scope: scope)
     }
 
@@ -224,6 +232,67 @@ public protocol FactoryModifing {
 }
 
 extension FactoryModifing {
+
+//    /// Defines this Factory's dependency scope to be cached. See ``Scope/Cached-swift.class``.
+//    /// ```swift
+//    /// var service: Factory<ServiceType> {
+//    ///     factory { MyService() }
+//    ///         .cached
+//    /// }
+//    /// ```
+//    public var cached: Self {
+//        map { $0.registration.scope = .cached }
+//    }
+//    /// Defines this Factory's dependency scope to be graph. See ``Scope/Graph-swift.class``.
+//    /// ```swift
+//    /// var service: Factory<ServiceType> {
+//    ///     factory { MyService() }
+//    ///         .graph
+//    /// }
+//    /// ```
+//    public var graph: Self {
+//        map { $0.registration.scope = .graph }
+//    }
+//    /// Defines this Factory's dependency scope to be shared. See ``Scope/Graph-swift.class``.
+//    /// ```swift
+//    /// var service: Factory<ServiceType> {
+//    ///     factory { MyService() }
+//    ///         .shared
+//    /// }
+//    /// ```
+//    public var shared: Self {
+//        map { $0.registration.scope = .shared }
+//    }
+//    /// Defines this Factory's dependency scope to be singleton. See ``Scope/Singleton-swift.class``.
+//    /// ```swift
+//    /// var service: Factory<ServiceType> {
+//    ///     factory { MyService() }
+//    ///         .singleton
+//    /// }
+//    /// ```
+//    public var singleton: Self {
+//        map { $0.registration.scope = .singleton }
+//    }
+//    /// Explicitly defines unique scope. See ``Scope``.
+//    /// ```swift
+//    /// var service: Factory<ServiceType> {
+//    ///     factory { MyService() }
+//    /// }
+//    /// ```
+//    /// While you can add the modifier, Factory's are unique by default.
+//    public var unique: Self {
+//        map { $0.registration.scope = nil }
+//    }
+//    /// Defines a custom dependency scope for this Factory. See ``Scope``.
+//    /// ```swift
+//    /// var service: Factory<ServiceType> {
+//    ///     factory { MyService() }
+//    ///         .custom(scope: .session)
+//    /// }
+//    /// ```
+//    public func custom(scope: Scope?) -> Self {
+//        map { $0.registration.scope = scope }
+//    }
 
     /// Adds a factory specific decorator. The decorator will be *always* be called with the resolved dependency
     /// for further examination or manipulation.
@@ -287,18 +356,12 @@ public final class Container: SharedContainer {
 
 }
 
-// MARK: - SharedContainer
+// MARK: - ManagedContainer
 
-/// SharedContainer defines the protocol all Containers must adopt.
+/// ManagedContainer defines the core protocol all Containers must adopt.
 ///
 ///  See <doc:Containers> for more information.
-public protocol SharedContainer: AnyObject {
-
-    /// Defines a single "shared" container for that container type.
-    ///
-    /// This container is used by the various @Injected property wrappers to resolve the keyPath to a given Factory. Care should be taken in
-    /// mixed environments where you're passing container references AND using the @Injected property wrappers.
-    static var shared: Self { get }
+public protocol ManagedContainer: AnyObject {
 
     /// Defines the ContainerManager used to manage registrations, resolutions, and scope caching for that container. Encapsulating the code in
     /// this fashion makes creating and using your own custom containers much simpler.
@@ -306,7 +369,7 @@ public protocol SharedContainer: AnyObject {
 }
 
 /// Defines the default factory helpers for containers
-extension SharedContainer {
+extension ManagedContainer {
 
     /// Makes a Factory with cached scope.
     @inlinable public func cached<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
@@ -357,6 +420,10 @@ extension SharedContainer {
         ParameterFactory(self, key: key, scope: .none, parameterFactory)
     }
 
+    //    @inlinable public func factory<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+    //        Factory(self, key: key, factory)
+    //    }
+
     /// Defines a decorator for the container. This decorator will see every dependency resolved by this container.
     public func decorator(_ decorator: ((Any) -> ())?) {
         manager.decorator = decorator
@@ -368,6 +435,19 @@ extension SharedContainer {
         transform(self)
         return self
     }
+}
+
+// MARK: - SharedContainer
+
+/// SharedContainer defines the protocol all Containers must adopt if they want to support Service Locator style injection or support any of the injection property wrappers.
+///
+///  See <doc:Containers> for more information.
+public protocol SharedContainer: ManagedContainer {
+    /// Defines a single "shared" container for that container type.
+    ///
+    /// This container is used by the various @Injected property wrappers to resolve the keyPath to a given Factory. Care should be taken in
+    /// mixed environments where you're passing container references AND using the @Injected property wrappers.
+    static var shared: Self { get }
 }
 
 // MARK: - ContainerManager
@@ -991,6 +1071,48 @@ public protocol AutoRegistering {
     }
 }
 
+#if os(iOS) || os(macOS) || os(tvOS) || os(watchOS)
+/// Immediate injection property wrapper for SwiftUI ObservableObjects. This wrapper is meant for use in SwiftUI Views and exposes
+/// bindable objects similar to that of SwiftUI @StateObject and @EnvironmentObject.
+///
+/// Dependent service must be of type ObservableObject. Updating object state will trigger view update.
+@available(OSX 10.15, iOS 14, tvOS 14.0, watchOS 7.0, *)
+@frozen @propertyWrapper public struct InjectedObject<T>: DynamicProperty where T: ObservableObject {
+    @StateObject fileprivate var dependency: T
+    /// Initializes the property wrapper. The dependency is resolved on initialization.
+    /// - Parameter keyPath: KeyPath to a Factory on the default Container.
+    public init(_ keyPath: KeyPath<Container, Factory<T>>) {
+        self._dependency = StateObject(wrappedValue: Container.shared[keyPath: keyPath]())
+    }
+    /// Initializes the property wrapper. The dependency is resolved on initialization.
+    /// - Parameter keyPath: KeyPath to a Factory on the specified Container.
+    public init<C:SharedContainer>(_ keyPath: KeyPath<C, Factory<T>>) {
+        self._dependency = StateObject(wrappedValue: C.shared[keyPath: keyPath]())
+    }
+    /// Manages the wrapped dependency.
+    @MainActor public var wrappedValue: T {
+        get { dependency }
+    }
+    /// Manages the wrapped dependency.
+    @MainActor public var projectedValue: ObservedObject<T>.Wrapper {
+        return $dependency
+    }
+}
+
+@available(OSX 10.15, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
+extension InjectedObject {
+    /// Simple initializer with passed parameter bypassing injection.
+    public init(_ wrappedValue: T) {
+        self._dependency = StateObject(wrappedValue: wrappedValue)
+    }
+    /// Initializes with passed parameter bypassing injection. This is what should work in Swift but doesn't.
+    /// https://forums.swift.org/t/allow-property-wrappers-with-multiple-arguments-to-defer-initialization-when-wrappedvalue-is-not-specified
+    public init(wrappedValue thunk: @autoclosure @escaping () -> T) {
+        self._dependency = StateObject(wrappedValue: thunk())
+    }
+}
+#endif
+
 /// Boxed wrapper to provide a Factory when asked
 internal protocol BoxedFactoryReference {
     func factory<T>() -> Factory<T>
@@ -1034,7 +1156,7 @@ public struct FactoryRegistration<P,T> {
     /// Id used to manage registrations and cached values. Usually looks something like "MyApp.Container.service".
     internal var id: String
     /// A strong reference to the container supporting this Factory.
-    internal var container: SharedContainer
+    internal var container: ManagedContainer
     /// The originally registered factory closure used to produce an object of the desired type.
     internal var factory: (P) -> T
     /// The scope responsible for managing the lifecycle of any objects created by this Factory.

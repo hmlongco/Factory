@@ -10,7 +10,7 @@ import Factory
 import Common
 import Networking
 
-class ContentModuleViewModel: ObservableObject {
+class ContentViewModel: ObservableObject {
 
     @Injected(\.myServiceType) private var service
     @Injected(\.networkType) private var network
@@ -20,7 +20,7 @@ class ContentModuleViewModel: ObservableObject {
     @Published var name: String = "Michael"
 
     init() {
-        print("ContentModuleViewModel Initialized")
+        print("ContentViewModel Initialized")
         testFactory()
     }
 

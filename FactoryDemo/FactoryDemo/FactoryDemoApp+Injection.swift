@@ -21,7 +21,7 @@ extension Container {
     }
 
     var simpleService3: Factory<SimpleService> {
-        unique { SimpleService() }
+        singleton { SimpleService() }
     }
 
     var simpleService4: Factory<SimpleService> {
@@ -31,7 +31,7 @@ extension Container {
 }
 
 extension Container {
-    var contentViewModel: Factory<ContentModuleViewModel> { unique { ContentModuleViewModel() } }
+    var contentViewModel: Factory<ContentViewModel> { unique { ContentViewModel() } }
 }
 
 extension SharedContainer {

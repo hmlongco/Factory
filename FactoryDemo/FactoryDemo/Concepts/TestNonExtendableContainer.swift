@@ -30,10 +30,10 @@ extension ServiceContainer {
 }
 
 extension ServiceContainer {
-    static var staticService1: Factory<MyServiceType> {
+    static var staticServiceMethod1: Factory<MyServiceType> {
         Factory(shared) { MyService() }
     }
-    static var staticService2: Factory<MyServiceType> {
+    static var staticServiceMethod2: Factory<MyServiceType> {
         ServiceContainer.shared.unique { MyService() }
     }
 }
@@ -41,8 +41,8 @@ extension ServiceContainer {
 extension ServiceContainer {
     static func test() {
         Self.shared.manager.trace.toggle()
-        let _ = Self.staticService1()
-        let _ = Self.staticService2()
+        let _ = Self.staticServiceMethod1()
+        let _ = Self.staticServiceMethod2()
         let _ = Self.shared.service1()
         let _ = Self.shared.extendedService()
         let _ = Self.shared.service2()
