@@ -24,14 +24,10 @@
 // THE SOFTWARE.
 //
 
-#if os(iOS)
-import UIKit
-import SwiftUI
-#elseif os(macOS) || os(tvOS) || os(watchOS)
 import Foundation
+
+#if canImport(SwiftUI)
 import SwiftUI
-#else
-import Foundation
 #endif
 
 // MARK: - Factory

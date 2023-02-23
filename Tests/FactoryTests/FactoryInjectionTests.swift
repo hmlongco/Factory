@@ -1,4 +1,9 @@
 import XCTest
+
+#if canImport(SwiftUI)
+import SwiftUI
+#endif
+
 @testable import Factory
 
 class Services1 {
@@ -224,4 +229,45 @@ final class FactoryInjectionTests: XCTestCase {
         XCTAssertNil(service.service)
     }
 
+    #if canImport(SwiftUI)
+    @available(iOS 14, *)
+    @MainActor
+    func testInjectedObject() throws {
+        // Test initializer for default container
+        let i1 = InjectedObject(\.contentViewModel)
+        let cvm1 = i1.wrappedValue
+        XCTAssertEqual(cvm1.text, "Test")
+        // Test initializer for custom container
+        let i2 = InjectedObject(\CustomContainer.contentViewModel)
+        let cvm2 = i2.wrappedValue
+        XCTAssertEqual(cvm2.text, "Test")
+        // Test initializer for passed parameter
+        let i3 = InjectedObject(ContentViewModel())
+        let cvm3 = i3.wrappedValue
+        XCTAssertEqual(cvm3.text, "Test")
+        // Test projected value
+        let projected = i3.projectedValue
+        XCTAssertNotNil(projected)
+    }
+    #endif
+
 }
+
+#if canImport(SwiftUI)
+@available(iOS 14, *)
+class ContentViewModel: ObservableObject {
+    @Published var text = "Test"
+}
+@available(iOS 14, *)
+extension Container {
+    var contentViewModel: Factory<ContentViewModel> {
+        unique { ContentViewModel() }
+    }
+}
+@available(iOS 14, *)
+extension CustomContainer {
+    var contentViewModel: Factory<ContentViewModel> {
+        unique { ContentViewModel() }
+    }
+}
+#endif
