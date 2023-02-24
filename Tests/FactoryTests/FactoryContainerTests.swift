@@ -57,12 +57,12 @@ final class FactoryContainerTests: XCTestCase {
     }
 
     func testConvenienceFucntions() throws {
-        XCTAssertNotNil(Container.shared.cachedCoverage)
-        XCTAssertNotNil(Container.shared.graphCoverage)
-        XCTAssertNotNil(Container.shared.scopeCoverage)
-        XCTAssertNotNil(Container.shared.sharedCoverage)
-        XCTAssertNotNil(Container.shared.singletonCoverage)
-        XCTAssertNotNil(Container.shared.uniqueCoverage)
+        XCTAssertNotNil(Container.shared.cachedCoverage())
+        XCTAssertNotNil(Container.shared.graphCoverage())
+        XCTAssertNotNil(Container.shared.scopeCoverage())
+        XCTAssertNotNil(Container.shared.sharedCoverage())
+        XCTAssertNotNil(Container.shared.singletonCoverage())
+        XCTAssertNotNil(Container.shared.uniqueCoverage())
         XCTAssertNotNil(Container.shared.cachedCoverageParameter(1))
         XCTAssertNotNil(Container.shared.graphCoverageParameter(1))
         XCTAssertNotNil(Container.shared.scopeCoverageParameter(1))

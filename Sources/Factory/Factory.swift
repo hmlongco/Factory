@@ -564,7 +564,7 @@ extension ContainerManager {
     public func reset(scope: Scope) {
         defer { globalRecursiveLock.unlock() }
         globalRecursiveLock.lock()
-        cache.reset(scope: scope)
+        cache.reset(scopeID: scope.scopeID)
     }
 
     /// Test function pushes the current registration and cache states
@@ -864,8 +864,8 @@ extension Scope {
         @inlinable func removeValue(forKey key: String) {
             cache.removeValue(forKey: key)
         }
-        internal func reset(scope: Scope) {
-            cache = cache.filter { $1.scopeID != scope.scopeID }
+        internal func reset(scopeID: UUID) {
+            cache = cache.filter { $1.scopeID != scopeID }
         }
         /// Internal function to clear cache if needed
         @inlinable func reset() {
@@ -1239,13 +1239,13 @@ internal protocol AnyBox {
 }
 
 /// Strong box for strong references to a type
-private struct StrongBox<T>: AnyBox {
+internal struct StrongBox<T>: AnyBox {
     let scopeID: UUID
     let boxed: T
 }
 
 /// Weak box for shared scope
-private struct WeakBox: AnyBox {
+internal struct WeakBox: AnyBox {
     let scopeID: UUID
     weak var boxed: AnyObject?
 }

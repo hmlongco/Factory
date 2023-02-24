@@ -19,7 +19,7 @@ The Factory source code is also fairly heavily documented.
 
 ## Migration
 
-A migration document is in the works, but for now here's some information on Factory's new syntax to get stated.
+A [preliminary migration document is available](https://hmlongco.github.io/Factory/documentation/factory/migration), but for now here's some information on Factory's new syntax to get stated.
 
 ## Containers
 
@@ -45,9 +45,9 @@ extension Container {
 We extended a Factory `Container` and within that container we defined a new computed variable of type `Factory<ServiceType>`. The type must be explicitly defined, and is usually a
 protocol to which the returned dependency conforms.
 
-Inside the computed variable we call a function on the enclosing container to make our factory for us, providing it with the closure needed to create an instance of our object when required. 
+Inside the computed variable we call a convenience function on the enclosing container to make our factory for us, providing it with the closure needed to create an instance of our object when required. Every time we resolve this factory we'll get a new, unique instance of our object. (Hence the name.)
 
-That Factory is then returned to the caller, usually to be evaluated (see ``Factory/callAsFunction()``). Every time we resolve this factory we'll get a new, unique instance of our object.
+The generated Factory is then returned to the caller, usually to be evaluated (see ``Factory/callAsFunction()``). 
 
 Just for reference, here's are the Factory 1.x and 2.0 registration definitions side by side.
 
@@ -105,17 +105,18 @@ This new factory closure overrides the original factory closure and clears the a
 
 ## Scopes
 
-Scopes behave as they did before, although they're now defined using a modifier syntax on the Factory. 
+Scopes behave as they did before, although they're now defined using the aforementioned convenience function used to builf the Factory. 
 
 ```swift
 extension Container {
     var sharedService: Factory<ServiceType> {
-        unique { MyService() }.shared
+        // Returns a Factory whose scope is unique.
+        unique { MyService() }
     }
     var decoratedSharedService: Factory<MyServiceType> {
-        unique { MyService() }
+        // Returns a Factory whose scope is shared.
+        shared { MyService() }
             .decorator { print("DECORATING \($0.id)") }
-            .shared
     }
 ```
 Factory 2.0 also provides addtional modifiers, like the per-factory decorator shown above.
