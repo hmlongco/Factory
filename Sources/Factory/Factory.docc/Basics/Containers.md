@@ -12,7 +12,7 @@ You can even create separate instances of the same container type, each with its
 
 Factory 2.0 supports true container-based dependency injection.
 
-## Containers and Factory's
+## Containers and Factories
 
 A Factory definition is a computed property defined within a container extension. Each Factory needs a reference to its container, a scope, and it also requires a factory closure that will produce our dependency when asked to do so.
 
@@ -76,7 +76,7 @@ All containers conform to the ``SharedContainer`` protocol. That basically means
 
 SharedContainer also defines some common functionality for each container, like the `unique` convenience function we've seen used throughout.
 
-Note that you can extend SharedContainer with your own Factory's.
+Note that you can extend SharedContainer with your own Factories.
 
 ```swift
 extension SharedContainer {
@@ -94,7 +94,7 @@ let common2 = MyContainer.shared.commonService()
 ## Custom Containers
 In a large project you might want to segregate factories into additional, smaller containers. 
 
-Definiing your own container class is simple. Just use the following as a template. 
+Defining your own container class is simple. Just use the following as a template. 
 
 ```swift
 public final class MyContainer: SharedContainer {
@@ -108,9 +108,9 @@ extension MyContainer {
     }
 }
 ```
-As mentioned, a contaimer must derive from ``SharedContainer``, have its own ``ContainerManager``, and implement a static `shared` instance. It also must be marked `final`.
+As mentioned, a contaimnr must derive from ``SharedContainer``, have its own ``ContainerManager``, and implement a static `shared` instance. It also must be marked `final`.
 
-Don't forget that if need be you can reach across containers simply by specifying the full container.factory path.
+Don't forget that if need be you can reach across containers simply by specifying the full `container.factory` path.
 
 ```swift
 extension PaymentsContainer {
@@ -122,7 +122,7 @@ extension PaymentsContainer {
 
 ## Injected Property Wrappers
 
-Property wrappers like @Injected and @LazyInjected always reference the `shared` container for that class type. Let's get an instance of the `cachedService` object we defined above by providing a keypath to the desired class and service.
+Property wrappers like `@Injected` and `@LazyInjected` always reference the `shared` container for that class type. Let's get an instance of the `cachedService` object we defined above by providing a keypath to the desired class and service.
 
 ```swift
 class ContentViewModel: ObservableObject {
@@ -159,11 +159,11 @@ extension Container: AutoRegistering {
 ```
 Just make `Container` conform to ``AutoRegistering`` and provide the `autoRegister` function. This function will be called *once* prior to the very first Factory service resolution on that container.
 
-Note that this can come in handy when you want to register instances of objects obtained across differe modules.
+Note that this can come in handy when you want to register instances of objects obtained across different modules.
 
 ## Resetting a Container
 
-Using register on a factory lets us change the state of the system. But what if we need to revert back to the original behavior?
+Using `register` on a factory lets us change the state of the system. But what if we need to revert back to the original behavior?
 
 Simple. Just reset it to bring back the original factory closure. Or, if desired, you can reset *everything* back to square one with a single command.
 ```Swift

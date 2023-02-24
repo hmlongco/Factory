@@ -24,7 +24,7 @@ extension Container {
 ```
 We prefer the more concise version, and that's what we'll use going forward.
 
-> Note: The container help functions are @inlinable and as such there's no performance penalty incurred when calling them.
+> Note: The container helper functions are `@inlinable` and as such there's no performance penalty incurred when calling them.
 
 ### Scopes
 Examples of defining scoped services in a Factory 2.0 container. 
