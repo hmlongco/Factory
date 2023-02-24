@@ -45,7 +45,7 @@ extension Container {
 We extended a Factory `Container` and within that container we defined a new computed variable of type `Factory<ServiceType>`. The type must be explicitly defined, and is usually a
 protocol to which the returned dependency conforms.
 
-Inside the computed variable we call a convenience function on the enclosing container to make our factory for us, providing it with the closure needed to create an instance of our object when required. Every time we resolve this factory we'll get a new, unique instance of our object. (Hence the name.)
+Inside the computed variable we call a convenience function on the enclosing container to make our factory for us, providing it with the closure needed to create an instance of our object when required. Every time we resolve this factory we'll get a new, unique instance of our object. (Hence the name. Corresponding functions exist for the other scopes like cached, shared, etc.)
 
 The generated Factory is then returned to the caller, usually to be evaluated (see ``Factory/callAsFunction()``). 
 
