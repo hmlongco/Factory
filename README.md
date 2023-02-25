@@ -135,6 +135,12 @@ Discussion and comments on the changes are occurring in [Discussions](https://gi
 
 Factory is available under the MIT license. See the LICENSE file for more info.
 
+## Sponsor Factory
+
+If you want to support my work on Factory and Resolver, consider a [GitHub Sponsorship](https://github.com/sponsors/hmlongco)! Many levels exist for increased support and even for mentorship and company training. 
+
+Or you can just buy me a cup of coffee!
+
 ## Author
 
 Factory is designed, implemented, documented, and maintained by [Michael Long](https://www.linkedin.com/in/hmlong/), a Lead iOS Software Engineer and a Top 1,000 Technology Writer on Medium.
