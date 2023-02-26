@@ -99,11 +99,16 @@ The @Injected property wrapper looks for dependencies in the shared container, s
 
 See ``Injected``, ``LazyInjected``, ``WeakLazyInjected``, and ``InjectedObject`` for more.
 
+```swift
+// Factory 1.0 version for reference
+@Injected(Container.service) var service: ServiceType
+```
+
 ## Registering a new Factory closure
 
 What happens if we want to change the behavior of a Factory? What if the system changes during runtime, or what if we want our factory to provide mocks and testing doubles? 
 
-It's easy, and works pretty much the same as it did before. Just register a new closure with the Factory.
+It's easy, and works pretty much the same as it did before. Just register a new closure with the Factory from its container.
 
 ```swift
 container.service.register {
@@ -112,6 +117,7 @@ container.service.register {
 ```
 
 This new factory closure overrides the original factory closure and clears the associated scope so that the next time this factory is resolved Factory will evaluate the new closure and return an instance of the newly registered object instead.
+
 
 > **Warning**: Registration "overrides" and scope caches are stored in the associated container. If the container ever goes out of scope, so will all of its registrations.
 
@@ -124,8 +130,7 @@ Scopes behave exactly as they did before, although they're now defined using a m
 ```swift
 extension Container {
     var singletonService: Factory<ServiceType> {
-        self { MyService() }
-        .singleton
+        self { MyService() }.singleton
     }
     var decoratedSharedService: Factory<MyServiceType> {
         self { MyService() }
@@ -135,6 +140,18 @@ extension Container {
 }
 ```
 Factory 2.0 also provides addtional modifiers for all of the known scoped, as well as a few more like the per-factory decorator shown above.
+```swift
+extension Container {
+    // Factory 1.0 version
+    static var singletonService = Factory(scope: .singleton)<ServiceType> {
+        MyService()
+    }
+    // Factory 1.0 version
+    static var decoratedSharedService = Factory(scope: .shared)<MyServiceType> {
+        MyService()
+    }
+}
+```
 
 ## Resetting
 

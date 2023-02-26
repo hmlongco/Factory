@@ -85,3 +85,30 @@ class ContentViewModel: ObservableObject {
 }
 ```
 This was discussed in greater detail in <doc:Registrations>
+
+### Composition Root
+
+If you want to use a Composition Root pattern, just use the container to provide the required dependencies to a constructor.
+
+```swift
+extension Container {
+    var constructedService: Factory<MyConstructedService> {
+        self { MyConstructedService(service: self.cachedService()) }.singleton
+    }
+    var cachedService: Factory<MyServiceType> {
+        self { MyService() }.cached
+    }
+}
+
+@main
+struct FactoryDemoApp: App {
+    let viewModel = MyViewModel(service: Container.shared.constructedService())
+    var body: some Scene {
+        WindowGroup {
+            NavigationView {
+                ContentView(viewModel: viewModel)
+            }
+        }
+    }
+}ß
+```

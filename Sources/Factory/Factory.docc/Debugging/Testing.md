@@ -32,6 +32,13 @@ final class FactoryCoreTests: XCTestCase {
         model.load()
         XCTAssertTrue(model.isLoaded)
     }
+
+    func testError() throws {
+        Container.shared.myServiceType.register(factory: { MockErrorService() })
+        let model = Container.shared.someViewModel()
+        model.load()
+        XCTAssertTrue(model.isError)
+    }
 }
 ```
 ## Rebuilding The Container

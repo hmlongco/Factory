@@ -4,153 +4,290 @@ A new approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
 ## Factory 2.0
 
-Welcome to the new version of Factory! Factory 2.0 offers true dependency injection container support as well as several other new features.
+Factory is strongly influenced by SwiftUI, and in my opinion is highly suited for use in that environment. Factory is...
 
-* Adds true Factory containers for container-based dependency resolution
-* Adds container-based scopes
-* Adds decorators to containers and factories
-* Adds debug trace support
+- **Safe**: Factory is compile-time safe; a factory for a given type must exist or the code simply will not compile.
+- **Flexible**: It's easy to override dependencies at runtime and for use in SwiftUI Previews.
+- **Powerful**: Like Resolver, Factory supports application, cached, shared, and custom scopes, custom containers, arguments, decorators, and more.
+- **Lightweight**: With all of that Factory is slim and trim, about 700 lines of actual code and half the size of Resolver.
+- **Performant**: Little to no setup time is needed for the vast majority of your services, resolutions are extremely fast, and no compile-time scripts or build phases are needed.
+- **Concise**: Defining a registration usually takes just a single line of code. Same for resolution.
+- **Documented**: Factory 2.0 has extensive DocC documentation covering its classes, methods, and use cases.
+- **Tested**: Unit tests with 100% code coverage helps ensure correct operation of registrations, resolutions, and scopes.
+- **Free**: Factory is free and open source under the MIT License.
 
-**This is a breaking change from 1.X.X.**
-
-If you download this branch you'll find initial DocC Documentation for the project, as well as working unit tests and a working code sample.
-
-The Factory source code is also fairly heavily documented.
-
-## Migration
-
-A [preliminary migration document is available](https://hmlongco.github.io/Factory/documentation/factory/migration), but for now here's some information on Factory's new syntax to get stated.
-
-## Containers
-
-Containers in Factory 1.X were essentially namespaces, and not actual object instances that could be passed around. That made the overall syntax cleaner, but the tradeoff resulted in a lack of functionality and the static class definitions prevented Factory from being used in anything other than a Service Locator role.
-
-That changed in Factory 2.0. Instead of defining Factory's as static variables on a class, they're now defined and returned as computed variables on the container itself. And instances of a given container can be created and shared as needed.
-
-Let's take a look.
-
-## Defining a Factory
-
-Most container-based dependency injection systems require you to define that a given dependency is available for injection and many require some sort of factory or mechanism that will provide a new instance of the service when needed.
-
-Factory, as you may have guessed from the name, is no exception. Here's a simple registration that returns a `ServiceType` dependency. 
-
+Sound too good to be true? Let's take a look.
+  
+ ## A Simple Example
+ 
+Most container-based dependency injection systems require you to define in some way that a given service type is available for injection and many require some sort of factory or mechanism that will provide a new instance of the service when needed.
+ 
+ Factory is no exception. Here's a simple dependency registration.
+ 
 ```swift
 extension Container {
-    var service: Factory<ServiceType> {
-        Factory(self) { MyService() }
-    }
-}
-```
-We extended a Factory `Container` and within that container we defined a new computed variable of type `Factory<ServiceType>`. The type must be explicitly defined, and is usually a
-protocol to which the returned dependency conforms.
-
-Inside the computed variable we create our Factory, binding it to the enclosing container. We also provide it with the closure needed to create an instance of our object when required. Every time we resolve this factory we'll get a new, unique instance of our object. 
-
-The generated Factory is then returned to the caller, usually to be evaluated (see ``Factory/callAsFunction()``). 
-
-Factory also provides an extra bit of syntactic sugar that allows us to do the same thing in a more convenient manner.
-```swift
-extension Container {
-    var service: Factory<ServiceType> {
+    var myService = Factory<MyServiceType> { 
         self { MyService() }
     }
 }
 ```
+Unlike Resolver which often requires defining a plethora of nested registration functions, or SwiftUI, where defining a new environment variable requires creating a new EnvironmentKey and adding additional getters and setters, here we simply add a new `Factory` to the default container. When called, the factory closure is evaluated and returns an instance of our dependency. That's it.
 
-Just for reference, here are the Factory 1.x and 2.0 registration definitions side by side.
+Injecting and using the service where needed is equally straightforward. Here's just one of the many ways Factory can be used.
+
+```swift
+class ContentViewModel: ObservableObject {
+    @Injected(\.myService) private var myService
+    ...
+}
+```
+Here this particular view model uses one of Factory's `@Injected` property wrappers to request the desired dependency. Similar to `@Environment` in SwiftUI, we provide the property wrapper with a keyPath to a factory of the desired type and it resolves that type the moment `ContentViewModel` is created.
+
+And that's the core mechanism. In order to use the property wrapper you *must* define a factory. That factory *must* return the desired type when asked. Fail to do either one and the code will simply not compile. As such, Factory is compile-time safe.
+
+ ## Inside Factory
+
+Similar to a `View` in SwiftUI, a `Factory` is a lightweight struct that exists to define and manage a specific dependency. Just provide it with a closure that constructs and returns an instance of your dependency or service, and Factory will handle the rest.
 
 ```swift
 extension Container {
-    // Factory 1.x
-    static var service = Factory<ServiceType> { MyService() }
+    var myService = Factory<MyServiceType> { 
+        self { MyService() }
+    }
+}
+```
+There's a few things going on here, so let's break it down. First, we extended our container in order to define a new computed variable of type `Factory<MyServiceType>`, where `MyServiceType` is the dependency type. In most situations that type is often a protocol to which the returned dependency conforms. 
+
+```swift
+extension Container {
+    var service: Factory<MyServiceType> {
+        ...
+    }
+}
+```
+So our computed variable needs to return a Factory. Factories have a couple of requirements: They need to communicate with their enclosing containers; and they need to be provided with a closure that can be called to create an instance of our dependency when required. 
+
+As such, a complete, formal Factory definition would look like this...
+```swift
+var service: Factory<ServiceType> {
+    Factory(self) { 
+        MyService()
+    }
+}
+```
+But we can do better. As shown, Factory also provdides a little bit of syntactic sugar that lets us ask the enclosing container to make our factory for us.
+
+```swift
+var service: Factory<ServiceType> {
+    self { MyService() }
+}
+```
+And we're done. Either way, the Factory generated by the container is then returned directly to the caller, usually to be evaluated. See "Resolving a Factory" below.
+
+If you're concerned about constructing Factory's on the fly, don't be. Like SwftUI Views, Factory structs and modifiers are lightweight and transitory value types. Ther're created when needed and then immediately discarded once their purpose has been served.
+
+For more examples of Factory definitions that define scopes, use constructor injection, and do parameter passing, see: [Registrations](https://hmlongco.github.io/Factory/documentation/factory/registrations).
+
+## Resolving Factories
+
+Earlier we demonstrated how to use the ``Injected`` property wrapper. But it's also possible to bypass the property wrapper and talk to the factory yourself.
+
+```swift
+class ContentViewModel: ObservableObject {
+    private let myService = Container.shared.myService()
+    private let eventLogger = Container.shared.eventLogger()
+    ...
+}
+```
+Just call the desired specific factory as a function and you'll get an instance of its managed dependency. It's that simple.
+
+If  you're into container-based dependency injection, note that you can also pass an instance of a container to a view model and obtain an instance of your service directly from that container.
+```swift
+class ContentViewModel: ObservableObject {
+    let service: MyServiceType
+    init(container: Container) {
+        service = container.service()
+    }
+}
+```
+Or if you want to use a Composition Root pattern, just use the container to provide the required dependencies to a constructor.
+
+```swift
+extension Container {
+    var myRepository: Factory<MyRepositoryType> {
+        self { MyRepository(service: self.networkService()) }
+    }
+    var networkService: Factory<Networking> {
+        self { MyNetworkService() }
+    }
+}
+
+@main
+struct FactoryDemoApp: App {
+    let viewModel = MyViewModel(repository: Container.shared.myRepository())
+    var body: some Scene {
+        WindowGroup {
+            NavigationView {
+                ContentView(viewModel: viewModel)
+            }
+        }
+    }
+}
+
+```
+Factory is flexible. See [Resolutions](https://hmlongco.github.io/Factory/documentation/factory/resolutions) for more examples.
+
+## Mocking
+
+If we go back and look at our original view model code one might wonder why we've gone to all of this trouble? Why not simply say `let myService = MyService()` and be done with it? 
+
+Or keep the container idea, but write something similar to this…
+
+```swift
+extension Container {
+    static var myService: MyServiceType { MyService() }
+}
+```
+
+Well, the primary benefit one gains from using a container-based dependency injection system is that we're able to change the behavior of the system as needed. Consider the following code:
+
+```swift
+struct ContentView: View {
+    @StateObject var model = ContentViewModel()
+    var body: some View {
+        Text(model.text())
+            .padding()
+    }
+}
+```
+
+Our ContentView uses our view model, which is assigned to a StateObject. Great. But now we want to preview our code. How do we change the behavior of `ContentViewModel` so that its `MyService` dependency isn't making live API calls during development? 
+
+It's easy. Just replace `MyService` with a mock that also conforms to `MyServiceType`.
+
+```swift
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        let _ = Container.myService.register { MockService2() }
+        ContentView()
+    }
+}
+```
+
+Note the line in our preview code where we’re gone back to our container and registered a new closure on our factory. This function overrides the default factory closure.
+
+Now when our preview is displayed `ContentView` creates a `ContentViewModel` which in turn has a dependency on `myService` using the `Injected` property wrapper. 
+
+And when the wrapper asks the factory for an instance of `MyServiceType` it now gets a `MockService2` instead of the `MyService` type originally defined.
+
+This is a powerful concept that lets us reach deep into a chain of dependencies and alter the behavior of a system as needed.
+
+## Testing
+
+The same concept can be used used when writing unit tests. Consider the following.
+
+```swift
+final class FactoryCoreTests: XCTestCase {
+
+    override func setUp() {
+        super.setUp()
+        Container.shared = Container()
+    }
     
-    // Factory 2.0
-    var service: Factory<ServiceType> { self { MyService() } }
+    func testLoaded() throws {
+        Container.shared.accountProvider.register { MockProvider(accounts: .sampleAccounts) }
+        let model = Container.shared.someViewModel()
+        model.load()
+        XCTAssertTrue(model.isLoaded)
+    }
+
+    func testEmpty() throws {
+        Container.shared.accountProvider.register { MockProvider(accounts: []) }
+        let model = Container.shared.someViewModel()
+        model.load()
+        XCTAssertTrue(model.isEmpty)
+    }
+
+    func testErrors() throws {
+        Container.shared.accountProvider.register { MockProvider(error: .notFoundError) }
+        let model = Container.shared.someViewModel()
+        model.load()
+        XCTAssertTrue(model.errorMessage = "Some Error")
+    }
+    
 }
 ```
-The 2.0 version is one character longer. (Sorry)
+Again, Factory makes it easy to reach into a chain of dependencies and make specific changes to the system as needed. This makes testing loading states, empty states, and error conditions simple.
 
-Like SwftUI Views, Factory structs and modifiers are lightweight and transitory. In Factory 2.0 they're created when needed and then immediately discarded once their purpose has been served.
+But we're not done yet. 
 
-## Resolving a Factory
+Factory has quite a few more tricks up its sleeve...
 
-To resolve a Factory and obtain an object or service of the desired type, one simply calls the Factory as a function. If you're passing an instance of a container around to your views or view models, just call it directly.
+## Scope
 
-```swift
-let service = container.service()
-```
-The resolved instance may be brand new or Factory may return a cached value from the specified ``Scope``.
+If you've used Resolver or some other dependency injection system before then you've probably experienced the benefits and power of scopes.
 
-We can also use the `shared` container that's provided for each and every container type.
+And if not, the concept is easy to understand: Just how long should an instance of an object live?
 
-```swift
-let service = Container.shared.service()
-```
-Note that this is fundamentally the same `let service = Container.service()` Service Locator pattern used in Factory 1.0.
+You've no doubt stuffed an instance of a class into a variable and created a singleton at some point in your career. This is an example of a scope. A single instance is created and then used and shared by all of the methods and functions in the app.
 
-Finally, you can also use the @Injected property wrapper. It now uses keyPaths to indicate the desired dependency.
-
-```swift
-@Injected(\.service) var service: ServiceType
-```
-The @Injected property wrapper looks for dependencies in the shared container, so this example is functionally identical to the `Container.shared.service()` version shown above.
-
-## Registering a new Factory closure
-
-What happens if we want to change the behavior of a Factory? What if the system changes during runtime, or what if we want our factory to provide mocks and testing doubles? 
-
-It's easy. Just register a new closure with the Factory.
-
-```swift
-container.service.register {
-    MockService()
-}
-```
-
-This new factory closure overrides the original factory closure and clears the associated scope so that the next time this factory is resolved Factory will evaluate the new closure and return an instance of the newly registered object instead.
-
-> **Warning**: Registration "overrides" and scope caches are stored in the associated container. If the container ever goes out of scope, so will all of its registrations.
-
-## Scopes
-
-Scopes behave as they did before, although they're now defined using a modifier on the Factory. 
+This can be done in Factory just by adding a scope modifer.
 
 ```swift
 extension Container {
-    var uniqueService: Factory<ServiceType> {
-        // Returns a Factory whose scope is unique.
-        self { MyService() }
-    }
-    var singletonService: Factory<ServiceType> {
-        // Returns a Factory whose scope is singleton.
+    var myService = Factory<MyServiceType> { 
         self { MyService() }
             .singleton
     }
-    var decoratedSharedService: Factory<MyServiceType> {
-        // Returns a Factory whose scope is shared.
-        self { MyService() }
-            .shared
-            .decorator { print("DECORATING \($0.id)") }
-    }
+}
 ```
-Factory 2.0 also provides addtional modifiers, like the per-factory decorator shown above.
+Now whenever someone requests an instance of `myService` they'll get the same instance of the object as everyone else.
+
+Note that the client neither knows nor cares about the scope. Nor should it. The client is simply given what it needs when it needs it. 
+
+If no scope is specified the default scope is unique. A new instance of the service will be instantiated and returned every time one is requested from the factory.
+
+Other common scopes are `cached` and `shared`. Cached items are persisted until the cache is reset, while shared items exist just as long as someone holds a strong reference to them. When the last reference goes away, the weakly held shared reference also goes away.
+
+Factory has other scope types, plus the ability to define your own. See [Scopes](https://hmlongco.github.io/Factory/documentation/factory/scopes) for additonal examples.
+
+## Debugging
+
+When running in DEBUG mode Factory allows you to trace the injection process and see every object created or returned during a given resolution cycle.
+```
+0: Factory.Container.cycleDemo = CycleDemo N:105553131389696
+1:     Factory.Container.aService = AServiceType N:105553119821680
+2:         Factory.Container.implementsAB = AServiceType & BServiceType N:105553119821680
+3:             Factory.Container.networkService = NetworkService N:105553119770688
+1:     Factory.Container.bService = BServiceType N:105553119821680
+2:         Factory.Container.implementsAB = AServiceType & BServiceType C:105553119821680
+```
+See [Debugging](https://hmlongco.github.io/Factory/documentation/factory/debugging) for more on this and other features.
 
 ## Documentation
 
-Current documentation can be found here: [Factory Documentation](https://hmlongco.github.io/Factory/documentation/factory).
+A single README file barely scratches the surface. Fortunately, Factory is throughly documented. 
 
-There's more coming, but I can only write so fast, so stay tuned.
+Current DocC documentation can be found in the project as well as online on [GitHub Pages](https://hmlongco.github.io/Factory/documentation/factory).
 
-## Discussion
+## Factory 2.0 Migration
 
-Discussion and comments on the changes are occurring in [Discussions](https://github.com/hmlongco/Factory/discussions). Go there if you have something to say or if you want to stay up to date.
+If you started with Factory 1.x a [migration document is available here](https://hmlongco.github.io/Factory/documentation/factory/migration).
+
+* Factory 2.0 adds true Factory containers for container-based dependency resolution
+* Factory 2.0 adds container-based scopes
+* Factory 2.0 adds decorators to containers and factories
+* Factory 2.0 adds debug trace support
+
+## Discussion Forum
+
+Discussion and comments on Factory and Factory 2.0 can be found in [Discussions](https://github.com/hmlongco/Factory/discussions). Go there if you have something to say or if you want to stay up to date.
 
 ## License
 
 Factory is available under the MIT license. See the LICENSE file for more info.
 
-## Sponsor Factory
+## Sponsor Factory!
 
 If you want to support my work on Factory and Resolver, consider a [GitHub Sponsorship](https://github.com/sponsors/hmlongco)! Many levels exist for increased support and even for mentorship and company training. 
 
@@ -168,6 +305,7 @@ Michael was also one of Google's [Open Source Peer Reward](https://opensource.go
 
 ## Additional Resources
 
+* [Factory Documentation](https://hmlongco.github.io/Factory/documentation/factory)
 * [Factory and Functional Dependency Injection](https://betterprogramming.pub/factory-and-functional-dependency-injection-2d0a38042d05)
 * [Factory: Multiple Module Registration](https://betterprogramming.pub/factory-multiple-module-registration-f9d19721a31d?sk=a03d78484d8c351762306ff00a8be67c)
 * [Resolver: A Swift Dependency Injection System](https://github.com/hmlongco/Resolver)
