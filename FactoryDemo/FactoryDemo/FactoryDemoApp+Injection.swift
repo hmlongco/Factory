@@ -13,45 +13,46 @@ import SwiftUI
 extension Container {
 
     var simpleService: Factory<SimpleService> {
-        unique { SimpleService() }
+        Factory(self) { SimpleService() }
     }
 
     var simpleService2: Factory<SimpleService> {
-        unique { SimpleService() }
+        .init(self) { SimpleService() }
     }
 
     var simpleService3: Factory<SimpleService> {
-        singleton { SimpleService() }
+        self { SimpleService() }
     }
 
     var simpleService4: Factory<SimpleService> {
-        singleton { SimpleService() }
+        self { SimpleService() }.singleton
     }
 
 }
 
 extension Container {
-    var contentViewModel: Factory<ContentViewModel> { unique { ContentViewModel() } }
+    var contentViewModel: Factory<ContentViewModel> { self { ContentViewModel() } }
 }
 
 extension SharedContainer {
-    var myServiceType: Factory<MyServiceType> { unique { MyService() } }
-    var sharedService: Factory<MyServiceType> { shared { MyService() } }
+    var myServiceType: Factory<MyServiceType> { self { MyService() } }
+    var sharedService: Factory<MyServiceType> { self { MyService() }.shared }
 }
 
 final class DemoContainer: ObservableObject, SharedContainer {
     static var shared = DemoContainer()
 
-    var optionalService: Factory<SimpleService?> { unique { nil } }
+    var optionalService: Factory<SimpleService?> { self { nil } }
 
     var constructedService: Factory<MyConstructedService> {
-        unique {
+        self {
             MyConstructedService(service: self.myServiceType())
         }
     }
 
     var additionalService: Factory<SimpleService> {
-        scope(.session) { SimpleService() }
+        self { SimpleService() }
+            .scope(.session)
     }
 
     var manager = ContainerManager()
@@ -59,13 +60,13 @@ final class DemoContainer: ObservableObject, SharedContainer {
 
 extension DemoContainer {
     var argumentService: ParameterFactory<Int, ParameterService> {
-        unique { count in ParameterService(count: count) }
+        self { count in ParameterService(count: count) }
     }
 }
 
 extension DemoContainer {
     var selfService: Factory<MyServiceType> {
-        unique { MyService() }
+        self { MyService() }
     }
 }
 
@@ -125,22 +126,23 @@ class Preferences {
 
 extension Container {
     var cycleDemo: Factory<CycleDemo> {
-        unique { CycleDemo() }
+        self { CycleDemo() }
     }
     var aService: Factory<AServiceType> {
-        unique { self.implementsAB() }
+        self { self.implementsAB() }
     }
     var bService: Factory<BServiceType> {
-        unique { self.implementsAB() }
+        self { self.implementsAB() }
     }
     var networkService: Factory<NetworkService> {
-        unique { NetworkService() }
+        self { NetworkService() }
     }
     var preferences: Factory<Preferences> {
-        unique { Preferences() }
+        self { Preferences() }
     }
     private var implementsAB: Factory<AServiceType&BServiceType> {
-        graph { ImplementsAB() }
+        self { ImplementsAB() }
+            .scope(.graph)
     }
 }
 

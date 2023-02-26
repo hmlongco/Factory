@@ -12,7 +12,7 @@ import Common
 extension Container: AutoRegistering {
 
     var autoRegisteredService: Factory<MyServiceType?> {
-        unique { nil }
+        self { nil }
     }
 
     public func autoRegister() {
@@ -36,7 +36,7 @@ extension Container: AutoRegistering {
     }
 
     private var scopedCommonType: Factory<CommonType> {
-        singleton { PromisedCommonType() }
+        self { PromisedCommonType() }.singleton
     }
 
 }

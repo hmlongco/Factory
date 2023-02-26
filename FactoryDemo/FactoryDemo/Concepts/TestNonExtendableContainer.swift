@@ -14,18 +14,18 @@ final class ServiceContainer: SharedContainer {
     var manager = ContainerManager()
 
     // DON'T DO THIS
-    lazy var service1: Factory<MyServiceType> = unique {
+    lazy var service1: Factory<MyServiceType> = self {
         MyService()
     }
     // DO THIS INSTEAD
     var service2: Factory<MyServiceType> {
-        unique { MyService() }
+        self { MyService() }
     }
 }
 
 extension ServiceContainer {
     var extendedService: Factory<MyServiceType> {
-        unique { MyService() }
+        self { MyService() }
     }
 }
 
@@ -34,7 +34,7 @@ extension ServiceContainer {
         Factory(shared) { MyService() }
     }
     static var staticServiceMethod2: Factory<MyServiceType> {
-        ServiceContainer.shared.unique { MyService() }
+        ServiceContainer.shared.self { MyService() }
     }
 }
 

@@ -52,11 +52,11 @@ class ServicesC {
 }
 
 extension Container {
-    fileprivate var services1: Factory<Services1> { unique { Services1() } }
-    fileprivate var services2: Factory<Services2> { unique { Services2() } }
-    fileprivate var services3: Factory<Services3> { unique { Services3() } }
-    fileprivate var servicesP: Factory<ServicesP> { shared { ServicesP() } }
-    fileprivate var servicesC: Factory<ServicesC> { shared { ServicesC() } }
+    fileprivate var services1: Factory<Services1> { self { Services1() } }
+    fileprivate var services2: Factory<Services2> { self { Services2() } }
+    fileprivate var services3: Factory<Services3> { self { Services3() } }
+    fileprivate var servicesP: Factory<ServicesP> { self { ServicesP() }.shared }
+    fileprivate var servicesC: Factory<ServicesC> { self { ServicesC() }.shared }
 }
 
 protocol ProtocolP: AnyObject {
@@ -90,14 +90,15 @@ class ProtocolClassC: ProtocolC {
 
 extension Container {
     fileprivate var protocolP: Factory<ProtocolP> {
-        shared {
+        self {
             let p = ProtocolClassP()
             p.child.parent = p
             return p
         }
+        .shared
     }
     fileprivate var protocolC: Factory<ProtocolC> {
-        shared { ProtocolClassC() }
+        self { ProtocolClassC() }.shared
     }
 }
 
@@ -261,13 +262,13 @@ class ContentViewModel: ObservableObject {
 @available(iOS 14, *)
 extension Container {
     var contentViewModel: Factory<ContentViewModel> {
-        unique { ContentViewModel() }
+        self { ContentViewModel() }
     }
 }
 @available(iOS 14, *)
 extension CustomContainer {
     var contentViewModel: Factory<ContentViewModel> {
-        unique { ContentViewModel() }
+        self { ContentViewModel() }
     }
 }
 #endif

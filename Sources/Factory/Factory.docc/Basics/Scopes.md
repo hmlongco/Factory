@@ -19,7 +19,8 @@ Just ask the container for a singleton factory.
 ```swift
 extension Container {
     var myService: Factory<MyServiceType> { 
-        singleton { MyService() }
+        self { MyService() }
+            .singleton
     }
 }
 ```
@@ -38,10 +39,10 @@ Cached items are persisted until the cache is reset, while shared items exist ju
 ```swift
 extension Container {
     var cachedService: Factory<MyServiceType> { 
-        cached { MyService() }
+        self { MyService() }.cached
     }
     var sharedService: Factory<MyServiceType> { 
-        shared { MyService() }
+        self { MyService() }.shared
     }
 }
 ```
@@ -56,10 +57,12 @@ extension Scope {
 
 extension Container {
     var authenticatedUser: Factory<AuthenticatedUser> { 
-        scope(.session) { AuthenticatedUser() }
+        self { AuthenticatedUser() }
+            .scope(.session)
     }
     var profileImageCache: Factory<ProfileImageCache> { 
-        scope(.session) { ProfileImageCache() } 
+        self { ProfileImageCache() } 
+            .scope(.session)
     }
 }
 ```
@@ -86,9 +89,9 @@ class ProtocolConsumer {
 The `ProtocolConsumer` wants two different protocols. But it doesn't know that a single class provides both services. (Nor should it care.) Take a look at the referenced factories.
 ```swift
 extension Container {
-    var consumer: Factory<ProtocolConsumer> { unique { ProtocolConsumer() } }
-    var idProvider: Factory<IDProviding> { unique { commonProviding() } }
-    var valueProvider: Factory<ValueProviding> { unique { commonProviding() } }
+    var consumer: Factory<ProtocolConsumer> { self { ProtocolConsumer() } }
+    var idProvider: Factory<IDProviding> { self { commonProviding() } }
+    var valueProvider: Factory<ValueProviding> { self { commonProviding() } }
     private var commonProviding: Factory<MyService> { graph { MyService() } }
 }
 ```

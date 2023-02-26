@@ -23,7 +23,7 @@ Factory, as you may have guessed from the name, is no exception. Here's a simple
 ```swift
 extension Container {
     var service: Factory<ServiceType> {
-        unique { MyService() }
+        self { MyService() }
     }
 }
 ```
@@ -31,8 +31,23 @@ extension Container {
 We extended a Factory `Container` and within that container we defined a new computed variable of type `Factory<ServiceType>`. The type must be explicitly defined, and is usually a
 protocol to which the returned dependency conforms.
 
+So our computed variable needs to return a Factory. But Factory's are complex creatures. They need to communicate with their enclosing containers and they need to be provided with a closure that can be called to create an instance of our dependency when required. 
 
-Inside the computed variable we asked the enclosing container to make a our factory for us, providing it with the closure needed to create an instance of our object when required. 
+As such, a complete, formal Factory definition would look like this...
+```swift
+var service: Factory<ServiceType> {
+    Factory(self, scope: .unique) { 
+        MyService()
+    }
+}
+```
+But we can do better. Factory provdides a bit of syntactic sugar that asks the enclosing container to make our factory for us.
+
+```swift
+var service: Factory<ServiceType> {
+    self { MyService() }
+}
+```
 
 That Factory is then returned to the caller, usually to be evaluated (see ``Factory/callAsFunction()``). Every time we resolve this factory we'll get a new, unique instance of our object.
 
@@ -44,11 +59,11 @@ extension Container {
     static var service = Factory<ServiceType> { MyService() }
     
     // Factory 2.0
-    var service: Factory<ServiceType> { unique { MyService() } }
+    var service: Factory<ServiceType> { self { MyService() } }
 }
 ```
 
-The new version is three characters longer. Hey. I tried... ;)
+The new version is one character longer. Hey. I tried... ;)
 
 Like SwftUI Views, Factory structs and modifiers are lightweight and transitory. In Factory 2.0 they're created when needed and then immediately discarded once their purpose has been served.
 
@@ -103,21 +118,23 @@ This new factory closure overrides the original factory closure and clears the a
 Again, see the <doc:Containers> page for a lot more on the subject.
 
 ## Scopes
-
+    
 Scopes behave exactly as they did before, although they're now defined using a modifier syntax on the Factory. 
 
 ```swift
 extension Container {
-    var sharedService: Factory<ServiceType> {
-        unique { MyService() }.shared
+    var singletonService: Factory<ServiceType> {
+        self { MyService() }
+        .singleton
     }
     var decoratedSharedService: Factory<MyServiceType> {
-        shared { MyService() }
+        self { MyService() }
+            .shared
             .decorator { print("DECORATING \($0.id)") }
     }
 }
 ```
-Factory 2.0 also provides addtional modifiers, like the per-factory decorator shown above.
+Factory 2.0 also provides addtional modifiers for all of the known scoped, as well as a few more like the per-factory decorator shown above.
 
 ## Resetting
 

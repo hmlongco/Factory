@@ -44,13 +44,22 @@ import SwiftUI
 /// ```swift
 /// extension Container {
 ///     var service: Factory<ServiceType> {
-///         unique { MyService() }
+///         Factory(self) { MyService() }
 ///     }
 /// }
 /// ```
-/// Inside the computed variable we use a convenience function that asks our container to make our factory for us, while also providing it with
+/// Inside the computed variable we define our Factory, passing it a reference to the enclosing container. We also provide it with
 /// a closure that creates an instance of our dependency when required. That Factory is then returned to the caller, usually to be evaluated
 /// (see `callAsFunction()` below). Every time we resolve this factory we'll get a new, unique instance of our object.
+///
+/// Factory also provides a bit of syntactic sugar that lets us do the same thing in a more convenient form,
+/// ```swift
+/// extension Container {
+///     var service: Factory<ServiceType> {
+///         self { MyService() }
+///     }
+/// }
+/// ```
 ///
 /// ## Transient
 /// If you're concerned about building Factory's on the fly, don't be. Like SwiftUI Views, Factory structs and modifiers
@@ -66,11 +75,9 @@ public struct Factory<T>: FactoryModifing {
     ///   - container: The bound container that manages registrations and scope caching for this Factory. The scope helper functions bind the
     ///   current container as well defining the scope.
     ///   - key: Hidden value used to differentiate different instances of the same type in the same container.
-    ///   - scope: Defines the ``Scope`` used to manage instances of this dependency. Passing nil indicates no scope management is required and
-    ///   that a new instance should be returned each time this factory is resolved.
     ///   - factory: A factory closure that produces an object of the desired type when required.
-    public init(_ container: ManagedContainer, key: String = #function, scope: Scope? = nil, _ factory: @escaping () -> T) {
-        self.registration = FactoryRegistration<Void,T>(id: "\(container.self).\(key)", container: container, factory: factory, scope: scope)
+    public init(_ container: ManagedContainer, key: String = #function, _ factory: @escaping () -> T) {
+        self.registration = FactoryRegistration<Void,T>(id: "\(container.self).\(key)", container: container, factory: factory)
     }
 
     /// Evaluates the factory and returns an object or service of the desired type. The resolved instance may be brand new or Factory may
@@ -154,7 +161,7 @@ public struct Factory<T>: FactoryModifing {
 /// ```swift
 /// extension Container {
 ///     var parameterService: ParameterFactory<Int, MyServiceType> {
-///        unique { ParameterService(value: $0) }
+///        self { ParameterService(value: $0) }
 ///     }
 /// }
 /// ```
@@ -176,7 +183,7 @@ public struct Factory<T>: FactoryModifing {
 /// If you need to pass more than one parameter just use a tuple, dictionary, or struct.
 /// ```swift
 /// var tupleService: ParameterFactory<(Int, Int), MultipleParameterService> {
-///     unique { (a, b) in
+///     self { (a, b) in
 ///         MultipleParameterService(a: a, b: b)
 ///     }
 /// }
@@ -189,18 +196,16 @@ public struct ParameterFactory<P,T>: FactoryModifing {
     /// Public initializer creates a factory capable of taking parameters at runtime.
     /// ```swift
     /// var parameterService: ParameterFactory<Int, ParameterService> {
-    ///     unique { ParameterService(value: $0) }
+    ///     self { ParameterService(value: $0) }
     /// }
     /// ```
     /// - Parameters:
     ///   - container: The bound container that manages registrations and scope caching for this Factory. The scope helper functions bind the
     ///   current container as well defining the scope.
     ///   - key: Hidden value used to differentiate different instances of the same type in the same container.
-    ///   - scope: Defines the ``Scope`` used to manage instances of this dependency. Passing nil indicates no scope management is required and
-    ///   that a new instance should be returned each time this factory is resolved.
     ///   - factory: A factory closure that produces an object of the desired type when required.
-    public init(_ container: ManagedContainer, key: String = #function, scope: Scope? = nil, _ factory: @escaping (P) -> T) {
-        self.registration = FactoryRegistration<P,T>(id: "\(container.self).\(key)", container: container, factory: factory, scope: scope)
+    public init(_ container: ManagedContainer, key: String = #function, _ factory: @escaping (P) -> T) {
+        self.registration = FactoryRegistration<P,T>(id: "\(container.self).\(key)", container: container, factory: factory)
     }
 
     /// Resolves a factory capable of taking parameters at runtime.
@@ -251,66 +256,70 @@ public protocol FactoryModifing {
 
 extension FactoryModifing {
 
-//    /// Defines this Factory's dependency scope to be cached. See ``Scope/Cached-swift.class``.
-//    /// ```swift
-//    /// var service: Factory<ServiceType> {
-//    ///     factory { MyService() }
-//    ///         .cached
-//    /// }
-//    /// ```
-//    public var cached: Self {
-//        map { $0.registration.scope = .cached }
-//    }
-//    /// Defines this Factory's dependency scope to be graph. See ``Scope/Graph-swift.class``.
-//    /// ```swift
-//    /// var service: Factory<ServiceType> {
-//    ///     factory { MyService() }
-//    ///         .graph
-//    /// }
-//    /// ```
-//    public var graph: Self {
-//        map { $0.registration.scope = .graph }
-//    }
-//    /// Defines this Factory's dependency scope to be shared. See ``Scope/Graph-swift.class``.
-//    /// ```swift
-//    /// var service: Factory<ServiceType> {
-//    ///     factory { MyService() }
-//    ///         .shared
-//    /// }
-//    /// ```
-//    public var shared: Self {
-//        map { $0.registration.scope = .shared }
-//    }
-//    /// Defines this Factory's dependency scope to be singleton. See ``Scope/Singleton-swift.class``.
-//    /// ```swift
-//    /// var service: Factory<ServiceType> {
-//    ///     factory { MyService() }
-//    ///         .singleton
-//    /// }
-//    /// ```
-//    public var singleton: Self {
-//        map { $0.registration.scope = .singleton }
-//    }
-//    /// Explicitly defines unique scope. See ``Scope``.
-//    /// ```swift
-//    /// var service: Factory<ServiceType> {
-//    ///     factory { MyService() }
-//    /// }
-//    /// ```
-//    /// While you can add the modifier, Factory's are unique by default.
-//    public var unique: Self {
-//        map { $0.registration.scope = nil }
-//    }
-//    /// Defines a custom dependency scope for this Factory. See ``Scope``.
-//    /// ```swift
-//    /// var service: Factory<ServiceType> {
-//    ///     factory { MyService() }
-//    ///         .custom(scope: .session)
-//    /// }
-//    /// ```
-//    public func custom(scope: Scope?) -> Self {
-//        map { $0.registration.scope = scope }
-//    }
+    /// Defines a dependency scope for this Factory. See ``Scope``.
+    /// ```swift
+    /// var service: Factory<ServiceType> {
+    ///     self { MyService() }
+    ///         .scope(.session)
+    /// }
+    /// ```
+    public func scope(_ scope: Scope?) -> Self {
+        var mutable = self
+        mutable.registration.scope = scope
+        return mutable
+    }
+
+    /// Syntactic sugar defines this Factory's dependency scope to be cached. See ``Scope/Cached-swift.class``.
+    /// ```swift
+    /// var service: Factory<ServiceType> {
+    ///     factory { MyService() }
+    ///         .cached
+    /// }
+    /// ```
+    @inlinable public var cached: Self {
+        scope(.cached)
+    }
+    /// Syntactic sugar defines this Factory's dependency scope to be graph. See ``Scope/Graph-swift.class``.
+    /// ```swift
+    /// var service: Factory<ServiceType> {
+    ///     factory { MyService() }
+    ///         .graph
+    /// }
+    /// ```
+    @inlinable public var graph: Self {
+        scope(.graph)
+    }
+    /// Syntactic sugar defines this Factory's dependency scope to be shared. See ``Scope/Graph-swift.class``.
+    /// ```swift
+    /// var service: Factory<ServiceType> {
+    ///     self { MyService() }
+    ///         .shared
+    /// }
+    /// ```
+    @inlinable public var shared: Self {
+        scope(.shared)
+    }
+    /// Syntactic sugar defines this Factory's dependency scope to be singleton. See ``Scope/Singleton-swift.class``.
+    /// ```swift
+    /// var service: Factory<ServiceType> {
+    ///     self { MyService() }
+    ///         .singleton
+    /// }
+    /// ```
+    @inlinable public var singleton: Self {
+        scope(.singleton)
+    }
+    /// Syntactic sugar defines defines unique scope. See ``Scope``.
+    /// ```swift
+    /// var service: Factory<ServiceType> {
+    ///     self { MyService() }
+    ///         .unique
+    /// }
+    /// ```
+    /// While you can add the modifier, Factory's are unique by default.
+    @inlinable public var unique: Self {
+        scope(.none)
+    }
 
     /// Adds a factory specific decorator. The decorator will be *always* be called with the resolved dependency
     /// for further examination or manipulation.
@@ -318,7 +327,7 @@ extension FactoryModifing {
     /// This includes previously created items that may have been cached by a scope.
     /// ```swift
     /// var decoratedService: Factory<ParentChildService> {
-    ///    unique { ParentChildService() }
+    ///    self { ParentChildService() }
     ///        .decorated {
     ///            $0.child.parent = $0
     ///        }
@@ -354,7 +363,7 @@ extension FactoryModifing {
 /// ```swift
 /// extension Container {
 ///     var service: Factory<ServiceType> {
-///         unique { MyService() }
+///         self { MyService() }
 ///     }
 /// }
 /// ```
@@ -399,58 +408,15 @@ public protocol ManagedContainer: AnyObject {
 /// Defines the default factory helpers for containers
 extension ManagedContainer {
 
-    /// Makes a Factory with cached scope.
-    @inlinable public func cached<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
-        Factory(self, key: key, scope: .cached, factory)
-    }
-    /// Makes a Factory with graph scope.
-    @inlinable public func graph<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
-        Factory(self, key: key, scope: .graph, factory)
-    }
-    /// Makes a Factory with a custom scope.
-    @inlinable public func scope<T>(_ scope: Scope, key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
-        Factory(self, key: key, scope: scope, factory)
-    }
-    /// Makes a Factory with shared scope.
-    @inlinable public func shared<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
-        Factory(self, key: key, scope: .shared, factory)
-    }
-    /// Makes a Factory with singleton scope.
-    @inlinable public func singleton<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
-        Factory(self, key: key, scope: .singleton, factory)
-    }
-    /// Makes a Factory with unique scope.
-    @inlinable public func unique<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
-        Factory(self, key: key, scope: .none, factory)
-    }
-    /// Makes a ParameterFactory with cached scope.
-    @inlinable public func cached<P,T>(key: String = #function, _ parameterFactory: @escaping (P) -> T) -> ParameterFactory<P,T> {
-        ParameterFactory(self, key: key, scope: .cached, parameterFactory)
-    }
-    /// Makes a ParameterFactory with graph scope.
-    @inlinable public func graph<P,T>(key: String = #function, _ parameterFactory: @escaping (P) -> T) -> ParameterFactory<P,T> {
-        ParameterFactory(self, key: key, scope: .graph, parameterFactory)
-    }
-    /// Makes a ParameterFactory with a custom scope.
-    @inlinable public func scope<P,T>(_ scope: Scope, key: String = #function, _ parameterFactory: @escaping (P) -> T) -> ParameterFactory<P,T> {
-        ParameterFactory(self, key: key, scope:scope , parameterFactory)
-    }
-    /// Makes a ParameterFactory with shared scope.
-    @inlinable public func shared<P,T>(key: String = #function, _ parameterFactory: @escaping (P) -> T) -> ParameterFactory<P,T> {
-        ParameterFactory(self, key: key, scope: .shared, parameterFactory)
-    }
-    /// Makes a ParameterFactory with singleton scope.
-    @inlinable public func singleton<P,T>(key: String = #function, _ parameterFactory: @escaping (P) -> T) -> ParameterFactory<P,T> {
-        ParameterFactory(self, key: key, scope: .singleton, parameterFactory)
-    }
-    /// Makes a ParameterFactory with unique scope.
-    @inlinable public func unique<P,T>(key: String = #function, _ parameterFactory: @escaping (P) -> T) -> ParameterFactory<P,T> {
-        ParameterFactory(self, key: key, scope: .none, parameterFactory)
+    /// Syntactic sugar allows container to create a properly bound Factory.
+    @inlinable public func callAsFunction<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+        Factory(self, key: key, factory)
     }
 
-    //    @inlinable public func factory<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
-    //        Factory(self, key: key, factory)
-    //    }
+    /// Syntactic sugar allows container to create a properly bound ParameterFactory.
+    @inlinable public func callAsFunction<P,T>(key: String = #function, _ factory: @escaping (P) -> T) -> ParameterFactory<P,T> {
+        ParameterFactory(self, key: key, factory)
+    }
 
     /// Defines a decorator for the container. This decorator will see every dependency resolved by this container.
     public func decorator(_ decorator: ((Any) -> ())?) {
@@ -729,7 +695,8 @@ extension ContainerManager {
 /// ```swift
 /// extension Container {
 ///     var service: Factory<ServiceType> {
-///         singleton { MyService() }
+///         self { MyService() }
+///             .singleton
 ///     }
 /// }
 /// ```

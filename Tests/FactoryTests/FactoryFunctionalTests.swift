@@ -5,7 +5,7 @@ typealias OpenURLFunction = (_ url: URL) -> Bool
 
 extension Container {
     var openURL: Factory<OpenURLFunction> {
-        unique { { _ in false } }
+        self { { _ in false } }
     }
 }
 

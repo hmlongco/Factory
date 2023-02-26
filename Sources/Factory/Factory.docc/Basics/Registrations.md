@@ -8,7 +8,7 @@ Example of a basic dependency registration in a Factory 2.0 container.
 ```swift
 extension Container {
     var service: Factory<MyServiceType> {
-        unique { MyService() }
+        self { MyService() }
     }
 }
 ```
@@ -32,20 +32,24 @@ Examples of defining scoped services in a Factory 2.0 container.
 ```swift
 extension Container {
     var standardService: Factory<MyServiceType> {
-        unique { MyService() }
+        self { MyService() }
     }
     var cachedService: Factory<MyServiceType> {
-        cached { MyService() }
+        self { MyService() }
+            .cached
     }
     var singletonService: Factory<SimpleService> {
-        singleton { SimpleService() }
+        self { SimpleService() }
+            .singleton
     }
     var sharedService: Factory<MyServiceType> {
-        shared { MyService() }
+        self { MyService() }
+            .shared
             .decorator { print("DECORATING \($0.id)") }
     }
     var customScopedService: Factory<SimpleService> {
-        scope(.session) { SimpleService() }
+        self { SimpleService() }
+            .scope(.session)
     }
 }
 ```
@@ -56,10 +60,10 @@ Example of service with constructor injection that requires another service as a
 ```swift
 extension Container {
     var constructedService: Factory<MyConstructedService> {
-        unique { MyConstructedService(service: self.cachedService()) }
+        self { MyConstructedService(service: self.cachedService()) }
     }
     var cachedService: Factory<MyServiceType> {
-        cached { MyService() }
+        self { MyService() }.cached
     }
 }
 ```
@@ -69,7 +73,7 @@ Like it or not, some services require one or more parameters to be passed to the
 ```swift
 extension Container {
     var parameterService: ParameterFactory<Int, ParameterService> {
-        unique { ParameterService(value: $0) }
+        self { ParameterService(value: $0) }
     }
 }
 ```
@@ -81,16 +85,16 @@ Example of correctly handling multiple instances of the same type.
 ```swift
 extension Container {
     var string1: Factory<String> {
-        unique { "String 1" }
+        self { "String 1" }
     }
     var string2: Factory<String> {
-        unique { "String 2" }
+        self { "String 2" }
     }
     var string3: Factory<String> {
-        unique { "String 3" }
+        self { "String 3" }
     }
     var string4: Factory<String> {
-        unique { "String 4" }
+        self { "String 4" }
     }
 }
 ```
@@ -105,11 +109,11 @@ final class ServiceContainer: SharedContainer {
     
     // DEFINE FACTORY
     var service1: Factory<MyServiceType> {
-        unique { MyService() }
+        self { MyService() }
     }
 
     // DON'T DO THIS
-    lazy var service2: Factory<MyServiceType> = unique {
+    lazy var service2: Factory<MyServiceType> = self {
         MyService()
     }
 }
@@ -143,7 +147,7 @@ Better to simply define the Factory as a standard computed variable within a Con
 ```swift
 extension Container {
     var newSchool: Factory<School> {
-        unique { School() }
+        self { School() }
     }
 }
 

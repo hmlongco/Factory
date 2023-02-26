@@ -39,6 +39,6 @@ class ContainerDemoViewModel: ObservableObject {
 extension DemoContainer: MyCustomContainer {}
 
 extension Container {
-    var demoContainer: Factory<DemoContainer> { unique { DemoContainer.shared }}
-    var customContainer: Factory<MyCustomContainer> { unique { DemoContainer.shared }}
+    var demoContainer: Factory<DemoContainer> { self { DemoContainer.shared }}
+    var customContainer: Factory<MyCustomContainer> { self { DemoContainer.shared }}
 }

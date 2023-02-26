@@ -20,7 +20,7 @@ That's a lot of code, so we usually just ask the enclosing container to make our
 ```swift
 extension Container {
     var service: Factory<MyServiceType> {
-        unique { MyService() }
+        self { MyService() }
     }
 }
 ```
@@ -81,7 +81,7 @@ Note that you can extend SharedContainer with your own Factories.
 ```swift
 extension SharedContainer {
     var commonSerice: Factory<ServiceType> {
-        unique { MyService() }
+        self { MyService() }
     }
 }
 ```
@@ -104,7 +104,7 @@ public final class MyContainer: SharedContainer {
 
 extension MyContainer {
     var cachedService: Factory<ServiceType> {
-        unique { MyService() }.cached
+        self { MyService() }.cached
     }
 }
 ```
@@ -115,7 +115,7 @@ Don't forget that if need be you can reach across containers simply by specifyin
 ```swift
 extension PaymentsContainer {
     let anotherService = Factory<AnotherService> { 
-        unique { AnotherService(using: Container.shared.optionalService()) }
+        self { AnotherService(using: Container.shared.optionalService()) }
     }
 }
 ```

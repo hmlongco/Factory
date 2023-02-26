@@ -90,20 +90,23 @@ Unlike Factory 1.0 which maintained a global store, each Factory 2.0 container s
 
 ## Convenience
 
-While the formal definition does the trick, most of the time it's easier to just ask the container to make our Factory for us.
+While the formal definition does the trick, most of the time it's easier to use some syntactic sugar and just ask the container to make our Factory for us.
 
 ```swift
 extension Container {
     var myService: Factory<MyServiceType> {
-        unique { MyService() }
+        self { MyService() }
     }
 }
 ```
-Factory containers provide quite a few convenience functions like this which can create your factory for you while at the same time letting you specify the required scope. 
+
+## Scopes
+Factory scopes work just as they did before, only now they're defined using a SwiftUI-like modifier syntax. 
 ```swift
 extension Container {
     var myService: Factory<MyServiceType> {
-        singleton { MyService() }
+        self { MyService() }
+            .singleton
     }
 }
 ```
