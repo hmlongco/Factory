@@ -278,6 +278,8 @@ If you started with Factory 1.x a [migration document is available here](https:/
 * Factory 2.0 adds container-based scopes
 * Factory 2.0 adds decorators to containers and factories
 * Factory 2.0 adds debug trace support
+* Factory 2.0 adds keyPath-based property wrappers
+* Factory 2.0 adds a new InjectedObject property wrapper for SwiftUI Views
 
 ## Discussion Forum
 

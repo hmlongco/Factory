@@ -7,6 +7,8 @@
 * Adds decorators to containers and factories
 * Adds debug trace support
 * Adds ability to specify scope during dependency assembly and registration
+* Adds keyPath-based property wrappers
+* Adds a new InjectedObject property wrapper for SwiftUI Views
 * Fixes ciricular dependency check when same class name used in seprate modules.
 
 ### 1.3.5
