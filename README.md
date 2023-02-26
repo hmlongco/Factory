@@ -58,7 +58,7 @@ extension Container {
 }
 ```
 
-Just for reference, here's are the Factory 1.x and 2.0 registration definitions side by side.
+Just for reference, here are the Factory 1.x and 2.0 registration definitions side by side.
 
 ```swift
 extension Container {
@@ -118,9 +118,14 @@ Scopes behave as they did before, although they're now defined using a modifier 
 
 ```swift
 extension Container {
-    var sharedService: Factory<ServiceType> {
+    var uniqueService: Factory<ServiceType> {
         // Returns a Factory whose scope is unique.
         self { MyService() }
+    }
+    var singletonService: Factory<ServiceType> {
+        // Returns a Factory whose scope is singleton.
+        self { MyService() }
+            .singleton
     }
     var decoratedSharedService: Factory<MyServiceType> {
         // Returns a Factory whose scope is shared.
