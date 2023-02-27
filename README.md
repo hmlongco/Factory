@@ -31,7 +31,7 @@ extension Container {
     }
 }
 ```
-Unlike Resolver which often requires defining a plethora of nested registration functions, or SwiftUI, where defining a new environment variable requires creating a new EnvironmentKey and adding additional getters and setters, here we simply add a new `Factory` to the default container. When called, the factory closure is evaluated and returns an instance of our dependency. That's it.
+Unlike Resolver which often requires defining a plethora of nested registration functions, or SwiftUI, where defining a new environment variable requires creating a new EnvironmentKey and adding additional getters and setters, here we simply add a new `Factory` computed variable to the default container. When called, the internal factory closure is evaluated and returns an instance of our dependency. That's it.
 
 Injecting and using the service where needed is equally straightforward. Here's just one of the many ways Factory can be used.
 
@@ -110,7 +110,7 @@ class ContentViewModel: ObservableObject {
     }
 }
 ```
-Or if you want to use a Composition Root pattern, just use the container to provide the required dependencies to a constructor.
+Or if you want to use a Composition Root structure, just use the container to provide the required dependencies to a constructor.
 
 ```swift
 extension Container {
@@ -235,13 +235,17 @@ This can be done in Factory just by adding a scope modifer.
 
 ```swift
 extension Container {
+    var networkService = Factory<NetworkProviding> { 
+        self { NetworkProvider() }
+            .singleton
+    }
     var myService = Factory<MyServiceType> { 
         self { MyService() }
-            .singleton
+            .scope(.session)
     }
 }
 ```
-Now whenever someone requests an instance of `myService` they'll get the same instance of the object as everyone else.
+Now whenever someone requests an instance of `networkService` they'll get the same instance of the object as everyone else.
 
 Note that the client neither knows nor cares about the scope. Nor should it. The client is simply given what it needs when it needs it. 
 
