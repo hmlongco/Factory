@@ -94,7 +94,9 @@ struct FactoryDemoApp: App {
 }
 
 ```
-Factory is flexible. See [Resolutions](https://hmlongco.github.io/Factory/documentation/factory/resolutions) for more examples.
+Factory is flexible, and it doesn't tie you down to a specific dependency injection pattern or technique.
+
+See [Resolutions](https://hmlongco.github.io/Factory/documentation/factory/resolutions) for more examples.
 
 ## Mocking
 
@@ -214,9 +216,13 @@ Other common scopes are `cached` and `shared`. Cached items are persisted until 
 
 Factory has other scope types, plus the ability to define your own. See [Scopes](https://hmlongco.github.io/Factory/documentation/factory/scopes) for additonal examples.
 
+Scopes and scope management are powerful tools to have in your dependency injection arsenal.
+
 ## Debugging
 
-When running in DEBUG mode Factory allows you to trace the injection process and see every object created or returned during a given resolution cycle.
+Factory can also help you debug, mock, and test your code.
+
+For example, when running in DEBUG mode Factory allows you to trace the injection process and see every object created or returned during a given resolution cycle.
 ```
 0: Factory.Container.cycleDemo = CycleDemo N:105553131389696
 1:     Factory.Container.aService = AServiceType N:105553119821680
@@ -225,6 +231,8 @@ When running in DEBUG mode Factory allows you to trace the injection process and
 1:     Factory.Container.bService = BServiceType N:105553119821680
 2:         Factory.Container.implementsAB = AServiceType & BServiceType C:105553119821680
 ```
+This can make it a lot easier to see the entire dependency tree for a given object or service.
+
 See [Debugging](https://hmlongco.github.io/Factory/documentation/factory/debugging) for more on this and other features.
 
 ## Documentation
