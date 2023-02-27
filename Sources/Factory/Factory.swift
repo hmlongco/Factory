@@ -470,6 +470,7 @@ public class ContainerManager {
     /// Public variable exposing dependency chain test maximum
     public var dependencyChainTestMax: Int = 10
 
+    #if DEBUG
     /// Public var enabling factory resolution trace statements in debug mode for ALL containers.
     public var trace: Bool {
         get { globalTraceFlag }
@@ -481,6 +482,7 @@ public class ContainerManager {
         get { globalLogger }
         set { globalLogger = newValue }
     }
+    #endif
 
     /// Internal closure decorates all factory resolutions for this container.
     internal var decorator: ((Any) -> ())?
