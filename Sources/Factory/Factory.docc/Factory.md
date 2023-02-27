@@ -27,7 +27,6 @@ Ready to get started?
 - <doc:GettingStarted>
 - <doc:Containers>
 - <doc:Scopes>
-- <doc:Migration>
 
 ### Development and Testing
 
@@ -42,3 +41,8 @@ Ready to get started?
 - <doc:Cycle>
 - <doc:Optionals>
 - <doc:Functional>
+
+### Addtional Topics
+
+- <doc:Competition>
+- <doc:Migration>
