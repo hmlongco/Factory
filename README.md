@@ -32,7 +32,7 @@ extension Container {
 }
 ```
 
-Unlike Resolver which often requires defining a plethora of nested registration functions, or SwiftUI, where defining a new environment variable requires creating a new EnvironmentKey and adding additional getters and setters, here we simply add a new `Factory` computed variable to the default container. When called, the internal factory closure is evaluated and returns an instance of our dependency. That's it.
+Unlike Resolver which often requires defining a plethora of nested registration functions, or SwiftUI, where defining a new environment variable requires creating a new EnvironmentKey and adding additional getters and setters, here we simply add a new `Factory` computed variable to the default container. When called, the internal Factory's closure is evaluated and returns an instance of our dependency. That's it.
 
 Injecting and using the service where needed is equally straightforward. Here's just one of the many ways Factory can be used.
 
@@ -221,16 +221,19 @@ Scopes and scope management are powerful tools to have in your dependency inject
 
 ## Simplified Syntax
 
-You may have noticed in the previous example that that Factory also provides a bit of syntactical sugar that lets us shorten our definition. We simply ask the enclosing container to make a properly bound Factory for us using a `callAsFunction` function on `self`.
+You may have noticed in the previous example that Factory also provides a bit of syntactical sugar that lets us shorten our definition. We simply ask the enclosing container to make a properly bound Factory for us using a `callAsFunction` function on `self`.
 
 ```swift
 extension Container {
-    var myService = Factory<MyServiceType> { 
+    var sugaredService = Factory<MyServiceType> { 
         self { MyService() }
+    }
+    var formalService = Factory<MyServiceType> { 
+        Factory(self) { MyService() }
     }
 }
 ```
-Both definitions provide the same exact result. The sugared function is even inlined, so there's no performance difference between the two versions.
+Both definitions provide the same exact result. The sugared function is even inlined, so there's not even a performance difference between the two versions.
 
 ## Debugging
 
