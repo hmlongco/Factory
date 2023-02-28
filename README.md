@@ -27,10 +27,11 @@ Most container-based dependency injection systems require you to define in some 
 ```swift
 extension Container {
     var myService = Factory<MyServiceType> { 
-        self { MyService() }
+        Factory(self) { MyService() }
     }
 }
 ```
+
 Unlike Resolver which often requires defining a plethora of nested registration functions, or SwiftUI, where defining a new environment variable requires creating a new EnvironmentKey and adding additional getters and setters, here we simply add a new `Factory` computed variable to the default container. When called, the internal factory closure is evaluated and returns an instance of our dependency. That's it.
 
 Injecting and using the service where needed is equally straightforward. Here's just one of the many ways Factory can be used.
@@ -74,10 +75,10 @@ Or if you want to use a Composition Root structure, just use the container to pr
 ```swift
 extension Container {
     var myRepository: Factory<MyRepositoryType> {
-        self { MyRepository(service: self.networkService()) }
+        Factory(self) { MyRepository(service: self.networkService()) }
     }
     var networkService: Factory<Networking> {
-        self { MyNetworkService() }
+        Factory(self) { MyNetworkService() }
     }
 }
 
@@ -218,9 +219,22 @@ Factory has other scope types, plus the ability to define your own. See [Scopes]
 
 Scopes and scope management are powerful tools to have in your dependency injection arsenal.
 
+## Simplified Syntax
+
+You may have noticed in the previous example that that Factory also provides a bit of syntactical sugar that lets us shorten our definition. We simply ask the enclosing container to make a properly bound Factory for us using a `callAsFunction` function on `self`.
+
+```swift
+extension Container {
+    var myService = Factory<MyServiceType> { 
+        self { MyService() }
+    }
+}
+```
+Both definitions provide the same exact result. The sugared function is even inlined, so there's no performance difference between the two versions.
+
 ## Debugging
 
-Factory can also help you debug, mock, and test your code.
+Factory can also help you debug your code.
 
 For example, when running in DEBUG mode Factory allows you to trace the injection process and see every object created or returned during a given resolution cycle.
 ```
