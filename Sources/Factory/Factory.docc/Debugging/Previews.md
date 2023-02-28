@@ -20,15 +20,9 @@ class ContentView: ObservableObject {
 ```
 Keep in mind that if you assign to an `ObservedObject` your Factory is responsible for managing the object's lifecycle (see the section on Scopes above).
 
-Unlike Resolver, Factory doesn't have an @InjectedObject property wrapper. There are [a few reasons for this](https://github.com/hmlongco/Factory/issues/15), but for now doing your own assignment to `StateObject` or `ObservedObject` is the preferred approach. 
-
-That said, at this point in time I feel that we should probably avoid using Factory to create the view model in the first place.  It's usually unnecessary, [you really can't use protocols with view models anyway](https://betterprogramming.pub/swiftui-view-models-are-not-protocols-8c415c0325b1), and for the most part Factory's really designed to provide the VM and other services with the dependencies that *they* need. 
-
-Especially since those services have no access to the environment.
-
 ## SwiftUI Previews
 
-With that in mind, here's an example of updating a view model's service dependency in order to setup a particular state for  preview.
+Here's an example of updating a view model's service dependency in order to setup a particular state for  preview.
 
 ```swift
 class ContentView: ObservableObject {
@@ -68,6 +62,68 @@ struct ContentView_Previews: PreviewProvider {
     }
 }
 ```
+
+## InjectedObject
+
+Should you prefer, you can also use ``InjectedObject``, an immediate injection property wrapper for SwiftUI ObservableObjects.
+
+This wrapper is meant for use in SwiftUI Views and exposes bindable objects similar to that of SwiftUI @StateObject
+and @EnvironmentObject.
+
+Like the other Injected property wrappers, InjectedObject wraps obtains the dependency from the Factory keypath
+and provides it to a wrapped instance of StateObject. 
+```swift
+struct ContentView: View {
+    @InjectedObject(\.contentViewModel) var model
+    var body: some View {
+        ...
+    }
+}
+```
+ContentViewModel must, of course, be of type ObservableObject and is registered like any other service
+or dependency.
+```swift
+extension Container {
+    var contentViewModel: Factory<ContentViewModel> {
+        self { ContentViewModel() }
+    }
+}
+```
+As with StateObject and ObservedObject, updating the object's state will trigger a view update.
+
+InjectedObject is also handy when...
+
+1. You have a service that could be comsumed from a view or a view model.
+2. You have view model dependencies that depend on the Graph scope and you need the view model to be the graph's root. See <doc:Scopes> for more details on graph.
+
+## InjectedObject Previews
+
+Single previews work exactly the same.
+```swift
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        let _ = Container.myService.register { MockServiceN(4) }
+        ContentView()
+    }
+}
+```
+But due a bug in how Swift manages property wrappers with built in initializers, doing mutlitple previews is just a little different than shown earlier.
+```swift
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        Group {
+            let _ = Container.shared.myServiceType.register { MockServiceN(44) }
+            let model1 = ContentViewModel()
+            ContentView(model: InjectedObject(model1))
+            
+            let _ = Container.shared.myServiceType.register { MockServiceN(88) }
+            let model2 = ContentViewModel()
+            ContentView(model: InjectedObject(model2))
+        }
+    }
+}
+```
+Instead of passing the model to the view directly, one creates the `InjectedObject(model1)` pair and passes that.
 
 ## Common Setup
 

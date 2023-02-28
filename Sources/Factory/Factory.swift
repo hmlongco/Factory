@@ -1085,9 +1085,25 @@ public protocol AutoRegistering {
 /// This wrapper is meant for use in SwiftUI Views and exposes bindable objects similar to that of SwiftUI @StateObject
 /// and @EnvironmentObject.
 ///
-/// InjectedObject wraps obtains the dependency from the Factory keypath and provides it to a wrapped instance of StateObject.
-///
-/// Dependent service must be of type ObservableObject. Updating object state will trigger view update.
+/// Like the other Injected property wrappers, InjectedObject wraps obtains the dependency from the Factory keypath
+/// and provides it to a wrapped instance of StateObject. Updating object state will trigger view update.
+/// ```swift
+/// struct ContentView: View {
+///     @InjectedObject(\.contentViewModel) var model
+///     var body: some View {
+///         ...
+///     }
+/// }
+/// ```
+/// ContentViewModel must, of course, be of type ObservableObject and is registered like any other service
+/// or dependency.
+/// ```swift
+/// extension Container {
+///     var contentViewModel: Factory<ContentViewModel> {
+///         self { ContentViewModel() }
+///     }
+/// }
+/// ```
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
 @frozen @propertyWrapper public struct InjectedObject<T>: DynamicProperty where T: ObservableObject {
     @StateObject fileprivate var dependency: T
