@@ -22,11 +22,11 @@ Sound too good to be true? Let's take a look.
  
 Most container-based dependency injection systems require you to define in some way that a given service type is available for injection and many require some sort of factory or mechanism that will provide a new instance of the service when needed.
  
- Factory is no exception. Here's a simple dependency registration.
+ Factory is no exception. Here's a simple dependency registration that returns a service that conforms to `MyServiceType`.
  
 ```swift
 extension Container {
-    var myService = Factory<MyServiceType> { 
+    var myService: Factory<MyServiceType> { 
         Factory(self) { MyService() }
     }
 }
@@ -44,7 +44,7 @@ class ContentViewModel: ObservableObject {
 ```
 Here this particular view model uses one of Factory's `@Injected` property wrappers to request the desired dependency. Similar to `@Environment` in SwiftUI, we provide the property wrapper with a keyPath to a factory of the desired type and it resolves that type the moment `ContentViewModel` is created.
 
-And that's the core mechanism. In order to use the property wrapper you *must* define a factory. That factory *must* return the desired type when asked. Fail to do either one and the code will simply not compile. As such, Factory is compile-time safe.
+And that's the core mechanism. In order to use the property wrapper you *must* define a factory within the specified container. That factory *must* return the desired type when asked. Fail to do either one and the code will simply not compile. As such, Factory is compile-time safe.
 
 By the way, if you're concerned about building Factory's on the fly, don't be. Like SwftUI Views, Factory structs and modifiers are lightweight and transitory value types. They're created when needed and then immediately discarded once their purpose has been served.
 
@@ -199,11 +199,11 @@ This can be done in Factory just by adding a scope modifer.
 
 ```swift
 extension Container {
-    var networkService = Factory<NetworkProviding> { 
+    var networkService: Factory<NetworkProviding> { 
         self { NetworkProvider() }
             .singleton
     }
-    var myService = Factory<MyServiceType> { 
+    var myService: Factory<MyServiceType> { 
         self { MyService() }
             .scope(.session)
     }
@@ -227,10 +227,10 @@ You may have noticed in the previous example that Factory also provides a bit of
 
 ```swift
 extension Container {
-    var sugared = Factory<MyServiceType> { 
+    var sugared: Factory<MyServiceType> { 
         self { MyService() }
     }
-    var formal = Factory<MyServiceType> { 
+    var formal: Factory<MyServiceType> { 
         Factory(self) { MyService() }
     }
 }

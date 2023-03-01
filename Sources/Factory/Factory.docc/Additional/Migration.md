@@ -140,18 +140,6 @@ extension Container {
 }
 ```
 Factory 2.0 also provides addtional modifiers for all of the known scoped, as well as a few more like the per-factory decorator shown above.
-```swift
-extension Container {
-    // Factory 1.0 version
-    static var singletonService = Factory(scope: .singleton)<ServiceType> {
-        MyService()
-    }
-    // Factory 1.0 version
-    static var decoratedSharedService = Factory(scope: .shared)<MyServiceType> {
-        MyService()
-    }
-}
-```
 
 ## Resetting
 
