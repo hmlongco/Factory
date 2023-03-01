@@ -46,6 +46,8 @@ Here this particular view model uses one of Factory's `@Injected` property wrapp
 
 And that's the core mechanism. In order to use the property wrapper you *must* define a factory. That factory *must* return the desired type when asked. Fail to do either one and the code will simply not compile. As such, Factory is compile-time safe.
 
+By the way, if you're concerned about building Factory's on the fly, don't be. Like SwftUI Views, Factory structs and modifiers are lightweight and transitory value types. They're created when needed and then immediately discarded once their purpose has been served.
+
 For more examples of Factory definitions that define scopes, use constructor injection, and do parameter passing, see the [Registrations](https://hmlongco.github.io/Factory/documentation/factory/registrations) page.
 
 ## Resolving Factories
@@ -225,10 +227,10 @@ You may have noticed in the previous example that Factory also provides a bit of
 
 ```swift
 extension Container {
-    var sugaredService = Factory<MyServiceType> { 
+    var sugared = Factory<MyServiceType> { 
         self { MyService() }
     }
-    var formalService = Factory<MyServiceType> { 
+    var formal = Factory<MyServiceType> { 
         Factory(self) { MyService() }
     }
 }
