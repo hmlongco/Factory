@@ -33,9 +33,9 @@ extension Container {
 }
 ```
 
-Unlike Resolver which often requires defining a plethora of nested registration functions, or SwiftUI, where defining a new environment variable requires creating a new EnvironmentKey and adding additional getters and setters, here we simply add a new `Factory` computed variable to the default container. When called, the internal Factory's closure is evaluated and returns an instance of our dependency. That's it.
+Unlike Resolver which often requires defining a plethora of nested registration functions, or SwiftUI, where defining a new environment variable requires creating a new EnvironmentKey and adding additional getters and setters, here we simply add a new `Factory` computed variable to the default container. When it's called our Factory is created, its closure is evaluated, and we get an instance of our dependency when we need it. 
 
-Injecting and using the service where needed is equally straightforward. Here's just one of the many ways Factory can be used.
+Injecting an instance of our service is equally straightforward. Here's just one of the many ways Factory can be used.
 
 ```swift
 class ContentViewModel: ObservableObject {
@@ -47,7 +47,7 @@ Here this particular view model uses one of Factory's `@Injected` property wrapp
 
 And that's the core mechanism. In order to use the property wrapper you *must* define a factory within the specified container. That factory *must* return the desired type when asked. Fail to do either one and the code will simply not compile. As such, Factory is compile-time safe.
 
-By the way, if you're concerned about building Factory's on the fly, don't be. Like SwftUI Views, Factory structs and modifiers are lightweight and transitory value types. They're created inside computed variables only when they're needed and then immediately discarded once their purpose has been served.
+By the way, if you're concerned about building Factory's on the fly, don't be. Like SwftUI Views, Factory structs and modifiers are lightweight and transitory value types. They're created inside computed variables **only** when they're needed and then immediately discarded once their purpose has been served.
 
 For more examples of Factory definitions that define scopes, use constructor injection, and do parameter passing, see the [Registrations](https://hmlongco.github.io/Factory/documentation/factory/registrations) page.
 
@@ -62,9 +62,9 @@ class ContentViewModel: ObservableObject {
     ...
 }
 ```
-Just call the desired specific factory as a function and you'll get an instance of its managed dependency. It's that simple.
+Just call the desired factory as a function and you'll get an instance of its managed dependency. It's that simple.
 
-If  you're into container-based dependency injection, note that you can also pass an instance of a container to a view model and obtain an instance of your service directly from that container.
+If you're into container-based dependency injection, note that you can also pass an instance of a container to a view model and obtain an instance of your service directly from that container.
 ```swift
 class ContentViewModel: ObservableObject {
     let service: MyServiceType
