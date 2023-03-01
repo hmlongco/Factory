@@ -223,7 +223,7 @@ Scopes and scope management are powerful tools to have in your dependency inject
 
 ## Simplified Syntax
 
-You may have noticed in the previous example that Factory also provides a bit of syntactical sugar that lets us shorten our definition. We simply ask the enclosing container to make a properly bound Factory for us using a `callAsFunction` function on `self`.
+You may have noticed in the previous example that Factory also provides a bit of syntactical sugar that lets us make our definitions more concise. We simply ask the enclosing container to make a properly bound Factory for us using `self.callAsFunction { ... }`.
 
 ```swift
 extension Container {
