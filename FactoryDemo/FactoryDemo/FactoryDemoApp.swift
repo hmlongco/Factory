@@ -11,11 +11,13 @@ import Factory
 @main
 struct FactoryDemoApp: App {
     var body: some Scene {
-        let _ = SharedContainer.setupMocks()
+        let _ = Container.shared.setupMocks()
+        let _ = ServiceContainer.test()
         WindowGroup {
             NavigationView {
                 ContentView()
             }
+            .environmentObject(DemoContainer.shared)
             .navigationViewStyle(StackNavigationViewStyle())
         }
     }

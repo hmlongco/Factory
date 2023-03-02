@@ -11,71 +11,146 @@ import Common
 import SwiftUI
 
 extension Container {
-    static let simpleService = Factory { SimpleService() }
+
+    var simpleService: Factory<SimpleService> {
+        Factory(self) { SimpleService() }
+    }
+
+    var simpleService2: Factory<SimpleService> {
+        .init(self) { SimpleService() }
+    }
+
+    var simpleService3: Factory<SimpleService> {
+        self { SimpleService() }
+    }
+
+    var simpleService4: Factory<SimpleService> {
+        self { SimpleService() }.singleton
+    }
+
 }
 
 extension Container {
-    static let contentViewModel = Factory { ContentModuleViewModel() }
+    var contentViewModel: Factory<ContentViewModel> { self { ContentViewModel() } }
 }
 
 extension SharedContainer {
-    static let myServiceType = Factory<MyServiceType> { MyService() }
-    static let sharedService = Factory<MyServiceType>(scope: .shared) { MyService() }
+    var myServiceType: Factory<MyServiceType> { self { MyService() } }
+    var sharedService: Factory<MyServiceType> { self { MyService() }.shared }
 }
 
-class OrderContainer: SharedContainer {
-    static let optionalService = Factory<SimpleService?> { nil }
-    static let constructedService = Factory { MyConstructedService(service: myServiceType()) }
-    static let additionalService = Factory(scope: .session) { SimpleService() }
+final class DemoContainer: ObservableObject, SharedContainer {
+    static var shared = DemoContainer()
+
+    var optionalService: Factory<SimpleService?> { self { nil } }
+
+    var constructedService: Factory<MyConstructedService> {
+        self {
+            MyConstructedService(service: self.myServiceType())
+        }
+    }
+
+    var additionalService: Factory<SimpleService> {
+        self { SimpleService() }
+            .scope(.session)
+    }
+
+    var manager = ContainerManager()
 }
 
-extension OrderContainer {
-    static func argumentService(count: Int) -> Factory<ParameterService> {
-        Factory { ParameterService(count: count) }
+extension DemoContainer {
+    var argumentService: ParameterFactory<Int, ParameterService> {
+        self { count in ParameterService(count: count) }
     }
 }
 
-extension SharedContainer.Scope {
+extension DemoContainer {
+    var selfService: Factory<MyServiceType> {
+        self { MyService() }
+    }
+}
+
+#if DEBUG
+extension DemoContainer {
+    static var mock1: DemoContainer {
+        shared.myServiceType.register { ParameterService(count: 3) }
+        return shared
+    }
+}
+#endif
+
+extension Scope {
     static var session = Cached()
 }
 
-extension SharedContainer {
-    static func setupMocks() {
+extension Container {
+    func setupMocks() {
         myServiceType.register { MockServiceN(4) }
 
-        OrderContainer.optionalService.register { SimpleService() }
+        DemoContainer.shared.optionalService.register { SimpleService() }
 
-#if DEBUG
-        Decorator.decorate = {
-            print("FACTORY: \(type(of: $0)) (\(Int(bitPattern: ObjectIdentifier($0 as AnyObject))))")
-        }
-#endif
     }
 }
 
 // implements
 
-public protocol AServiceType {
+class CycleDemo {
+    @Injected(\.aService) var aService: AServiceType
+    @Injected(\.bService) var bService: BServiceType
+}
+
+public protocol AServiceType: AnyObject {
+    var id: UUID { get }
+}
+
+public protocol BServiceType: AnyObject {
     func text() -> String
 }
 
-public protocol BServiceType {
-    func text() -> String
-}
-
-class Multiple: AServiceType, BServiceType {
+class ImplementsAB: AServiceType, BServiceType {
+    @Injected(\.networkService) var networkService
+    var id: UUID = UUID()
     func text() -> String {
-        return "Multiple"
+        "Multiple"
     }
 }
 
-extension Container {
-    private static var multiple = Factory<AServiceType&BServiceType> { Multiple() }
-    static var aService = Factory<AServiceType> { multiple() }
-    static var bService = Factory<BServiceType> { multiple() }
+class NetworkService {
+    @LazyInjected(\.preferences) var preferences
+    func load() {}
 }
 
-class MultipleDemo {
-    var aService: AServiceType = Container.aService()
-    var bService: BServiceType = Container.bService()
+class Preferences {
+    func load() {}
 }
+
+extension Container {
+    var cycleDemo: Factory<CycleDemo> {
+        self { CycleDemo() }
+    }
+    var aService: Factory<AServiceType> {
+        self { self.implementsAB() }
+    }
+    var bService: Factory<BServiceType> {
+        self { self.implementsAB() }
+    }
+    var networkService: Factory<NetworkService> {
+        self { NetworkService() }
+    }
+    var preferences: Factory<Preferences> {
+        self { Preferences() }
+    }
+    private var implementsAB: Factory<AServiceType&BServiceType> {
+        self { ImplementsAB() }
+            .scope(.graph)
+    }
+}
+
+extension SharedContainer {
+//    @inlinable public func scope<T>(_ scope: Scope?, key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+//        Factory(self, key: key, factory).custom(scope: scope)
+//    }
+//
+//    var someOtherService: Factory<MyServiceType> { scope(.shared) { MyService() } }
+}
+

@@ -3,8 +3,6 @@ import XCTest
 
 final class FactoryMultithreadingTests: XCTestCase {
 
-    let container = MultiThreadedContainer()
-
     let qa = DispatchQueue(label: "A", qos: .userInteractive, attributes: .concurrent)
     let qb = DispatchQueue(label: "B", qos: .userInitiated, attributes: .concurrent)
     let qc = DispatchQueue(label: "C", qos: .background, attributes: .concurrent)
@@ -12,8 +10,7 @@ final class FactoryMultithreadingTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        Container.Registrations.reset()
-        Container.Scope.reset()
+        MultiThreadedContainer.shared = MultiThreadedContainer()
     }
 
     func testMultiThreading() throws {
@@ -27,46 +24,46 @@ final class FactoryMultithreadingTests: XCTestCase {
 
         for _ in 0...10000 {
             qa.async {
-               MultiThreadedContainer.a.register { A(b: MultiThreadedContainer.b()) }
+                MultiThreadedContainer.shared.a.register { A(b: MultiThreadedContainer.shared.b()) }
             }
             qa.async {
                 self.qc.async {
-                    MultiThreadedContainer.b.register { B(c: MultiThreadedContainer.c()) }
+                    MultiThreadedContainer.shared.b.register { B(c: MultiThreadedContainer.shared.c()) }
                 }
                 self.qd.async {
-                    let b: B = MultiThreadedContainer.b()
+                    let b: B = MultiThreadedContainer.shared.b()
                     b.test()
                 }
             }
             qc.async {
-                MultiThreadedContainer.b.register { B(c: MultiThreadedContainer.c()) }
+                MultiThreadedContainer.shared.b.register { B(c: MultiThreadedContainer.shared.c()) }
             }
             qd.async {
-                let b: B = MultiThreadedContainer.b()
+                let b: B = MultiThreadedContainer.shared.b()
                 b.test()
             }
             qa.async {
-                let a: A = MultiThreadedContainer.a()
+                let a: A = MultiThreadedContainer.shared.a()
                 a.test()
             }
             qb.async {
-                let b: B = MultiThreadedContainer.b()
+                let b: B = MultiThreadedContainer.shared.b()
                 b.test()
             }
             qb.async {
-                let d: D = MultiThreadedContainer.d()
+                let d: D = MultiThreadedContainer.shared.d()
                 d.test()
             }
             qc.async {
-                let b: B = MultiThreadedContainer.b()
+                let b: B = MultiThreadedContainer.shared.b()
                 b.test()
             }
             qc.async {
                 self.qd.async {
-                    MultiThreadedContainer.e.register { E() }
+                    MultiThreadedContainer.shared.e.register { E() }
                 }
                 self.qd.async {
-                    let e: E = MultiThreadedContainer.e()
+                    let e: E = MultiThreadedContainer.shared.e()
                     e.test()
                 }
             }
@@ -80,7 +77,7 @@ final class FactoryMultithreadingTests: XCTestCase {
         wait(for: [expA, expB, expC, expD], timeout: 20)
 
         // threads not quite done yet
-        
+
         while interationValue() < 80008 {
             Thread.sleep(forTimeInterval: 0.2)
         }
@@ -145,7 +142,7 @@ fileprivate class D {
 }
 
 fileprivate class E {
-    @LazyInjected(MultiThreadedContainer.d) var d: D
+    @LazyInjected(\MultiThreadedContainer.d) var d: D
     init() {}
     func test() {
         d.test()
@@ -153,12 +150,14 @@ fileprivate class E {
     }
 }
 
-class MultiThreadedContainer: SharedContainer {
-    fileprivate static var a = Factory<A> { A(b: b()) }
-    fileprivate static var b = Factory<B> { B(c: c()) }
-    fileprivate static var c = Factory<C> { C(d: d()) }
-    fileprivate static var d = Factory<D>(scope: .cached) { D() }
-    fileprivate static var e = Factory<E> { E() }
+fileprivate final class MultiThreadedContainer: SharedContainer {
+    fileprivate static var shared = MultiThreadedContainer()
+    fileprivate var a: Factory<A> { self { A(b: self.b()) } }
+    fileprivate var b: Factory<B> { self { B(c: self.c()) } }
+    fileprivate var c: Factory<C> { self { C(d: self.d()) } }
+    fileprivate var d: Factory<D> { self { D() }.cached }
+    fileprivate var e: Factory<E> { self { E() } }
+    var manager = ContainerManager()
 }
 
 extension XCTestCase {

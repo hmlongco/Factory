@@ -10,7 +10,7 @@ import Factory
 
 struct ContentView: View {
 
-    @StateObject var model = ContentModuleViewModel()
+    @InjectedObject(\.contentViewModel) var model: ContentViewModel
 
     var body: some View {
         VStack(spacing: 20) {
@@ -25,6 +25,7 @@ struct ContentView: View {
             Button("Trigger Circular Dependency Crash") {
                 Container.testCircularDependencies()
             }
+            ContainerDemoView()
         }
         .padding()
     }
@@ -33,14 +34,24 @@ struct ContentView: View {
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        Group {
-            let _ = Container.myServiceType.register { MockServiceN(4) }
-            let model1 = ContentModuleViewModel()
-            ContentView(model: model1)
-
-            let _ = Container.myServiceType.register { MockServiceN(8) }
-            let model2 = ContentModuleViewModel()
-            ContentView(model: model2)
-        }
+        let _ = Container.shared.myServiceType.register { MockServiceN(6) }
+        ContentView()
     }
 }
+
+// Illustrates multiple
+//struct ContentView_Previews2: PreviewProvider {
+//    static var previews: some View {
+//        Group {
+//            let _ = Container.shared.myServiceType.register { MockServiceN(44) }
+//            let model1 = ContentViewModel()
+//            ContentView(model: InjectedObject(model1))
+//
+//            let _ = Container.shared.myServiceType.register { MockServiceN(88) }
+//            let model2 = ContentViewModel()
+//            ContentView(model: InjectedObject(model2))
+//        }
+//    }
+//}
+
+

@@ -27,8 +27,8 @@ struct AccountLoader: AccountLoading {
 }
 
 extension Container {
-    static let accountLoader = Factory<AccountLoading> {
-        AccountLoader()
+    var accountLoader: Factory<AccountLoading> {
+        self { AccountLoader() }
     }
 }
 
@@ -39,7 +39,7 @@ struct MockAccountLoader: AccountLoading {
 }
 
 func setupMocks() {
-    Container.accountLoader.register { MockAccountLoader() }
+    Container.shared.accountLoader.register { MockAccountLoader() }
 }
 
 
@@ -59,8 +59,8 @@ struct MockLoader<T> {
 }
 
 extension Container {
-    static let genericAaccountLoader = Factory<AccountLoading> {
-        NetworkLoader<[Account]>(path: "/api/accounts")
+    var genericAaccountLoader: Factory<AccountLoading> {
+        self { NetworkLoader<[Account]>(path: "/api/accounts") }
     }
 }
 
@@ -95,8 +95,8 @@ struct AnyLoader<T> {
 }
 
 extension Container {
-    static let anyAccountLoader = Factory<AnyLoader<[Account]>> {
-        AnyLoader(NetworkLoader(path: "/api/accounts"))
+    var anyAccountLoader: Factory<AnyLoader<[Account]>> {
+        self { AnyLoader(NetworkLoader(path: "/api/accounts")) }
     }
 }
 
@@ -113,8 +113,8 @@ extension NetworkLoader<[Account]>: NewAccountLoading {}
 extension MockLoader<[Account]>: NewAccountLoading {}
 
 extension Container {
-    static let newAccountLoader = Factory<any NewAccountLoading> {
-        NetworkLoader<[Account]>(path: "/api/accounts")
+    var newAccountLoader: Factory<any NewAccountLoading> {
+        self { NetworkLoader<[Account]>(path: "/api/accounts") }
     }
 }
 
@@ -137,16 +137,16 @@ class NetworkClassLoader<T>: AbstractClassLoader<T> {
 }
 
 extension Container {
-    static let abstractAccountLoader = Factory<AbstractClassLoader<[Account]>> {
-        NetworkClassLoader<[Account]>(path: "/api/accounts")
+    var abstractAccountLoader: Factory<AbstractClassLoader<[Account]>> {
+        self { NetworkClassLoader<[Account]>(path: "/api/accounts") }
     }
 }
 
 typealias LoadFunction<T> = () -> T
 
 extension Container {
-    static let functionalAccountLoader = Factory<LoadFunction<[Account]>> {
-        NetworkClassLoader<[Account]>(path: "/api/accounts").load
+    var functionalAccountLoader: Factory<LoadFunction<[Account]>> {
+        self { NetworkClassLoader<[Account]>(path: "/api/accounts").load }
     }
 }
 
@@ -160,7 +160,7 @@ extension Container {
 //}
 
 class ViewModel: ObservableObject {
-    @Injected(Container.abstractAccountLoader) var loader
+    @Injected(\.abstractAccountLoader) var loader
     @Published var accounts: [Account] = []
     func load() {
         accounts = loader.load()

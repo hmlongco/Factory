@@ -9,10 +9,12 @@ import Foundation
 
 public struct NewFactory<T> {
     public init(_ factory: @escaping () -> T) {
+        self.id = UUID().uuidString
         self.container = NewContainer.shared
         self.factory = factory
     }
-    public init(_ container: FactoryContainer, _ factory: @escaping () -> T) {
+    fileprivate init(_ container: NewSharedContainer, _ factory: @escaping () -> T) {
+        self.id = "\(container).\(T.self)"
         self.container = container
         self.factory = factory
     }
@@ -23,24 +25,22 @@ public struct NewFactory<T> {
         container.registrations.register(id: id, factory: factory)
     }
     public func name(_ name: String) -> Self {
-        var mutable = self
-        mutable.name = name
-        return mutable
+        map { $0.id = "\(container).\(T.self).\(name)" }
     }
     public func scope(_ scope: NewFactoryScope) -> Self {
-        var mutable = self
-        mutable.scope = scope
-        return mutable
+        map { $0.scope = scope }
     }
     public func reset() {
         container.registrations.reset(id: id)
     }
-    private var id: String {
-        "\(container).\(T.self).\(name)"
+    @inlinable internal func map(_ transform: (_ factory: inout NewFactory) -> Void) -> Self {
+        var mutable = self
+        transform(&mutable)
+        return mutable
     }
-    private let container: FactoryContainer
+    private var id: String
+    private let container: NewSharedContainer
     private let factory: () -> T
-    private var name: String = "*"
     private var scope: NewFactoryScope?
 }
 
@@ -77,28 +77,29 @@ public class Registrations {
 
 
 
-public protocol FactoryContainer: AnyObject {
+public protocol NewSharedContainer: AnyObject {
+    static var shared: Self { get }
     var registrations: Registrations { get }
 }
 
-extension FactoryContainer {
+extension NewSharedContainer {
     public func factory<T>(factory: @escaping () -> T) -> NewFactory<T> {
         NewFactory(self, factory)
     }
-    public func container<T>(factory: @escaping () -> T) -> NewFactory<T> {
+    public func register<T>(factory: @escaping () -> T) -> NewFactory<T> {
         NewFactory(self, factory)
     }
 }
 
-
-
-public protocol InjectableContainer: FactoryContainer {
-    static var shared: Self { get }
+extension NewSharedContainer {
+    var service: NewFactory<MyServiceType> {
+        register { MyService() }
+    }
 }
 
-public final class NewContainer: InjectableContainer {
+public final class NewContainer: NewSharedContainer {
     public static var shared = NewContainer()
-    public var registrations: Registrations = Registrations()
+    public var registrations = Registrations()
 }
 
 extension NewContainer {
@@ -106,51 +107,39 @@ extension NewContainer {
         .scope(.shared)
 }
 
-
 extension NewContainer {
     var service: NewFactory<MyServiceType> {
-        .init(self) { MyService() }
+        register { MyService() }
     }
     var cachedService: NewFactory<MyServiceType> {
-        .init(self) { MyService() }
+        register { MyService() }
             .scope(.singleton)
     }
     var namedService: NewFactory<MyServiceType> {
-        .init(self) { MyService() }
+        register { MyService() }
             .name("test")
     }
     var constructedService: NewFactory<MyConstructedService> {
-        .init(self) { MyConstructedService(service: self.service()) }
+        register { MyConstructedService(service: self.service()) }
     }
     func parameterized(_ n: Int) -> NewFactory<ParameterService> {
-        .init(self) { ParameterService(count: n) }
+        register { ParameterService(count: n) }
     }
 }
 
 
 
 
-public final class MyContainer: InjectableContainer {
+public final class MyContainer: NewSharedContainer {
     public static var shared = MyContainer()
-    public var registrations: Registrations = Registrations()
+    public var registrations = Registrations()
 }
 
 extension MyContainer {
     var anotherService: NewFactory<MyServiceType> {
-        factory { MyService() }
+        register { MyService() }
     }
 }
-
-
-//public class PureContainer: NewFactoryContainer {
-//    public var manager = ContainerManager()
-//    lazy var anotherService = NewFactory<MyServiceType>(self) {
-//        MyService()
-//    }
-//    lazy var constructedService = NewFactory<MyConstructedService>(self) {
-//        MyConstructedService(service: self.anotherService())
-//    }
-//}
 
 
 @propertyWrapper public struct NewInjected<T> {
@@ -158,7 +147,7 @@ extension MyContainer {
     public init(_ keyPath: KeyPath<NewContainer, NewFactory<T>>) {
         self.dependency = NewContainer.shared[keyPath: keyPath]()
     }
-    public init<C:InjectableContainer>(_ keyPath: KeyPath<C, NewFactory<T>>) {
+    public init<C:NewSharedContainer>(_ keyPath: KeyPath<C, NewFactory<T>>) {
         self.dependency = C.shared[keyPath: keyPath]()
     }
     public var wrappedValue: T {

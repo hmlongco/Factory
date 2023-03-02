@@ -14,12 +14,12 @@ public protocol NetworkType {
 }
 
 extension Container {
-    public static var networkType = Factory<NetworkType> { Network() }
+    public var networkType: Factory<NetworkType> { self { Network() } }
 }
 
 extension Container {
-    public static func networkSetup() {
-        Container.networkType.register {
+    public func networkSetup() {
+        Container.shared.networkType.register {
             CommonNetworkType()
         }
     }
@@ -33,7 +33,7 @@ private class CommonNetworkType: NetworkType {
 }
 
 private class Network: NetworkType {
-    @Injected(Container.commonType) private var commonType
+    @Injected(\.commonType) private var commonType
     public init() {}
     public func test() {
         commonType.test()

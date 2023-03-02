@@ -62,17 +62,17 @@ struct ValueService: MyServiceType {
 
 // classes for recursive resolution test
 class RecursiveA {
-    @Injected(Container.recursiveB) var b: RecursiveB?
+    @Injected(\.recursiveB) var b: RecursiveB?
     init() {}
 }
 
 class RecursiveB {
-    @Injected(Container.recursiveC) var c: RecursiveC?
+    @Injected(\.recursiveC) var c: RecursiveC?
     init() {}
 }
 
 class RecursiveC {
-    @Injected(Container.recursiveA) var a: RecursiveA?
+    @Injected(\.recursiveA) var a: RecursiveA?
     init() {}
 }
 
@@ -88,93 +88,125 @@ class ParameterService: MyServiceType {
 }
 
 extension Container {
-    static let myServiceType = Factory<MyServiceType> { MyService() }
-    static let myServiceType2 = Factory<MyServiceType> { MyService() }
+    var myServiceType: Factory<MyServiceType> { self { MyService() } }
+    var myServiceType2: Factory<MyServiceType> { self { MyService() } }
 
-    static let mockService = Factory { MockService() }
+    var mockService: Factory<MockService> { self { MockService() } }
 
-    static let cachedService = Factory(scope: .cached) { MyService() }
-    static let cachedOptionalService = Factory<MyServiceType?>(scope: .cached) { MyService() }
-    static let cachedEmptyOptionalService = Factory<MyServiceType?>(scope: .cached) { nil }
+    var cachedService: Factory<MyService> { self { MyService() }.cached }
+    var cachedOptionalService: Factory<MyServiceType?> { self { MyService() }.cached }
+    var cachedEmptyOptionalService: Factory<MyServiceType?> { self { nil }.cached }
 
-    static let sharedService = Factory(scope: .shared) { MyService() }
-    static let sharedExplicitProtocol = Factory<MyServiceType>(scope: .shared) { MyService() }
-    static let sharedInferredProtocol = Factory(scope: .shared) { MyService() as MyServiceType }
-    static let sharedOptionalProtocol = Factory<MyServiceType?>(scope: .shared) { MyService() }
+    var sharedService: Factory<MyServiceType> { self { MyService() }.shared }
+    var sharedExplicitProtocol: Factory<MyServiceType> { self { MyService() }.shared }
+    var sharedInferredProtocol: Factory<MyServiceType> { self { MyService() }.shared }
+    var sharedOptionalProtocol: Factory<MyServiceType?> { self { MyService() }.shared }
 
-    static let optionalService = Factory<MyServiceType?> { MyService() }
-    static let optionalValueService = Factory<MyServiceType?> { ValueService() }
+    var optionalService: Factory<MyServiceType?> { self { MyService() } }
+    var optionalValueService: Factory<MyServiceType?> { self { ValueService() } }
 
-    static let singletonService = Factory(scope: .singleton) { MyService() }
+    var singletonService: Factory<MyServiceType> { self { MyService() }.singleton }
 
-    static let nilSService = Factory<MyServiceType?> { nil }
-    static let nilCachedService = Factory<MyServiceType?>(scope: .cached) { nil }
-    static let nilSharedService = Factory<MyServiceType?>(scope: .shared) { nil }
+    var nilSService: Factory<MyServiceType?> { self { nil } }
+    var nilCachedService: Factory<MyServiceType?> { self { nil }.cached }
+    var nilSharedService: Factory<MyServiceType?> { self { nil }.shared }
 
-    static let sessionService = Factory(scope: .session) { MyService() }
+    var sessionService: Factory<MyService> { self { MyService() }.scope(.session) }
 
-    static let valueService = Factory(scope: .cached) { ValueService() }
-    static let sharedValueService = Factory(scope: .shared) { ValueService() }
-    static let sharedValueProtocol = Factory<MyServiceType>(scope: .shared) { ValueService() }
+    var valueService: Factory<ValueService> { self { ValueService() }.cached }
+    var sharedValueService: Factory<ValueService> { self { ValueService() }.shared }
+    var sharedValueProtocol: Factory<ValueService> { self { ValueService() }.shared }
 
-    static let promisedService = Factory<MyServiceType?> { nil }
+    var uniqueServiceType: Factory<MyServiceType> { self { MyService() } }
+
+    var promisedService: Factory<MyServiceType?> { self { nil } }
 
 }
 
 // For parameter tests
 extension Container {
-    static var parameterService = ParameterFactory { n in
-        ParameterService(value: n) as MyServiceType
+    var parameterService: ParameterFactory<Int, ParameterService> {
+        self { ParameterService(value: $0) }
     }
-    static var scopedParameterService = ParameterFactory(scope: .cached) { n in
-        ParameterService(value: n) as MyServiceType
-    }
-}
-
-extension Container {
-    static var tupleService = ParameterFactory<(Int, Int), MyServiceType> { (a, b) in
-        ParameterService(value: a + b)
+    var scopedParameterService: ParameterFactory<Int, ParameterService> {
+        self { ParameterService(value: $0) }.cached
     }
 }
 
 // Custom scope
 
-extension Container.Scope {
-    static let session = Cached()
+extension Scope {
+    static var session = Cached()
 }
 
 // Class for recursive scope test
 
 extension Container {
-    static var recursiveA = Factory<RecursiveA?> { RecursiveA() }
-    static var recursiveB = Factory<RecursiveB?> { RecursiveB() }
-    static var recursiveC = Factory<RecursiveC?> { RecursiveC() }
+    var recursiveA: Factory<RecursiveA?> { self { RecursiveA() } }
+    var recursiveB: Factory<RecursiveB?> { self { RecursiveB() } }
+    var recursiveC: Factory<RecursiveC?> { self { RecursiveC() } }
 }
 
 // Classes for graph scope tests
 
 class GraphWrapper {
-    @Injected(Container.graphService) var service1
-    @Injected(Container.graphService) var service2
+    @Injected(\.graphService) var service1
+    @Injected(\.graphService) var service2
     init() {}
 }
 
 extension Container {
-    static let graphWrapper = Factory { GraphWrapper() }
-    static let graphService = Factory(scope: .graph) { MyService() }
+    var graphWrapper: Factory<GraphWrapper> { self { GraphWrapper() } }
+    var graphService: Factory<MyService> { self { MyService() }.graph }
 }
 
 // Classes for implements scope tests
 
 class ProtocolConsumer {
-    @Injected(Container.idProvider) var ids
-    @Injected(Container.valueProvider) var values
+    @Injected(\.idProvider) var ids
+    @Injected(\.valueProvider) var values
     init() {}
 }
 
 extension Container {
-    static let consumer = Factory { ProtocolConsumer() }
-    static let idProvider = Factory<IDProviding> { commonProvider() }
-    static let valueProvider = Factory<ValueProviding> { commonProvider() }
-    private static let commonProvider = Factory(scope: .graph) { MyService() }
+    var consumer: Factory<ProtocolConsumer> { self { ProtocolConsumer() } }
+    var idProvider: Factory<IDProviding> { self { self.commonProvider() } }
+    var valueProvider: Factory<ValueProviding> { self { self.commonProvider() } }
+    private var commonProvider: Factory<MyService> { self { MyService() }.graph }
+}
+
+// Custom Conatiner
+
+final class CustomContainer: SharedContainer, AutoRegistering {
+    static var shared = CustomContainer()
+    static var count = 0
+    var count = 0
+    var test: Factory<MyServiceType> {
+        self {
+            MockServiceN(32)
+        }
+        .shared
+    }
+    var decorated: Factory<MyService> {
+        self {
+            MyService()
+        }
+        .decorator { _ in
+            self.count += 1
+        }
+    }
+    func autoRegister() {
+        print("CustomContainer AUTOREGISTERING")
+        Self.count = 1
+        self.count = 1
+        self.decorator { _ in
+            Self.count += 1
+        }
+#if DEBUG
+        decorator {
+            print("FACTORY: \(type(of: $0)) (\(Int(bitPattern: ObjectIdentifier($0 as AnyObject))))")
+        }
+#endif
+    }
+    var manager = ContainerManager()
 }
