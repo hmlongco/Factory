@@ -141,9 +141,7 @@ struct ContentView_Previews: PreviewProvider {
 
 Note the line in our preview code where we’re gone back to our container and registered a new closure on our factory. This function overrides the default factory closure.
 
-Now when our preview is displayed `ContentView` creates a `ContentViewModel` which in turn has a dependency on `myService` using the `Injected` property wrapper. 
-
-And when the wrapper asks the factory for an instance of `MyServiceType` it now gets a `MockService2` instead of the `MyService` type originally defined.
+Now when our preview is displayed `ContentView` creates a `ContentViewModel` which in turn has a dependency on `myService` using the `Injected` property wrapper. And when the wrapper asks the factory for an instance of `MyServiceType` it now gets a `MockService2` instead of the `MyService` type originally defined.
 
 This is a powerful concept that lets us reach deep into a chain of dependencies and alter the behavior of a system as needed.
 
