@@ -1,5 +1,9 @@
 # Factory Changelog
 
+### 2.0.1
+
+* Minor issue in that new scope registration function doesn't allow scope to be set to unique
+
 ### 2.0.0
 
 * Adds true Factory containers for container-based dependency resolution

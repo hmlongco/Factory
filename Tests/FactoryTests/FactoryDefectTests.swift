@@ -104,6 +104,35 @@ final class FactoryDefectTests: XCTestCase {
         }
     }
 
+    // Unable to correctly clear/set scope to unique using register function
+    func testRegistrationClearsScope() throws {
+        Container.shared.manager.reset()
+        let service1 = Container.shared.singletonService()
+        XCTAssertNotNil(service1)
+        XCTAssertFalse(Container.shared.manager.cache.isEmpty)
+        Container.shared.manager.reset()
+        Container.shared.singletonService.register(scope: .unique) {
+            MyService()
+        }
+        let service2 = Container.shared.singletonService()
+        XCTAssertNotNil(service2)
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
+    }
+
+    func testParameterRegistrationClearsScope() throws {
+        Container.shared.manager.reset()
+        let service1 = Container.shared.scopedParameterService(8)
+        XCTAssertNotNil(service1)
+        XCTAssertFalse(Container.shared.manager.cache.isEmpty)
+        Container.shared.manager.reset()
+        Container.shared.scopedParameterService.register(scope: .unique) {
+            ParameterService(value: $0)
+        }
+        let service2 = Container.shared.scopedParameterService(9)
+        XCTAssertNotNil(service2)
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
+    }
+
 }
 
 extension Container {

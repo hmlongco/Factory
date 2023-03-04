@@ -132,7 +132,8 @@ public struct Factory<T>: FactoryModifing {
     ///  - factory: A new factory closure that produces an object of the desired type when needed.
     /// Allows updating registered factory and scope.
     public func register(factory: @escaping () -> T) {
-        register(scope: nil, factory: factory)
+        let typedFactory = TypedFactory<Void,T>(factory: factory, scope: registration.scope)
+        registration.container.manager.register(id: registration.id, factory: typedFactory)
     }
 
     /// Allows registering new factory closure and updating scope used after the fact.
@@ -225,7 +226,8 @@ public struct ParameterFactory<P,T>: FactoryModifing {
     /// - Parameters:
     ///  - factory: A new factory closure that produces an object of the desired type when needed.
     public func register(factory: @escaping (P) -> T) {
-        register(scope: nil, factory: factory)
+        let typedFactory = TypedFactory<P,T>(factory: factory, scope: registration.scope)
+        registration.container.manager.register(id: registration.id, factory: typedFactory)
     }
 
     /// Allows registering new factory closure and updating scope used after the fact.
@@ -572,7 +574,7 @@ extension ContainerManager {
 
         let id = registration.id
         let registeredFactory = registrations[id] as? TypedFactory<P,T>
-        let registeredScope = registeredFactory?.scope ?? registration.scope
+        let registeredScope = registeredFactory == nil ? registration.scope : registeredFactory?.scope
         var current: (P) -> T = registeredFactory?.factory ?? registration.factory
 
         #if DEBUG
@@ -816,6 +818,9 @@ extension Scope {
             super.init()
         }
     }
+
+    /// A reference to the default unique scope.
+    public static let unique: Scope? = nil
 
 }
 

@@ -45,7 +45,7 @@ class ContentViewModel: ObservableObject {
 ```
 
 ### Injected Proprty Wrappers
-Using the `@Injected` and `@LazyInjecter` property wrappers to obtain dependencies using an Annotation pattern similar to that used by `EnvironmentObject` in SwiftUI.
+Using the `@Injected` and `@LazyInjected` property wrappers to obtain dependencies using an Annotation pattern similar to that used by `EnvironmentObject` in SwiftUI.
 ```swift
 class ContentViewModel: ObservableObject {
 
@@ -58,6 +58,15 @@ class ContentViewModel: ObservableObject {
     // LazyInjected property from custom container
     @LazyInjected(\MyContainer.myLazyService) var myLazyService
 
+}
+```
+One can also inject the view model itself.
+```swift
+struct ContentView: View {
+    @InjectedObject(\.contentViewModel) var model: ContentViewModel
+    var body: some View {
+        ...
+    }
 }
 ```
 See ``Injected``, ``LazyInjected``, ``WeakLazyInjected``, and ``InjectedObject`` for more.

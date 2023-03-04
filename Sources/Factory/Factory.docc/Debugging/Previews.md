@@ -102,7 +102,7 @@ Single previews work exactly the same.
 ```swift
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        let _ = Container.myService.register { MockServiceN(4) }
+        let _ = Container.shared.myService.register { MockServiceN(4) }
         ContentView()
     }
 }
@@ -123,7 +123,7 @@ struct ContentView_Previews: PreviewProvider {
     }
 }
 ```
-Instead of passing the model to the view directly, one creates the `InjectedObject(model1)` pair and passes that.
+Instead of passing the model to the view directly, we need to create the entire `InjectedObject(model1)` pair and pass that.
 
 ## Common Setup
 

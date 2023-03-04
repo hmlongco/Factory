@@ -25,6 +25,8 @@ Turning on a trace can be helpful in testing when you want to get an idea of an 
 
 Note that enabling trace logging enables it for *all* containers.
 
+One final consideration is that logging the construction of an object will show everything intialized as part of that resolution cycle. Anything created lazily after the fact may not appear in the trace.
+
 ## Logging
 
 Trace logs are usually just printed to the system log, but you can change that behavior if needed.
