@@ -34,7 +34,7 @@ class ContentView: ObservableObject {
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        let _ = Container.myService.register { MockServiceN(4) }
+        let _ = Container.shared.myService.register { MockServiceN(4) }
         ContentView()
     }
 }
