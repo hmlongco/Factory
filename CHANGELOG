@@ -3,6 +3,7 @@
 ### 2.0.1
 
 * Minor issue in that new scope registration function doesn't allow scope to be set to unique
+* Add watchos.deployment_target = "8.2" - Issue #54
 
 ### 2.0.0
 
