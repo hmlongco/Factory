@@ -484,7 +484,7 @@ public class ContainerManager {
 
     /// Internal closure decorates all factory resolutions for this container.
     internal var decorator: ((Any) -> ())?
-    internal var autoRegistrationCheck = true
+    internal var autoRegistrationCheckNeeded = true
     internal typealias FactoryMap = [String:AnyFactory]
     internal lazy var registrations: FactoryMap = .init(minimumCapacity: 32)
     internal lazy var cache: Scope.Cache = Scope.Cache()
@@ -504,13 +504,13 @@ extension ContainerManager {
         switch options {
         case .registration:
             registrations = [:]
-            autoRegistrationCheck = false
+            autoRegistrationCheckNeeded = false
         case .scope:
             cache.reset()
         default:
             registrations = [:]
             cache.reset()
-            autoRegistrationCheck = false
+            autoRegistrationCheckNeeded = false
         }
     }
 
@@ -525,7 +525,7 @@ extension ContainerManager {
     public func push() {
         defer { globalRecursiveLock.unlock() }
         globalRecursiveLock.lock()
-        stack.append((registrations, cache.cache, autoRegistrationCheck))
+        stack.append((registrations, cache.cache, autoRegistrationCheckNeeded))
     }
 
     /// Test function pops and restores a previously pushed registration and cache state
@@ -535,7 +535,7 @@ extension ContainerManager {
         if let state = stack.popLast() {
             registrations = state.0
             cache.cache = state.1
-            autoRegistrationCheck = state.2
+            autoRegistrationCheckNeeded = state.2
         }
     }
 
@@ -1057,10 +1057,7 @@ public struct FactoryRegistration<P,T> {
 
         let manager = container.manager
 
-        if manager.autoRegistrationCheck {
-            manager.autoRegistrationCheck = false
-            (container as? AutoRegistering)?.autoRegister()
-        }
+        performAutoRegistrationCheck()
 
         let registeredFactory = manager.registrations[id] as? TypedFactory<P,T>
         let registeredScope = registeredFactory == nil ? scope : registeredFactory?.scope
@@ -1127,16 +1124,18 @@ public struct FactoryRegistration<P,T> {
     internal func register(factory: AnyFactory) {
         defer { globalRecursiveLock.unlock() }
         globalRecursiveLock.lock()
+        performAutoRegistrationCheck()
+        container.manager.registrations[id] = factory
+        container.manager.cache.removeValue(forKey: id)
+    }
 
-        let manager = container.manager
-
-        if manager.autoRegistrationCheck {
-            manager.autoRegistrationCheck = false
-            (container as? AutoRegistering)?.autoRegister()
+    /// Support function performs autoRegistrationCheck
+    internal func performAutoRegistrationCheck() {
+        guard container.manager.autoRegistrationCheckNeeded else {
+            return
         }
-
-        manager.registrations[id] = factory
-        manager.cache.removeValue(forKey: id)
+        container.manager.autoRegistrationCheckNeeded = false
+        (container as? AutoRegistering)?.autoRegister()
     }
 
     /// Support function resets the behavior for a specific Factory to its original state, removing any associated registrations and clearing

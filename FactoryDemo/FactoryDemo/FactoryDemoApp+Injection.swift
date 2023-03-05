@@ -85,10 +85,7 @@ extension Scope {
 
 extension Container {
     func setupMocks() {
-        myServiceType.register { MockServiceN(4) }
-
         DemoContainer.shared.optionalService.register { SimpleService() }
-
     }
 }
 
