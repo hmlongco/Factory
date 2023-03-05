@@ -17,13 +17,13 @@ final class FactoryCoreTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        Container.shared.push()
+        Container.shared.manager.push()
         Container.shared.setupMocks()
     }
     
     override func tearDown() {
         super.tearDown()
-        Container.shared.pop()
+        Container.shared.manager.pop()
     }
     
     func testSomething() throws {
