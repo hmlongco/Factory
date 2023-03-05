@@ -155,7 +155,7 @@ public struct Factory<T>: FactoryModifying {
 ///
 /// Like it or not, some services require one or more parameters to be passed to them in order to be initialized correctly. In that case use `ParameterFactory`.
 ///
-/// We define a ParameterFactory exactly as we do a normal factory with two exceptions: we need to specfy the
+/// We define a ParameterFactory exactly as we do a normal factory with two exceptions: we need to specify the
 /// parameter type, and we need to consume the passed parameter in our factory closure.
 /// ```swift
 /// extension Container {
