@@ -66,8 +66,8 @@ import SwiftUI
 /// are lightweight and transitory. They're created when needed and then immediately discarded once their purpose has
 /// been served.
 ///
-/// Other operations exist for Factory. See ``FactoryModifing``.
-public struct Factory<T>: FactoryModifing {
+/// Other operations exist for Factory. See ``FactoryModifying``.
+public struct Factory<T>: FactoryModifying {
 
     /// Public initializer creates a Factory capable of managing dependencies of the desired type.
     ///
@@ -143,7 +143,7 @@ public struct Factory<T>: FactoryModifing {
         registration.register(factory: TypedFactory<Void,T>(factory: factory, scope: scope))
     }
 
-    /// Internal parameters fort his Factory including id, container, the factory closure itself, the scope,
+    /// Internal parameters for this Factory including id, container, the factory closure itself, the scope,
     /// and others.
     public var registration: FactoryRegistration<Void,T>
 
@@ -155,7 +155,7 @@ public struct Factory<T>: FactoryModifing {
 ///
 /// Like it or not, some services require one or more parameters to be passed to them in order to be initialized correctly. In that case use `ParameterFactory`.
 ///
-/// We define a ParameterFactory exactly as we do a normal factory with two exceptions: we need to specfic the
+/// We define a ParameterFactory exactly as we do a normal factory with two exceptions: we need to specify the
 /// parameter type, and we need to consume the passed parameter in our factory closure.
 /// ```swift
 /// extension Container {
@@ -164,7 +164,7 @@ public struct Factory<T>: FactoryModifing {
 ///     }
 /// }
 /// ```
-/// Resolving it is straightforward. Just pass the paramter to the Factory.
+/// Resolving it is straightforward. Just pass the parameter to the Factory.
 /// ```Swift
 /// let myService = Container.shared.parameterService(n)
 /// ```
@@ -190,7 +190,7 @@ public struct Factory<T>: FactoryModifing {
 /// Finally, if you define a scope keep in mind that the first argument passed will be used to create the dependency
 /// and *that* dependency will be cached. Since the cached object will be returned from now on any arguments passed in
 /// later requests will be ignored until the factory or scope is reset.
-public struct ParameterFactory<P,T>: FactoryModifing {
+public struct ParameterFactory<P,T>: FactoryModifying {
 
     /// Public initializer creates a factory capable of taking parameters at runtime.
     /// ```swift
@@ -243,7 +243,7 @@ public struct ParameterFactory<P,T>: FactoryModifing {
 // MARK: Factory Modifiers
 
 /// Public protocol with functionality common to all Factory's. Used to add scope and decorator modifiers to Factory.
-public protocol FactoryModifing {
+public protocol FactoryModifying {
     /// The parameter type of the Factory, if any. Will be `Void` on the standard Factory.
     associatedtype P
     /// The return type of the Factory's dependency.
@@ -252,7 +252,7 @@ public protocol FactoryModifing {
     var registration: FactoryRegistration<P,T> { get set }
 }
 
-extension FactoryModifing {
+extension FactoryModifying {
 
     /// Defines a dependency scope for this Factory. See ``Scope``.
     /// ```swift
@@ -344,7 +344,7 @@ extension FactoryModifing {
 
 }
 
-extension FactoryModifing {
+extension FactoryModifying {
     /// Allows builder-style mutation of self
     fileprivate func map (_ mutate: (inout Self) -> Void) -> Self {
         var mutable = self
