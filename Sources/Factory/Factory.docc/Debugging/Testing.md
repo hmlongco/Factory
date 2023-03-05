@@ -10,6 +10,10 @@ Factory has a few additional provisions added to make unit testing easier. Let's
 
 In your unit test setUp function you can *push* the current state of the registration system and then register and test anything you want.
 
+Then in the teardown you can *pop* the stack, eliminating all of your changes and restoring the container to its original state before the push.
+
+This lets each set of tests start from the same state, irregardless of what the prior tests had changed.
+
 The following example assumes we're using the shared container.
 
 ```swift

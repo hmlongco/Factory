@@ -1,5 +1,9 @@
 # Factory Changelog
 
+## 2.0.2
+
+* Registration on a new container would be overriden by auto registration on same Factory
+
 ### 2.0.1
 
 * Minor issue in that new scope registration function doesn't allow scope to be set to unique

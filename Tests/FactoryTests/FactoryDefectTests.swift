@@ -117,21 +117,33 @@ final class FactoryDefectTests: XCTestCase {
         let service2 = Container.shared.singletonService()
         XCTAssertNotNil(service2)
         XCTAssertTrue(Container.shared.manager.cache.isEmpty)
-    }
 
-    func testParameterRegistrationClearsScope() throws {
         Container.shared.manager.reset()
-        let service1 = Container.shared.scopedParameterService(8)
-        XCTAssertNotNil(service1)
+        let service3 = Container.shared.scopedParameterService(8)
+        XCTAssertNotNil(service3)
         XCTAssertFalse(Container.shared.manager.cache.isEmpty)
         Container.shared.manager.reset()
         Container.shared.scopedParameterService.register(scope: .unique) {
             ParameterService(value: $0)
         }
-        let service2 = Container.shared.scopedParameterService(9)
-        XCTAssertNotNil(service2)
+        let service4 = Container.shared.scopedParameterService(9)
+        XCTAssertNotNil(service4)
         XCTAssertTrue(Container.shared.manager.cache.isEmpty)
     }
+
+    // Registration on a new container could be overriden by auto registration
+    func testRegistrationOverridenByAutoRegistration() throws {
+        let container1 = AutoRegisteringContainer()
+        let service1 = container1.test()
+        XCTAssertEqual(service1.value, 32)
+        let container2 = AutoRegisteringContainer()
+        container2.test.register {
+            MockServiceN(64)
+        }
+        let service2 = container2.test()
+        XCTAssertEqual(service2.value, 64)
+    }
+
 
 }
 
@@ -159,4 +171,15 @@ fileprivate class LockingTestA {
 
 fileprivate class LockingTestB {
     init() {}
+}
+
+fileprivate final class AutoRegisteringContainer: SharedContainer, AutoRegistering {
+    static var shared = AutoRegisteringContainer()
+    var test: Factory<MyServiceType> {
+        self { MockServiceN(16) }
+    }
+    func autoRegister() {
+        test.register { MockServiceN(32) }
+    }
+    var manager = ContainerManager()
 }

@@ -15,7 +15,7 @@ Factory is...
 - **Concise**: Defining a registration usually takes just a single line of code. Same for resolution.
 - **Flexible**: Working with UIKIt or SwiftUI? iOS or macOS? Using MVVM? MVP? Clean? VIPER? No problem. Factory works with all of these and more.
 - **Documented**: Factory 2.0 has extensive DocC documentation and examples covering its classes, methods, and use cases.
-- **Lightweight**: With all of that Factory is slim and trim, just 421 lines of executable code and half the size of Resolver.
+- **Lightweight**: With all of that Factory is slim and trim, just 428 lines of executable code and half the size of Resolver.
 - **Tested**: Unit tests with 100% code coverage helps ensure correct operation of registrations, resolutions, and scopes.
 - **Free**: Factory is free and open source under the MIT License.
 

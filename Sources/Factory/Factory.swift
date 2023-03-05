@@ -106,7 +106,7 @@ public struct Factory<T>: FactoryModifing {
     /// ```
     /// - Returns: An object or service of the desired type.
     public func callAsFunction() -> T {
-        registration.container.manager.resolve(registration, with: ())
+        registration.resolve(with: ())
     }
 
     /// Registers a new factory closure capable of producing an object or service of the desired type.
@@ -132,8 +132,7 @@ public struct Factory<T>: FactoryModifing {
     ///  - factory: A new factory closure that produces an object of the desired type when needed.
     /// Allows updating registered factory and scope.
     public func register(factory: @escaping () -> T) {
-        let typedFactory = TypedFactory<Void,T>(factory: factory, scope: registration.scope)
-        registration.container.manager.register(id: registration.id, factory: typedFactory)
+        registration.register(factory: TypedFactory<Void,T>(factory: factory, scope: registration.scope))
     }
 
     /// Allows registering new factory closure and updating scope used after the fact.
@@ -141,8 +140,7 @@ public struct Factory<T>: FactoryModifing {
     ///  - scope: Optional parameter that lets the registration redefine the scope used for this dependency.
     ///  - factory: A new factory closure that produces an object of the desired type when needed.
     public func register(scope: Scope?, factory: @escaping () -> T) {
-        let typedFactory = TypedFactory<P,T>(factory: factory, scope: scope)
-        registration.container.manager.register(id: registration.id, factory: typedFactory)
+        registration.register(factory: TypedFactory<Void,T>(factory: factory, scope: scope))
     }
 
     /// Internal parameters fort his Factory including id, container, the factory closure itself, the scope,
@@ -214,7 +212,7 @@ public struct ParameterFactory<P,T>: FactoryModifing {
     /// let service = container.parameterService(16)
     /// ```
     public func callAsFunction(_ parameters: P) -> T {
-        registration.container.manager.resolve(registration, with: parameters)
+        registration.resolve(with: parameters)
     }
 
     /// Registers a new factory capable of taking parameters at runtime.
@@ -226,8 +224,7 @@ public struct ParameterFactory<P,T>: FactoryModifing {
     /// - Parameters:
     ///  - factory: A new factory closure that produces an object of the desired type when needed.
     public func register(factory: @escaping (P) -> T) {
-        let typedFactory = TypedFactory<P,T>(factory: factory, scope: registration.scope)
-        registration.container.manager.register(id: registration.id, factory: typedFactory)
+        registration.register(factory: TypedFactory<P,T>(factory: factory, scope: registration.scope))
     }
 
     /// Allows registering new factory closure and updating scope used after the fact.
@@ -235,8 +232,7 @@ public struct ParameterFactory<P,T>: FactoryModifing {
     ///  - scope: Optional parameter that lets the registration redefine the scope used for this dependency.
     ///  - factory: A new factory closure that produces an object of the desired type when needed.
     public func register(scope: Scope?, factory: @escaping (P) -> T) {
-        let typedFactory = TypedFactory<P,T>(factory: factory, scope: scope)
-        registration.container.manager.register(id: registration.id, factory: typedFactory)
+        registration.register(factory: TypedFactory<P,T>(factory: factory, scope: scope))
     }
 
     /// Required registration
@@ -342,8 +338,8 @@ extension FactoryModifing {
 
     /// Resets the Factory's behavior to its original state, removing any registrations and clearing any cached items from the specified scope.
     /// - Parameter options: options description
-    public func reset(_ options: ContainerManager.ResetOptions = .all) {
-        registration.container.manager.reset(options: options, for: registration.id)
+    public func reset(_ options: FactoryResetOptions = .all) {
+        registration.reset(options: options)
     }
 
 }
@@ -456,7 +452,7 @@ public protocol SharedContainer: ManagedContainer {
 
 // MARK: - ContainerManager
 
-/// ContainerManager encapsulates and manages the registration, resolution, and scope caching mechanisms for a given container.
+/// ContainerManager manages the registration and scope caching storage mechanisms for a given container.
 ///
 /// Every container requires a ContainerManager.
 ///
@@ -498,20 +494,8 @@ public class ContainerManager {
 
 extension ContainerManager {
 
-    /// Reset options for Factory's and Container's
-    public enum ResetOptions {
-        /// Resets registration and scope caches
-        case all
-        /// Performs no reset
-        case none
-        /// Resets registrations on this container
-        case registration
-        /// Resets all scope caches on this container
-        case scope
-    }
-
     /// Resets the Container to its original state, removing all registrations and clearing all scope caches.
-    public func reset(options: ResetOptions = .all) {
+    public func reset(options: FactoryResetOptions = .all) {
         guard options != .none else {
             return
         }
@@ -555,136 +539,6 @@ extension ContainerManager {
         }
     }
 
-}
-
-extension ContainerManager {
-
-    /// Resolves a Factory, returning an instance of the desired type. All roads lead here.
-    ///
-    /// - Parameter factory: Factory wanting resolution.
-    /// - Returns: Instance of the desired type.
-    internal func resolve<P,T>(_ registration: FactoryRegistration<P,T>, with parameters: P) -> T {
-        defer { globalRecursiveLock.unlock() }
-        globalRecursiveLock.lock()
-
-        if autoRegistrationCheck {
-            (registration.container as? AutoRegistering)?.autoRegister()
-            autoRegistrationCheck = false
-        }
-
-        let id = registration.id
-        let registeredFactory = registrations[id] as? TypedFactory<P,T>
-        let registeredScope = registeredFactory == nil ? registration.scope : registeredFactory?.scope
-        var current: (P) -> T = registeredFactory?.factory ?? registration.factory
-
-        #if DEBUG
-        if dependencyChainTestMax > 0 {
-            circularDependencyChainCheck(for: String(reflecting: T.self))
-        }
-
-        let traceLevel = globalTraceResolutions.count
-        var traceNew = false
-        if trace {
-            let wrapped = current
-            current = {
-                traceNew = true // detects if new instance created
-                return wrapped($0)
-            }
-            globalTraceResolutions.append("")
-        }
-        #endif
-
-        globalGraphResolutionDepth += 1
-        let instance = registeredScope?.resolve(using: cache, id: id, factory: { current(parameters) }) ?? current(parameters)
-        globalGraphResolutionDepth -= 1
-
-        if globalGraphResolutionDepth == 0 {
-            Scope.graph.cache.reset()
-            #if DEBUG
-            globalDependencyChainMessages = []
-            #endif
-        }
-
-        #if DEBUG
-        if !globalDependencyChain.isEmpty {
-            globalDependencyChain.removeLast()
-        }
-
-        if trace {
-            let indent = String(repeating: " ", count: globalGraphResolutionDepth * 4)
-            let type = type(of: instance)
-            let address = Int(bitPattern: ObjectIdentifier(instance as AnyObject))
-            let new = traceNew ? "N" : "C"
-            let traced = "\(globalGraphResolutionDepth): \(indent)\(id) = \(type) \(new):\(address)"
-            globalTraceResolutions[traceLevel] = traced
-            if globalGraphResolutionDepth == 0 {
-                globalTraceResolutions.forEach { self.logger($0) }
-                globalTraceResolutions = []
-            }
-        }
-        #endif
-
-        registration.decorator?(instance)
-        decorator?(instance)
-
-        return instance
-    }
-
-    /// Registers a new factory closure capable of producing an object or service of the desired type. This factory overrides the original factory and
-    /// the next time this factory is resolved Factory will evaluate the newly registered factory instead.
-    /// - Parameters:
-    ///   - id: ID of associated Factory.
-    ///   - factory: Factory closure called to create a new instance of the service when needed.
-    internal func register(id: String, factory: AnyFactory) {
-        defer { globalRecursiveLock.unlock() }
-        globalRecursiveLock.lock()
-        registrations[id] = factory
-        cache.removeValue(forKey: id)
-    }
-
-    /// Support function resets the behavior for a specific Factory to its original state, removing any associated registrations and clearing
-    /// any cached instances from the specified scope.
-    /// - Parameters:
-    ///   - options: Reset option: .all, .registration, .scope, .none
-    ///   - id: ID of item to remove from the appropriate cache.
-    internal func reset(options: ResetOptions, for id: String) {
-        guard options != .none else { return }
-        defer { globalRecursiveLock.unlock() }
-        globalRecursiveLock.lock()
-        switch options {
-        case .registration:
-            registrations.removeValue(forKey: id)
-        case .scope:
-            cache.removeValue(forKey: id)
-        default:
-            registrations.removeValue(forKey: id)
-            cache.removeValue(forKey: id)
-        }
-    }
-
-    #if DEBUG
-    internal func circularDependencyChainCheck(for typeName: String) {
-        let typeComponents = typeName.components(separatedBy: CharacterSet(charactersIn: "<>"))
-        let typeName = typeComponents.count > 1 ? typeComponents[1] : typeComponents[0]
-        let typeIndex = globalDependencyChain.firstIndex(where: { $0 == typeName })
-        globalDependencyChain.append(typeName)
-        if let index = typeIndex {
-            let chain = globalDependencyChain[index...]
-            let message = "circular dependency chain - \(chain.joined(separator: " > "))"
-            if globalDependencyChainMessages.filter({ $0 == message }).count == dependencyChainTestMax {
-                globalDependencyChain = []
-                globalDependencyChainMessages = []
-                globalGraphResolutionDepth = 0
-                globalRecursiveLock = NSRecursiveLock()
-                globalTraceResolutions = []
-                triggerFatalError(message, #file, #line)
-            } else {
-                globalDependencyChain = [typeName]
-                globalDependencyChainMessages.append(message)
-            }
-        }
-    }
-    #endif
 }
 
 // MARK: - Scope
@@ -857,7 +711,7 @@ extension Scope {
 
 }
 
-/// MARK: - Automatic Registrations
+// MARK: - Automatic Registrations
 
 /// Adds an registration "hook" to a `Container`.
 ///
@@ -881,6 +735,20 @@ public protocol AutoRegistering {
     /// User provided function that supports first-time registration of needed dependencies prior to first resolution
     /// of a dependency on that container.
     func autoRegister()
+}
+
+// MARK: - Reset Options
+
+/// Reset options for Factory's and Container's
+public enum FactoryResetOptions {
+    /// Resets registration and scope caches
+    case all
+    /// Performs no reset
+    case none
+    /// Resets registrations on this container
+    case registration
+    /// Resets all scope caches on this container
+    case scope
 }
 
 // MARK: - Property wrappers
@@ -940,7 +808,7 @@ public protocol AutoRegistering {
     }
 
     /// Allows the user to force a Factory resolution at their descretion.
-    public mutating func resolve(reset options: ContainerManager.ResetOptions = .none) {
+    public mutating func resolve(reset options: FactoryResetOptions = .none) {
         factory.reset(options)
         dependency = factory()
     }
@@ -1006,7 +874,7 @@ public protocol AutoRegistering {
     }
 
     /// Allows the user to force a Factory resolution at their descretion.
-    public mutating func resolve(reset options: ContainerManager.ResetOptions = .none) {
+    public mutating func resolve(reset options: FactoryResetOptions = .none) {
         factory.reset(options)
         dependency = factory()
         initialize = false
@@ -1077,7 +945,7 @@ public protocol AutoRegistering {
     }
 
     /// Allows the user to force a Factory resolution at their descretion.
-    public mutating func resolve(reset options: ContainerManager.ResetOptions = .none) {
+    public mutating func resolve(reset options: FactoryResetOptions = .none) {
         factory.reset(options)
         dependency = factory() as AnyObject
         initialize = false
@@ -1163,27 +1031,11 @@ internal struct FactoryReference<C: SharedContainer, T>: BoxedFactoryReference {
 
 #endif
 
-// MARK: - Internal Variables
-
-/// Master recursive lock
-private var globalRecursiveLock = NSRecursiveLock()
-
-/// Master graph resolution depth counter
-private var globalGraphResolutionDepth = 0
-
-#if DEBUG
-/// Internal variables used for debugging
-private var globalDependencyChain: [String] = []
-private var globalDependencyChainMessages: [String] = []
-private var globalTraceFlag: Bool = false
-private var globalTraceResolutions: [String] = []
-private var globalLogger: (String) -> Void = { print($0) }
-#endif
-
 // MARK: - Internal Protocols and Types
 
-/// Shared registration type for Factory and ParameterFactory. Used internally to pass information from Factory to ContainerManager.
+/// Shared registration type for Factory and ParameterFactory. Used internally to manage the registration and resolution process.
 public struct FactoryRegistration<P,T> {
+
     /// Id used to manage registrations and cached values. Usually looks something like "MyApp.Container.service".
     internal var id: String
     /// A strong reference to the container supporting this Factory.
@@ -1194,6 +1046,144 @@ public struct FactoryRegistration<P,T> {
     internal var scope: Scope?
     /// Decorator will be passed fully constructed instance for further configuration.
     internal var decorator: ((T) -> Void)?
+
+    /// Resolves a Factory, returning an instance of the desired type. All roads lead here.
+    ///
+    /// - Parameter factory: Factory wanting resolution.
+    /// - Returns: Instance of the desired type.
+    internal func resolve(with parameters: P) -> T {
+        defer { globalRecursiveLock.unlock() }
+        globalRecursiveLock.lock()
+
+        let manager = container.manager
+
+        if manager.autoRegistrationCheck {
+            manager.autoRegistrationCheck = false
+            (container as? AutoRegistering)?.autoRegister()
+        }
+
+        let registeredFactory = manager.registrations[id] as? TypedFactory<P,T>
+        let registeredScope = registeredFactory == nil ? scope : registeredFactory?.scope
+        var current: (P) -> T = registeredFactory?.factory ?? factory
+
+        #if DEBUG
+        if manager.dependencyChainTestMax > 0 {
+            circularDependencyChainCheck(for: String(reflecting: T.self), max: manager.dependencyChainTestMax)
+        }
+
+        let traceLevel = globalTraceResolutions.count
+        var traceNew = false
+        if manager.trace {
+            let wrapped = current
+            current = {
+                traceNew = true // detects if new instance created
+                return wrapped($0)
+            }
+            globalTraceResolutions.append("")
+        }
+        #endif
+
+        globalGraphResolutionDepth += 1
+        let instance = registeredScope?.resolve(using: manager.cache, id: id, factory: { current(parameters) }) ?? current(parameters)
+        globalGraphResolutionDepth -= 1
+
+        if globalGraphResolutionDepth == 0 {
+            Scope.graph.cache.reset()
+            #if DEBUG
+            globalDependencyChainMessages = []
+            #endif
+        }
+
+        #if DEBUG
+        if !globalDependencyChain.isEmpty {
+            globalDependencyChain.removeLast()
+        }
+
+        if manager.trace {
+            let indent = String(repeating: " ", count: globalGraphResolutionDepth * 4)
+            let type = type(of: instance)
+            let address = Int(bitPattern: ObjectIdentifier(instance as AnyObject))
+            let new = traceNew ? "N" : "C"
+            let traced = "\(globalGraphResolutionDepth): \(indent)\(id) = \(type) \(new):\(address)"
+            globalTraceResolutions[traceLevel] = traced
+            if globalGraphResolutionDepth == 0 {
+                globalTraceResolutions.forEach { manager.logger($0) }
+                globalTraceResolutions = []
+            }
+        }
+        #endif
+
+        decorator?(instance)
+        manager.decorator?(instance)
+
+        return instance
+    }
+
+    /// Registers a new factory closure capable of producing an object or service of the desired type. This factory overrides the original factory and
+    /// the next time this factory is resolved Factory will evaluate the newly registered factory instead.
+    /// - Parameters:
+    ///   - id: ID of associated Factory.
+    ///   - factory: Factory closure called to create a new instance of the service when needed.
+    internal func register(factory: AnyFactory) {
+        defer { globalRecursiveLock.unlock() }
+        globalRecursiveLock.lock()
+
+        let manager = container.manager
+
+        if manager.autoRegistrationCheck {
+            manager.autoRegistrationCheck = false
+            (container as? AutoRegistering)?.autoRegister()
+        }
+
+        manager.registrations[id] = factory
+        manager.cache.removeValue(forKey: id)
+    }
+
+    /// Support function resets the behavior for a specific Factory to its original state, removing any associated registrations and clearing
+    /// any cached instances from the specified scope.
+    /// - Parameters:
+    ///   - options: Reset option: .all, .registration, .scope, .none
+    ///   - id: ID of item to remove from the appropriate cache.
+    internal func reset(options: FactoryResetOptions) {
+        guard options != .none else { return }
+        defer { globalRecursiveLock.unlock() }
+        globalRecursiveLock.lock()
+        let manager = container.manager
+        switch options {
+        case .registration:
+            manager.registrations.removeValue(forKey: id)
+        case .scope:
+            manager.cache.removeValue(forKey: id)
+        default:
+            manager.registrations.removeValue(forKey: id)
+            manager.cache.removeValue(forKey: id)
+        }
+    }
+
+    #if DEBUG
+    internal func circularDependencyChainCheck(for typeName: String, max: Int) {
+        let typeComponents = typeName.components(separatedBy: CharacterSet(charactersIn: "<>"))
+        let typeName = typeComponents.count > 1 ? typeComponents[1] : typeComponents[0]
+        let typeIndex = globalDependencyChain.firstIndex(where: { $0 == typeName })
+        globalDependencyChain.append(typeName)
+        if let index = typeIndex {
+            let chain = globalDependencyChain[index...]
+            let message = "circular dependency chain - \(chain.joined(separator: " > "))"
+            if globalDependencyChainMessages.filter({ $0 == message }).count == max {
+                globalDependencyChain = []
+                globalDependencyChainMessages = []
+                globalGraphResolutionDepth = 0
+                globalRecursiveLock = NSRecursiveLock()
+                globalTraceResolutions = []
+                triggerFatalError(message, #file, #line)
+            } else {
+                globalDependencyChain = [typeName]
+                globalDependencyChainMessages.append(message)
+            }
+        }
+    }
+    #endif
+
 }
 
 // Internal Factory type
@@ -1240,7 +1230,22 @@ internal struct WeakBox: AnyBox {
     weak var boxed: AnyObject?
 }
 
+// MARK: - Internal Variables
+
+/// Master recursive lock
+private var globalRecursiveLock = NSRecursiveLock()
+
+/// Master graph resolution depth counter
+private var globalGraphResolutionDepth = 0
+
 #if DEBUG
+/// Internal variables used for debugging
+private var globalDependencyChain: [String] = []
+private var globalDependencyChainMessages: [String] = []
+private var globalTraceFlag: Bool = false
+private var globalTraceResolutions: [String] = []
+private var globalLogger: (String) -> Void = { print($0) }
+
 /// Allow unit test interception of any fatal errors that may occur running the circular dependency check
 /// Variation of solution: https://stackoverflow.com/questions/32873212/unit-test-fatalerror-in-swift#
 internal var triggerFatalError = Swift.fatalError
