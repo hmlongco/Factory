@@ -2,7 +2,8 @@
 
 ## 2.0.2
 
-* Registration on a new container would be overriden by auto registration on same Factory
+* Registration on a new container could be overriden by auto registration on same Factory
+* Some internal code reorginization for performance
 
 ### 2.0.1
 
