@@ -93,9 +93,6 @@ func testAdd() async throws {
     // test the model
 }
 ```
-As shown, one can use this and other strategies to update the dependencies on `FeatureModel`. It doesn't, however, let you reach deeper into the dependency tree and change a dependency inside of a dependency inside of a dependency like you can with Factory.
-
-Further, note that in order to mutate the `FeatureModel` the api parameter can not be private. It must be expeosed to the outside world.
 
 ## Compile-Time Libraries
 
