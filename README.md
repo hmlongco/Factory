@@ -297,8 +297,8 @@ Michael was also one of Google's [Open Source Peer Reward](https://opensource.go
 ## Additional Resources
 
 * [Factory Documentation](https://hmlongco.github.io/Factory/documentation/factory)
-* [Factory and Functional Dependency Injection](https://betterprogramming.pub/factory-and-functional-dependency-injection-2d0a38042d05)
-* [Factory: Multiple Module Registration](https://betterprogramming.pub/factory-multiple-module-registration-f9d19721a31d?sk=a03d78484d8c351762306ff00a8be67c)
+* [Factory 1.0 and Functional Dependency Injection](https://betterprogramming.pub/factory-and-functional-dependency-injection-2d0a38042d05)
+* [Factory 1.0: Multiple Module Registration](https://betterprogramming.pub/factory-multiple-module-registration-f9d19721a31d?sk=a03d78484d8c351762306ff00a8be67c)
 * [Resolver: A Swift Dependency Injection System](https://github.com/hmlongco/Resolver)
 * [Inversion of Control Design Pattern ~ Wikipedia](https://en.wikipedia.org/wiki/Inversion_of_control)
 * [Inversion of Control Containers and the Dependency Injection pattern ~ Martin Fowler](https://martinfowler.com/articles/injection.html)
