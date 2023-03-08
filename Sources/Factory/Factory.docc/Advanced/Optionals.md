@@ -49,5 +49,5 @@ Next, note that Factory is *thread-safe.* Registrations and resolutions lock and
 
 And finally, note that calling register also *removes any cached dependency from its associated scope.* This ensures that any new dependency injection request performed from that point on will always get the most recently defined instance of an object.
 
-This technique can also be handy when doing registrations in a project with multiple modules. See: [Factory: Multiple Module Registration](https://betterprogramming.pub/factory-multiple-module-registration-f9d19721a31d?sk=a03d78484d8c351762306ff00a8be67c)
+This technique can also be handy when doing registrations in a project with multiple modules. See <doc:Modules> for more.
 

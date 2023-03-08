@@ -39,6 +39,7 @@ Ready to get started?
 ### Advanced Topics
 
 - <doc:Design>
+- <doc:Modules>
 - <doc:Cycle>
 - <doc:Optionals>
 - <doc:Functional>

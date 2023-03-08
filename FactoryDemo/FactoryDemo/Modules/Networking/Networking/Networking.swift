@@ -19,7 +19,7 @@ extension Container {
 
 extension Container {
     public func networkSetup() {
-        Container.shared.networkType.register {
+        networkType.register {
             CommonNetworkType()
         }
     }

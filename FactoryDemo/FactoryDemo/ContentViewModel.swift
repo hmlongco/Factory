@@ -29,8 +29,6 @@ class ContentViewModel: ObservableObject {
     }
 
     func testFactory() {
-        $network.resolve(reset: .all)
-        
         let m1 = CycleDemo()
         print("CycleDemo - W/O ROOT \(m1.aService === m1.bService)")
         let m2 = Container.shared.cycleDemo()
@@ -38,6 +36,9 @@ class ContentViewModel: ObservableObject {
 
         let p1 = Container.shared.promisedType()
         p1?.test()
+
+        let n1 = Container.shared.networkType()
+        n1.test()
     }
 
 }

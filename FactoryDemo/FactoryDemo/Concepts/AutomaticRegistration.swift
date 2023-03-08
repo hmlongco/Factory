@@ -19,24 +19,25 @@ extension Container: AutoRegistering {
 
         print("AUTOREGISTRATION!!!")
 
+        // Enable tracing if needed
+        // manager.trace.toggle()
+
+        // Demonstrate registring optional type at runtime
         autoRegisteredService.register { MyService() }
 
-        // Letting external module initialize
+        // Demonstrate providing type external to module
+        promisedType.register { PromisedCommonType() }
+
+        // Demonstrate letting external module initialize
         networkSetup()
 
-        // Providing type external to module
-        promisedType.register { self.scopedCommonType() }
-
         #if DEBUG
+        // Demonstrate custom registration overrides for UI tests
         if ProcessInfo().arguments.contains("-mock1") {
             myServiceType.register { MockServiceN(1) }
         }
-        // manager.trace.toggle()
         #endif
-    }
 
-    private var scopedCommonType: Factory<CommonType> {
-        self { PromisedCommonType() }.singleton
     }
 
 }
