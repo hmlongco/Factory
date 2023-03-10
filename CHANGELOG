@@ -1,5 +1,9 @@
 # Factory Changelog
 
+## 2.0.3
+
+* AutoRegister should be retriggered after resetting registrations.
+
 ## 2.0.2
 
 * Registration on a new container could be overriden by auto registration on same Factory

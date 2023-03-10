@@ -504,13 +504,13 @@ extension ContainerManager {
         switch options {
         case .registration:
             registrations = [:]
-            autoRegistrationCheckNeeded = false
+            autoRegistrationCheckNeeded = true
         case .scope:
             cache.reset()
         default:
             registrations = [:]
             cache.reset()
-            autoRegistrationCheckNeeded = false
+            autoRegistrationCheckNeeded = true
         }
     }
 
