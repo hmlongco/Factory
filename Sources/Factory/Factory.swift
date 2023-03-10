@@ -132,15 +132,7 @@ public struct Factory<T>: FactoryModifying {
     ///  - factory: A new factory closure that produces an object of the desired type when needed.
     /// Allows updating registered factory and scope.
     public func register(factory: @escaping () -> T) {
-        registration.register(factory: TypedFactory<Void,T>(factory: factory, scope: registration.scope))
-    }
-
-    /// Allows registering new factory closure and updating scope used after the fact.
-    /// - Parameters:
-    ///  - scope: Optional parameter that lets the registration redefine the scope used for this dependency.
-    ///  - factory: A new factory closure that produces an object of the desired type when needed.
-    public func register(scope: Scope?, factory: @escaping () -> T) {
-        registration.register(factory: TypedFactory<Void,T>(factory: factory, scope: scope))
+        registration.register(TypedFactory<Void,T>(factory: factory, scope: registration.scope))
     }
 
     /// Internal parameters for this Factory including id, container, the factory closure itself, the scope,
@@ -224,15 +216,7 @@ public struct ParameterFactory<P,T>: FactoryModifying {
     /// - Parameters:
     ///  - factory: A new factory closure that produces an object of the desired type when needed.
     public func register(factory: @escaping (P) -> T) {
-        registration.register(factory: TypedFactory<P,T>(factory: factory, scope: registration.scope))
-    }
-
-    /// Allows registering new factory closure and updating scope used after the fact.
-    /// - Parameters:
-    ///  - scope: Optional parameter that lets the registration redefine the scope used for this dependency.
-    ///  - factory: A new factory closure that produces an object of the desired type when needed.
-    public func register(scope: Scope?, factory: @escaping (P) -> T) {
-        registration.register(factory: TypedFactory<P,T>(factory: factory, scope: scope))
+        registration.register(TypedFactory<P,T>(factory: factory, scope: registration.scope))
     }
 
     /// Required registration
@@ -334,6 +318,59 @@ extension FactoryModifying {
     /// As shown, decorator can come in handy when you need to perform some operation or manipulation after the fact.
     public func decorator(_ decorator: @escaping (_ instance: T) -> Void) -> Self {
         map { $0.registration.decorator = decorator }
+    }
+
+    /// Allows registering new factory closure and updating scope used after the fact.
+    /// - Parameters:
+    ///  - scope: Optional parameter that lets the registration redefine the scope used for this dependency.
+    ///  - factory: A new factory closure that produces an object of the desired type when needed.
+    public func register(scope: Scope?, factory: @escaping (P) -> T) {
+        registration.register(TypedFactory<P,T>(factory: factory, scope: scope))
+    }
+
+    /// Factory builder shortcut for context(.arg) { .. }
+    @discardableResult
+    public func arg(_ argument: String, factory: @escaping (P) -> T) -> Self {
+        context(.arg(argument), factory: factory)
+        return self
+    }
+    /// Factory builder shortcut for context(.preview) { .. }
+    @discardableResult
+    public func preview(factory: @escaping (P) -> T) -> Self {
+        context(.preview, factory: factory)
+        return self
+    }
+    /// Factory builder shortcut for context(.test) { .. }
+    @discardableResult
+    public func test(factory: @escaping (P) -> T) -> Self {
+        context(.test, factory: factory)
+        return self
+    }
+    /// Factory builder shortcut for context(.debug) { .. }
+    @discardableResult
+    public func debug(factory: @escaping (P) -> T) -> Self {
+        context(.debug, factory: factory)
+        return self
+    }
+
+}
+
+extension FactoryModifying {
+
+    /// Registers a factory to be used when running in a specific context.
+    ///
+    /// A context might be be when running in SwiftUI preview mode, or when running unit tests.
+    public func context(_ context: FactoryContext, factory: @escaping (P) -> T) {
+        switch context {
+        case .arg:
+            let typedFactory = TypedFactory<P,T>(factory: factory, scope: registration.scope)
+            registration.context(context, id: registration.id, factory: typedFactory)
+        default:
+            #if DEBUG
+            let typedFactory = TypedFactory<P,T>(factory: factory, scope: registration.scope)
+            registration.context(context, id: registration.id, factory: typedFactory)
+            #endif
+        }
     }
 
     /// Resets the Factory's behavior to its original state, removing any registrations and clearing any cached items from the specified scope.
@@ -485,10 +522,11 @@ public class ContainerManager {
     /// Internal closure decorates all factory resolutions for this container.
     internal var decorator: ((Any) -> ())?
     internal var autoRegistrationCheckNeeded = true
+    internal var argumentCheckNeeded = false
     internal typealias FactoryMap = [String:AnyFactory]
     internal lazy var registrations: FactoryMap = .init(minimumCapacity: 32)
     internal lazy var cache: Scope.Cache = Scope.Cache()
-    internal lazy var stack: [(FactoryMap, Scope.Cache.CacheMap, Bool)] = []
+    internal lazy var stack: [(FactoryMap, Scope.Cache.CacheMap, Bool, Bool)] = []
 
 }
 
@@ -504,13 +542,16 @@ extension ContainerManager {
         switch options {
         case .registration:
             registrations = [:]
-            autoRegistrationCheckNeeded = false
+            autoRegistrationCheckNeeded = true
+        case .context:
+            registrations = registrations.filter { !$0.key.contains(".ctx=") }
         case .scope:
             cache.reset()
         default:
             registrations = [:]
             cache.reset()
-            autoRegistrationCheckNeeded = false
+            autoRegistrationCheckNeeded = true
+            argumentCheckNeeded = false
         }
     }
 
@@ -525,7 +566,7 @@ extension ContainerManager {
     public func push() {
         defer { globalRecursiveLock.unlock() }
         globalRecursiveLock.lock()
-        stack.append((registrations, cache.cache, autoRegistrationCheckNeeded))
+        stack.append((registrations, cache.cache, autoRegistrationCheckNeeded, argumentCheckNeeded))
     }
 
     /// Test function pops and restores a previously pushed registration and cache state
@@ -536,6 +577,7 @@ extension ContainerManager {
             registrations = state.0
             cache.cache = state.1
             autoRegistrationCheckNeeded = state.2
+            argumentCheckNeeded = state.3
         }
     }
 
@@ -743,10 +785,12 @@ public protocol AutoRegistering {
 public enum FactoryResetOptions {
     /// Resets registration and scope caches
     case all
-    /// Performs no reset
+    /// Performs no reset actions on this container
     case none
     /// Resets registrations on this container
     case registration
+    /// Resets context-based registrations on this container
+    case context
     /// Resets all scope caches on this container
     case scope
 }
@@ -1031,7 +1075,17 @@ internal struct FactoryReference<C: SharedContainer, T>: BoxedFactoryReference {
 
 #endif
 
-// MARK: - Internal Protocols and Types
+// MARK: - Public Protocols and Types
+
+public enum FactoryContext: Equatable {
+    case arg(String)
+    case preview
+    case test
+    case debug
+    public static var arguments: [String] = ProcessInfo.processInfo.arguments
+    public static var isPreview: Bool = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
+    public static var isTest: Bool = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+}
 
 /// Shared registration type for Factory and ParameterFactory. Used internally to manage the registration and resolution process.
 public struct FactoryRegistration<P,T> {
@@ -1059,9 +1113,9 @@ public struct FactoryRegistration<P,T> {
 
         performAutoRegistrationCheck()
 
-        let registeredFactory = manager.registrations[id] as? TypedFactory<P,T>
-        let registeredScope = registeredFactory == nil ? scope : registeredFactory?.scope
-        var current: (P) -> T = registeredFactory?.factory ?? factory
+        let typeFactory = findFactoryForCurrentContext()
+        let scope: Scope? = typeFactory.scope
+        var factory: (P) -> T = typeFactory.factory
 
         #if DEBUG
         if manager.dependencyChainTestMax > 0 {
@@ -1071,8 +1125,8 @@ public struct FactoryRegistration<P,T> {
         let traceLevel = globalTraceResolutions.count
         var traceNew = false
         if manager.trace {
-            let wrapped = current
-            current = {
+            let wrapped = factory
+            factory = {
                 traceNew = true // detects if new instance created
                 return wrapped($0)
             }
@@ -1081,7 +1135,7 @@ public struct FactoryRegistration<P,T> {
         #endif
 
         globalGraphResolutionDepth += 1
-        let instance = registeredScope?.resolve(using: manager.cache, id: id, factory: { current(parameters) }) ?? current(parameters)
+        let instance = scope?.resolve(using: manager.cache, id: id, factory: { factory(parameters) }) ?? factory(parameters)
         globalGraphResolutionDepth -= 1
 
         if globalGraphResolutionDepth == 0 {
@@ -1116,17 +1170,57 @@ public struct FactoryRegistration<P,T> {
         return instance
     }
 
+    func findFactoryForCurrentContext() -> TypedFactory<P,T> {
+        let manager = container.manager
+        if manager.argumentCheckNeeded {
+            for arg in FactoryContext.arguments {
+                if let found = manager.registrations["\(id).ctx=`\(arg)`"] as? TypedFactory<P,T> {
+                    return found
+                }
+            }
+        }
+        #if DEBUG
+        let current: FactoryContext = FactoryContext.isPreview ? .preview : FactoryContext.isTest ? .test : .debug
+        for context in [FactoryContext.preview, .test, .debug] where context == current {
+            if let found = manager.registrations["\(id).ctx=\(context)"] as? TypedFactory<P,T> {
+                return found
+            }
+        }
+        #endif
+        if let found = manager.registrations[id] as? TypedFactory<P,T> {
+            return found
+        }
+        return TypedFactory<P,T>(factory: factory, scope: scope)
+    }
+
     /// Registers a new factory closure capable of producing an object or service of the desired type. This factory overrides the original factory and
     /// the next time this factory is resolved Factory will evaluate the newly registered factory instead.
     /// - Parameters:
     ///   - id: ID of associated Factory.
     ///   - factory: Factory closure called to create a new instance of the service when needed.
-    internal func register(factory: AnyFactory) {
+    internal func register(_ factory: AnyFactory) {
         defer { globalRecursiveLock.unlock() }
         globalRecursiveLock.lock()
         performAutoRegistrationCheck()
         container.manager.registrations[id] = factory
         container.manager.cache.removeValue(forKey: id)
+    }
+
+    internal func context(_ context: FactoryContext, id: String, factory: AnyFactory) {
+        defer { globalRecursiveLock.unlock() }
+        globalRecursiveLock.lock()
+        performAutoRegistrationCheck()
+        let manager = container.manager
+        switch context {
+        case .arg(let arg):
+            let key = "\(id).ctx=`\(arg)`"
+            manager.registrations[key] = factory
+            manager.argumentCheckNeeded = true
+       default:
+            let key = "\(id).ctx=\(context)"
+            manager.registrations[key] = factory
+        }
+        manager.cache.removeValue(forKey: id)
     }
 
     /// Support function performs autoRegistrationCheck
@@ -1151,10 +1245,12 @@ public struct FactoryRegistration<P,T> {
         switch options {
         case .registration:
             manager.registrations.removeValue(forKey: id)
+        case .context:
+            manager.registrations = manager.registrations.filter { !$0.key.hasPrefix("\(id).ctx=") }
         case .scope:
             manager.cache.removeValue(forKey: id)
         default:
-            manager.registrations.removeValue(forKey: id)
+            manager.registrations = manager.registrations.filter { !$0.key.hasPrefix(id) }
             manager.cache.removeValue(forKey: id)
         }
     }

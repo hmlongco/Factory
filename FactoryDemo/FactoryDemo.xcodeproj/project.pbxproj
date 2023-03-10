@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4C386E6D298EDE960018FB55 /* Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C386E6C298EDE960018FB55 /* Helpers.swift */; };
-		4C3F6FE92932C5F80084A647 /* AutomaticRegistration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C3F6FE82932C5F80084A647 /* AutomaticRegistration.swift */; };
+		4C3F6FE92932C5F80084A647 /* FactoryDemoApp+AutoRegister.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C3F6FE82932C5F80084A647 /* FactoryDemoApp+AutoRegister.swift */; };
 		4C46E063295642B100185E6E /* GenericAPIs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C46E062295642B100185E6E /* GenericAPIs.swift */; };
 		4C46E0662956433200185E6E /* CircularDependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C46E0652956433200185E6E /* CircularDependencies.swift */; };
 		4C4ED1F828FDADB3009E41A5 /* FunctionInjection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C4ED1F728FDADB3009E41A5 /* FunctionInjection.swift */; };
@@ -89,7 +89,7 @@
 
 /* Begin PBXFileReference section */
 		4C386E6C298EDE960018FB55 /* Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Helpers.swift; sourceTree = "<group>"; };
-		4C3F6FE82932C5F80084A647 /* AutomaticRegistration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutomaticRegistration.swift; sourceTree = "<group>"; };
+		4C3F6FE82932C5F80084A647 /* FactoryDemoApp+AutoRegister.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FactoryDemoApp+AutoRegister.swift"; sourceTree = "<group>"; };
 		4C46E062295642B100185E6E /* GenericAPIs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericAPIs.swift; sourceTree = "<group>"; };
 		4C46E0652956433200185E6E /* CircularDependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircularDependencies.swift; sourceTree = "<group>"; };
 		4C4ED1F728FDADB3009E41A5 /* FunctionInjection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FunctionInjection.swift; sourceTree = "<group>"; };
@@ -141,7 +141,6 @@
 			children = (
 				4CA223FF28CFC49900944456 /* Actors.swift */,
 				4C6EB40528D792D400D17E7D /* Alternatives.swift */,
-				4C3F6FE82932C5F80084A647 /* AutomaticRegistration.swift */,
 				4C46E0652956433200185E6E /* CircularDependencies.swift */,
 				4C4ED1F728FDADB3009E41A5 /* FunctionInjection.swift */,
 				4C46E062295642B100185E6E /* GenericAPIs.swift */,
@@ -213,6 +212,7 @@
 			children = (
 				4CEEC348284927EE00C979B3 /* FactoryDemoApp.swift */,
 				4CEEC35B2849309C00C979B3 /* FactoryDemoApp+Injection.swift */,
+				4C3F6FE82932C5F80084A647 /* FactoryDemoApp+AutoRegister.swift */,
 				4CEEC34A284927EE00C979B3 /* ContentView.swift */,
 				4CEEC35F2849311000C979B3 /* ContentViewModel.swift */,
 				4C6914432988A05D0083A78F /* ContainerDemoView.swift */,
@@ -412,7 +412,7 @@
 				4C947C332988A13800815704 /* ContainerDemoViewModel.swift in Sources */,
 				4C46E063295642B100185E6E /* GenericAPIs.swift in Sources */,
 				4CEEC349284927EE00C979B3 /* FactoryDemoApp.swift in Sources */,
-				4C3F6FE92932C5F80084A647 /* AutomaticRegistration.swift in Sources */,
+				4C3F6FE92932C5F80084A647 /* FactoryDemoApp+AutoRegister.swift in Sources */,
 				4CEEC35C2849309C00C979B3 /* FactoryDemoApp+Injection.swift in Sources */,
 				4C46E0662956433200185E6E /* CircularDependencies.swift in Sources */,
 				4C6EB40628D792D400D17E7D /* Alternatives.swift in Sources */,

@@ -34,6 +34,14 @@ extension Container {
     var contentViewModel: Factory<ContentViewModel> { self { ContentViewModel() } }
 }
 
+extension Container {
+    var previewService: Factory<MyServiceType> {
+        self { MyService() }
+            .preview { MockServiceN(55) }
+            .singleton
+    }
+}
+
 extension SharedContainer {
     var myServiceType: Factory<MyServiceType> { self { MyService() } }
     var sharedService: Factory<MyServiceType> { self { MyService() }.shared }

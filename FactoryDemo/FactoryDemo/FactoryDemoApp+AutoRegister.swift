@@ -1,5 +1,5 @@
 //
-//  AutomaticRegistration.swift
+//  FactoryDemoApp+AutoRegister.swift
 //  FactoryDemo
 //
 //  Created by Michael Long on 11/26/22.
@@ -31,13 +31,24 @@ extension Container: AutoRegistering {
         // Demonstrate letting external module initialize
         networkSetup()
 
+        // Demonstrate registration overrides for uitest application passed arguments
+        myServiceType.arg("mock1") {
+            MockServiceN(1)
+        }
+        myServiceType.arg("mock2") {
+            MockServiceN(2)
+        }
+
         #if DEBUG
-        // Demonstrate custom registration overrides for UI tests
-        if ProcessInfo().arguments.contains("-mock1") {
-            myServiceType.register { MockServiceN(1) }
+        // Demonstrate preview registration override
+        myServiceType.preview {
+            MockServiceN(66)
+        }
+        // Demonstrate debug registration override
+        myServiceType.debug {
+            MockServiceN(77)
         }
         #endif
-
     }
 
 }
