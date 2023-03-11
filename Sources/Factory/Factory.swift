@@ -131,8 +131,10 @@ public struct Factory<T>: FactoryModifying {
     /// - Parameters:
     ///  - factory: A new factory closure that produces an object of the desired type when needed.
     /// Allows updating registered factory and scope.
-    public func register(factory: @escaping () -> T) {
+    @discardableResult
+    public func register(factory: @escaping () -> T) -> Self {
         registration.register(TypedFactory<Void,T>(factory: factory, scope: registration.scope))
+        return self
     }
 
     /// Internal parameters for this Factory including id, container, the factory closure itself, the scope,
@@ -215,8 +217,10 @@ public struct ParameterFactory<P,T>: FactoryModifying {
     /// ```
     /// - Parameters:
     ///  - factory: A new factory closure that produces an object of the desired type when needed.
-    public func register(factory: @escaping (P) -> T) {
+    @discardableResult
+    public func register(factory: @escaping (P) -> T) -> Self {
         registration.register(TypedFactory<P,T>(factory: factory, scope: registration.scope))
+        return self
     }
 
     /// Required registration
@@ -324,8 +328,10 @@ extension FactoryModifying {
     /// - Parameters:
     ///  - scope: Optional parameter that lets the registration redefine the scope used for this dependency.
     ///  - factory: A new factory closure that produces an object of the desired type when needed.
-    public func register(scope: Scope?, factory: @escaping (P) -> T) {
+    @discardableResult
+    public func register(scope: Scope?, factory: @escaping (P) -> T) -> Self {
         registration.register(TypedFactory<P,T>(factory: factory, scope: scope))
+        return self
     }
 
     /// Factory builder shortcut for context(.arg) { .. }
@@ -525,6 +531,7 @@ public class ContainerManager {
     internal var argumentCheckNeeded = false
     internal typealias FactoryMap = [String:AnyFactory]
     internal lazy var registrations: FactoryMap = .init(minimumCapacity: 32)
+    internal lazy var contexts: FactoryMap = .init(minimumCapacity: 32)
     internal lazy var cache: Scope.Cache = Scope.Cache()
     internal lazy var stack: [(FactoryMap, Scope.Cache.CacheMap, Bool, Bool)] = []
 
@@ -541,8 +548,7 @@ extension ContainerManager {
         globalRecursiveLock.lock()
         switch options {
         case .registration:
-            registrations = [:]
-            autoRegistrationCheckNeeded = true
+            registrations = registrations.filter { $0.key.contains(".ctx=") }
         case .context:
             registrations = registrations.filter { !$0.key.contains(".ctx=") }
         case .scope:
@@ -1180,11 +1186,14 @@ public struct FactoryRegistration<P,T> {
             }
         }
         #if DEBUG
-        let current: FactoryContext = FactoryContext.isPreview ? .preview : FactoryContext.isTest ? .test : .debug
-        for context in [FactoryContext.preview, .test, .debug] where context == current {
-            if let found = manager.registrations["\(id).ctx=\(context)"] as? TypedFactory<P,T> {
-                return found
-            }
+        if FactoryContext.isPreview, let found = manager.registrations["\(id).ctx=preview"] as? TypedFactory<P,T> {
+            return found
+        }
+        if FactoryContext.isTest, let found = manager.registrations["\(id).ctx=test"] as? TypedFactory<P,T> {
+            return found
+        }
+        if let found = manager.registrations["\(id).ctx=debug"] as? TypedFactory<P,T> {
+            return found
         }
         #endif
         if let found = manager.registrations[id] as? TypedFactory<P,T> {

@@ -8,43 +8,111 @@
 import Foundation
 
 public struct NewFactory<T> {
-    public init(_ factory: @escaping () -> T) {
-        self.id = UUID().uuidString
-        self.container = NewContainer.shared
-        self.factory = factory
-    }
-    fileprivate init(_ container: NewSharedContainer, _ factory: @escaping () -> T) {
-        self.id = "\(container).\(T.self)"
+    fileprivate init(_ container: NewContainer, key: String = #function, _ factory: @escaping () -> T) {
         self.container = container
-        self.factory = factory
+        self.registration = container.registration(id: "\(container).\(T.self).\(key)", container: container, factory: factory)
     }
     public func callAsFunction() -> T {
-        container.registrations.resolve(id: id, factory: factory)
+        registration.resolve()
     }
-    public func register(factory: @escaping () -> T) {
-        container.registrations.register(id: id, factory: factory)
+    @discardableResult public func register(factory: @escaping () -> T) -> Self {
+        registration.register(factory: factory)
+        return self
     }
-    public func name(_ name: String) -> Self {
-        map { $0.id = "\(container).\(T.self).\(name)" }
+    @discardableResult public func context(factory: @escaping () -> T) -> Self {
+        registration.context(factory: factory)
+        return self
     }
-    public func scope(_ scope: NewFactoryScope) -> Self {
-        map { $0.scope = scope }
+    @discardableResult public func scope(_ scope: NewFactoryScope) -> Self {
+        registration.scope(scope)
+        return self
+    }
+    @discardableResult public func once(_ transform: (_ factory: NewFactory<T>) -> Void) -> Self {
+        registration.perform(once: transform(self))
+        return self
     }
     public func reset() {
-        container.registrations.reset(id: id)
+        container.registrations.removeValue(forKey: registration.id)
     }
-    @inlinable internal func map(_ transform: (_ factory: inout NewFactory) -> Void) -> Self {
-        var mutable = self
-        transform(&mutable)
-        return mutable
-    }
-    private var id: String
-    private let container: NewSharedContainer
-    private let factory: () -> T
-    private var scope: NewFactoryScope?
+    internal let container: NewContainer
+    internal let registration: NewRegistration<T>
 }
 
-private struct NewRegistration<T> {}
+public final class NewContainer {
+    public static var shared = NewContainer()
+    internal func registration<T>(id: String, container: NewContainer, factory: @escaping FactoryType<T>) -> NewRegistration<T> {
+        defer { lock.unlock() }
+        lock.lock()
+        // autoRegistrationCheck
+        // print("REGISTRATION \(id)")
+        if let registration = registrations[id] as? NewRegistration<T> {
+            return registration
+        }
+        let registration = NewRegistration<T>(id: id, factory: factory)
+        registrations[id] = registration
+        return registration
+    }
+    internal var lock = NSRecursiveLock()
+    internal var registrations: [String:AnyRegistration] = [:]
+}
+
+internal protocol AnyRegistration {}
+
+internal protocol CacheProviding: AnyObject{
+    associatedtype T
+    var cached: T? { get set }
+}
+
+internal typealias FactoryType<T> = () -> T
+
+internal class NewRegistration<T>: AnyRegistration, CacheProviding {
+    init(id: String, factory: @escaping FactoryType<T>) {
+        self.id = id
+        self.factory = factory
+    }
+    internal func resolve() -> T {
+        defer { lock.unlock() }
+        lock.lock()
+        let instance: T = context?() ?? registration?() ?? factory()
+        return instance
+    }
+    internal func register(factory: @escaping FactoryType<T>) {
+        defer { lock.unlock() }
+        lock.lock()
+        registration = factory
+        cached = nil
+    }
+    internal func context(factory: @escaping () -> T) {
+        defer { lock.unlock() }
+        lock.lock()
+        context = factory
+        cached = nil
+    }
+    internal func perform(once: @autoclosure () -> Void) {
+        defer { lock.unlock() }
+        lock.lock()
+        if hasPeformedOnce == false {
+            hasPeformedOnce = true
+            print("PERFORMING ONCE")
+            once()
+        }
+    }
+    internal func scope(_ newScope: NewFactoryScope) {
+        defer { lock.unlock() }
+        lock.lock()
+        scope = newScope
+        cached = nil
+    }
+    internal var lock = NSRecursiveLock()
+    internal var id: String
+    internal var factory: FactoryType<T>
+    internal var registration: FactoryType<T>?
+    internal var context: FactoryType<T>?
+    internal var scope: NewFactoryScope?
+    internal var cached: T?
+    internal var hasPeformedOnce: Bool = false
+}
+
 
 public class NewFactoryScope {}
 public extension NewFactoryScope {
@@ -53,102 +121,51 @@ public extension NewFactoryScope {
     static var singleton: NewFactoryScope = NewFactoryScope()
 }
 
-public class Registrations {
-    fileprivate func resolve<T>(id: String, factory: () -> T) -> T {
-        defer { lock.unlock() }
-        lock.lock()
-        print("RESOLVING \(id)")
-        return registrations[id]?() as? T ?? factory()
-    }
-    fileprivate func register<T>(id: String, factory: @escaping () -> T) {
-        defer { lock.unlock() }
-        lock.lock()
-        registrations[id] = factory
-    }
-    fileprivate func reset(id: String) {
-        defer { lock.unlock() }
-        lock.lock()
-        registrations.removeValue(forKey: id)
-    }
-    internal var lock = NSRecursiveLock()
-    internal var registrations: [String:(() -> Any)] = [:]
-}
-
-
-
-
-public protocol NewSharedContainer: AnyObject {
-    static var shared: Self { get }
-    var registrations: Registrations { get }
-}
-
-extension NewSharedContainer {
-    public func factory<T>(factory: @escaping () -> T) -> NewFactory<T> {
-        NewFactory(self, factory)
-    }
-    public func register<T>(factory: @escaping () -> T) -> NewFactory<T> {
-        NewFactory(self, factory)
+extension NewContainer {
+    public func callAsFunction<T>(key: String = #function, factory: @escaping () -> T) -> NewFactory<T> {
+        NewFactory(self, key: key, factory)
     }
 }
 
-extension NewSharedContainer {
-    var service: NewFactory<MyServiceType> {
-        register { MyService() }
-    }
-}
 
-public final class NewContainer: NewSharedContainer {
-    public static var shared = NewContainer()
-    public var registrations = Registrations()
+struct ContextService {
+    var name: String
 }
 
 extension NewContainer {
-    static var oldSchool = NewFactory<MyServiceType> { MyService() }
-        .scope(.shared)
+    fileprivate var contextService: NewFactory<ContextService> {
+        self { ContextService(name: "FACTORY") }
+            .context { ContextService(name: "CONTEXT") }
+    }
+    fileprivate var onceService: NewFactory<ContextService> {
+        self { ContextService(name: "FACTORY") }
+            .once { $0.context { ContextService(name: "CONTEXT-ONCE") } }
+    }
 }
 
 extension NewContainer {
     var service: NewFactory<MyServiceType> {
-        register { MyService() }
+        self { MyService() }
     }
     var cachedService: NewFactory<MyServiceType> {
-        register { MyService() }
+        self { MyService() }
             .scope(.singleton)
     }
     var namedService: NewFactory<MyServiceType> {
-        register { MyService() }
-            .name("test")
+        self { MyService() }
     }
     var constructedService: NewFactory<MyConstructedService> {
-        register { MyConstructedService(service: self.service()) }
+        self { MyConstructedService(service: self.service()) }
     }
     func parameterized(_ n: Int) -> NewFactory<ParameterService> {
-        register { ParameterService(count: n) }
+        self { ParameterService(count: n) }
     }
 }
-
-
-
-
-public final class MyContainer: NewSharedContainer {
-    public static var shared = MyContainer()
-    public var registrations = Registrations()
-}
-
-extension MyContainer {
-    var anotherService: NewFactory<MyServiceType> {
-        register { MyService() }
-    }
-}
-
 
 @propertyWrapper public struct NewInjected<T> {
     private var dependency: T
     public init(_ keyPath: KeyPath<NewContainer, NewFactory<T>>) {
         self.dependency = NewContainer.shared[keyPath: keyPath]()
-    }
-    public init<C:NewSharedContainer>(_ keyPath: KeyPath<C, NewFactory<T>>) {
-        self.dependency = C.shared[keyPath: keyPath]()
     }
     public var wrappedValue: T {
         get { return dependency }
@@ -156,12 +173,7 @@ extension MyContainer {
     }
 }
 
-
-
 class Test1 {
-
-    // Old factory static service Locator
-    let oldSchool = NewContainer.oldSchool()
 
     // New shared service Locator
     let service = NewContainer.shared.constructedService()
@@ -177,11 +189,8 @@ class Test1 {
     // Injected property from default shared container
     @NewInjected(\.constructedService) var constructed
 
-    // Injected property from custom container
-    @NewInjected(\MyContainer.anotherService) var anotherService
-
     // Constructor
-    init(container: NewContainer) {
+    init(container: NewContainer = NewContainer.shared) {
         // construct from container
         service2 = container.constructedService()
 
@@ -190,9 +199,20 @@ class Test1 {
 
         container.service.register { MockServiceN(8) }
 
-        print(constructed.text())
         print(service.text())
         print(service2.text())
+
+        print("CONTEXT = \(container.contextService().name)")
+        container.contextService.context {
+            ContextService(name: "CONTEXT-REVISED")
+        }
+        print("CONTEXT = \(container.contextService().name)")
+
+        print("ONCE = \(container.onceService().name)")
+        container.onceService.context {
+            ContextService(name: "CONTEXT-REVISED")
+        }
+        print("ONCE = \(container.onceService().name)")
     }
 
 }
