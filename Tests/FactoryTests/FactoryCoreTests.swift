@@ -121,6 +121,20 @@ final class FactoryCoreTests: XCTestCase {
         XCTAssertEqual(CustomContainer.shared.count, 0)
         let _ = CustomContainer.shared.decorated()
         XCTAssertEqual(CustomContainer.shared.count, 2)
+        let _ = CustomContainer.shared.decorated()
+        XCTAssertEqual(CustomContainer.shared.count, 3)
+        let _ = CustomContainer.shared.decorated()
+        XCTAssertEqual(CustomContainer.shared.count, 4)
+    }
+
+    func testFactoryOnce() {
+        XCTAssertEqual(CustomContainer.shared.count, 0)
+        let _ = CustomContainer.shared.once()
+        XCTAssertEqual(CustomContainer.shared.count, 2)
+        let _ = CustomContainer.shared.once()
+        XCTAssertEqual(CustomContainer.shared.count, 2)
+        let _ = CustomContainer.shared.once()
+        XCTAssertEqual(CustomContainer.shared.count, 2)
     }
 
     func testCircularDependencyFailure() {

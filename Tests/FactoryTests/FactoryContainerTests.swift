@@ -63,12 +63,6 @@ final class FactoryContainerTests: XCTestCase {
         XCTAssertNotNil(Container.shared.sharedCoverage())
         XCTAssertNotNil(Container.shared.singletonCoverage())
         XCTAssertNotNil(Container.shared.uniqueCoverage())
-//        XCTAssertNotNil(Container.shared.cachedCoverageParameter(1))
-//        XCTAssertNotNil(Container.shared.graphCoverageParameter(1))
-//        XCTAssertNotNil(Container.shared.scopeCoverageParameter(1))
-//        XCTAssertNotNil(Container.shared.sharedCoverageParameter(1))
-//        XCTAssertNotNil(Container.shared.singletonCoverageParameter(1))
-//        XCTAssertNotNil(Container.shared.uniqueCoverageParameter(1))
     }
 
 }
@@ -80,10 +74,4 @@ private extension Container {
     var sharedCoverage: Factory<MyService?> { self { MyService() }.shared }
     var singletonCoverage: Factory<MyService?>  { self { MyService() }.singleton }
     var uniqueCoverage: Factory<MyService?>  { self { MyService() }.unique }
-//    var cachedCoverageParameter: ParameterFactory<Int, ParameterService?> { cached { ParameterService(value: $0) }. }
-//    var graphCoverageParameter: ParameterFactory<Int, ParameterService?> { graph { ParameterService(value: $0) } }
-//    var scopeCoverageParameter: ParameterFactory<Int, ParameterService?> { scope(.session) { ParameterService(value: $0) } }
-//    var sharedCoverageParameter: ParameterFactory<Int, ParameterService?> { shared { ParameterService(value: $0) } }
-//    var singletonCoverageParameter: ParameterFactory<Int, ParameterService?> { singleton { ParameterService(value: $0) } }
-//    var uniqueCoverageParameter: ParameterFactory<Int, ParameterService?>  { self { ParameterService(value: $0) } }
 }

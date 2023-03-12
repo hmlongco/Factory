@@ -195,6 +195,15 @@ final class CustomContainer: SharedContainer, AutoRegistering {
             self.count += 1
         }
     }
+    var once: Factory<MyService> {
+        self {
+            MyService()
+        }
+        .once {
+            self.count += 1
+            return $0
+        }
+    }
     func autoRegister() {
         print("CustomContainer AUTOREGISTERING")
         Self.count = 1

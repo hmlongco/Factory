@@ -174,6 +174,27 @@ final class FactoryContextTests: XCTestCase {
         XCTAssertEqual(service2.name, "DEBUG")
     }
 
+    func testResettingContainerContextsWithOnce() {
+        FactoryContext.arguments = []
+        FactoryContext.isPreview = true
+        FactoryContext.isTest = true
+        // reset container contexts
+        let service1 = Container.shared.onceContextService()
+        // will see once
+        XCTAssertEqual(service1.name, "ONCE")
+        // update
+        Container.shared.onceContextService.debug {
+            ContextService(name: "DEBUG")
+        }
+        let service2 = Container.shared.onceContextService()
+        // will see new context
+        XCTAssertEqual(service2.name, "DEBUG")
+        Container.shared.onceContextService.reset(.context)
+        let service3 = Container.shared.onceContextService()
+        // will see factory
+        XCTAssertEqual(service3.name, "FACTORY")
+    }
+
 }
 
 struct ContextService {
@@ -188,4 +209,15 @@ extension Container {
         self { ContextService(name: "FACTORY") }
             .debug { ContextService(name: "DEBUG") }
     }
+    fileprivate var onceContextService: Factory<ContextService> {
+        self {
+            ContextService(name: "FACTORY")
+        }
+        .once {
+            $0.debug {
+                ContextService(name: "ONCE")
+            }
+        }
+    }
+
 }

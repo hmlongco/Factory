@@ -240,8 +240,9 @@ public protocol FactoryModifying {
     var registration: FactoryRegistration<P,T> { get set }
 }
 
-extension FactoryModifying {
+// FactoryModifying Scope Functionality
 
+extension FactoryModifying {
     /// Defines a dependency scope for this Factory. See ``Scope``.
     /// ```swift
     /// var service: Factory<ServiceType> {
@@ -306,7 +307,11 @@ extension FactoryModifying {
     @inlinable public var unique: Self {
         scope(.none)
     }
+}
 
+// FactoryModifying Decorator Functionality
+
+extension FactoryModifying {
     /// Adds a factory specific decorator. The decorator will be *always* be called with the resolved dependency
     /// for further examination or manipulation.
     ///
@@ -321,19 +326,29 @@ extension FactoryModifying {
     /// ```
     /// As shown, decorator can come in handy when you need to perform some operation or manipulation after the fact.
     public func decorator(_ decorator: @escaping (_ instance: T) -> Void) -> Self {
-        map { $0.registration.decorator = decorator }
-    }
-
-    /// Allows registering new factory closure and updating scope used after the fact.
-    /// - Parameters:
-    ///  - scope: Optional parameter that lets the registration redefine the scope used for this dependency.
-    ///  - factory: A new factory closure that produces an object of the desired type when needed.
-    @discardableResult
-    public func register(scope: Scope?, factory: @escaping (P) -> T) -> Self {
-        registration.register(TypedFactory<P,T>(factory: factory, scope: scope))
+        registration.decorator(decorator)
         return self
     }
+}
 
+// FactoryModifying Context Functionality
+
+extension FactoryModifying {
+    /// Registers a factory to be used when running in a specific context.
+    ///
+    /// A context might be be when running in SwiftUI preview mode, or when running unit tests.
+    public func context(_ context: FactoryContext, factory: @escaping (P) -> T) {
+        switch context {
+        case .arg:
+            let typedFactory = TypedFactory<P,T>(factory: factory, scope: registration.scope)
+            registration.context(context, id: registration.id, factory: typedFactory)
+        default:
+            #if DEBUG
+            let typedFactory = TypedFactory<P,T>(factory: factory, scope: registration.scope)
+            registration.context(context, id: registration.id, factory: typedFactory)
+            #endif
+        }
+    }
     /// Factory builder shortcut for context(.arg) { .. }
     @discardableResult
     public func arg(_ argument: String, factory: @escaping (P) -> T) -> Self {
@@ -358,41 +373,41 @@ extension FactoryModifying {
         context(.debug, factory: factory)
         return self
     }
-
 }
 
+// FactoryModifying Once Functionality
+
 extension FactoryModifying {
-
-    /// Registers a factory to be used when running in a specific context.
-    ///
-    /// A context might be be when running in SwiftUI preview mode, or when running unit tests.
-    public func context(_ context: FactoryContext, factory: @escaping (P) -> T) {
-        switch context {
-        case .arg:
-            let typedFactory = TypedFactory<P,T>(factory: factory, scope: registration.scope)
-            registration.context(context, id: registration.id, factory: typedFactory)
-        default:
-            #if DEBUG
-            let typedFactory = TypedFactory<P,T>(factory: factory, scope: registration.scope)
-            registration.context(context, id: registration.id, factory: typedFactory)
-            #endif
+    /// Adds ability to mutate Factory on first instantiation only.
+    @discardableResult
+    public func once(_ transform: (_ instance: Self) -> Self) -> Self {
+        defer { globalRecursiveLock.unlock() }
+        globalRecursiveLock.lock()
+        let container = registration.unsafeCheckecContainer()
+        if container.manager.once.contains(registration.id) {
+            return self
         }
+        container.manager.once.insert(registration.id)
+        return transform(self)
     }
+}
 
+// FactoryModifying Common Functionality
+
+extension FactoryModifying {
+    /// Allows registering new factory closure and updating scope used after the fact.
+    /// - Parameters:
+    ///  - scope: Optional parameter that lets the registration redefine the scope used for this dependency.
+    ///  - factory: A new factory closure that produces an object of the desired type when needed.
+    @discardableResult
+    public func register(scope: Scope?, factory: @escaping (P) -> T) -> Self {
+        registration.register(TypedFactory<P,T>(factory: factory, scope: scope))
+        return self
+    }
     /// Resets the Factory's behavior to its original state, removing any registrations and clearing any cached items from the specified scope.
     /// - Parameter options: options description
     public func reset(_ options: FactoryResetOptions = .all) {
         registration.reset(options: options)
-    }
-
-}
-
-extension FactoryModifying {
-    /// Allows builder-style mutation of self
-    fileprivate func map (_ mutate: (inout Self) -> Void) -> Self {
-        var mutable = self
-        mutate(&mutable)
-        return mutable
     }
 }
 
@@ -422,6 +437,27 @@ public final class Container: SharedContainer {
     /// Public initializer
     public init() {}
 
+}
+
+// MARK: - SharedContainer
+
+/// SharedContainer defines the protocol all Containers must adopt if they want to support Service Locator style injection or support any of the injection property wrappers.
+///
+/// Here's an example of reaching out to a Conatiner's shared instance for dependency resolution.
+/// ```swift
+/// class ContentViewModel {
+///     let service: MyServiceType = Container.shared.service()
+/// }
+/// ```
+/// The default ``Container`` provided is a SharedContainer. It can be used in both roles as needed.
+///
+///  See <doc:Containers> for more information.
+public protocol SharedContainer: ManagedContainer {
+    /// Defines a single "shared" container for that container type.
+    ///
+    /// This container is used by the various @Injected property wrappers to resolve the keyPath to a given Factory. Care should be taken in
+    /// mixed environments where you're passing container references AND using the @Injected property wrappers.
+    static var shared: Self { get }
 }
 
 // MARK: - ManagedContainer
@@ -472,27 +508,6 @@ extension ManagedContainer {
     }
 }
 
-// MARK: - SharedContainer
-
-/// SharedContainer defines the protocol all Containers must adopt if they want to support Service Locator style injection or support any of the injection property wrappers.
-///
-/// Here's an example of reaching out to a Conatiner's shared instance for dependency resolution.
-/// ```swift
-/// class ContentViewModel {
-///     let service: MyServiceType = Container.shared.service()
-/// }
-/// ```
-/// The default ``Container`` provided is a SharedContainer. It can be used in both roles as needed.
-///
-///  See <doc:Containers> for more information.
-public protocol SharedContainer: ManagedContainer {
-    /// Defines a single "shared" container for that container type.
-    ///
-    /// This container is used by the various @Injected property wrappers to resolve the keyPath to a given Factory. Care should be taken in
-    /// mixed environments where you're passing container references AND using the @Injected property wrappers.
-    static var shared: Self { get }
-}
-
 // MARK: - ContainerManager
 
 /// ContainerManager manages the registration and scope caching storage mechanisms for a given container.
@@ -508,10 +523,10 @@ public class ContainerManager {
     /// Public initializer
     public init() {}
 
+    #if DEBUG
     /// Public variable exposing dependency chain test maximum
     public var dependencyChainTestMax: Int = 10
 
-    #if DEBUG
     /// Public var enabling factory resolution trace statements in debug mode for ALL containers.
     public var trace: Bool {
         get { globalTraceFlag }
@@ -525,15 +540,27 @@ public class ContainerManager {
     }
     #endif
 
+    /// Alias for Factory registration map.
+    internal typealias FactoryMap = [String:AnyFactory]
+    /// Alias for Factory options map.
+    internal typealias FactoryOptionsMap = [String:FactoryOptions]
+    /// Alias for Factory options map.
+    internal typealias FactoryOnceSet = Set<String>
+
     /// Internal closure decorates all factory resolutions for this container.
     internal var decorator: ((Any) -> ())?
+    /// Flag indicating autoregistration check needs to be performed and executed if needed.
     internal var autoRegistrationCheckNeeded = true
-    internal var argumentCheckNeeded = false
-    internal typealias FactoryMap = [String:AnyFactory]
+    /// Updated registrations for Factory's.
     internal lazy var registrations: FactoryMap = .init(minimumCapacity: 32)
-    internal lazy var contexts: FactoryMap = .init(minimumCapacity: 32)
+    /// Updated options for Factory's.
+    internal lazy var options: FactoryOptionsMap = .init(minimumCapacity: 32)
+    /// Scope cache for Factory's managed by this container.
     internal lazy var cache: Scope.Cache = Scope.Cache()
-    internal lazy var stack: [(FactoryMap, Scope.Cache.CacheMap, Bool, Bool)] = []
+    /// Once cache for Factory's managed by this container.
+    internal lazy var once: FactoryOnceSet = .init()
+    /// Push/Pop stack for registrations, options, cache, and so on.
+    internal lazy var stack: [(FactoryMap, FactoryOptionsMap, Scope.Cache.CacheMap, FactoryOnceSet, Bool)] = []
 
 }
 
@@ -548,16 +575,22 @@ extension ContainerManager {
         globalRecursiveLock.lock()
         switch options {
         case .registration:
-            registrations = registrations.filter { $0.key.contains(".ctx=") }
+            self.registrations = [:]
         case .context:
-            registrations = registrations.filter { !$0.key.contains(".ctx=") }
+            for (key, option) in self.options {
+                var mutable = option
+                mutable.argumentContexts = [:]
+                mutable.contexts = [:]
+                self.options[key] = mutable
+            }
         case .scope:
-            cache.reset()
+            self.cache.reset()
         default:
-            registrations = [:]
-            cache.reset()
-            autoRegistrationCheckNeeded = true
-            argumentCheckNeeded = false
+            self.registrations.removeAll()
+            self.options.removeAll()
+            self.cache.reset()
+            self.once.removeAll()
+            self.autoRegistrationCheckNeeded = true
         }
     }
 
@@ -572,7 +605,7 @@ extension ContainerManager {
     public func push() {
         defer { globalRecursiveLock.unlock() }
         globalRecursiveLock.lock()
-        stack.append((registrations, cache.cache, autoRegistrationCheckNeeded, argumentCheckNeeded))
+        stack.append((registrations, options, cache.cache, once, autoRegistrationCheckNeeded))
     }
 
     /// Test function pops and restores a previously pushed registration and cache state
@@ -581,9 +614,10 @@ extension ContainerManager {
         globalRecursiveLock.lock()
         if let state = stack.popLast() {
             registrations = state.0
-            cache.cache = state.1
-            autoRegistrationCheckNeeded = state.2
-            argumentCheckNeeded = state.3
+            options = state.1
+            cache.cache = state.2
+            once = state.3
+            autoRegistrationCheckNeeded = state.4
         }
     }
 
@@ -722,12 +756,14 @@ extension Scope {
     }
 
     /// A reference to the default unique scope.
+    ///
+    /// If no scope cache is specified then Factory is running in unique more.
     public static let unique: Scope? = nil
 
 }
 
 extension Scope {
-
+    /// Internal class that manages scope caching for containers and scopes.
     internal class Cache {
         typealias CacheMap = [String:AnyBox]
         /// Internal support functions
@@ -756,7 +792,6 @@ extension Scope {
         }
         #endif
    }
-
 }
 
 // MARK: - Automatic Registrations
@@ -1083,13 +1118,24 @@ internal struct FactoryReference<C: SharedContainer, T>: BoxedFactoryReference {
 
 // MARK: - Public Protocols and Types
 
+/// Context types available for special purpose factory registrations.
 public enum FactoryContext: Equatable {
+    /// Context used when application is launched with a particular argument.
     case arg(String)
+    /// Context used when application is running in Xcode Preview mode.
     case preview
+    /// Context used when application is running in Xcode Unit Test mode.
     case test
+    /// Context used when application is running in Xcode DEBUG mode.
     case debug
+}
+
+extension FactoryContext {
+    /// Proxy for application arguments.
     public static var arguments: [String] = ProcessInfo.processInfo.arguments
+    /// Proxy check for application running in preview mode.
     public static var isPreview: Bool = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
+    /// Proxy check for application running in unit test mode.
     public static var isTest: Bool = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
 }
 
@@ -1104,8 +1150,15 @@ public struct FactoryRegistration<P,T> {
     internal var factory: (P) -> T
     /// The scope responsible for managing the lifecycle of any objects created by this Factory.
     internal var scope: Scope?
-    /// Decorator will be passed fully constructed instance for further configuration.
-    internal var decorator: ((T) -> Void)?
+
+    /// Support function performs autoRegistrationCheck and returns properly initialized container.
+    internal func unsafeCheckecContainer() -> ManagedContainer {
+        if container.manager.autoRegistrationCheckNeeded {
+            container.manager.autoRegistrationCheckNeeded = false
+            (container as? AutoRegistering)?.autoRegister()
+        }
+        return container
+    }
 
     /// Resolves a Factory, returning an instance of the desired type. All roads lead here.
     ///
@@ -1115,11 +1168,9 @@ public struct FactoryRegistration<P,T> {
         defer { globalRecursiveLock.unlock() }
         globalRecursiveLock.lock()
 
-        let manager = container.manager
-
-        performAutoRegistrationCheck()
-
-        let typeFactory = findFactoryForCurrentContext()
+        let manager = unsafeCheckecContainer().manager
+        let options = manager.options[id]
+        let typeFactory = findFactoryForCurrentContext(using: options)
         let scope: Scope? = typeFactory.scope
         var factory: (P) -> T = typeFactory.factory
 
@@ -1170,30 +1221,34 @@ public struct FactoryRegistration<P,T> {
         }
         #endif
 
-        decorator?(instance)
+        if let decorator = options?.decorator as? (T) -> Void {
+            decorator(instance)
+        }
         manager.decorator?(instance)
 
         return instance
     }
 
-    func findFactoryForCurrentContext() -> TypedFactory<P,T> {
+    func findFactoryForCurrentContext(using options: FactoryOptions?) -> TypedFactory<P,T> {
         let manager = container.manager
-        if manager.argumentCheckNeeded {
+        if let contexts = options?.argumentContexts, !contexts.isEmpty {
             for arg in FactoryContext.arguments {
-                if let found = manager.registrations["\(id).ctx=`\(arg)`"] as? TypedFactory<P,T> {
+                if let found = contexts["arg=\(arg)"] as? TypedFactory<P,T> {
                     return found
                 }
             }
         }
         #if DEBUG
-        if FactoryContext.isPreview, let found = manager.registrations["\(id).ctx=preview"] as? TypedFactory<P,T> {
-            return found
-        }
-        if FactoryContext.isTest, let found = manager.registrations["\(id).ctx=test"] as? TypedFactory<P,T> {
-            return found
-        }
-        if let found = manager.registrations["\(id).ctx=debug"] as? TypedFactory<P,T> {
-            return found
+        if let contexts = options?.contexts, !contexts.isEmpty {
+            if FactoryContext.isPreview, let found = contexts["preview"] as? TypedFactory<P,T> {
+                return found
+            }
+            if FactoryContext.isTest, let found = contexts["test"] as? TypedFactory<P,T> {
+                return found
+            }
+            if let found = contexts["debug"] as? TypedFactory<P,T> {
+                return found
+            }
         }
         #endif
         if let found = manager.registrations[id] as? TypedFactory<P,T> {
@@ -1210,35 +1265,47 @@ public struct FactoryRegistration<P,T> {
     internal func register(_ factory: AnyFactory) {
         defer { globalRecursiveLock.unlock() }
         globalRecursiveLock.lock()
-        performAutoRegistrationCheck()
-        container.manager.registrations[id] = factory
-        container.manager.cache.removeValue(forKey: id)
-    }
-
-    internal func context(_ context: FactoryContext, id: String, factory: AnyFactory) {
-        defer { globalRecursiveLock.unlock() }
-        globalRecursiveLock.lock()
-        performAutoRegistrationCheck()
-        let manager = container.manager
-        switch context {
-        case .arg(let arg):
-            let key = "\(id).ctx=`\(arg)`"
-            manager.registrations[key] = factory
-            manager.argumentCheckNeeded = true
-       default:
-            let key = "\(id).ctx=\(context)"
-            manager.registrations[key] = factory
-        }
+        let manager = unsafeCheckecContainer().manager
+        manager.registrations[id] = factory
         manager.cache.removeValue(forKey: id)
     }
 
-    /// Support function performs autoRegistrationCheck
-    internal func performAutoRegistrationCheck() {
-        guard container.manager.autoRegistrationCheckNeeded else {
-            return
+    /// Registers a new context.
+    internal func context(_ context: FactoryContext, id: String, factory: TypedFactory<P,T>) {
+        options { options in
+            switch context {
+            case .arg(let arg):
+                let key = "arg=\(arg)"
+                options.argumentContexts[key] = factory
+            default:
+                let key = "\(context)"
+                options.contexts[key] = factory
+            }
+            self.container.manager.cache.removeValue(forKey: id)
         }
-        container.manager.autoRegistrationCheckNeeded = false
-        (container as? AutoRegistering)?.autoRegister()
+    }
+
+    /// Registers a new decorator.
+    internal func decorator(_ decorator: @escaping (T) -> Void) {
+        options { options in
+            options.decorator = decorator
+        }
+    }
+
+    /// Support function for options mutation.
+    internal func options(mutate: (_ options: inout FactoryOptions) -> Void) {
+        defer { globalRecursiveLock.unlock() }
+        globalRecursiveLock.lock()
+        let _ = unsafeCheckecContainer()
+        unlockedOptions(mutate: mutate)
+    }
+
+    /// Unsafe support function for options mutation. Use only in locked contexts.
+    internal func unlockedOptions(mutate: (_ options: inout FactoryOptions) -> Void) {
+        let manager = container.manager
+        var options: FactoryOptions = manager.options[id] ?? FactoryOptions()
+        mutate(&options)
+        manager.options[id] = options
     }
 
     /// Support function resets the behavior for a specific Factory to its original state, removing any associated registrations and clearing
@@ -1255,7 +1322,10 @@ public struct FactoryRegistration<P,T> {
         case .registration:
             manager.registrations.removeValue(forKey: id)
         case .context:
-            manager.registrations = manager.registrations.filter { !$0.key.hasPrefix("\(id).ctx=") }
+            unlockedOptions {
+                $0.argumentContexts = [:]
+                $0.contexts = [:]
+            }
         case .scope:
             manager.cache.removeValue(forKey: id)
         default:
@@ -1288,6 +1358,17 @@ public struct FactoryRegistration<P,T> {
     }
     #endif
 
+}
+
+// MARK: Internal Protocols and Types
+
+internal struct FactoryOptions {
+    /// Decorator will be passed fully constructed instance for further configuration.
+    var decorator: Any?
+    /// Contexts
+    var argumentContexts: [String:AnyFactory] = [:]
+    /// Contexts
+    var contexts: [String:AnyFactory] = [:]
 }
 
 // Internal Factory type
