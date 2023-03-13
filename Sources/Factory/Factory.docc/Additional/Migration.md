@@ -41,7 +41,7 @@ var service: Factory<ServiceType> {
     }
 }
 ```
-But we can do better. Factory provdides a bit of syntactic sugar that asks the enclosing container to make our factory for us.
+But we can do better. Factory provides a bit of syntactic sugar that asks the enclosing container to make our factory for us.
 
 ```swift
 var service: Factory<ServiceType> {

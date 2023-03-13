@@ -101,7 +101,7 @@ import XCTest
 final class FactoryDemoUITests: XCTestCase {
     func testExample() throws {
         let app = XCUIApplication()
-        app.launchArguments.append("-mock1")
+        app.launchArguments.append("mock1")
         app.launch()
 
         let welcome = app.staticTexts["Mock Number 1! for Michael"]
@@ -114,16 +114,33 @@ And then in the application we check the launch arguments to see what registrati
 import Foundation
 import Factory
 
-#if DEBUG
 extension Container: AutoRegistering {
     public func autoRegister() {
-        if ProcessInfo().arguments.contains("-mock1") {
+        #if DEBUG
+        if ProcessInfo().arguments.contains("mock1") {
             myServiceType.register { MockServiceN(1) }
         }
+        #endif
     }
 }
-#endif
 ```
+Or you can simplify things with an `arg` context that accomplishes the same thing.
+```swift
+import Foundation
+import Factory
+
+extension Container: AutoRegistering {
+    public func autoRegister() {
+        #if DEBUG
+        myServiceType.context(.arg("mock1")) { 
+            MockServiceN(1)
+        }
+        #endif
+    }
+}
+```
+There are many contexts for testing, previews, and even UITesting. See <doc:Contexts> for more.
+
 Obviously, one can add as many different test cases and registrations as needed.
 
 ## Common Setup
@@ -135,6 +152,18 @@ extension Container {
     func setupMocks() {
         myService.register { MockServiceN(4) }
         sharedService.register { MockService2() }
+    }
+}
+```
+Or again, if we always want the same result whenver we're previewing, just set it up once in the autoRegister function using a `preview` context:
+
+```swift
+extension Container: AutoRegistering {
+    public func autoRegister() {
+        #if DEBUG
+        myService.context(.preview) { MockServiceN(4)MockServiceN(1) }
+        sharedService.context(.preview) { MockService2() }
+        #endif
     }
 }
 ```

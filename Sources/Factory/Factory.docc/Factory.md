@@ -33,6 +33,7 @@ Ready to get started?
 
 - <doc:Previews>
 - <doc:Testing>
+- <doc:Contexts>
 - <doc:Debugging>
 - <doc:Chains>
 

@@ -48,7 +48,7 @@ var service: Factory<ServiceType> {
     }
 }
 ```
-But we can do better. Factory also provdides a bit of syntactic sugar that asks the enclosing container to make our factory for us using a `callAsFunction` function on `self`.
+But we can do better. Factory also provides a bit of syntactic sugar that asks the enclosing container to make our factory for us using a `callAsFunction` function on `self`.
 
 ```swift
 var service: Factory<ServiceType> {
@@ -151,6 +151,19 @@ And when the wrapper asks the factory for an instance of `MyServiceType` it now 
 This is a powerful concept that lets us reach deep into a chain of dependencies and alter the behavior of a system as needed.
 
 See <doc:Testing> for more information.
+
+## Contexts
+
+One powerful new feture in Factory 2.1 is contexts. Let's say that for logistical reasons whenever your application runs in debug mode you never want it to make calls to your application's analytics engine.
+
+Factory makes it easy. Just register an override for that particular context.
+
+```swift
+container.analytics.context(.debug) {
+    StubAnalyticsEngine()
+}
+```
+There are many contexts for testing, previews, and even UITesting. See <doc:Contexts> for more.
 
 ## Topics
 
