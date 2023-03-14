@@ -155,7 +155,7 @@ extension Container {
     }
 }
 ```
-Or again, if we always want the same result whenver we're previewing any screen, just set it up once in the autoRegister function using a `preview` context:
+Then again, if we always want the same result whenver we're previewing any screen, we just set it up once in the autoRegister function using a `preview` context:
 
 ```swift
 extension Container: AutoRegistering {
