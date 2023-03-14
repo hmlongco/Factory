@@ -133,7 +133,7 @@ public struct Factory<T>: FactoryModifying {
     /// Allows updating registered factory and scope.
     @discardableResult
     public func register(factory: @escaping () -> T) -> Self {
-        registration.register(TypedFactory<Void,T>(factory: factory, scope: nil))
+        registration.register(factory)
         return self
     }
 
@@ -219,7 +219,7 @@ public struct ParameterFactory<P,T>: FactoryModifying {
     ///  - factory: A new factory closure that produces an object of the desired type when needed.
     @discardableResult
     public func register(factory: @escaping (P) -> T) -> Self {
-        registration.register(TypedFactory<P,T>(factory: factory, scope: nil))
+        registration.register(factory)
         return self
     }
 
@@ -342,12 +342,10 @@ extension FactoryModifying {
     public func context(_ context: FactoryContext, factory: @escaping (P) -> T) -> Self {
         switch context {
         case .arg:
-            let typedFactory = TypedFactory<P,T>(factory: factory, scope: nil)
-            registration.context(context, id: registration.id, factory: typedFactory)
+            registration.context(context, id: registration.id, factory: factory)
         default:
             #if DEBUG
-            let typedFactory = TypedFactory<P,T>(factory: factory, scope: nil)
-            registration.context(context, id: registration.id, factory: typedFactory)
+            registration.context(context, id: registration.id, factory: factory)
             #endif
         }
         return self
@@ -411,7 +409,7 @@ extension FactoryModifying {
     @available(*, deprecated, message: "Use container.service.scope(.cached).register { Service() } instead")
     @discardableResult
     public func register(scope: Scope?, factory: @escaping (P) -> T) -> Self {
-        registration.register(TypedFactory<P,T>(factory: factory, scope: nil))
+        registration.register(factory)
         registration.scope(scope)
         return self
     }
@@ -1208,7 +1206,7 @@ public struct FactoryRegistration<P,T> {
         let options = manager.options[id]
         let scope = options?.scope
 
-        var factory = factoryAndScopeForCurrentContext(using: options)
+        var factory: (P) -> T = factoryForCurrentContext(using: options)
 
         #if DEBUG
         if manager.dependencyChainTestMax > 0 {
@@ -1265,43 +1263,7 @@ public struct FactoryRegistration<P,T> {
         return instance
     }
 
-//    func factoryAndScopeForCurrentContext(using options: FactoryOptions?) -> ((P) -> T, Scope?) {
-//        let manager = container.manager
-//        if let contexts = options?.argumentContexts, !contexts.isEmpty {
-//            for arg in FactoryContext.arguments {
-//                if let found = contexts["arg=\(arg)"] as? TypedFactory<P,T> {
-//                    return (found.factory, found.scope)
-//                }
-//            }
-//        }
-//        if let contexts = options?.contexts, !contexts.isEmpty {
-//            #if DEBUG
-//            if FactoryContext.isPreview, let found = contexts["preview"] as? TypedFactory<P,T> {
-//                return (found.factory, found.scope)
-//            }
-//            if FactoryContext.isTest, let found = contexts["test"] as? TypedFactory<P,T> {
-//                return (found.factory, found.scope)
-//            }
-//            if FactoryContext.isSimulator, let found = contexts["simulator"] as? TypedFactory<P,T> {
-//                return (found.factory, found.scope)
-//            }
-//            #endif
-//            if !FactoryContext.isSimulator, let found = contexts["device"] as? TypedFactory<P,T> {
-//                return (found.factory, found.scope)
-//            }
-//            #if DEBUG
-//            if let found = contexts["debug"] as? TypedFactory<P,T> {
-//                return (found.factory, found.scope)
-//            }
-//            #endif
-//        }
-//        if let found = manager.registrations[id] as? TypedFactory<P,T> {
-//            return (found.factory, options?.scope)
-//        }
-//        return (factory, options?.scope)
-//    }
-
-    func factoryAndScopeForCurrentContext(using options: FactoryOptions?) -> (P) -> T {
+    func factoryForCurrentContext(using options: FactoryOptions?) -> (P) -> T {
         let manager = container.manager
         if let contexts = options?.argumentContexts, !contexts.isEmpty {
             for arg in FactoryContext.arguments {
@@ -1342,11 +1304,11 @@ public struct FactoryRegistration<P,T> {
     /// - Parameters:
     ///   - id: ID of associated Factory.
     ///   - factory: Factory closure called to create a new instance of the service when needed.
-    internal func register(_ factory: AnyFactory) {
+    internal func register(_ factory: @escaping (P) -> T) {
         defer { pthread_mutex_unlock(&globalRecursiveLock.mutex) }
         pthread_mutex_lock(&globalRecursiveLock.mutex)
         let manager = unsafeCheckecContainer().manager
-        manager.registrations[id] = factory
+        manager.registrations[id] = TypedFactory(factory: factory)
         manager.cache.removeValue(forKey: id)
     }
 
@@ -1368,13 +1330,13 @@ public struct FactoryRegistration<P,T> {
     }
 
     /// Registers a new context.
-    internal func context(_ context: FactoryContext, id: String, factory: TypedFactory<P,T>) {
+    internal func context(_ context: FactoryContext, id: String, factory: @escaping (P) -> T) {
         options { options in
             switch context {
             case .arg(let arg):
-                options.argumentContexts["arg=\(arg)"] = factory
+                options.argumentContexts["arg=\(arg)"] = TypedFactory(factory: factory)
             default:
-                options.contexts["\(context)"] = factory
+                options.contexts["\(context)"] = TypedFactory(factory: factory)
             }
             self.container.manager.cache.removeValue(forKey: id)
         }
@@ -1469,7 +1431,6 @@ internal protocol AnyFactory {}
 
 internal struct TypedFactory<P,T>: AnyFactory {
     let factory: (P) -> T
-    let scope: Scope?
 }
 
 /// Internal protocol used to evaluate optional types for caching
