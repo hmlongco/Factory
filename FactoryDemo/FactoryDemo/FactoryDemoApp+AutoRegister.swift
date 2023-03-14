@@ -32,20 +32,20 @@ extension Container: AutoRegistering {
         networkSetup()
 
         // Demonstrate registration overrides for uitest application passed arguments
-        myServiceType.arg("mock1") {
+        myServiceType.onArg("mock1") {
             MockServiceN(1)
         }
-        myServiceType.arg("mock2") {
+        myServiceType.onArg("mock2") {
             MockServiceN(2)
         }
 
         #if DEBUG
         // Demonstrate preview registration override
-        myServiceType.preview {
+        myServiceType.onPreview {
             MockServiceN(66)
         }
         // Demonstrate debug registration override
-        myServiceType.debug {
+        myServiceType.onDebug {
             MockServiceN(77)
         }
         #endif

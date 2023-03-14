@@ -250,12 +250,11 @@ extension FactoryModifying {
     ///         .scope(.session)
     /// }
     /// ```
-    public func scope(_ scope: Scope?) -> Self {
+    public func scope(_ scope: Scope) -> Self {
         var mutable = self
         mutable.registration.scope = scope
         return mutable
     }
-
     /// Syntactic sugar defines this Factory's dependency scope to be cached. See ``Scope/Cached-swift.class``.
     /// ```swift
     /// var service: Factory<ServiceType> {
@@ -305,7 +304,7 @@ extension FactoryModifying {
     /// ```
     /// While you can add the modifier, Factory's are unique by default.
     @inlinable public var unique: Self {
-        scope(.none)
+        scope(.unique)
     }
 }
 
@@ -334,10 +333,13 @@ extension FactoryModifying {
 // FactoryModifying Context Functionality
 
 extension FactoryModifying {
-    /// Registers a factory to be used when running in a specific context.
+    /// Registers a factory closure to be used only when running in a specific context.
     ///
     /// A context might be be when running in SwiftUI preview mode, or when running unit tests.
-    public func context(_ context: FactoryContext, factory: @escaping (P) -> T) {
+    ///
+    /// See <doc:Contexts>
+    @discardableResult
+    public func context(_ context: FactoryContext, factory: @escaping (P) -> T) -> Self {
         switch context {
         case .arg:
             let typedFactory = TypedFactory<P,T>(factory: factory, scope: registration.scope)
@@ -348,30 +350,37 @@ extension FactoryModifying {
             registration.context(context, id: registration.id, factory: typedFactory)
             #endif
         }
+        return self
     }
     /// Factory builder shortcut for context(.arg) { .. }
     @discardableResult
-    public func arg(_ argument: String, factory: @escaping (P) -> T) -> Self {
+    public func onArg(_ argument: String, factory: @escaping (P) -> T) -> Self {
         context(.arg(argument), factory: factory)
-        return self
     }
     /// Factory builder shortcut for context(.preview) { .. }
     @discardableResult
-    public func preview(factory: @escaping (P) -> T) -> Self {
+    public func onPreview(factory: @escaping (P) -> T) -> Self {
         context(.preview, factory: factory)
-        return self
     }
     /// Factory builder shortcut for context(.test) { .. }
     @discardableResult
-    public func test(factory: @escaping (P) -> T) -> Self {
+    public func onTest(factory: @escaping (P) -> T) -> Self {
         context(.test, factory: factory)
-        return self
     }
     /// Factory builder shortcut for context(.debug) { .. }
     @discardableResult
-    public func debug(factory: @escaping (P) -> T) -> Self {
+    public func onDebug(factory: @escaping (P) -> T) -> Self {
         context(.debug, factory: factory)
-        return self
+    }
+    /// Factory builder shortcut for context(.simulator) { .. }
+    @discardableResult
+    public func onSimulator(factory: @escaping (P) -> T) -> Self {
+        context(.simulator, factory: factory)
+    }
+    /// Factory builder shortcut for context(.device) { .. }
+    @discardableResult
+    public func onDevice(factory: @escaping (P) -> T) -> Self {
+        context(.device, factory: factory)
     }
 }
 
@@ -427,16 +436,12 @@ extension FactoryModifying {
 ///
 ///  See <doc:Containers> for more information.
 public final class Container: SharedContainer {
-
     /// Define the default shared container.
     public static var shared = Container()
-
     /// Define the container's manager.
     public var manager: ContainerManager = ContainerManager()
-
     /// Public initializer
     public init() {}
-
 }
 
 // MARK: - SharedContainer
@@ -476,30 +481,25 @@ public protocol SharedContainer: ManagedContainer {
 /// ```
 ///  See <doc:Containers> for more information.
 public protocol ManagedContainer: AnyObject {
-
     /// Defines the ContainerManager used to manage registrations, resolutions, and scope caching for that container. Encapsulating the code in
     /// this fashion makes creating and using your own custom containers much simpler.
-    var manager: ContainerManager { get set }
+    var manager: ContainerManager { get }
 }
 
 /// Defines the default factory helpers for containers
 extension ManagedContainer {
-
     /// Syntactic sugar allows container to create a properly bound Factory.
     @inlinable public func callAsFunction<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
         Factory(self, key: key, factory)
     }
-
     /// Syntactic sugar allows container to create a properly bound ParameterFactory.
     @inlinable public func callAsFunction<P,T>(key: String = #function, _ factory: @escaping (P) -> T) -> ParameterFactory<P,T> {
         ParameterFactory(self, key: key, factory)
     }
-
     /// Defines a decorator for the container. This decorator will see every dependency resolved by this container.
     public func decorator(_ decorator: ((Any) -> ())?) {
         manager.decorator = decorator
     }
-
     /// Defines a with function to allow container transformation on assignment.
     @discardableResult
     public func with(_ transform: (Self) -> Void) -> Self {
@@ -685,7 +685,6 @@ extension Scope {
 
     /// A reference to the default cached scope manager.
     public static let cached = Cached()
-
     /// Defines a cached scope. The same instance will be returned by the factory until the cache is reset.
     public final class Cached: Scope {
         public override init() {
@@ -695,7 +694,6 @@ extension Scope {
 
     /// A reference to the default graph scope manager.
     public static let graph = Graph()
-
     /// Defines the graph scope. A single instance of a given type will be returned during a given resolution cycle.
     ///
     /// This scope is managed and cleared by the main resolution function at the end of each resolution cycle.
@@ -713,7 +711,6 @@ extension Scope {
 
     /// A reference to the default shared scope manager.
     public static let shared = Shared()
-
     /// Defines a shared (weak) scope. The same instance will be returned by the factory as long as someone maintains a strong reference.
     public final class Shared: Scope {
         public override init() {
@@ -747,7 +744,6 @@ extension Scope {
 
     /// A reference to the default singleton scope manager.
     public static let singleton = Singleton()
-
     /// Defines the singleton scope. The same instance will always be returned by the factory.
     public final class Singleton: Scope {
         public override init() {
@@ -758,7 +754,16 @@ extension Scope {
     /// A reference to the default unique scope.
     ///
     /// If no scope cache is specified then Factory is running in unique more.
-    public static let unique: Scope? = nil
+    public static let unique = Unique()
+    /// Defines the unique scope. A new instance of a given type will be returned on evver resolution cycle.
+    public final class Unique: Scope {
+        public override init() {
+            super.init()
+        }
+        internal override func resolve<T>(using cache: Cache, id: String, factory: () -> T) -> T {
+            factory()
+        }
+    }
 
 }
 
@@ -792,6 +797,21 @@ extension Scope {
         }
         #endif
    }
+}
+
+// MARK: - Scope Defaults
+
+/// Protocol allows container to specifer a default scope for all managed factories.
+///
+/// ```swift
+/// extension Container: ScopeDefaults {
+///     var defaultScope: Scope = .graph
+/// }
+/// ```
+/// Implemented as protocol since attempting to set via AutoRegister would be too late for first factory resolved.
+public protocol ScopeDefaults {
+    /// Variable allows container to specifer a default scope other than unique for all managed factories.
+    var defaultScope: Scope { get }
 }
 
 // MARK: - Automatic Registrations
@@ -1128,15 +1148,21 @@ public enum FactoryContext: Equatable {
     case test
     /// Context used when application is running in Xcode DEBUG mode.
     case debug
+    /// Context used when application is running within an Xcode simulator.
+    case simulator
+    /// Context used when application is running on an actual device.
+    case device
 }
 
 extension FactoryContext {
     /// Proxy for application arguments.
-    public static var arguments: [String] = ProcessInfo.processInfo.arguments
+    internal static var arguments: [String] = ProcessInfo.processInfo.arguments
     /// Proxy check for application running in preview mode.
-    public static var isPreview: Bool = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
+    internal static var isPreview: Bool = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
     /// Proxy check for application running in unit test mode.
-    public static var isTest: Bool = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+    internal static var isTest: Bool = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+    /// Proxy check for application running in simulator.
+    internal static var isSimulator: Bool = ProcessInfo.processInfo.environment["SIMULATOR_UDID"] != nil
 }
 
 /// Shared registration type for Factory and ParameterFactory. Used internally to manage the registration and resolution process.
@@ -1146,10 +1172,18 @@ public struct FactoryRegistration<P,T> {
     internal var id: String
     /// A strong reference to the container supporting this Factory.
     internal var container: ManagedContainer
-    /// The originally registered factory closure used to produce an object of the desired type.
+    /// Typed factory with scope and factpry.
     internal var factory: (P) -> T
     /// The scope responsible for managing the lifecycle of any objects created by this Factory.
     internal var scope: Scope?
+
+    /// Tnitializer for registration sets passed values and default scope from container manager.
+    internal init(id: String, container: ManagedContainer, factory: @escaping (P) -> T) {
+        self.id = id
+        self.container = container
+        self.factory = factory
+        self.scope = (container as? ScopeDefaults)?.defaultScope
+    }
 
     /// Support function performs autoRegistrationCheck and returns properly initialized container.
     internal func unsafeCheckecContainer() -> ManagedContainer {
@@ -1170,9 +1204,8 @@ public struct FactoryRegistration<P,T> {
 
         let manager = unsafeCheckecContainer().manager
         let options = manager.options[id]
-        let typeFactory = findFactoryForCurrentContext(using: options)
-        let scope: Scope? = typeFactory.scope
-        var factory: (P) -> T = typeFactory.factory
+
+        var (factory, scope) = factoryAndScopeForCurrentContext(using: options)
 
         #if DEBUG
         if manager.dependencyChainTestMax > 0 {
@@ -1229,32 +1262,40 @@ public struct FactoryRegistration<P,T> {
         return instance
     }
 
-    func findFactoryForCurrentContext(using options: FactoryOptions?) -> TypedFactory<P,T> {
+    func factoryAndScopeForCurrentContext(using options: FactoryOptions?) -> ((P) -> T, Scope?) {
         let manager = container.manager
         if let contexts = options?.argumentContexts, !contexts.isEmpty {
             for arg in FactoryContext.arguments {
                 if let found = contexts["arg=\(arg)"] as? TypedFactory<P,T> {
-                    return found
+                    return (found.factory, found.scope)
                 }
             }
         }
-        #if DEBUG
         if let contexts = options?.contexts, !contexts.isEmpty {
+            #if DEBUG
             if FactoryContext.isPreview, let found = contexts["preview"] as? TypedFactory<P,T> {
-                return found
+                return (found.factory, found.scope)
             }
             if FactoryContext.isTest, let found = contexts["test"] as? TypedFactory<P,T> {
-                return found
+                return (found.factory, found.scope)
             }
+            if FactoryContext.isSimulator, let found = contexts["simulator"] as? TypedFactory<P,T> {
+                return (found.factory, found.scope)
+            }
+            #endif
+            if !FactoryContext.isSimulator, let found = contexts["device"] as? TypedFactory<P,T> {
+                return (found.factory, found.scope)
+            }
+            #if DEBUG
             if let found = contexts["debug"] as? TypedFactory<P,T> {
-                return found
+                return (found.factory, found.scope)
             }
+            #endif
         }
-        #endif
         if let found = manager.registrations[id] as? TypedFactory<P,T> {
-            return found
+            return (found.factory, found.scope)
         }
-        return TypedFactory<P,T>(factory: factory, scope: scope)
+        return (factory, scope)
     }
 
     /// Registers a new factory closure capable of producing an object or service of the desired type. This factory overrides the original factory and
@@ -1331,6 +1372,7 @@ public struct FactoryRegistration<P,T> {
         default:
             manager.registrations = manager.registrations.filter { !$0.key.hasPrefix(id) }
             manager.cache.removeValue(forKey: id)
+            manager.once.remove(id)
         }
     }
 

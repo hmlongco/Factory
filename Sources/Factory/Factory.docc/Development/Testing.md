@@ -132,7 +132,7 @@ import Factory
 extension Container: AutoRegistering {
     public func autoRegister() {
         #if DEBUG
-        myServiceType.context(.arg("mock1")) { 
+        myServiceType.onArg("mock1") { 
             MockServiceN(1)
         }
         #endif
@@ -155,14 +155,14 @@ extension Container {
     }
 }
 ```
-Or again, if we always want the same result whenver we're previewing, just set it up once in the autoRegister function using a `preview` context:
+Or again, if we always want the same result whenver we're previewing any screen, just set it up once in the autoRegister function using a `preview` context:
 
 ```swift
 extension Container: AutoRegistering {
     public func autoRegister() {
         #if DEBUG
-        myService.context(.preview) { MockServiceN(4)MockServiceN(1) }
-        sharedService.context(.preview) { MockService2() }
+        myService.onPreview { MockServiceN(4)MockServiceN(1) }
+        sharedService.onPreview { MockService2() }
         #endif
     }
 }

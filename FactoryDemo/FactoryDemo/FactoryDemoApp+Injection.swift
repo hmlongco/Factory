@@ -37,7 +37,7 @@ extension Container {
 extension Container {
     var previewService: Factory<MyServiceType> {
         self { MyService() }
-            .preview { MockServiceN(55) }
+            .onPreview { MockServiceN(55) }
             .singleton
     }
 }

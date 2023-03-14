@@ -159,7 +159,7 @@ One powerful new feture in Factory 2.1 is contexts. Let's say that for logistica
 Factory makes it easy. Just register an override for that particular context.
 
 ```swift
-container.analytics.context(.debug) {
+container.analytics.onDebug {
     StubAnalyticsEngine()
 }
 ```

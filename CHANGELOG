@@ -1,5 +1,15 @@
 # Factory Changelog
 
+## 2.1.0
+
+* Contexts allow quick and easy Factory customization when doing previews, debugging and testing.
+* Once modifier allows one-time initialization on a per-Factory basis.
+* ScopeDefaults allows you to define the default scope used for a given container.
+
+## 2.0.3
+
+* AutoRegister should be retriggered after resetting registrations.
+
 ## 2.0.2
 
 * Registration on a new container could be overriden by auto registration on same Factory

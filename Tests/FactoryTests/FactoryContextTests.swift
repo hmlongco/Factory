@@ -16,16 +16,21 @@ final class FactoryContextTests: XCTestCase {
         // externally defined contexts
         Container.shared.externalContextService
             .register { ContextService(name: "REGISTERED") }
-            .preview { ContextService(name: "PREVIEW") }
-            .test { ContextService(name: "TEST") }
-            .arg("ARG") { ContextService(name: "ARG") }
+            .onPreview { ContextService(name: "PREVIEW") }
+            .onTest { ContextService(name: "TEST") }
+            .onArg("ARG") { ContextService(name: "ARG") }
 
         // externally defined contexts
         Container.shared.internalContextService
             .register { ContextService(name: "REGISTERED") }
-            .preview { ContextService(name: "PREVIEW") }
-            .test { ContextService(name: "TEST") }
-            .arg("ARG") { ContextService(name: "ARG") }
+            .onPreview { ContextService(name: "PREVIEW") }
+            .onTest { ContextService(name: "TEST") }
+            .onArg("ARG") { ContextService(name: "ARG") }
+
+        // externally defined device contexts
+        Container.shared.simulatorContextService
+            .onDevice { ContextService(name: "DEVICE") }
+            .onSimulator { ContextService(name: "SIMULATOR") }
 
         // save current arg state
         arguments = FactoryContext.arguments
@@ -46,6 +51,13 @@ final class FactoryContextTests: XCTestCase {
         XCTAssertEqual(service1.name, "TEST")
         let service2 = Container.shared.internalContextService()
         XCTAssertEqual(service2.name, "TEST")
+        if FactoryContext.isSimulator {
+            let service3 = Container.shared.simulatorContextService()
+            XCTAssertEqual(service3.name, "SIMULATOR")
+        } else {
+            let service3 = Container.shared.simulatorContextService()
+            XCTAssertEqual(service3.name, "DEVICE")
+        }
     }
 
     func testNoPreviewNoTest() {
@@ -73,13 +85,29 @@ final class FactoryContextTests: XCTestCase {
         XCTAssertEqual(service1.name, "TEST")
         let service2 = Container.shared.internalContextService()
         XCTAssertEqual(service2.name, "TEST")
-   }
+    }
+
+    func testWithSimulator() {
+        FactoryContext.isPreview = false
+        FactoryContext.isTest = false
+        FactoryContext.isSimulator = true
+        let service1 = Container.shared.simulatorContextService()
+        XCTAssertEqual(service1.name, "SIMULATOR")
+    }
+
+    func testWithDevice() {
+        FactoryContext.isPreview = false
+        FactoryContext.isTest = false
+        FactoryContext.isSimulator = false
+        let service1 = Container.shared.simulatorContextService()
+        XCTAssertEqual(service1.name, "DEVICE")
+    }
 
     func testDebugWithNoPreviewNoTest() {
         FactoryContext.isPreview = false
         FactoryContext.isTest = false
         Container.shared.externalContextService
-            .debug { ContextService(name: "DEBUG") }
+            .onDebug { ContextService(name: "DEBUG") }
         let service1 = Container.shared.externalContextService()
         XCTAssertEqual(service1.name, "DEBUG")
         let service2 = Container.shared.internalContextService()
@@ -183,7 +211,7 @@ final class FactoryContextTests: XCTestCase {
         // will see once
         XCTAssertEqual(service1.name, "ONCE")
         // update
-        Container.shared.onceContextService.debug {
+        Container.shared.onceContextService.onDebug {
             ContextService(name: "DEBUG")
         }
         let service2 = Container.shared.onceContextService()
@@ -193,6 +221,11 @@ final class FactoryContextTests: XCTestCase {
         let service3 = Container.shared.onceContextService()
         // will see factory
         XCTAssertEqual(service3.name, "FACTORY")
+        // hard reset
+        Container.shared.manager.reset()
+        let service4 = Container.shared.onceContextService()
+        // will see once
+        XCTAssertEqual(service4.name, "ONCE")
     }
 
 }
@@ -207,14 +240,17 @@ extension Container {
     }
     fileprivate var internalContextService: Factory<ContextService> {
         self { ContextService(name: "FACTORY") }
-            .debug { ContextService(name: "DEBUG") }
+            .onDebug { ContextService(name: "DEBUG") }
+    }
+    fileprivate var simulatorContextService: Factory<ContextService> {
+        self { ContextService(name: "FACTORY") }
     }
     fileprivate var onceContextService: Factory<ContextService> {
         self {
             ContextService(name: "FACTORY")
         }
         .once {
-            $0.debug {
+            $0.onDebug {
                 ContextService(name: "ONCE")
             }
         }
