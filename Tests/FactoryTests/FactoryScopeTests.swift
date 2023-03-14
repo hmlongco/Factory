@@ -324,9 +324,9 @@ final class FactoryScopeTests: XCTestCase {
         let service2 = Container.shared.nilSService()
         XCTAssertNotNil(service2)
         XCTAssertTrue(Container.shared.manager.cache.isEmpty) // nothing caches
-        Container.shared.nilSService.register(scope: .cached) {
-            MyService()
-        }
+        Container.shared.nilSService
+            .register { MyService() }
+            .scope(.cached)
         let service3 = Container.shared.nilSService()
         XCTAssertNotNil(service3)
         XCTAssertFalse(Container.shared.manager.cache.isEmpty) // should be cached
@@ -335,11 +335,12 @@ final class FactoryScopeTests: XCTestCase {
         XCTAssertTrue(service3?.id == service4?.id) // should be cached
     }
 
-//    func testDefaultScopeContainer() throws {
-//        let container = DefaultScopeContainer()
-//        let registration = container.myServiceType.registration
-//        XCTAssertTrue(registration.scope === Scope.singleton)
-//    }
+    func testDefaultScopeContainer() throws {
+        let container = DefaultScopeContainer()
+        let service1 = container.myServiceType()
+        let service2 = container.myServiceType()
+        XCTAssertTrue(service1.id == service2.id)
+    }
 
 }
 

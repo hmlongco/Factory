@@ -1175,6 +1175,11 @@ public struct FactoryRegistration<P,T> {
     /// Once flag
     internal var once: Bool = false
 
+    /// Internal calculated value
+    internal var defaultScope: Scope? {
+        (container as? ScopeDefaults)?.defaultScope
+    }
+
     /// Tnitializer for registration sets passed values and default scope from container manager.
     internal init(id: String, container: ManagedContainer, factory: @escaping (P) -> T) {
         self.id = id
@@ -1207,7 +1212,7 @@ public struct FactoryRegistration<P,T> {
 
         let manager = unsafeCheckecContainer().manager
         let options = manager.options[id]
-        let scope = options?.scope
+        let scope = options?.scope ?? defaultScope
 
         var factory: (P) -> T = factoryForCurrentContext(using: options)
 
@@ -1365,7 +1370,7 @@ public struct FactoryRegistration<P,T> {
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
         let manager = unsafeCheckecContainer().manager
-        var options: FactoryOptions = manager.options[id] ?? FactoryOptions()
+        var options = manager.options[id] ?? FactoryOptions(scope: defaultScope)
         if options.once == once {
             mutate(&options)
             manager.options[id] = options
