@@ -324,6 +324,7 @@ extension FactoryModifying {
     /// }
     /// ```
     /// As shown, decorator can come in handy when you need to perform some operation or manipulation after the fact.
+    @discardableResult
     public func decorator(_ decorator: @escaping (_ instance: T) -> Void) -> Self {
         registration.decorator(decorator)
         return self
@@ -387,15 +388,13 @@ extension FactoryModifying {
 extension FactoryModifying {
     /// Adds ability to mutate Factory on first instantiation only.
     @discardableResult
-    public func once(_ transform: (_ instance: Self) -> Self) -> Self {
+    public func once() -> Self {
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
-        let container = registration.unsafeCheckecContainer()
-        if container.manager.once.contains(registration.id) {
-            return self
-        }
-        container.manager.once.insert(registration.id)
-        return transform(self)
+        registration.container.manager.once.insert(registration.id)
+        var mutable = self
+        mutable.registration.once = true
+        return mutable
     }
 }
 
@@ -549,8 +548,10 @@ public class ContainerManager {
     internal typealias FactoryMap = [String:AnyFactory]
     /// Alias for Factory options map.
     internal typealias FactoryOptionsMap = [String:FactoryOptions]
-    /// Alias for Factory options map.
+    /// Alias for Factory once set.
     internal typealias FactoryOnceSet = Set<String>
+    /// Alias for Factory options map.
+    internal typealias FactoryOnceMap = [String:UUID]
 
     /// Internal closure decorates all factory resolutions for this container.
     internal var decorator: ((Any) -> ())?
@@ -564,6 +565,8 @@ public class ContainerManager {
     internal lazy var cache: Scope.Cache = Scope.Cache()
     /// Once cache for Factory's managed by this container.
     internal lazy var once: FactoryOnceSet = .init()
+    /// Once cache for Factory's managed by this container.
+    internal lazy var onceMap: FactoryOnceMap = .init()
     /// Push/Pop stack for registrations, options, cache, and so on.
     internal lazy var stack: [(FactoryMap, FactoryOptionsMap, Scope.Cache.CacheMap, FactoryOnceSet, Bool)] = []
 
@@ -1177,15 +1180,14 @@ public struct FactoryRegistration<P,T> {
     internal var container: ManagedContainer
     /// Typed factory with scope and factpry.
     internal var factory: (P) -> T
-    /// The scope responsible for managing the lifecycle of any objects created by this Factory.
-//    internal var scope: Scope?
+    /// Once flag
+    internal var once: Bool = false
 
     /// Tnitializer for registration sets passed values and default scope from container manager.
     internal init(id: String, container: ManagedContainer, factory: @escaping (P) -> T) {
         self.id = id
         self.container = container
         self.factory = factory
-//        self.scope = (container as? ScopeDefaults)?.defaultScope
     }
 
     /// Support function performs autoRegistrationCheck and returns properly initialized container.
@@ -1195,6 +1197,11 @@ public struct FactoryRegistration<P,T> {
             (container as? AutoRegistering)?.autoRegister()
         }
         return container
+    }
+
+    /// Support function for one-time only option updates
+    internal func unsafeCanUpdateOptions() -> Bool {
+        container.manager.once.contains(id) == once
     }
 
     /// Resolves a Factory, returning an instance of the desired type. All roads lead here.
@@ -1310,6 +1317,7 @@ public struct FactoryRegistration<P,T> {
     internal func register(_ factory: @escaping (P) -> T) {
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
+        guard unsafeCanUpdateOptions() else { return }
         let manager = unsafeCheckecContainer().manager
         manager.registrations[id] = TypedFactory(factory: factory)
         manager.cache.removeValue(forKey: id)
@@ -1320,6 +1328,7 @@ public struct FactoryRegistration<P,T> {
     internal func scope(_ scope: Scope?) {
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
+        guard unsafeCanUpdateOptions() else { return }
         let manager = unsafeCheckecContainer().manager
         if var options = manager.options[id] {
             if scope !== options.scope {
@@ -1356,6 +1365,7 @@ public struct FactoryRegistration<P,T> {
     internal func options(mutate: (_ options: inout FactoryOptions) -> Void) {
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
+        guard unsafeCanUpdateOptions() else { return }
         let manager = unsafeCheckecContainer().manager
         var options: FactoryOptions = manager.options[id] ?? FactoryOptions()
         mutate(&options)

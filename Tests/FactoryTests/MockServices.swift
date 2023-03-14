@@ -199,10 +199,11 @@ final class CustomContainer: SharedContainer, AutoRegistering {
         self {
             MyService()
         }
-        .once {
+        .scope(.singleton)
+        .decorator { _ in
             self.count += 1
-            return $0
         }
+        .once()
     }
     func autoRegister() {
         print("CustomContainer AUTOREGISTERING")

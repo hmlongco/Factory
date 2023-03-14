@@ -249,11 +249,10 @@ extension Container {
         self {
             ContextService(name: "FACTORY")
         }
-        .once {
-            $0.onDebug {
-                ContextService(name: "ONCE")
-            }
+        .onDebug {
+            ContextService(name: "ONCE")
         }
+        .once()
     }
 
 }
