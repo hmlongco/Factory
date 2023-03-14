@@ -133,7 +133,7 @@ public struct Factory<T>: FactoryModifying {
     /// Allows updating registered factory and scope.
     @discardableResult
     public func register(factory: @escaping () -> T) -> Self {
-        registration.register(TypedFactory<Void,T>(factory: factory, scope: registration.scope))
+        registration.register(TypedFactory<Void,T>(factory: factory, scope: nil))
         return self
     }
 
@@ -219,7 +219,7 @@ public struct ParameterFactory<P,T>: FactoryModifying {
     ///  - factory: A new factory closure that produces an object of the desired type when needed.
     @discardableResult
     public func register(factory: @escaping (P) -> T) -> Self {
-        registration.register(TypedFactory<P,T>(factory: factory, scope: registration.scope))
+        registration.register(TypedFactory<P,T>(factory: factory, scope: nil))
         return self
     }
 
@@ -250,10 +250,10 @@ extension FactoryModifying {
     ///         .scope(.session)
     /// }
     /// ```
+    @discardableResult
     public func scope(_ scope: Scope) -> Self {
-        var mutable = self
-        mutable.registration.scope = scope
-        return mutable
+        registration.scope(scope)
+        return self
     }
     /// Syntactic sugar defines this Factory's dependency scope to be cached. See ``Scope/Cached-swift.class``.
     /// ```swift
@@ -342,11 +342,11 @@ extension FactoryModifying {
     public func context(_ context: FactoryContext, factory: @escaping (P) -> T) -> Self {
         switch context {
         case .arg:
-            let typedFactory = TypedFactory<P,T>(factory: factory, scope: registration.scope)
+            let typedFactory = TypedFactory<P,T>(factory: factory, scope: nil)
             registration.context(context, id: registration.id, factory: typedFactory)
         default:
             #if DEBUG
-            let typedFactory = TypedFactory<P,T>(factory: factory, scope: registration.scope)
+            let typedFactory = TypedFactory<P,T>(factory: factory, scope: nil)
             registration.context(context, id: registration.id, factory: typedFactory)
             #endif
         }
@@ -390,8 +390,8 @@ extension FactoryModifying {
     /// Adds ability to mutate Factory on first instantiation only.
     @discardableResult
     public func once(_ transform: (_ instance: Self) -> Self) -> Self {
-        defer { globalRecursiveLock.unlock() }
-        globalRecursiveLock.lock()
+        defer { pthread_mutex_unlock(&globalRecursiveLock.mutex) }
+        pthread_mutex_lock(&globalRecursiveLock.mutex)
         let container = registration.unsafeCheckecContainer()
         if container.manager.once.contains(registration.id) {
             return self
@@ -408,9 +408,11 @@ extension FactoryModifying {
     /// - Parameters:
     ///  - scope: Optional parameter that lets the registration redefine the scope used for this dependency.
     ///  - factory: A new factory closure that produces an object of the desired type when needed.
+    @available(*, deprecated, message: "Use container.service.scope(.cached).register { Service() } instead")
     @discardableResult
     public func register(scope: Scope?, factory: @escaping (P) -> T) -> Self {
-        registration.register(TypedFactory<P,T>(factory: factory, scope: scope))
+        registration.register(TypedFactory<P,T>(factory: factory, scope: nil))
+        registration.scope(scope)
         return self
     }
     /// Resets the Factory's behavior to its original state, removing any registrations and clearing any cached items from the specified scope.
@@ -571,11 +573,11 @@ extension ContainerManager {
         guard options != .none else {
             return
         }
-        defer { globalRecursiveLock.unlock() }
-        globalRecursiveLock.lock()
+        defer { pthread_mutex_unlock(&globalRecursiveLock.mutex) }
+        pthread_mutex_lock(&globalRecursiveLock.mutex)
         switch options {
         case .registration:
-            self.registrations = [:]
+            self.registrations.removeAll(keepingCapacity: true)
         case .context:
             for (key, option) in self.options {
                 var mutable = option
@@ -586,32 +588,32 @@ extension ContainerManager {
         case .scope:
             self.cache.reset()
         default:
-            self.registrations.removeAll()
-            self.options.removeAll()
+            self.registrations.removeAll(keepingCapacity: true)
+            self.options.removeAll(keepingCapacity: true)
+            self.once.removeAll(keepingCapacity: true)
             self.cache.reset()
-            self.once.removeAll()
             self.autoRegistrationCheckNeeded = true
         }
     }
 
     /// Clears any cached values associated with a specific scope, leaving the other scope caches intact.
     public func reset(scope: Scope) {
-        defer { globalRecursiveLock.unlock() }
-        globalRecursiveLock.lock()
+        defer { pthread_mutex_unlock(&globalRecursiveLock.mutex) }
+        pthread_mutex_lock(&globalRecursiveLock.mutex)
         cache.reset(scopeID: scope.scopeID)
     }
 
     /// Test function pushes the current registration and cache states
     public func push() {
-        defer { globalRecursiveLock.unlock() }
-        globalRecursiveLock.lock()
+        defer { pthread_mutex_unlock(&globalRecursiveLock.mutex) }
+        pthread_mutex_lock(&globalRecursiveLock.mutex)
         stack.append((registrations, options, cache.cache, once, autoRegistrationCheckNeeded))
     }
 
     /// Test function pops and restores a previously pushed registration and cache state
     public func pop() {
-        defer { globalRecursiveLock.unlock() }
-        globalRecursiveLock.lock()
+        defer { pthread_mutex_unlock(&globalRecursiveLock.mutex) }
+        pthread_mutex_lock(&globalRecursiveLock.mutex)
         if let state = stack.popLast() {
             registrations = state.0
             options = state.1
@@ -787,7 +789,7 @@ extension Scope {
         /// Internal function to clear cache if needed
         @inlinable func reset() {
             if !cache.isEmpty {
-                cache = [:]
+                cache.removeAll(keepingCapacity: true)
             }
         }
         var cache: CacheMap = .init(minimumCapacity: 32)
@@ -955,8 +957,8 @@ public enum FactoryResetOptions {
     /// Manages the wrapped dependency, which is resolved when this value is accessed for the first time.
     public var wrappedValue: T {
         mutating get {
-            defer { globalRecursiveLock.unlock() }
-            globalRecursiveLock.lock()
+            defer { pthread_mutex_unlock(&globalRecursiveLock.mutex) }
+            pthread_mutex_lock(&globalRecursiveLock.mutex)
             if initialize {
                 resolve()
             }
@@ -1026,8 +1028,8 @@ public enum FactoryResetOptions {
     /// Manages the wrapped dependency, which is resolved when this value is accessed for the first time.
     public var wrappedValue: T? {
         mutating get {
-            defer { globalRecursiveLock.unlock() }
-            globalRecursiveLock.lock()
+            defer { pthread_mutex_unlock(&globalRecursiveLock.mutex) }
+            pthread_mutex_lock(&globalRecursiveLock.mutex)
             if initialize {
                 resolve()
             }
@@ -1175,14 +1177,14 @@ public struct FactoryRegistration<P,T> {
     /// Typed factory with scope and factpry.
     internal var factory: (P) -> T
     /// The scope responsible for managing the lifecycle of any objects created by this Factory.
-    internal var scope: Scope?
+//    internal var scope: Scope?
 
     /// Tnitializer for registration sets passed values and default scope from container manager.
     internal init(id: String, container: ManagedContainer, factory: @escaping (P) -> T) {
         self.id = id
         self.container = container
         self.factory = factory
-        self.scope = (container as? ScopeDefaults)?.defaultScope
+//        self.scope = (container as? ScopeDefaults)?.defaultScope
     }
 
     /// Support function performs autoRegistrationCheck and returns properly initialized container.
@@ -1199,13 +1201,14 @@ public struct FactoryRegistration<P,T> {
     /// - Parameter factory: Factory wanting resolution.
     /// - Returns: Instance of the desired type.
     internal func resolve(with parameters: P) -> T {
-        defer { globalRecursiveLock.unlock() }
-        globalRecursiveLock.lock()
+        defer { pthread_mutex_unlock(&globalRecursiveLock.mutex) }
+        pthread_mutex_lock(&globalRecursiveLock.mutex)
 
         let manager = unsafeCheckecContainer().manager
         let options = manager.options[id]
+        let scope = options?.scope
 
-        var (factory, scope) = factoryAndScopeForCurrentContext(using: options)
+        var factory = factoryAndScopeForCurrentContext(using: options)
 
         #if DEBUG
         if manager.dependencyChainTestMax > 0 {
@@ -1262,40 +1265,76 @@ public struct FactoryRegistration<P,T> {
         return instance
     }
 
-    func factoryAndScopeForCurrentContext(using options: FactoryOptions?) -> ((P) -> T, Scope?) {
+//    func factoryAndScopeForCurrentContext(using options: FactoryOptions?) -> ((P) -> T, Scope?) {
+//        let manager = container.manager
+//        if let contexts = options?.argumentContexts, !contexts.isEmpty {
+//            for arg in FactoryContext.arguments {
+//                if let found = contexts["arg=\(arg)"] as? TypedFactory<P,T> {
+//                    return (found.factory, found.scope)
+//                }
+//            }
+//        }
+//        if let contexts = options?.contexts, !contexts.isEmpty {
+//            #if DEBUG
+//            if FactoryContext.isPreview, let found = contexts["preview"] as? TypedFactory<P,T> {
+//                return (found.factory, found.scope)
+//            }
+//            if FactoryContext.isTest, let found = contexts["test"] as? TypedFactory<P,T> {
+//                return (found.factory, found.scope)
+//            }
+//            if FactoryContext.isSimulator, let found = contexts["simulator"] as? TypedFactory<P,T> {
+//                return (found.factory, found.scope)
+//            }
+//            #endif
+//            if !FactoryContext.isSimulator, let found = contexts["device"] as? TypedFactory<P,T> {
+//                return (found.factory, found.scope)
+//            }
+//            #if DEBUG
+//            if let found = contexts["debug"] as? TypedFactory<P,T> {
+//                return (found.factory, found.scope)
+//            }
+//            #endif
+//        }
+//        if let found = manager.registrations[id] as? TypedFactory<P,T> {
+//            return (found.factory, options?.scope)
+//        }
+//        return (factory, options?.scope)
+//    }
+
+    func factoryAndScopeForCurrentContext(using options: FactoryOptions?) -> (P) -> T {
         let manager = container.manager
         if let contexts = options?.argumentContexts, !contexts.isEmpty {
             for arg in FactoryContext.arguments {
                 if let found = contexts["arg=\(arg)"] as? TypedFactory<P,T> {
-                    return (found.factory, found.scope)
+                    return found.factory
                 }
             }
         }
         if let contexts = options?.contexts, !contexts.isEmpty {
             #if DEBUG
             if FactoryContext.isPreview, let found = contexts["preview"] as? TypedFactory<P,T> {
-                return (found.factory, found.scope)
+                return found.factory
             }
             if FactoryContext.isTest, let found = contexts["test"] as? TypedFactory<P,T> {
-                return (found.factory, found.scope)
+                return found.factory
             }
             if FactoryContext.isSimulator, let found = contexts["simulator"] as? TypedFactory<P,T> {
-                return (found.factory, found.scope)
+                return found.factory
             }
             #endif
             if !FactoryContext.isSimulator, let found = contexts["device"] as? TypedFactory<P,T> {
-                return (found.factory, found.scope)
+                return found.factory
             }
             #if DEBUG
             if let found = contexts["debug"] as? TypedFactory<P,T> {
-                return (found.factory, found.scope)
+                return found.factory
             }
             #endif
         }
         if let found = manager.registrations[id] as? TypedFactory<P,T> {
-            return (found.factory, found.scope)
+            return found.factory
         }
-        return (factory, scope)
+        return factory
     }
 
     /// Registers a new factory closure capable of producing an object or service of the desired type. This factory overrides the original factory and
@@ -1304,11 +1343,28 @@ public struct FactoryRegistration<P,T> {
     ///   - id: ID of associated Factory.
     ///   - factory: Factory closure called to create a new instance of the service when needed.
     internal func register(_ factory: AnyFactory) {
-        defer { globalRecursiveLock.unlock() }
-        globalRecursiveLock.lock()
+        defer { pthread_mutex_unlock(&globalRecursiveLock.mutex) }
+        pthread_mutex_lock(&globalRecursiveLock.mutex)
         let manager = unsafeCheckecContainer().manager
         manager.registrations[id] = factory
         manager.cache.removeValue(forKey: id)
+    }
+
+    /// Registers a new factory scope.
+    /// - Parameter: - scope: New scope
+    internal func scope(_ scope: Scope?) {
+        defer { pthread_mutex_unlock(&globalRecursiveLock.mutex) }
+        pthread_mutex_lock(&globalRecursiveLock.mutex)
+        let manager = unsafeCheckecContainer().manager
+        if var options = manager.options[id] {
+            if scope !== options.scope {
+                options.scope = scope
+                manager.options[id] = options
+                manager.cache.removeValue(forKey: id)
+            }
+        } else {
+            manager.options[id] = FactoryOptions(scope: scope)
+        }
     }
 
     /// Registers a new context.
@@ -1316,11 +1372,9 @@ public struct FactoryRegistration<P,T> {
         options { options in
             switch context {
             case .arg(let arg):
-                let key = "arg=\(arg)"
-                options.argumentContexts[key] = factory
+                options.argumentContexts["arg=\(arg)"] = factory
             default:
-                let key = "\(context)"
-                options.contexts[key] = factory
+                options.contexts["\(context)"] = factory
             }
             self.container.manager.cache.removeValue(forKey: id)
         }
@@ -1335,15 +1389,9 @@ public struct FactoryRegistration<P,T> {
 
     /// Support function for options mutation.
     internal func options(mutate: (_ options: inout FactoryOptions) -> Void) {
-        defer { globalRecursiveLock.unlock() }
-        globalRecursiveLock.lock()
-        let _ = unsafeCheckecContainer()
-        unlockedOptions(mutate: mutate)
-    }
-
-    /// Unsafe support function for options mutation. Use only in locked contexts.
-    internal func unlockedOptions(mutate: (_ options: inout FactoryOptions) -> Void) {
-        let manager = container.manager
+        defer { pthread_mutex_unlock(&globalRecursiveLock.mutex) }
+        pthread_mutex_lock(&globalRecursiveLock.mutex)
+        let manager = unsafeCheckecContainer().manager
         var options: FactoryOptions = manager.options[id] ?? FactoryOptions()
         mutate(&options)
         manager.options[id] = options
@@ -1356,14 +1404,14 @@ public struct FactoryRegistration<P,T> {
     ///   - id: ID of item to remove from the appropriate cache.
     internal func reset(options: FactoryResetOptions) {
         guard options != .none else { return }
-        defer { globalRecursiveLock.unlock() }
-        globalRecursiveLock.lock()
+        defer { pthread_mutex_unlock(&globalRecursiveLock.mutex) }
+        pthread_mutex_lock(&globalRecursiveLock.mutex)
         let manager = container.manager
         switch options {
         case .registration:
             manager.registrations.removeValue(forKey: id)
         case .context:
-            unlockedOptions {
+            self.options {
                 $0.argumentContexts = [:]
                 $0.contexts = [:]
             }
@@ -1371,6 +1419,7 @@ public struct FactoryRegistration<P,T> {
             manager.cache.removeValue(forKey: id)
         default:
             manager.registrations = manager.registrations.filter { !$0.key.hasPrefix(id) }
+            manager.options.removeValue(forKey: id)
             manager.cache.removeValue(forKey: id)
             manager.once.remove(id)
         }
@@ -1389,7 +1438,7 @@ public struct FactoryRegistration<P,T> {
                 globalDependencyChain = []
                 globalDependencyChainMessages = []
                 globalGraphResolutionDepth = 0
-                globalRecursiveLock = NSRecursiveLock()
+                globalRecursiveLock = FactoryRecursiveLock()
                 globalTraceResolutions = []
                 triggerFatalError(message, #file, #line)
             } else {
@@ -1405,17 +1454,18 @@ public struct FactoryRegistration<P,T> {
 // MARK: Internal Protocols and Types
 
 internal struct FactoryOptions {
-    /// Decorator will be passed fully constructed instance for further configuration.
-    var decorator: Any?
+    /// Managed scope for this factory instance
+    var scope: Scope?
     /// Contexts
     var argumentContexts: [String:AnyFactory] = [:]
     /// Contexts
     var contexts: [String:AnyFactory] = [:]
+    /// Decorator will be passed fully constructed instance for further configuration.
+    var decorator: Any?
 }
 
 // Internal Factory type
-internal protocol AnyFactory {
-}
+internal protocol AnyFactory {}
 
 internal struct TypedFactory<P,T>: AnyFactory {
     let factory: (P) -> T
@@ -1457,10 +1507,20 @@ internal struct WeakBox: AnyBox {
     weak var boxed: AnyObject?
 }
 
+private struct FactoryRecursiveLock {
+    init() {
+        pthread_mutexattr_init(&mutexAttr)
+        pthread_mutexattr_settype(&mutexAttr, PTHREAD_MUTEX_RECURSIVE)
+        pthread_mutex_init(&mutex, &mutexAttr)
+    }
+    internal var mutex = pthread_mutex_t()
+    internal var mutexAttr = pthread_mutexattr_t()
+}
+
 // MARK: - Internal Variables
 
 /// Master recursive lock
-private var globalRecursiveLock = NSRecursiveLock()
+private var globalRecursiveLock = FactoryRecursiveLock()
 
 /// Master graph resolution depth counter
 private var globalGraphResolutionDepth = 0

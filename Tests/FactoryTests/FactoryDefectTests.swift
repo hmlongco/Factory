@@ -111,24 +111,25 @@ final class FactoryDefectTests: XCTestCase {
         XCTAssertNotNil(service1)
         XCTAssertFalse(Container.shared.manager.cache.isEmpty)
         Container.shared.manager.reset()
-        Container.shared.singletonService.register(scope: .unique) {
-            MyService()
-        }
+        Container.shared.singletonService
+            .unique
+            .register { MyService() }
         let service2 = Container.shared.singletonService()
         XCTAssertNotNil(service2)
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
-
+        // scope defined in factory definition will still override last change
+        XCTAssertFalse(Container.shared.manager.cache.isEmpty)
         Container.shared.manager.reset()
         let service3 = Container.shared.scopedParameterService(8)
         XCTAssertNotNil(service3)
         XCTAssertFalse(Container.shared.manager.cache.isEmpty)
         Container.shared.manager.reset()
-        Container.shared.scopedParameterService.register(scope: .unique) {
-            ParameterService(value: $0)
-        }
+        Container.shared.scopedParameterService
+            .unique
+            .register { ParameterService(value: $0) }
         let service4 = Container.shared.scopedParameterService(9)
         XCTAssertNotNil(service4)
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
+        // scope defined in factory definition will still override last change
+        XCTAssertFalse(Container.shared.manager.cache.isEmpty)
     }
 
     // Registration on a new container could be overriden by auto registration
