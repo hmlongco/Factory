@@ -246,13 +246,9 @@ extension Container {
         self { ContextService(name: "FACTORY") }
     }
     fileprivate var onceContextService: Factory<ContextService> {
-        self {
-            ContextService(name: "FACTORY")
-        }
-        .onDebug {
-            ContextService(name: "ONCE")
-        }
-        .once()
+        self { ContextService(name: "FACTORY") }
+            .onDebug { ContextService(name: "ONCE") }
+            .once()
     }
 
 }

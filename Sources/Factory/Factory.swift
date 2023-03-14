@@ -527,6 +527,9 @@ public class ContainerManager {
     /// Public initializer
     public init() {}
 
+    /// Default scope
+    public var defaultScope: Scope?
+    
     #if DEBUG
     /// Public variable exposing dependency chain test maximum
     public var dependencyChainTestMax: Int = 10
@@ -578,11 +581,12 @@ extension ContainerManager {
         switch options {
         case .registration:
             self.registrations.removeAll(keepingCapacity: true)
+            self.autoRegistrationCheckNeeded = true
         case .context:
             for (key, option) in self.options {
                 var mutable = option
-                mutable.argumentContexts = [:]
-                mutable.contexts = [:]
+                mutable.argumentContexts = nil
+                mutable.contexts = nil
                 self.options[key] = mutable
             }
         case .scope:
@@ -797,21 +801,6 @@ extension Scope {
         }
         #endif
    }
-}
-
-// MARK: - Scope Defaults
-
-/// Protocol allows container to specifer a default scope for all managed factories.
-///
-/// ```swift
-/// extension Container: ScopeDefaults {
-///     var defaultScope: Scope = .graph
-/// }
-/// ```
-/// Implemented as protocol since attempting to set via AutoRegister would be too late for first factory resolved.
-public protocol ScopeDefaults {
-    /// Variable allows container to specifer a default scope other than unique for all managed factories.
-    var defaultScope: Scope { get }
 }
 
 // MARK: - Automatic Registrations
@@ -1177,7 +1166,7 @@ public struct FactoryRegistration<P,T> {
 
     /// Internal calculated value
     internal var defaultScope: Scope? {
-        (container as? ScopeDefaults)?.defaultScope
+        container.manager.defaultScope
     }
 
     /// Tnitializer for registration sets passed values and default scope from container manager.
@@ -1354,7 +1343,6 @@ public struct FactoryRegistration<P,T> {
                 }
                 options.contexts?["\(context)"] = TypedFactory(factory: factory)
             }
-            self.container.manager.cache.removeValue(forKey: id)
         }
     }
 
@@ -1392,8 +1380,8 @@ public struct FactoryRegistration<P,T> {
             manager.registrations.removeValue(forKey: id)
         case .context:
             self.options {
-                $0.argumentContexts = [:]
-                $0.contexts = [:]
+                $0.argumentContexts = nil
+                $0.contexts = nil
             }
         case .scope:
             manager.cache.removeValue(forKey: id)

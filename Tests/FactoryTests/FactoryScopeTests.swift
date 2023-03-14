@@ -335,8 +335,8 @@ final class FactoryScopeTests: XCTestCase {
         XCTAssertTrue(service3?.id == service4?.id) // should be cached
     }
 
-    func testDefaultScopeContainer() throws {
-        let container = DefaultScopeContainer()
+    func testSingletonContainer() throws {
+        let container = SingletonContainer()
         let service1 = container.myServiceType()
         let service2 = container.myServiceType()
         XCTAssertTrue(service1.id == service2.id)
@@ -344,10 +344,13 @@ final class FactoryScopeTests: XCTestCase {
 
 }
 
-fileprivate class DefaultScopeContainer: ManagedContainer, ScopeDefaults {
-    let defaultScope: Scope = .singleton
-    let manager = ContainerManager()
+fileprivate class SingletonContainer: ManagedContainer, AutoRegistering {
+    func autoRegister() {
+        manager.defaultScope = .singleton
+    }
     var myServiceType: Factory<MyServiceType> {
         self { MyService() }
+            .onTest { MockServiceN(66) }
     }
+    let manager = ContainerManager()
 }

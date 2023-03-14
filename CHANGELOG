@@ -3,8 +3,8 @@
 ## 2.1.0
 
 * Contexts allow quick and easy Factory customization when doing previews, debugging and testing.
-* Once modifier allows one-time initialization on a per-Factory basis.
-* ScopeDefaults allows you to define the default scope used for a given container.
+* Provides once modifier which allows one-time initialization on a per-Factory basis.
+* Allows you to define the default scope used for a given container.
 
 ## 2.0.3
 
