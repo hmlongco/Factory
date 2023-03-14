@@ -389,9 +389,9 @@ extension FactoryModifying {
     /// Adds ability to mutate Factory on first instantiation only.
     @discardableResult
     public func once() -> Self {
-        defer { globalRecursiveLock.unlock()  }
-        globalRecursiveLock.lock()
-        registration.container.manager.once.insert(registration.id)
+        registration.options { options in
+            options.once = true
+        }
         var mutable = self
         mutable.registration.once = true
         return mutable
@@ -550,8 +550,6 @@ public class ContainerManager {
     internal typealias FactoryOptionsMap = [String:FactoryOptions]
     /// Alias for Factory once set.
     internal typealias FactoryOnceSet = Set<String>
-    /// Alias for Factory options map.
-    internal typealias FactoryOnceMap = [String:UUID]
 
     /// Internal closure decorates all factory resolutions for this container.
     internal var decorator: ((Any) -> ())?
@@ -563,12 +561,8 @@ public class ContainerManager {
     internal lazy var options: FactoryOptionsMap = .init(minimumCapacity: 32)
     /// Scope cache for Factory's managed by this container.
     internal lazy var cache: Scope.Cache = Scope.Cache()
-    /// Once cache for Factory's managed by this container.
-    internal lazy var once: FactoryOnceSet = .init()
-    /// Once cache for Factory's managed by this container.
-    internal lazy var onceMap: FactoryOnceMap = .init()
     /// Push/Pop stack for registrations, options, cache, and so on.
-    internal lazy var stack: [(FactoryMap, FactoryOptionsMap, Scope.Cache.CacheMap, FactoryOnceSet, Bool)] = []
+    internal lazy var stack: [(FactoryMap, FactoryOptionsMap, Scope.Cache.CacheMap, Bool)] = []
 
 }
 
@@ -596,7 +590,6 @@ extension ContainerManager {
         default:
             self.registrations.removeAll(keepingCapacity: true)
             self.options.removeAll(keepingCapacity: true)
-            self.once.removeAll(keepingCapacity: true)
             self.cache.reset()
             self.autoRegistrationCheckNeeded = true
         }
@@ -613,7 +606,7 @@ extension ContainerManager {
     public func push() {
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
-        stack.append((registrations, options, cache.cache, once, autoRegistrationCheckNeeded))
+        stack.append((registrations, options, cache.cache, autoRegistrationCheckNeeded))
     }
 
     /// Test function pops and restores a previously pushed registration and cache state
@@ -624,8 +617,7 @@ extension ContainerManager {
             registrations = state.0
             options = state.1
             cache.cache = state.2
-            once = state.3
-            autoRegistrationCheckNeeded = state.4
+            autoRegistrationCheckNeeded = state.3
         }
     }
 
@@ -1201,7 +1193,8 @@ public struct FactoryRegistration<P,T> {
 
     /// Support function for one-time only option updates
     internal func unsafeCanUpdateOptions() -> Bool {
-        container.manager.once.contains(id) == once
+        let options = container.manager.options[id]
+        return options == nil || options?.once == once
     }
 
     /// Resolves a Factory, returning an instance of the desired type. All roads lead here.
@@ -1317,10 +1310,11 @@ public struct FactoryRegistration<P,T> {
     internal func register(_ factory: @escaping (P) -> T) {
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
-        guard unsafeCanUpdateOptions() else { return }
         let manager = unsafeCheckecContainer().manager
-        manager.registrations[id] = TypedFactory(factory: factory)
-        manager.cache.removeValue(forKey: id)
+        if unsafeCanUpdateOptions() {
+            manager.registrations[id] = TypedFactory(factory: factory)
+            manager.cache.removeValue(forKey: id)
+        }
     }
 
     /// Registers a new factory scope.
@@ -1328,10 +1322,9 @@ public struct FactoryRegistration<P,T> {
     internal func scope(_ scope: Scope?) {
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
-        guard unsafeCanUpdateOptions() else { return }
         let manager = unsafeCheckecContainer().manager
         if var options = manager.options[id] {
-            if scope !== options.scope {
+            if once == options.once && scope !== options.scope {
                 options.scope = scope
                 manager.options[id] = options
                 manager.cache.removeValue(forKey: id)
@@ -1346,9 +1339,15 @@ public struct FactoryRegistration<P,T> {
         options { options in
             switch context {
             case .arg(let arg):
-                options.argumentContexts["arg=\(arg)"] = TypedFactory(factory: factory)
+                if options.argumentContexts == nil {
+                    options.argumentContexts = [:]
+                }
+                options.argumentContexts?["arg=\(arg)"] = TypedFactory(factory: factory)
             default:
-                options.contexts["\(context)"] = TypedFactory(factory: factory)
+                if options.contexts == nil {
+                    options.contexts = [:]
+                }
+                options.contexts?["\(context)"] = TypedFactory(factory: factory)
             }
             self.container.manager.cache.removeValue(forKey: id)
         }
@@ -1365,11 +1364,12 @@ public struct FactoryRegistration<P,T> {
     internal func options(mutate: (_ options: inout FactoryOptions) -> Void) {
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
-        guard unsafeCanUpdateOptions() else { return }
         let manager = unsafeCheckecContainer().manager
         var options: FactoryOptions = manager.options[id] ?? FactoryOptions()
-        mutate(&options)
-        manager.options[id] = options
+        if options.once == once {
+            mutate(&options)
+            manager.options[id] = options
+        }
     }
 
     /// Support function resets the behavior for a specific Factory to its original state, removing any associated registrations and clearing
@@ -1396,7 +1396,6 @@ public struct FactoryRegistration<P,T> {
             manager.registrations = manager.registrations.filter { !$0.key.hasPrefix(id) }
             manager.options.removeValue(forKey: id)
             manager.cache.removeValue(forKey: id)
-            manager.once.remove(id)
         }
     }
 
@@ -1432,11 +1431,13 @@ internal struct FactoryOptions {
     /// Managed scope for this factory instance
     var scope: Scope?
     /// Contexts
-    var argumentContexts: [String:AnyFactory] = [:]
+    var argumentContexts: [String:AnyFactory]?
     /// Contexts
-    var contexts: [String:AnyFactory] = [:]
+    var contexts: [String:AnyFactory]?
     /// Decorator will be passed fully constructed instance for further configuration.
     var decorator: Any?
+    /// Onve flag for options
+    var once: Bool = false
 }
 
 // Internal Factory type
