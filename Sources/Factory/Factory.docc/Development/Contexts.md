@@ -37,22 +37,25 @@ Let's dive in.
 
 ## Some Examples
 
-### • Test
+### • onTest
 
 As mentioned, the Factory closure associated with this context is used whenever your application or library is running unit tests using XCTest. And, as with most Factory modifiers, there's also a shortcut version:
 
 ```swift
+// test context modifier
+container.analytics.context(.test) { MockAnalyticsEngine() }
+// test shortcut
 container.analytics.onTest { MockAnalyticsEngine() }
 ```
 Having contexts built into Factory saves you from having to go to StackOverflow in an attempt to figure out how to do the same thing for yourself.
 ```swift
 if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
-    container.analytics.onTest { MockAnalyticsEngine() }
+    container.analytics.register { MockAnalyticsEngine() }
 }
 ```
 Plus it's a lot easier to remember...
 
-### • Preview
+### • onPreview
 
 This specifies a dependency that will be used whenever your app or module is running SwiftUI Previews.
 
@@ -67,17 +70,18 @@ struct ContentView_Previews: PreviewProvider {
     }
 }
 ```
-### • Debug
+You can, of course, still use the mechanisms shown in <doc:Previews>.
+### • onDebug
 
 Triggered whenever your application is running in debug mode in simulators, on a device, or when running unit tests.
 
-Note that there's no `release` context. Just use the standard `register` syntax in the case.
+> Note: that there's no `release` context. Just use the standard `register` syntax in that case.
 
-### •  Simulator / Device
+### •  onSimulator / onDevice
 
 Pretty apparent. What may not be so apparent, however, is that unlike all of the above these two contexts are also available in release builds. 
 
-### • Arg(String)
+### • onArg(String)
 
 The `arg` context is a powerful tool to have when you want to UITest your application and you want to change it's behavior.
 
@@ -127,17 +131,15 @@ Which brings us to...
 
 ## Context Precedence
 
-Registering multiple contexts could lead one to wonder just which one will be used in a situation where multiple contexts apply.
+Registering multiple contexts could lead one to wonder just which one will be used in a situation where multiple contexts apply. Here's the order of evaluation.
 
-Here's the order of evaluation.
+* **arg(...)**
+* **preview** *
+* **test** *
+* **simulator**
+* **device**
+* **debug** *
+* **registered factory** (if any)
+* **original factory**
 
-* arg(...)
-* preview **
-* test **
-* simulator
-* device
-* debug **
-* registered factory override (if any)
-* original factory
-
-Note that any context maked with asterisks (**) is only available in a DEBUG build. The executable functionality is stripped from release builds.
+Note that any context maked with an asterisk (*) is only available in a DEBUG build. The executable functionality is stripped from release builds.
