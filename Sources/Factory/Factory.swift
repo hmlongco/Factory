@@ -1277,10 +1277,10 @@ public struct FactoryRegistration<P,T> {
             if FactoryContext.isTest, let found = contexts["test"] as? TypedFactory<P,T> {
                 return found.factory
             }
+            #endif
             if FactoryContext.isSimulator, let found = contexts["simulator"] as? TypedFactory<P,T> {
                 return found.factory
             }
-            #endif
             if !FactoryContext.isSimulator, let found = contexts["device"] as? TypedFactory<P,T> {
                 return found.factory
             }
