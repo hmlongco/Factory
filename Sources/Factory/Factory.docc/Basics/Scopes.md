@@ -115,6 +115,21 @@ Scope caches are maintained by the Factory's container.
 
 See the "Releasing a Container" discussion in <doc:Containers> for more information.
 
+## Default Scope
+
+As mentioned earlier, the default scope for a new Factory is `unique`; a new instance will be created each and every time the Factory is resolved.
+
+That default can be changed on a per-container basis.
+```swift
+extension Container: AutoRegistering {
+    func autoRegister() {
+        manager.defaultScope = .graph
+        ...
+    }
+}
+```
+Now any Factory registration that doesn't specify a scope of its own will use the `graph` scope by default.
+
 ## Reset
 
 As shown above, individual scope caches can be reset (cleared) if needed.

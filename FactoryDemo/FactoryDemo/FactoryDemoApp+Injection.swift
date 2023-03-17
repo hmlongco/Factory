@@ -150,12 +150,3 @@ extension Container {
             .scope(.graph)
     }
 }
-
-extension SharedContainer {
-//    @inlinable public func scope<T>(_ scope: Scope?, key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
-//        Factory(self, key: key, factory).custom(scope: scope)
-//    }
-//
-//    var someOtherService: Factory<MyServiceType> { scope(.shared) { MyService() } }
-}
-

@@ -120,6 +120,7 @@ extension Container {
     var uniqueServiceType: Factory<MyServiceType> { self { MyService() } }
 
     var promisedService: Factory<MyServiceType?> { self { nil } }
+    var strictPromisedService: Factory<MyServiceType?> { promised() }
 
 }
 

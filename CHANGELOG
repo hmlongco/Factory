@@ -4,7 +4,8 @@
 
 * Contexts allow quick and easy Factory customization when doing previews, debugging and testing.
 * Provides once modifier which allows one-time initialization on a per-Factory basis.
-* Allows you to define the default scope used for a given container.
+* Let's you define the default scope used for a given container.
+* Allows you to specify promised optionals that warn when registrations are not provided.
 
 ## 2.0.3
 

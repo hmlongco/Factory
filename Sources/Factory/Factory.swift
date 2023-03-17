@@ -342,7 +342,7 @@ extension FactoryModifying {
     @discardableResult
     public func context(_ context: FactoryContext, factory: @escaping (P) -> T) -> Self {
         switch context {
-        case .arg:
+        case .arg, .args, .device, .simulator:
             registration.context(context, id: registration.id, factory: factory)
         default:
             #if DEBUG
@@ -351,10 +351,15 @@ extension FactoryModifying {
         }
         return self
     }
-    /// Factory builder shortcut for context(.arg) { .. }
+    /// Factory builder shortcut for context(.arg("test") { .. }
     @discardableResult
     public func onArg(_ argument: String, factory: @escaping (P) -> T) -> Self {
         context(.arg(argument), factory: factory)
+    }
+    /// Factory builder shortcut for context(.args["test1","test2") { .. }
+    @discardableResult
+    public func onArgs(_ args: [String], factory: @escaping (P) -> T) -> Self {
+        context(.args(args), factory: factory)
     }
     /// Factory builder shortcut for context(.preview) { .. }
     @discardableResult
@@ -499,6 +504,16 @@ extension ManagedContainer {
     /// Syntactic sugar allows container to create a properly bound ParameterFactory.
     @inlinable public func callAsFunction<P,T>(key: String = #function, _ factory: @escaping (P) -> T) -> ParameterFactory<P,T> {
         ParameterFactory(self, key: key, factory)
+    }
+    /// Syntactic sugar allows container to create a factory where registration is promised before resolution.
+    public func promised<T>(key: String = #function) -> Factory<T?>  {
+        Factory<T?>(self, key: key) {
+            if FactoryContext.promiseTriggersError {
+                resetAndTriggerFatalError("\(T.self) was not registerd", #file, #line)
+            } else {
+                return nil
+            }
+        }
     }
     /// Defines a decorator for the container. This decorator will see every dependency resolved by this container.
     public func decorator(_ decorator: ((Any) -> ())?) {
@@ -1115,6 +1130,7 @@ internal struct FactoryReference<C: SharedContainer, T>: BoxedFactoryReference {
 public enum FactoryContext: Equatable {
     /// Context used when application is launched with a particular argument.
     case arg(String)
+    case args([String])
     /// Context used when application is running in Xcode Preview mode.
     case preview
     /// Context used when application is running in Xcode Unit Test mode.
@@ -1136,6 +1152,15 @@ extension FactoryContext {
     internal static var isTest: Bool = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
     /// Proxy check for application running in simulator.
     internal static var isSimulator: Bool = ProcessInfo.processInfo.environment["SIMULATOR_UDID"] != nil
+    #if DEBUG
+    /// Proxy checks for application running in DEBUG mode.
+    internal static var isDebug: Bool = true
+    #else
+    /// Proxy check for application running in DEBUG mode.
+    internal static var isDebug: Bool = false
+    #endif
+    /// Proxy check for promise error handling.
+    internal static var promiseTriggersError: Bool = isDebug
 }
 
 /// Reset options for Factory's and Container's
@@ -1337,6 +1362,13 @@ public struct FactoryRegistration<P,T> {
                     options.argumentContexts = [:]
                 }
                 options.argumentContexts?["arg=\(arg)"] = TypedFactory(factory: factory)
+            case .args(let args):
+                if options.argumentContexts == nil {
+                    options.argumentContexts = [:]
+                }
+                args.forEach { arg in
+                    options.argumentContexts?["arg=\(arg)"] = TypedFactory(factory: factory)
+                }
             default:
                 if options.contexts == nil {
                     options.contexts = [:]
@@ -1402,12 +1434,7 @@ public struct FactoryRegistration<P,T> {
             let chain = globalDependencyChain[index...]
             let message = "circular dependency chain - \(chain.joined(separator: " > "))"
             if globalDependencyChainMessages.filter({ $0 == message }).count == max {
-                globalDependencyChain = []
-                globalDependencyChainMessages = []
-                globalGraphResolutionDepth = 0
-                globalRecursiveLock = RecursiveLock()
-                globalTraceResolutions = []
-                triggerFatalError(message, #file, #line)
+                resetAndTriggerFatalError(message, #file, #line)
             } else {
                 globalDependencyChain = [typeName]
                 globalDependencyChainMessages.append(message)
@@ -1477,28 +1504,8 @@ internal struct WeakBox: AnyBox {
 
 // MARK: - Locking
 
-internal final class RecursiveLock {
-    init() {
-        pthread_mutexattr_init(&mutexAttr)
-        pthread_mutexattr_settype(&mutexAttr, PTHREAD_MUTEX_RECURSIVE)
-        pthread_mutex_init(&mutex, &mutexAttr)
-    }
-    deinit {
-        pthread_mutex_destroy(&mutex)
-        pthread_mutexattr_destroy(&mutexAttr)
-    }
-    @inlinable final func lock() {
-        pthread_mutex_lock(&globalRecursiveLock.mutex)
-    }
-    @inlinable final func unlock() {
-        pthread_mutex_unlock(&globalRecursiveLock.mutex)
-    }
-    private var mutex = pthread_mutex_t()
-    private var mutexAttr = pthread_mutexattr_t()
-}
-
 /// Master recursive lock
-private var globalRecursiveLock = RecursiveLock()
+private var globalRecursiveLock = NSRecursiveLock()
 
 // MARK: - Internal Variables
 
@@ -1512,6 +1519,16 @@ private var globalDependencyChainMessages: [String] = []
 private var globalTraceFlag: Bool = false
 private var globalTraceResolutions: [String] = []
 private var globalLogger: (String) -> Void = { print($0) }
+
+/// Triggers fatalError after resetting enough stuff so unit tests can continue
+func resetAndTriggerFatalError(_ message: String, _ file: StaticString, _ line: Int) -> Never {
+    globalDependencyChain = []
+    globalDependencyChainMessages = []
+    globalGraphResolutionDepth = 0
+    globalRecursiveLock = NSRecursiveLock()
+    globalTraceResolutions = []
+    triggerFatalError(message, #file, #line) // GOES BOOM
+}
 
 /// Allow unit test interception of any fatal errors that may occur running the circular dependency check
 /// Variation of solution: https://stackoverflow.com/questions/32873212/unit-test-fatalerror-in-swift#

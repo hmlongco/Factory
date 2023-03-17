@@ -27,6 +27,7 @@ Factory makes it easy.
 Factory 2.1 provides quite a few predefined contexts for your use. They are:
 
 * **arg(String)** - application is launched with a particular argument.
+* **args([String])** - application is launched with one of several arguments.
 * **preview** - application is running in Xcode Preview mode
 * **test** - application is running in Xcode Unit Test mode
 * **debug** - application is running in Xcode DEBUG mode
@@ -118,6 +119,15 @@ extension Container: AutoRegistering {
 }
 ```
 
+## onArgs
+Similar to arg, but let's you use the same factory when any of several arguments are passed.
+```swift
+myServiceType
+    .onArgs("mock0", "mock1", "mock3") { 
+        EmptyService()
+    }
+```
+
 ## Multiple Contexts
 
 As you may have noticed above in the `arg` example, multple contexts work just as you'd expect and are specfied using Factory's modifier syntax.
@@ -133,7 +143,7 @@ Which brings us to...
 
 Registering multiple contexts could lead one to wonder just which one will be used in a situation where multiple contexts apply. Here's the order of evaluation.
 
-* **arg(...)**
+* **arg[s]**
 * **preview** *
 * **test** *
 * **simulator**

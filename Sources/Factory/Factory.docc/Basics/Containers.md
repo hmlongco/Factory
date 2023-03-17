@@ -157,9 +157,9 @@ extension Container: AutoRegistering {
     }
 }
 ```
-Just make `Container` conform to ``AutoRegistering`` and provide the `autoRegister` function. This function will be called *once* prior to the very first Factory service resolution on that container.
+Just make your container conform to ``AutoRegistering`` and provide the `autoRegister` function. This function will be called *once* prior to the very first Factory service resolution on that container.
 
-Note that this can come in handy when you want to register instances of objects obtained across different modules.
+Note that this can come in handy when you want to register instances of objects obtained across different modules, or change settings in the container manager.
 
 ## Resetting a Container
 
