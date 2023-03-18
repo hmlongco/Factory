@@ -49,3 +49,23 @@ internal class MyCommonType: CommonType {
         print("My Common Test")
     }
 }
+
+
+```swift
+// Public Protocol
+public protocol Analytics {
+    func event(loadtion: String, name: String)
+}
+
+// Public Factory
+extension Container {
+    public var analytics: Factory<Analytics> { self { AnalyticsAdator() } }
+}
+
+// Private Implementation
+private class AnalyticsAdator: Analytics {
+    public func event(loadtion: String, name: String) {
+        // talk to analytics library
+    }
+}
+```

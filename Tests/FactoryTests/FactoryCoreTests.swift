@@ -156,12 +156,12 @@ final class FactoryCoreTests: XCTestCase {
 
     func testStrictPromise() {
         // Expect non fatal error when strict and NOT in debug mode
-        FactoryContext.promiseTriggersError = false
+        Container.shared.manager.promiseTriggersError = false
         expectNonFatalError {
             let _ = Container.shared.strictPromisedService()
         }
         // Expect fatal error when strict and in debug mode
-        FactoryContext.promiseTriggersError = true
+        Container.shared.manager.promiseTriggersError = true
         expectFatalError(expectedMessage: "MyServiceType was not registerd") {
             let _ = Container.shared.strictPromisedService()
         }

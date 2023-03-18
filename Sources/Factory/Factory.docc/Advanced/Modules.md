@@ -34,17 +34,22 @@ Before we answer the above question, let's look at a related, but simpler proble
 
 Let's say we have a module called Networking that provides (suprise, suprise) a service that conforms to a Networking prototol. Let's also say that module *also* provides the implementation of that service.
 
-In that case our implementation is simple. We define the public protocol *and* we also publicaly define the Factory that provides it.
+![Diagram of Application Architecture](Networking)
+
+In that case our implementation is simple. Inside of Networking we define the public protocol *and* we also publicaly define the Factory that provides it.
 
 ```swift
+// Public Protocol
 public protocol Networking {
     func load<T>() async throws -> T
 }
 
+// Public Factory
 extension Container {
     public var network: Factory<Networking> { self { Network() } }
 }
 
+// Private Implementation
 private class Network: Networking {
     public func load<T>() async throws -> T {
         ...
@@ -53,7 +58,7 @@ private class Network: Networking {
 ```
 Note that our implementation is private and hidden to the rest of the world, which only sees and receives some instance that conforms to our Networking protocol.
 
-Got it? Anything which can see our protocol can also see a source that provides that protocol.
+Got it? Anything that can see our protocol can *also* see a source that provides an instance of that protocol.
 
 Okay, let's return to our orginally scheduled program.
 
@@ -67,11 +72,12 @@ Who’s on first?
 
 It's a dilemma, but fortunately it's not a serious one. The solution is twofold. 
 
-First, everone imports Factory. From an architectural perspective, the dependency injection system lives above everything else.
+First, everone imports Factory. From an architectural perspective, the dependency injection system is an invisible layer that lives above and wraps around everything else.
 
-Next, we implement part of the "same module" solution show above, but with a twist, adding the following Factory defintion to **ModuleP**.
+Next, we implement part of the "same module" solution shown above, but with a twist, adding the following Factory defintion to **ModuleP**.
 
 ```swift
+// Public Factory
 extension Container {
     public var accountLoading: Factory<AccountLoading?> { self { nil } }
 }
@@ -79,7 +85,9 @@ extension Container {
 
 Now, as with our earlier solution, anyone who imports ModuleP can see the protocol and can also see a Factory that promises to provide one. 
 
-That Factory, however, doesn't know how to construct one, and so we make its defintion optional and its facotory closure return nothing.
+That Factory, however, doesn't know how to construct one, so we make its defintion optional and proceed to define its factory closure to returns nil.
+
+And now we're cooking. But where does our missing ingredient come from?
 
 ## Wiring Things Together
 
@@ -120,7 +128,7 @@ class ViewModel: ObservableObject {
 }
 ```
 
-But that's the price we pay for compile-time safety. Should we fail to cross-wire a module dependency, our application isn't going to crash. It may not run correctly, but it isn't going to crash.
+But that one line is the price we pay for compile-time safety. Should we fail to cross-wire a module dependency, our application isn't going to crash. It may not run correctly, but it isn't going to crash.
 
 The `AutomaticRegistration.swift` file in the demo application illustrates a few examples of the cross-module registration technique. Check it out.
 
@@ -152,9 +160,9 @@ extension Container {
     public var accountLoading: Factory<AccountLoading?> { self { fatalError() } }
 }
 ```
-Providing the factory closure with `fatalError` will cause the application to fail fast, the very first time an unregistered Factory is accessed. Some people prefer this.
+Providing the factory closure with `fatalError` will cause the application to crash the very first time an unregistered Factory is accessed. And some people actually prefer this "fail fast" approach.
 
-But the problem, of course, is what happens if for some reason this application was shipped? The end user goes to screen X, the view model for that screen tries to get an accountLoader... and the application crashes.
+But the problem, of course, is what happens if for some reason this application is shipped and the registration was never provided? The end user goes to screen X, the view model for that screen tries to get an accountLoader... and the application crashes.
 
 Not a good look. Fortunately, Factory 2.1 provides a solution.
 
@@ -175,14 +183,52 @@ There could well be some cases where ModuleP wants to be truely independent and 
 
 In those cases, we're going to need a level of indirection.
 
-![Diagram of Application Architecture](MultiModule2)
+![Diagram of Application Architecture](Services)
 
-Everyone sees what they saw before, plus everyone can see `Dependencies`, the cross-module framework where our emtpy registrations are defined. `Dependencies`, in turn, can only see ModuleP as that's where it gets the model and protocol definitions that it needs to create its Factory's.
+Everyone sees what they saw before, plus everyone who's dependent on ModuleP can also see a new module called `Services`. This is a new cross-module framework where our emtpy registrations are defined. `Services`, in turn, can only see ModuleP as that's where it gets the model and protocol definitions that it needs to create its Factory's.
 
-As before the application, which can see everything, cross wires the various service registrations provided by `Dependencies`.
+Our original `accountLoading` Factory, which lived in ModuleP in the original example, now lives in Services.
+
+```swift
+// Public Factory
+extension Container {
+    public var accountLoading: Factory<AccountLoading?> { self { nil } }
+}
+```
+And the application, which can see everything, cross wires the various service registrations provided by `Services` together, just as it did before.
+
+ModuleP is now completely independent.
+
+## Adaptors
+
+There's one last case, that of using some third party library.
+
+In that case, we're often better off implementing an adaptor protocol and library that wraps that library and provides an agnostic, independent interface to its functionality.
+
+![Diagram of Application Architecture](Adaptor)
+
+This is a good approach to take when faced with thrid-party analytics libraries or feature managers like LaunchDarkly. 
+```swift
+// Public Protocol
+public protocol Analytics {
+    func event(loadtion: String, name: String)
+}
+
+// Public Factory
+extension Container {
+    public var analytics: Factory<Analytics> { self { AnalyticsAdator() } }
+}
+
+// Private Implementation
+private class AnalyticsAdator: Analytics {
+    public func event(loadtion: String, name: String) {
+        // talk to analytics library
+    }
+}
+```
 
 ## Mix and Match
 
-In a real world application with multiple modules providing sets of features and services, one would probably use all of the techniques mentioned here.
+In a real world application with multiple modules providing varying sets of features and services, one would probably use all of the techniques mentioned here.
 
-Some modules would benefit from the cross-module wiring approach, while many service modules like networking libraries could simply provide the public protocols and the internal implementations as shown above in the first example.
+Some modules would benefit from the cross-module wiring approach, while many service modules and adaptors could simply provide the public protocols and the internal implementations as shown above in the first and last examples.

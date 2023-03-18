@@ -508,11 +508,15 @@ extension ManagedContainer {
     /// Syntactic sugar allows container to create a factory where registration is promised before resolution.
     public func promised<T>(key: String = #function) -> Factory<T?>  {
         Factory<T?>(self, key: key) {
-            if FactoryContext.promiseTriggersError {
+            #if DEBUG
+            if self.manager.promiseTriggersError {
                 resetAndTriggerFatalError("\(T.self) was not registerd", #file, #line)
             } else {
                 return nil
             }
+            #else
+            nil
+            #endif
         }
     }
     /// Defines a decorator for the container. This decorator will see every dependency resolved by this container.
@@ -548,6 +552,9 @@ public class ContainerManager {
     #if DEBUG
     /// Public variable exposing dependency chain test maximum
     public var dependencyChainTestMax: Int = 10
+
+    /// Public variable promise behavior
+    public var promiseTriggersError: Bool = FactoryContext.isDebug
 
     /// Public var enabling factory resolution trace statements in debug mode for ALL containers.
     public var trace: Bool {
@@ -1159,8 +1166,6 @@ extension FactoryContext {
     /// Proxy check for application running in DEBUG mode.
     internal static var isDebug: Bool = false
     #endif
-    /// Proxy check for promise error handling.
-    internal static var promiseTriggersError: Bool = isDebug
 }
 
 /// Reset options for Factory's and Container's
