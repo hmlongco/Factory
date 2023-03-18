@@ -900,10 +900,10 @@ public enum FactoryResetOptions {
 /// allows you to point an instance on your own customer container type.
 ///
 /// > Note: Lazy injection is resolved the first time the dependency is referenced by the code, **not** on initilization.
-@propertyWrapper public struct WeakLazyInjected<T> {
+@propertyWrapper public struct WeakLazyInjected<T: AnyObject> {
 
     private var reference: BoxedFactoryReference
-    private weak var dependency: AnyObject?
+    private weak var dependency: T?
     private var initialize = true
 
     /// Initializes the property wrapper. The dependency isn't resolved until the wrapped value is accessed for the first time.
@@ -926,10 +926,10 @@ public enum FactoryResetOptions {
             if initialize {
                 resolve()
             }
-            return dependency as? T
+            return dependency
         }
         mutating set {
-            dependency = newValue as AnyObject
+            dependency = newValue
         }
     }
 
@@ -947,7 +947,7 @@ public enum FactoryResetOptions {
     /// Allows the user to force a Factory resolution at their descretion.
     public mutating func resolve(reset options: FactoryResetOptions = .none) {
         factory.reset(options)
-        dependency = factory() as AnyObject
+        dependency = factory()
         initialize = false
     }
 }
