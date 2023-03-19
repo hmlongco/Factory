@@ -109,6 +109,11 @@ public struct Factory<T>: FactoryModifying {
         registration.resolve(with: ())
     }
 
+    /// Unsugared resolution function.
+    public func resolve() -> T {
+        registration.resolve(with: ())
+    }
+
     /// Registers a new factory closure capable of producing an object or service of the desired type.
     ///
     /// This factory overrides the original factory closure and clears the associated scope so that the next time this factory is resolved
@@ -206,6 +211,11 @@ public struct ParameterFactory<P,T>: FactoryModifying {
     /// let service = container.parameterService(16)
     /// ```
     public func callAsFunction(_ parameters: P) -> T {
+        registration.resolve(with: parameters)
+    }
+
+    /// Unsugared resolution function.
+    public func resolve(_ parameters: P) -> T {
         registration.resolve(with: parameters)
     }
 

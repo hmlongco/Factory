@@ -61,7 +61,8 @@ extension Container {
         self { self.implementsAB() }
     }
     private var implementsAB: Factory<AServiceType&BServiceType> {
-        self { ImplementsAB() }.graph
+        self { ImplementsAB() }
+            .graph
     }
     var networkService: Factory<NetworkService> {
         self { NetworkService() }

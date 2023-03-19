@@ -162,7 +162,7 @@ extension Container {
 ```
 Providing the factory closure with `fatalError` will cause the application to crash the very first time an unregistered Factory is accessed. And some people actually prefer this "fail fast" approach.
 
-But the problem, of course, is what happens if for some reason this application is shipped and the registration was never provided? The end user goes to screen X, the view model for that screen tries to get an accountLoader... and the application crashes.
+But the problem, of course, is what happens if for some reason this application is shipped and the registration was never provided? Or was accidentally removed? In either case, the end user goes to screen X, the view model for that screen tries to get an accountLoader... and the application crashes.
 
 Not a good look. Fortunately, Factory 2.1 provides a solution.
 

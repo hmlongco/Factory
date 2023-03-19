@@ -32,6 +32,19 @@ struct ContentView: View {
     
 }
 
+struct innerView: View {
+    var body: some View {
+        Text("Hello")
+            .foregroundColor(.red)
+    }
+}
+struct outerView: View {
+    var body: some View {
+        innerView()
+            .foregroundColor(.green)
+    }
+}
+
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         // Depends on preview context set in FactoryDemoApp+AutoRegister.swift

@@ -40,13 +40,16 @@ Let's dive in.
 
 ### • onTest
 
-As mentioned, the Factory closure associated with this context is used whenever your application or library is running unit tests using XCTest. And, as with most Factory modifiers, there's also a shortcut version:
+As mentioned, the Factory closure associated with this context is used whenever your application or library is running unit tests using XCTest. 
+```swift
+container.analytics
+    .context(.test) { MockAnalyticsEngine() }
+```
+There's also a shortcut version:
 
 ```swift
-// test context modifier
-container.analytics.context(.test) { MockAnalyticsEngine() }
-// test shortcut
-container.analytics.onTest { MockAnalyticsEngine() }
+container.analytics
+    .onTest { MockAnalyticsEngine() }
 ```
 Having contexts built into Factory saves you from having to go to StackOverflow in an attempt to figure out how to do the same thing for yourself.
 ```swift
@@ -61,7 +64,8 @@ Plus it's a lot easier to remember...
 This specifies a dependency that will be used whenever your app or module is running SwiftUI Previews.
 
 ```swift
-container.myServiceType.onPreview { MockService() }
+container.myServiceType
+    .onPreview { MockService() }
 ```
 Which obviously makes your preview code itself much simpler.
 ```swift
