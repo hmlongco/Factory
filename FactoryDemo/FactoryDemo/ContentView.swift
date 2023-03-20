@@ -25,6 +25,9 @@ struct ContentView: View {
             Button("Trigger Circular Dependency Crash") {
                 Container.testCircularDependencies()
             }
+            Button("Promised Crash") {
+                let _ = Container.shared.promisedSerice()
+            }
             ContainerDemoView()
         }
         .padding()

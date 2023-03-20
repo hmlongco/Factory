@@ -150,3 +150,9 @@ extension Container {
             .scope(.graph)
     }
 }
+
+extension Container {
+    var promisedSerice: Factory<MyServiceType?> {
+        promised()
+    }
+}
