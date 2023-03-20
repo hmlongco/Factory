@@ -1536,7 +1536,7 @@ private var globalTraceResolutions: [String] = []
 private var globalLogger: (String) -> Void = { print($0) }
 
 /// Triggers fatalError after resetting enough stuff so unit tests can continue
-func resetAndTriggerFatalError(_ message: String, _ file: StaticString, _ line: Int) -> Never {
+private func resetAndTriggerFatalError(_ message: String, _ file: StaticString, _ line: Int) -> Never {
     globalDependencyChain = []
     globalDependencyChainMessages = []
     globalGraphResolutionDepth = 0
