@@ -284,6 +284,8 @@ If you want to support my work on Factory and Resolver, consider a [GitHub Spons
 
 Or you can just buy me a cup of coffee!
 
+And maany thanks to my new sponsors: sueddeutsche, doozMen.
+
 ## Author
 
 Factory is designed, implemented, documented, and maintained by [Michael Long](https://www.linkedin.com/in/hmlong/), a Lead iOS Software Engineer and a Top 1,000 Technology Writer on Medium.
