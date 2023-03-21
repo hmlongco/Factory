@@ -108,7 +108,7 @@ extension MyContainer {
     }
 }
 ```
-As mentioned, a contaimnr must derive from ``SharedContainer``, have its own ``ContainerManager``, and implement a static `shared` instance. It also must be marked `final`.
+As mentioned, a container must derive from ``SharedContainer``, have its own ``ContainerManager``, and implement a static `shared` instance. It also must be marked `final`.
 
 Don't forget that if need be you can reach across containers simply by specifying the full `container.factory` path.
 
