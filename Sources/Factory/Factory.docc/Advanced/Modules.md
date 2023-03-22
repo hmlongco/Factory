@@ -32,11 +32,11 @@ Let's take a look.
 
 Before we answer the above question, let's look at a related, but simpler problem. 
 
-Let's say we have a module called Networking that provides (suprise, suprise) a service that conforms to a Networking prototol. Let's also say that module *also* provides the implementation of that service.
+Let's say we have a module called Networking that provides (surprise, surprise) a service that conforms to a Networking protocol. Let's also say that module *also* provides the implementation of that service.
 
 ![Diagram of Application Architecture](Networking)
 
-In that case our implementation is simple. Inside of Networking we define the public protocol *and* we also publicaly define the Factory that provides it.
+In that case our implementation is quite simple. Inside Networking we define the public protocol *and* we publicly define the Factory to produce it.
 
 ```swift
 // Public Protocol
@@ -56,15 +56,15 @@ private class Network: Networking {
     }
 }
 ```
-Note that our implementation is private and hidden to the rest of the world, which only sees and receives some instance that conforms to our Networking protocol.
+Note that our implementation is private and hidden from the rest of the world, which can only see and receive some instance that conforms to Networking.
 
-Got it? Anything that can see our protocol can *also* see a source that provides an instance of that protocol.
+Got it? Anything that can see our protocol can *also* see a source that provides an instance of it.
 
-Okay, let's return to our orginally scheduled program.
+Okay, let's return to our originally scheduled program.
 
 ## Implementation in different module from protocol
 
-To recap, we have a protocol that's defined in ModuleP. The concrete type AccountLoader exists in ModuleB… but ModuleA doesn’t know about it. It can’t know about.
+To recap, we have a protocol that's defined in ModuleP and the concrete type AccountLoader exists in ModuleB … but ModuleA doesn’t know about it. It can’t know about.
 
 But the code in ModuleA needs to be able to see a Factory in order to resolve it. And that Factory must have a definition, but it can't, because it can't see ModuleB.
 
@@ -72,9 +72,9 @@ Who’s on first?
 
 It's a dilemma, but fortunately it's not a serious one. The solution is twofold. 
 
-First, everone imports Factory. From an architectural perspective, the dependency injection system is an invisible layer that lives above and wraps around everything else.
+First, everyone imports Factory. From an architectural perspective, the dependency injection system is an invisible layer that lives above and wraps around everything else.
 
-Next, we implement part of the "same module" solution shown above, but with a twist, adding the following Factory defintion to **ModuleP**.
+Next, we implement part of the "same module" solution shown above, but with a twist, adding the following Factory definition to **ModuleP**.
 
 ```swift
 // Public Factory
@@ -85,17 +85,17 @@ extension Container {
 
 Now, as with our earlier solution, anyone who imports ModuleP can see the protocol and can also see a Factory that promises to provide one. 
 
-That Factory, however, doesn't know how to construct one, so we make its defintion optional and proceed to define its factory closure to returns nil.
+That Factory, however, doesn't know how to construct one, so we make its definition optional and code it's factory closure to return a nil.
 
-And now we're cooking. But where does our missing ingredient come from?
+Now we're cooking. But where does our missing ingredient come from?
 
 ## Wiring Things Together
 
-Since our application is the only piece of the puzzle that can see everything: ModuleP, ModuleA, and ModuleB, it's up to the application to wire everything together.
+Since our application is the only piece of the puzzle that can see ModuleP, ModuleA, and ModuleB, it's up to the application to wire everything together.
 
-So let's go into our main application and create a spot where we can cross-wire all of the pieces of our application together.
+So let's go into our main application and create a spot where we can cross-wire all of the pieces together.
 
-The key to the puzzle is `AutoRegistering`, a protocol which defines a function that's guranteed to be called before any Factory is resolved.
+The key to the puzzle is `AutoRegistering`, a protocol which defines a function that's guaranteed to be called before any Factory is resolved.
 
 ```swift
 import ModuleP
@@ -109,9 +109,9 @@ extension Container: AutoRegistering {
     }
 }
 ```
-Since this file can see all of the modules, it's tasked with registering a new factory closure with `accountLoader` that provides an actual instance of `AccountLoader` from ModuleB.
+Since this file can see all of the modules, it's tasked with registering a new factory closure for `accountLoader` that provides the actual instance of `AccountLoader` from ModuleB.
 
-And... that's it. Prior to the first resolution Factory will call `autoRegister` in order to setup everything needed for the application to run.
+And … that's it. Prior to the first resolution Factory will call `autoRegister` in order to setup everything needed for the application to run.
 
 ## Optionals
 
@@ -144,25 +144,23 @@ class ViewModel: ObservableObject {
     }
 }
 ```
-We could... but let's not do that, shall we? Explicitly unwrapping the optional works if we've wired everything together, but could crash if we haven't.
+We could … but let's not do that, shall we? Explicitly unwrapping the optional works if we've wired everything together, but could crash if we haven't.
 
-Which sort of defeats Factory's primary goal in life.
-
-Safety.
+Which sort of defeats Factory's primary goal in life - Safety.
 
 ## Promises
 
-Some might worry that an application might slip up and not provide a needed registration. While that's certainly possible, the probability is that you'd tend to notice such a thing the first time you tried to test a new feature.
+Some might worry that an developer might slip up and forget to provide a needed registration. While that's certainly possible, the probability is that you'd tend to notice such a thing the first time you tried to test a new feature.
 
-One *could* do something like the following...
+One *could* also do something like the following …
 ```swift
 extension Container {
     public var accountLoading: Factory<AccountLoading?> { self { fatalError() } }
 }
 ```
-Providing the factory closure with `fatalError` will cause the application to crash the very first time an unregistered Factory is accessed. And some people actually prefer this "fail fast" approach.
+Which provides the factory closure with `fatalError` that will cause the application to crash the very first time an unregistered Factory is accessed. And some people actually prefer this "fail fast" approach.
 
-But the problem, of course, is what happens if for some reason this application is shipped and the registration was never provided? Or was accidentally removed? In either case, the end user goes to screen X, the view model for that screen tries to get an accountLoader... and the application crashes.
+But the problem of course, is what happens if the application is shipped and the registration was never provided? Or was accidentally removed? In either case the end user goes to screen X, the view model for that screen tries to get an accountLoader … and the application crashes.
 
 Not a good look. Fortunately, Factory 2.1 provides a solution.
 
@@ -171,11 +169,11 @@ extension Container {
     public var accountLoading: Factory<AccountLoading?> { promised() }
 }
 ```
-When run in debug mode and an attempt to resolve an unregsitered accountLoader is made, `promised` will trigger a fatalError, informing you of your mistake. In a release application, however, promised simply returns nil and your application can continue on.
+When run in debug mode and the application attempts to resolve an unregistered accountLoader, `promised()` will trigger a fatalError to inform you of the mistake. But in a released application, `promised()` simply returns nil and your application can continue on.
 
-That feature still won't work, of course. But at least your application didn't blow up and crash, perhaps even taking some of your user's data with it.
+The feature still won't work of course, but at least the application won't blow up and crash, possibly taking some of your user's data with it.
 
-Promised also cleans up the Factory registration, a nice win that eliminates the rather odd looking `self { nil }` requirement.
+Promised also cleans up Factory registrations, a nice win that eliminates the rather odd looking `self { nil }` requirement.
 
 ## Separating Dependencies
 
@@ -185,7 +183,7 @@ In those cases, we're going to need a level of indirection.
 
 ![Diagram of Application Architecture](Services)
 
-Everyone sees what they saw before, plus everyone who's dependent on ModuleP can also see a new module called `Services`. This is a new cross-module framework where our emtpy registrations are defined. `Services`, in turn, can only see ModuleP as that's where it gets the model and protocol definitions that it needs to create its Factory's.
+Everyone sees what they saw before, plus everyone who's dependent on ModuleP can also see a new module called `Services` which is a new cross-module framework where our empty registrations are defined. `Services` in turn, can only see ModuleP in order to get the model and protocol definitions it needs to create its Factory's.
 
 Our original `accountLoading` Factory, which lived in ModuleP in the original example, now lives in Services.
 
@@ -203,25 +201,25 @@ ModuleP is now completely independent.
 
 There's one last case, that of using some third party library.
 
-In that case, we're often better off implementing an adaptor protocol and library that wraps that library and provides an agnostic, independent interface to its functionality.
+In that case, we're often better off implementing an adaptor protocol to wrap the library and provide an agnostic, independent interface to its functionality.
 
 ![Diagram of Application Architecture](Adaptor)
 
-This is a good approach to take when faced with thrid-party analytics libraries or feature managers like LaunchDarkly. 
+This is a good approach to take when faced with third-party analytics libraries or feature managers like LaunchDarkly. 
 ```swift
 // Public Protocol
 public protocol Analytics {
-    func event(loadtion: String, name: String)
+    func event(location: String, name: String)
 }
 
 // Public Factory
 extension Container {
-    public var analytics: Factory<Analytics> { self { AnalyticsAdator() } }
+    public var analytics: Factory<Analytics> { self { AnalyticsAdaptor() } }
 }
 
 // Private Implementation
-private class AnalyticsAdator: Analytics {
-    public func event(loadtion: String, name: String) {
+private class AnalyticsAdaptor: Analytics {
+    public func event(location: String, name: String) {
         // talk to analytics library
     }
 }
@@ -229,6 +227,6 @@ private class AnalyticsAdator: Analytics {
 
 ## Mix and Match
 
-In a real world application with multiple modules providing varying sets of features and services, one would probably use all of the techniques mentioned here.
+In a real world application where multiple modules provide varying sets of features and services, one would probably use all of the techniques mentioned here.
 
-Some modules would benefit from the cross-module wiring approach, while many service modules and adaptors could simply provide the public protocols and the internal implementations as shown above in the first and last examples.
+Some modules benefit from the cross-module wiring approach, while other service modules and adaptors can simply provide the public protocols and internal implementations as shown above in the first and last examples.
