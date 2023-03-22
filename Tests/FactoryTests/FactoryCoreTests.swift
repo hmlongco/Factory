@@ -58,6 +58,13 @@ final class FactoryCoreTests: XCTestCase {
         XCTAssertTrue(service2?.text() == "MyService")
     }
 
+    func testUnsugaredResolution() throws {
+        let service1 = Container.shared.myServiceType.resolve()
+        XCTAssertEqual(service1.text(), "MyService")
+        let service2 = Container.shared.parameterService.resolve(23)
+        XCTAssertEqual(service2.text(), "ParameterService23")
+    }
+
     func testResetOptions() {
         func registerAndResolve() {
             // Sneak in code coverage on with as well

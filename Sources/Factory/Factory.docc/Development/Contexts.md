@@ -86,7 +86,7 @@ Triggered whenever your application is running in debug mode in simulators, on a
 
 Pretty apparent. What may not be so apparent, however, is that unlike all of the above these two contexts are also available in release builds. 
 
-### • onArg(String)
+### • onArg
 
 The `arg` context is a powerful tool to have when you want to UITest your application and you want to change it's behavior.
 
@@ -123,18 +123,30 @@ extension Container: AutoRegistering {
 }
 ```
 
-## onArgs
+### • onArgs
 Similar to arg, but let's you use the same factory when any of several arguments are passed.
 ```swift
 myServiceType
-    .onArgs("mock0", "mock1", "mock3") { 
+    .onArgs(["mock0", "mock1", "mock3"]) { 
         EmptyService()
     }
 ```
 
+## Runtime Arguments
+
+You can also add and remove your own arguments at runtime. Consider this...
+```swift
+FactoryContext.setArg("light", forKey: "theme")
+FactoryContext.removeArg(forKey: "theme")
+
+myStyleSystem { StandardTheme() }
+    .onArg("light") { LightTheme() }
+    .onArg("dark") { DarkTheme() }
+```
+
 ## Multiple Contexts
 
-As you may have noticed above in the `arg` example, multiple contexts work just as you'd expect and are specified using Factory's modifier syntax.
+As you may have noticed above in the `arg` example, chaining multiple contexts together work just as you'd expect and are specified using Factory's modifier syntax.
 
 ```swift
 container.myServiceType

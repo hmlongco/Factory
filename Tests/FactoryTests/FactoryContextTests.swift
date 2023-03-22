@@ -156,6 +156,17 @@ final class FactoryContextTests: XCTestCase {
         XCTAssertEqual(service3.name, "ARG")
     }
 
+    func testRuntimeArgFunctions() {
+        FactoryContext.isPreview = false
+        FactoryContext.isTest = false
+        FactoryContext.setArg("ARG2", forKey: "CUSTOM")
+        let service1 = Container.shared.argsContextService()
+        XCTAssertEqual(service1.name, "ARG")
+        FactoryContext.removeArg(forKey: "CUSTOM")
+        let service2 = Container.shared.argsContextService()
+        XCTAssertEqual(service2.name, "FACTORY")
+    }
+
     func testUnmatchedArgument() {
         FactoryContext.arguments = ["ARG3"]
         FactoryContext.isPreview = false
@@ -266,6 +277,18 @@ final class FactoryContextTests: XCTestCase {
         let service4 = Container.shared.onceContextService()
         // will see once
         XCTAssertEqual(service4.name, "ONCE")
+    }
+
+    func testChaining() {
+        FactoryContext.arguments = []
+        FactoryContext.isPreview = false
+        FactoryContext.isTest = false
+        let service1 = Container.shared.internalContextService()
+        XCTAssertEqual(service1.name, "DEBUG")
+        let service2 = Container.shared.internalContextService
+            .onDebug { ContextService(name: "CHANGED") }
+            .resolve()
+        XCTAssertEqual(service2.name, "CHANGED")
     }
 
 }

@@ -920,7 +920,7 @@ public protocol AutoRegistering {
     /// Allows the user to force a Factory resolution at their descretion.
     public mutating func resolve(reset options: FactoryResetOptions = .none) {
         factory.reset(options)
-        dependency = factory()
+        dependency = factory.resolve()
     }
 }
 
@@ -1161,6 +1161,17 @@ public enum FactoryContext: Equatable {
 }
 
 extension FactoryContext {
+    /// Add argument to global context.
+    public static func setArg(_ arg: String, forKey key: String) {
+        runtimeArguments[key] = arg
+    }
+    /// Add argument to global context.
+    public static func removeArg(forKey key: String) {
+        runtimeArguments.removeValue(forKey: key)
+    }
+}
+
+extension FactoryContext {
     /// Proxy for application arguments.
     internal static var arguments: [String] = ProcessInfo.processInfo.arguments
     /// Proxy check for application running in preview mode.
@@ -1176,6 +1187,8 @@ extension FactoryContext {
     /// Proxy check for application running in DEBUG mode.
     internal static var isDebug: Bool = false
     #endif
+    /// Runtime arguments
+    internal static var runtimeArguments: [String:String] = [:]
 }
 
 /// Reset options for Factory's and Container's
@@ -1304,6 +1317,11 @@ public struct FactoryRegistration<P,T> {
         let manager = container.manager
         if let contexts = options?.argumentContexts, !contexts.isEmpty {
             for arg in FactoryContext.arguments {
+                if let found = contexts["arg=\(arg)"] as? TypedFactory<P,T> {
+                    return found.factory
+                }
+            }
+            for (_, arg) in FactoryContext.runtimeArguments {
                 if let found = contexts["arg=\(arg)"] as? TypedFactory<P,T> {
                     return found.factory
                 }

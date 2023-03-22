@@ -150,7 +150,7 @@ Another solution that might work in some circumstances is chaining.
 ```swift
 let myService = Container.shared.myService
     .onTest { NullAnalyticsEngine() }
-    .resolve()
+    .()
 ```
 This way the internal definitions are applied, then onTest is updated, and then we immediately resolve the service using the latest definition.
 
