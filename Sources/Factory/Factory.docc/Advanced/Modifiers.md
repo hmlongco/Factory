@@ -46,7 +46,7 @@ Factory provides quite a few modifiers for your use, but they basically break do
 
 * Scopes: Defines just how long a particular dependency persists.
 * Registrations: Updating or changing the dependency to be provided.
-* Contexts: Defines Factory overrides that should occur when the app is running is a spcific context.
+* Contexts: Defines Factory overrides that should occur when the app is running is a specific context.
 * Decorators: Defines code to be run whenever a dependency is resolved.
 * Resets: Reseting a Factory's registrations or scope cache.
 
@@ -76,7 +76,7 @@ When it's 'called, the `self { MyService() }` code asks the parent container to 
 
 That fully configure Factory is what's returned to the caller, either to be modified further, or resolved as we've done here.
 
-That may seem like a lot of overhead, but it actually isn't. As we've mentioned elsewhere, Factory's are like SwftUI Views. Its structs and modifiers are lightweight and transitory value types, created when needed and then immediately discarded once their purpose has been served.
+That may seem like a lot of overhead, but it actually isn't. As we've mentioned elsewhere, Factory's are like SwiftUI Views. Its structs and modifiers are lightweight and transitory value types, created when needed and then immediately discarded once their purpose has been served.
 
 There is, however, one consideration.
 
@@ -114,7 +114,7 @@ struct outerView: View {
     }
 }
 ```
-Here the color of the "Hello" text is red, dispite our attempt to override it. The innermost bound property wins.
+Here the color of the "Hello" text is red, despite our attempt to override it. The innermost bound property wins.
 
 So what can we do?
 
@@ -130,7 +130,7 @@ extension Container {
     }
 }
 ```
-And then we add anything we might want to change later as an extenally defined option.
+And then we add anything we might want to change later as an externally defined option.
 
 ```swift
 extension Container: AutoRegistering {
@@ -148,11 +148,11 @@ extension Container: AutoRegistering {
 Another solution that might work in some circumstances is chaining.
 
 ```swift
-let mySerivce = Container.shared.myService
+let myService = Container.shared.myService
     .onTest { NullAnalyticsEngine() }
     .resolve()
 ```
-This way the internal definitions are applied, then onTest is updated, and then we immediately resolve the serivce using the latest definition.
+This way the internal definitions are applied, then onTest is updated, and then we immediately resolve the service using the latest definition.
 
 Or we can use a new modifier added to Factory 2.1.
 

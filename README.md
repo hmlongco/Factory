@@ -47,7 +47,7 @@ This particular view model uses one of Factory's `@Injected` property wrappers t
 
 And that's the core mechanism. In order to use the property wrapper you *must* define a factory within the specified container. That factory *must* return the desired type when asked. Fail to do either one and the code will simply not compile. As such, Factory is compile-time safe.
 
-By the way, if you're concerned about building Factory's on the fly, don't be. Like SwftUI Views, Factory structs and modifiers are lightweight and transitory value types. They're created inside computed variables **only** when they're needed and then immediately discarded once their purpose has been served.
+By the way, if you're concerned about building Factory's on the fly, don't be. Like SwiftUI Views, Factory structs and modifiers are lightweight and transitory value types. They're created inside computed variables **only** when they're needed and then immediately discarded once their purpose has been served.
 
 For more examples of Factory definitions that define scopes, use constructor injection, and do parameter passing, see the [Registrations](https://hmlongco.github.io/Factory/documentation/factory/registrations) page.
 
@@ -194,7 +194,7 @@ And if not, the concept is easy to understand: Just how long should an instance 
 
 You've no doubt stuffed an instance of a class into a variable and created a singleton at some point in your career. This is an example of a scope. A single instance is created and then used and shared by all of the methods and functions in the app.
 
-This can be done in Factory just by adding a scope modifer.
+This can be done in Factory just by adding a scope modifier.
 
 ```swift
 extension Container {
@@ -216,7 +216,7 @@ If no scope is specified the default scope is unique. A new instance of the serv
 
 Other common scopes are `cached` and `shared`. Cached items are persisted until the cache is reset, while shared items exist just as long as someone holds a strong reference to them. When the last reference goes away, the weakly held shared reference also goes away.
 
-Factory has other scope types, plus the ability to define your own. See [Scopes](https://hmlongco.github.io/Factory/documentation/factory/scopes) for additonal examples.
+Factory has other scope types, plus the ability to define your own. See [Scopes](https://hmlongco.github.io/Factory/documentation/factory/scopes) for additional examples.
 
 Scopes and scope management are powerful tools to have in your dependency injection arsenal.
 
@@ -284,7 +284,7 @@ If you want to support my work on Factory and Resolver, consider a [GitHub Spons
 
 Or you can just buy me a cup of coffee!
 
-And maany thanks to my new sponsors: sueddeutsche, doozMen.
+And many thanks to my new sponsors: sueddeutsche, doozMen.
 
 ## Author
 

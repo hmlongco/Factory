@@ -93,7 +93,7 @@ As with StateObject and ObservedObject, updating the object's state will trigger
 
 InjectedObject is also handy when...
 
-1. You have a service that could be comsumed from a view or a view model.
+1. You have a service that could be consumed from a view or a view model.
 2. You have view model dependencies that depend on the Graph scope and you need the view model to be the graph's root. See <doc:Scopes> for more details on graph.
 
 ## InjectedObject Previews
@@ -107,7 +107,7 @@ struct ContentView_Previews: PreviewProvider {
     }
 }
 ```
-But due a bug in how Swift manages property wrappers with built in initializers, doing mutlitple previews is just a little different than shown earlier.
+But due a bug in how Swift manages property wrappers with built in initializers, doing multiple previews is just a little different than shown earlier.
 ```swift
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {

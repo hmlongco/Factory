@@ -93,7 +93,7 @@ final class FactoryCoreTests: XCTestCase {
 
 ## Xcode UI Testing
 
-We can use the autoregistration feature mentioned earlier to help us out when running UI Tests. The test case is fairly straightforward.
+We can use the auto-registration feature mentioned earlier to help us out when running UI Tests. The test case is fairly straightforward.
 
 ```swift
 import XCTest
@@ -155,7 +155,7 @@ extension Container {
     }
 }
 ```
-Then again, if we always want the same result whenver we're previewing any screen, we just set it up once in the autoRegister function using a `preview` context:
+Then again, if we always want the same result whenever we're previewing any screen, we just set it up once in the autoRegister function using a `preview` context:
 
 ```swift
 extension Container: AutoRegistering {

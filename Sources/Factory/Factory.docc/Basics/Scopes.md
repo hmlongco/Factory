@@ -97,13 +97,13 @@ extension Container {
 ```
 Both provider factories reference the same factory. When Factory is asked for an instance of `consumer`, both providers will receive the same instance of `MyService`.
 
-There are a few caveats and considerations for using graph. The first is that anyone who wants to participate in the graph needs to explicitely state as such using the graph scope. Note the scope parameter for `commonProviding`.
+There are a few caveats and considerations for using graph. The first is that anyone who wants to participate in the graph needs to explicitly state as such using the graph scope. Note the scope parameter for `commonProviding`.
 
 The second is that there needs to be a "root" to the graph. 
 
 In the above example, the `consumer` object is the root. Factory is asked for a consumer, which in turn requires two providers. 
 
-If you were to instantiate an instance of `ProtocolConsumer` yourself, each one of ProtocolConsumer's Injected property wrappers would initialize sequentually on the same thread, resulting in two separate and distinct resolution cycles.
+If you were to instantiate an instance of `ProtocolConsumer` yourself, each one of ProtocolConsumer's Injected property wrappers would initialize sequentially on the same thread, resulting in two separate and distinct resolution cycles.
 
 See: <doc:Cycle> for more on this.
 
@@ -140,7 +140,7 @@ Or you can reset the cache for every scope in a given container.
 ```swift
 Container.shared.manager.reset(options: .scope)
 ```
-> Important: Resetting a container or scope has no effect whatsoever on anything that's alreay been resolved by Factory. It only ensures that the *next* time a Factory is asked to resolve a dependency that dependency will be a new instance.
+> Important: Resetting a container or scope has no effect whatsoever on anything that's already been resolved by Factory. It only ensures that the *next* time a Factory is asked to resolve a dependency that dependency will be a new instance.
 
 ## Topics
 

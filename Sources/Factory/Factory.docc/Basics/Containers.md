@@ -55,7 +55,7 @@ This instance can be referenced directly if you're using a Service Locator-style
 ```swift
 let service = Container.shared.service()
 ```
-Or you can use the "shared" container as an application root container and pass it along to whereever it's needed. Let's take a look.
+Or you can use the "shared" container as an application root container and pass it along to wherever it's needed. Let's take a look.
 
 ## Passing Containers
 
@@ -68,7 +68,7 @@ class ContentViewModel {
     }
 }
 ```
-Addtional examples and methods can be seen on the <doc:Resolutions> page.
+Additional examples and methods can be seen on the <doc:Resolutions> page.
 
 ## SharedContainer
 
@@ -80,12 +80,12 @@ Note that you can extend SharedContainer with your own Factories.
 
 ```swift
 extension SharedContainer {
-    var commonSerice: Factory<ServiceType> {
+    var commonService: Factory<ServiceType> {
         self { MyService() }
     }
 }
 ```
-The `commonSerice` Factory will now be available on every container created. 
+The `commonService` Factory will now be available on every container created. 
 ```swift
 let common1 = Container.shared.commonService()
 let common2 = MyContainer.shared.commonService()
@@ -144,7 +144,7 @@ containerA.register.cachedService { MockService() }
 // Will have a MockService
 let service1 = containerA.cachedService() 
 
-// Will have a new or prevously cached instance of ServiceType
+// Will have a new or previously cached instance of ServiceType
 let service2 = MyContainer.shared.cachedService() 
 ```
 ## AutoRegister
@@ -184,7 +184,7 @@ Container.shared.manager.reset(scope: .cached)
 ```
 Note that resetting registrations also resets the container's auto registration flag.
 
-> Important: Resetting a container or scope has no effect whatsoever on anything that's alreay been resolved by Factory. It only ensures that the *next* time a Factory is asked to resolve a dependency that dependency will be a new instance.
+> Important: Resetting a container or scope has no effect whatsoever on anything that's already been resolved by Factory. It only ensures that the *next* time a Factory is asked to resolve a dependency that dependency will be a new instance.
 
 ## Pushing and Popping State
 
@@ -208,7 +208,7 @@ This can be handy in an unit test environment. Keep in mind that push/pop uses a
 
 > Warning: If a container ever goes out of scope, so will all of its registrations and cached objects.
 
-To demonstrate, let's see what happens when we create and assign a new container to `MyContainer.shared`. Doing so releases the provious container, along with any registrations or objects that container may have cached. We'll use the `cachedService` Factory we defined above.
+To demonstrate, let's see what happens when we create and assign a new container to `MyContainer.shared`. Doing so releases the previous container, along with any registrations or objects that container may have cached. We'll use the `cachedService` Factory we defined above.
 
 ```swift
 // Create an instance of our cached service.

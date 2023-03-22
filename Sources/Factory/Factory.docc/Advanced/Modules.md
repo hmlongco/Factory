@@ -24,7 +24,7 @@ Note that ModuleA and ModuleB are independent. Neither one knows about the other
 
 This is a classic modular contractural pattern.
 
-But we have an application to build. So how does ModuleA get an instance of an account loader, when it knows nothing about ModuleB?
+But we have an application to build. So how can ModuleA get an instance of an account loader, when it knows nothing about ModuleB?
 
 Let's take a look.
 
@@ -36,7 +36,7 @@ Let's say we have a module called Networking that provides (surprise, surprise) 
 
 ![Diagram of Application Architecture](Networking)
 
-In that case our implementation is quite simple. Inside Networking we define the public protocol *and* we publicly define the Factory to produce it.
+In which case our implementation is quite simple. Inside Networking we define the public protocol *and* we publicly define the Factory that provides it.
 
 ```swift
 // Public Protocol
@@ -60,11 +60,11 @@ Note that our implementation is private and hidden from the rest of the world, w
 
 Got it? Anything that can see our protocol can *also* see a source that provides an instance of it.
 
-Okay, let's return to our originally scheduled program.
+So with that, let's return to our originally scheduled program.
 
 ## Implementation in different module from protocol
 
-To recap, we have a protocol that's defined in ModuleP and the concrete type AccountLoader exists in ModuleB … but ModuleA doesn’t know about it. It can’t know about.
+To recap, we have a protocol that's defined in ModuleP and the concrete type AccountLoader exists in ModuleB… but ModuleA doesn’t know about it. It can’t know about.
 
 But the code in ModuleA needs to be able to see a Factory in order to resolve it. And that Factory must have a definition, but it can't, because it can't see ModuleB.
 
@@ -85,17 +85,17 @@ extension Container {
 
 Now, as with our earlier solution, anyone who imports ModuleP can see the protocol and can also see a Factory that promises to provide one. 
 
-That Factory, however, doesn't know how to construct one, so we make its definition optional and code it's factory closure to return a nil.
+That Factory, however, doesn't know how to construct one, so its definition is optional, and its factory closure just returns nil.
 
 Now we're cooking. But where does our missing ingredient come from?
 
 ## Wiring Things Together
 
-Since our application is the only piece of the puzzle that can see ModuleP, ModuleA, and ModuleB, it's up to the application to wire everything together.
+Since our application is the only piece of the puzzle that can see ModuleP, ModuleA, *and* ModuleB, it's up to the application to wire everything together.
 
 So let's go into our main application and create a spot where we can cross-wire all of the pieces together.
 
-The key to the puzzle is `AutoRegistering`, a protocol which defines a function that's guaranteed to be called before any Factory is resolved.
+The key to the puzzle is `AutoRegistering`, a container-based protocol which defines a function that's guaranteed to be called before any Factory is resolved.
 
 ```swift
 import ModuleP
@@ -111,7 +111,7 @@ extension Container: AutoRegistering {
 ```
 Since this file can see all of the modules, it's tasked with registering a new factory closure for `accountLoader` that provides the actual instance of `AccountLoader` from ModuleB.
 
-And … that's it. Prior to the first resolution Factory will call `autoRegister` in order to setup everything needed for the application to run.
+And… that's it. Prior to the first resolution Factory will call `autoRegister` in order to setup everything needed for the application to run.
 
 ## Optionals
 
@@ -144,7 +144,7 @@ class ViewModel: ObservableObject {
     }
 }
 ```
-We could … but let's not do that, shall we? Explicitly unwrapping the optional works if we've wired everything together, but could crash if we haven't.
+We could… but let's not do that, shall we? Explicitly unwrapping the optional works if we've wired everything together, but could crash if we haven't.
 
 Which sort of defeats Factory's primary goal in life - Safety.
 
@@ -160,7 +160,7 @@ extension Container {
 ```
 Which provides the factory closure with `fatalError` that will cause the application to crash the very first time an unregistered Factory is accessed. And some people actually prefer this "fail fast" approach.
 
-But the problem of course, is what happens if the application is shipped and the registration was never provided? Or was accidentally removed? In either case the end user goes to screen X, the view model for that screen tries to get an accountLoader … and the application crashes.
+But the problem of course, is what happens if the application is shipped and the registration was never provided? Or was accidentally removed? In either case the end user goes to screen X, the view model for that screen tries to get an accountLoader… and the application crashes.
 
 Not a good look. Fortunately, Factory 2.1 provides a solution.
 

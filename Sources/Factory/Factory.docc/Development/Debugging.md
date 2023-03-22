@@ -1,6 +1,6 @@
 # Debugging
 
-Additional support for debugging resolution cycles, dependency chains and other issus.
+Additional support for debugging resolution cycles, dependency chains and other issue.
 
 ## Tracing the Resolution Cycle
 
@@ -25,7 +25,7 @@ Turning on a trace can be helpful in testing when you want to get an idea of an 
 
 Note that enabling trace logging enables it for *all* containers.
 
-One final consideration is that logging the construction of an object will show everything intialized as part of that resolution cycle. Anything created lazily after the fact may not appear in the trace.
+One final consideration is that logging the construction of an object will show everything initialized as part of that resolution cycle. Anything created lazily after the fact may not appear in the trace.
 
 ## Logging
 

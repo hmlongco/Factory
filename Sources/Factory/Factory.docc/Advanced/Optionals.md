@@ -7,7 +7,7 @@ With Factory registrations can be performed at any time.
 Optional Factory definitions have several uses, including:
 
 1.  Dynamic Registration - Providing Factory's based on application state.
-2.  Mutliple-Module Registration - Registering Factory's across modules to avoid cross-cutting concerns. 
+2.  Multiple-Module Registration - Registering Factory's across modules to avoid cross-cutting concerns. 
 
 Let's take a look.
 

@@ -134,7 +134,7 @@ myServiceType
 
 ## Multiple Contexts
 
-As you may have noticed above in the `arg` example, multple contexts work just as you'd expect and are specfied using Factory's modifier syntax.
+As you may have noticed above in the `arg` example, multiple contexts work just as you'd expect and are specified using Factory's modifier syntax.
 
 ```swift
 container.myServiceType
@@ -156,4 +156,4 @@ Registering multiple contexts could lead one to wonder just which one will be us
 * **registered factory** (if any)
 * **original factory**
 
-Note that any context maked with an asterisk (*) is only available in a DEBUG build. The executable functionality is stripped from release builds.
+Note that any context marked with an asterisk (*) is only available in a DEBUG build. The executable functionality is stripped from release builds.

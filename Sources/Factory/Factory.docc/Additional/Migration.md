@@ -65,7 +65,7 @@ extension Container {
 
 The new version is one character longer. Hey. I tried... ;)
 
-Like SwftUI Views, Factory structs and modifiers are lightweight and transitory. In Factory 2.0 they're created when needed and then immediately discarded once their purpose has been served.
+Like SwiftUI Views, Factory structs and modifiers are lightweight and transitory. In Factory 2.0 they're created when needed and then immediately discarded once their purpose has been served.
 
 See the <doc:Containers> page for a lot more on the subject.
 
@@ -139,7 +139,7 @@ extension Container {
     }
 }
 ```
-Factory 2.0 also provides addtional modifiers for all of the known scoped, as well as a few more like the per-factory decorator shown above.
+Factory 2.0 also provides additional modifiers for all of the known scoped, as well as a few more like the per-factory decorator shown above.
 
 ## Resetting
 
@@ -147,7 +147,7 @@ When doing tests and in other situations it was relatively common to reset facto
 
 Just keep in mind that in Factory 1.0 registrations and scopes were global, whereas today we ask our container to do the job for us.
 ```swift
-// Reset everything based in that containter.
+// Reset everything based in that container.
 Container.shared.manager.reset()
 
 // Reset all registrations, restoring original factories but leaving caches intact
@@ -164,4 +164,4 @@ Resetting a container only affects that container.
 
 ## Creating Custom Containers and Scopes
 
-Again, a bit different. Rather than duplicate the documention for doing so, please checkout the appropriate section in the <doc:Containers> or <doc:Scopes> documentation.
+Again, a bit different. Rather than duplicate the documentation for doing so, please checkout the appropriate section in the <doc:Containers> or <doc:Scopes> documentation.

@@ -48,7 +48,7 @@ Circular dependencies such as this are usually a violation of the Single Respons
 
 ## Disabling CDC Detection
 
-If needed circular dependency chain detectiong can be disabled by setting the detection limit to zero.
+If needed circular dependency chain detecting can be disabled by setting the detection limit to zero.
 ```swift
 Container.shared.manager.dependencyChainTestMax = 0
 ```
