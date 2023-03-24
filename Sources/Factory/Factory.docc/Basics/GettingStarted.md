@@ -103,7 +103,7 @@ container.service.register {
 }
 ```
 
-This new factory closure overrides the original factory closure and clears the associated scope so that the next time this factory is resolved Factory will evaluate the new closure and return an instance of the newly registered object instead.
+This new factory registration overrides the original factory closure and then asks the container to clear its associated scope. The next time this factory is resolved Factory will evaluate the new closure and return an instance of the newly registered object instead.
 
 ## Mocking and Testing
 

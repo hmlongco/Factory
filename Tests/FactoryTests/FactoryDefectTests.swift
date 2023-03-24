@@ -107,14 +107,14 @@ final class FactoryDefectTests: XCTestCase {
     // Unable to correctly clear/set scope to unique using register function
     func testRegistrationClearsScope() throws {
         Container.shared.manager.reset()
-        let service1 = Container.shared.singletonService()
+        let service1 = Container.shared.cachedService()
         XCTAssertNotNil(service1)
         XCTAssertFalse(Container.shared.manager.cache.isEmpty)
         Container.shared.manager.reset()
         Container.shared.singletonService
             .unique
             .register { MyService() }
-        let service2 = Container.shared.singletonService()
+        let service2 = Container.shared.cachedService()
         XCTAssertNotNil(service2)
         // scope defined in factory definition will still override last change
         XCTAssertFalse(Container.shared.manager.cache.isEmpty)

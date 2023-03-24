@@ -214,7 +214,12 @@ final class FactoryScopeTests: XCTestCase {
         XCTAssertTrue(service1.id == service2.id)
         Container.shared.manager.reset(scope: .singleton)
         let service3: MyServiceType? = Container.shared.singletonService()
-        XCTAssertTrue(service2.id != service3?.id)
+        // Existing instance as scope not reset since container doesn't manage singletons
+        XCTAssertTrue(service2.id == service3?.id)
+        Scope.singleton.reset()
+        let service4: MyServiceType? = Container.shared.singletonService()
+        // Scope reset so new instance
+        XCTAssertFalse(service2.id == service4?.id)
     }
 
     func testCustomCachedScope() throws {

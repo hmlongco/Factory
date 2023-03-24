@@ -6,6 +6,8 @@
 * Provides once modifier which allows one-time initialization on a per-Factory basis.
 * Let's you define the default scope used for a given container.
 * Allows you to specify promised optionals that warn when registrations are not provided.
+* Singletons now span containers and are cached separately.
+* Factory library now implemented across multiple files.
 
 ## 2.0.3
 

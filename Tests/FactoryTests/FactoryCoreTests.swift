@@ -169,7 +169,7 @@ final class FactoryCoreTests: XCTestCase {
         }
         // Expect fatal error when strict and in debug mode
         Container.shared.manager.promiseTriggersError = true
-        expectFatalError(expectedMessage: "MyServiceType was not registerd") {
+        expectFatalError(expectedMessage: "MyServiceType was not registered") {
             let _ = Container.shared.strictPromisedService()
         }
     }

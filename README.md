@@ -13,7 +13,7 @@ Factory is strongly influenced by SwiftUI, and in my opinion is highly suited fo
 - **Concise**: Defining a registration usually takes just a single line of code. Same for resolution.
 - **Flexible**: Working with UIKIt or SwiftUI? iOS or macOS? Using MVVM? MVP? Clean? VIPER? No problem. Factory works with all of these and more.
 - **Documented**: Factory 2.0 has extensive DocC documentation and examples covering its classes, methods, and use cases.
-- **Lightweight**: With all of that Factory is slim and trim, under 600 lines of executable code and half the size of Resolver.
+- **Lightweight**: With all of that Factory is slim and trim, under 700 lines of executable code.
 - **Tested**: Unit tests with 100% code coverage helps ensure correct operation of registrations, resolutions, and scopes.
 - **Free**: Factory is free and open source under the MIT License.
 
@@ -258,6 +258,16 @@ See [Debugging](https://hmlongco.github.io/Factory/documentation/factory/debuggi
 A single README file barely scratches the surface. Fortunately, Factory is throughly documented. 
 
 Current DocC documentation can be found in the project as well as online on [GitHub Pages](https://hmlongco.github.io/Factory/documentation/factory).
+
+## Installation
+
+Factory supports CocoaPods and the Swift Package Manager.
+```
+pod "Factory"
+```
+Or download the source files and add the Factory folder to your project.
+
+Note that the current version of Factory (2.1) require Swift 5.1 minimum and that the minimum version of iOS currently supported with this release is iOS 11.
 
 ## Factory 2.0 Migration
 
