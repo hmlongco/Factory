@@ -120,7 +120,7 @@ public struct FactoryRegistration<P,T> {
             let traced = "\(globalGraphResolutionDepth): \(indent)\(id) = \(type) \(new):\(address)"
             globalTraceResolutions[traceLevel] = traced
             if globalGraphResolutionDepth == 0 {
-                globalTraceResolutions.forEach { manager.logger($0) }
+                globalTraceResolutions.forEach { globalLogger($0) }
                 globalTraceResolutions = []
             }
         }
@@ -138,12 +138,12 @@ public struct FactoryRegistration<P,T> {
         let manager = container.manager
         if let contexts = options?.argumentContexts, !contexts.isEmpty {
             for arg in FactoryContext.arguments {
-                if let found = contexts["arg=\(arg)"] as? TypedFactory<P,T> {
+                if let found = contexts[arg] as? TypedFactory<P,T> {
                     return found.factory
                 }
             }
             for (_, arg) in FactoryContext.runtimeArguments {
-                if let found = contexts["arg=\(arg)"] as? TypedFactory<P,T> {
+                if let found = contexts[arg] as? TypedFactory<P,T> {
                     return found.factory
                 }
             }
@@ -215,13 +215,13 @@ public struct FactoryRegistration<P,T> {
                 if options.argumentContexts == nil {
                     options.argumentContexts = [:]
                 }
-                options.argumentContexts?["arg=\(arg)"] = TypedFactory(factory: factory)
+                options.argumentContexts?[arg] = TypedFactory(factory: factory)
             case .args(let args):
                 if options.argumentContexts == nil {
                     options.argumentContexts = [:]
                 }
                 args.forEach { arg in
-                    options.argumentContexts?["arg=\(arg)"] = TypedFactory(factory: factory)
+                    options.argumentContexts?[arg] = TypedFactory(factory: factory)
                 }
             default:
                 if options.contexts == nil {
@@ -288,7 +288,7 @@ public struct FactoryRegistration<P,T> {
         globalDependencyChain.append(typeName)
         if let index = typeIndex {
             let chain = globalDependencyChain[index...]
-            let message = "circular dependency chain - \(chain.joined(separator: " > "))"
+            let message = "FACTORY: Circular dependency chain - \(chain.joined(separator: " > "))"
             if globalDependencyChainMessages.filter({ $0 == message }).count == max {
                 resetAndTriggerFatalError(message, #file, #line)
             } else {

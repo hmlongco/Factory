@@ -105,15 +105,15 @@ extension ManagedContainer {
     /// Syntactic sugar allows container to create a factory where registration is promised before resolution.
     public func promised<T>(key: String = #function) -> Factory<T?>  {
         Factory<T?>(self, key: key) {
-#if DEBUG
+            #if DEBUG
             if self.manager.promiseTriggersError {
                 resetAndTriggerFatalError("\(T.self) was not registered", #file, #line)
             } else {
                 return nil
             }
-#else
+            #else
             nil
-#endif
+            #endif
         }
     }
     /// Defines a decorator for the container. This decorator will see every dependency resolved by this container.
@@ -148,7 +148,7 @@ public class ContainerManager {
 
     #if DEBUG
     /// Public variable exposing dependency chain test maximum
-    public var dependencyChainTestMax: Int = 10
+    public var dependencyChainTestMax: Int = 8
 
     /// Public variable promise behavior
     public var promiseTriggersError: Bool = FactoryContext.isDebug
@@ -222,7 +222,12 @@ extension ContainerManager {
     public func reset(scope: Scope) {
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
-        cache.reset(scopeID: scope.scopeID)
+        switch scope {
+        case is Scope.Singleton:
+            globalLogger("FACTORY: Singleton scope not managed by container")
+        default:
+            cache.reset(scopeID: scope.scopeID)
+        }
     }
 
     /// Test function pushes the current registration and cache states

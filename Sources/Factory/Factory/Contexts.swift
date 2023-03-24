@@ -30,6 +30,7 @@ import Foundation
 public enum FactoryContext: Equatable {
     /// Context used when application is launched with a particular argument.
     case arg(String)
+    /// Context used when application is launched with a particular argument or arguments.
     case args([String])
     /// Context used when application is running in Xcode Preview mode.
     case preview

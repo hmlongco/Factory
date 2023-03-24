@@ -169,3 +169,9 @@ Registering multiple contexts could lead one to wonder just which one will be us
 * **original factory**
 
 Note that any context marked with an asterisk (*) is only available in a DEBUG build. The executable functionality is stripped from release builds.
+
+## Global Context
+
+Keep in mind that contexts are global. The entire app is running in debug more or it's not. It was passed a "mock0" argument at runtime or it wasn't. 
+
+The `onArg` and `onDebug` and other context modifiers basically define how the app should respond to that particular context. 
