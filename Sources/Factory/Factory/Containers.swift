@@ -138,7 +138,7 @@ extension ManagedContainer {
 /// to a pristine state, as well as push/pop methods that can save and restore the current state.
 ///
 /// Those functions are designed primarily for testing.
-public class ContainerManager {
+public final class ContainerManager {
 
     /// Public initializer
     public init() {}
@@ -192,14 +192,13 @@ extension ContainerManager {
 
     /// Resets the Container to its original state, removing all registrations and clearing all scope caches.
     public func reset(options: FactoryResetOptions = .all) {
-        guard options != .none else {
-            return
-        }
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
         switch options {
-        case .registration:
+        case .all:
             self.registrations.removeAll(keepingCapacity: true)
+            self.options.removeAll(keepingCapacity: true)
+            self.cache.reset()
             self.autoRegistrationCheckNeeded = true
         case .context:
             for (key, option) in self.options {
@@ -208,13 +207,13 @@ extension ContainerManager {
                 mutable.contexts = nil
                 self.options[key] = mutable
             }
+        case .none:
+            break
+        case .registration:
+            self.registrations.removeAll(keepingCapacity: true)
+            self.autoRegistrationCheckNeeded = true
         case .scope:
             self.cache.reset()
-        default:
-            self.registrations.removeAll(keepingCapacity: true)
-            self.options.removeAll(keepingCapacity: true)
-            self.cache.reset()
-            self.autoRegistrationCheckNeeded = true
         }
     }
 

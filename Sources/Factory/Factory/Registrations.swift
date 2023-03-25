@@ -257,26 +257,27 @@ public struct FactoryRegistration<P,T> {
     ///   - options: Reset option: .all, .registration, .scope, .none
     ///   - id: ID of item to remove from the appropriate cache.
     internal func reset(options: FactoryResetOptions) {
-        guard options != .none else { return }
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
         let manager = container.manager
         switch options {
-        case .registration:
+        case .all:
+            let cache = (manager.options[id]?.scope as? InternalScopeCaching)?.cache ?? manager.cache
+            cache.removeValue(forKey: id)
             manager.registrations.removeValue(forKey: id)
+            manager.options.removeValue(forKey: id)
         case .context:
             self.options {
                 $0.argumentContexts = nil
                 $0.contexts = nil
             }
+        case .none:
+            break
+        case .registration:
+            manager.registrations.removeValue(forKey: id)
         case .scope:
             let cache = (manager.options[id]?.scope as? InternalScopeCaching)?.cache ?? manager.cache
             cache.removeValue(forKey: id)
-        default:
-            let cache = (manager.options[id]?.scope as? InternalScopeCaching)?.cache ?? manager.cache
-            cache.removeValue(forKey: id)
-            manager.registrations.removeValue(forKey: id)
-            manager.options.removeValue(forKey: id)
         }
     }
 

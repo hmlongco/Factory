@@ -162,6 +162,8 @@ extension Scope {
         internal var cache = Cache()
         /// Reset
         public func reset() {
+            defer { globalRecursiveLock.unlock()  }
+            globalRecursiveLock.lock()
             cache.reset()
         }
     }
@@ -186,7 +188,7 @@ extension Scope {
 
 extension Scope {
     /// Internal class that manages scope caching for containers and scopes.
-    internal class Cache {
+    internal final class Cache {
         typealias CacheMap = [String:AnyBox]
         /// Internal support functions
         @inlinable func value(forKey key: String) -> AnyBox? {
