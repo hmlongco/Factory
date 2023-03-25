@@ -38,11 +38,6 @@ public struct FactoryRegistration<P,T> {
     /// Once flag
     internal var once: Bool = false
 
-    /// Internal calculated value
-    internal var defaultScope: Scope? {
-        container.manager.defaultScope
-    }
-
     /// Initializer for registration sets passed values and default scope from container manager.
     internal init(id: String, container: ManagedContainer, factory: @escaping (P) -> T) {
         self.id = id
@@ -75,7 +70,7 @@ public struct FactoryRegistration<P,T> {
 
         let manager = unsafeCheckedContainer().manager
         let options = manager.options[id]
-        let scope = options?.scope ?? defaultScope
+        let scope = options?.scope ?? manager.defaultScope
 
         var factory: (P) -> T = factoryForCurrentContext(using: options)
 
@@ -85,11 +80,11 @@ public struct FactoryRegistration<P,T> {
         }
 
         let traceLevel = globalTraceResolutions.count
-        var traceNew = false
+        var traceNew = "C"
         if manager.trace {
             let wrapped = factory
             factory = {
-                traceNew = true // detects if new instance created
+                traceNew = "N" // detects if new instance created
                 return wrapped($0)
             }
             globalTraceResolutions.append("")
@@ -102,23 +97,24 @@ public struct FactoryRegistration<P,T> {
 
         if globalGraphResolutionDepth == 0 {
             Scope.graph.cache.reset()
-        #if DEBUG
+            #if DEBUG
             globalDependencyChainMessages = []
-        #endif
+            #endif
         }
-
+        
         #if DEBUG
         if !globalDependencyChain.isEmpty {
             globalDependencyChain.removeLast()
         }
+        #endif
 
+        #if DEBUG
         if manager.trace {
-            let indent = String(repeating: " ", count: globalGraphResolutionDepth * 4)
+            let indent = String(repeating: "    ", count: globalGraphResolutionDepth)
             let type = type(of: instance)
             let address = Int(bitPattern: ObjectIdentifier(instance as AnyObject))
-            let new = traceNew ? "N" : "C"
-            let traced = "\(globalGraphResolutionDepth): \(indent)\(id) = \(type) \(new):\(address)"
-            globalTraceResolutions[traceLevel] = traced
+            let resolution = "\(globalGraphResolutionDepth): \(indent)\(id) = \(type) \(traceNew):\(address)"
+            globalTraceResolutions[traceLevel] = resolution
             if globalGraphResolutionDepth == 0 {
                 globalTraceResolutions.forEach { globalLogger($0) }
                 globalTraceResolutions = []
@@ -135,41 +131,42 @@ public struct FactoryRegistration<P,T> {
     }
 
     func factoryForCurrentContext(using options: FactoryOptions?) -> (P) -> T {
-        let manager = container.manager
-        if let contexts = options?.argumentContexts, !contexts.isEmpty {
-            for arg in FactoryContext.arguments {
-                if let found = contexts[arg] as? TypedFactory<P,T> {
-                    return found.factory
+        if let options = options {
+            if let contexts = options.argumentContexts, !contexts.isEmpty {
+                for arg in FactoryContext.arguments {
+                    if let found = contexts[arg] as? TypedFactory<P,T> {
+                        return found.factory
+                    }
+                }
+                for (_, arg) in FactoryContext.runtimeArguments {
+                    if let found = contexts[arg] as? TypedFactory<P,T> {
+                        return found.factory
+                    }
                 }
             }
-            for (_, arg) in FactoryContext.runtimeArguments {
-                if let found = contexts[arg] as? TypedFactory<P,T> {
+            if let contexts = options.contexts, !contexts.isEmpty {
+                #if DEBUG
+                if FactoryContext.isPreview, let found = contexts["preview"] as? TypedFactory<P,T> {
                     return found.factory
                 }
+                if FactoryContext.isTest, let found = contexts["test"] as? TypedFactory<P,T> {
+                    return found.factory
+                }
+                #endif
+                if FactoryContext.isSimulator, let found = contexts["simulator"] as? TypedFactory<P,T> {
+                    return found.factory
+                }
+                if !FactoryContext.isSimulator, let found = contexts["device"] as? TypedFactory<P,T> {
+                    return found.factory
+                }
+                #if DEBUG
+                if let found = contexts["debug"] as? TypedFactory<P,T> {
+                    return found.factory
+                }
+                #endif
             }
         }
-        if let contexts = options?.contexts, !contexts.isEmpty {
-            #if DEBUG
-            if FactoryContext.isPreview, let found = contexts["preview"] as? TypedFactory<P,T> {
-                return found.factory
-            }
-            if FactoryContext.isTest, let found = contexts["test"] as? TypedFactory<P,T> {
-                return found.factory
-            }
-            #endif
-            if FactoryContext.isSimulator, let found = contexts["simulator"] as? TypedFactory<P,T> {
-                return found.factory
-            }
-            if !FactoryContext.isSimulator, let found = contexts["device"] as? TypedFactory<P,T> {
-                return found.factory
-            }
-            #if DEBUG
-            if let found = contexts["debug"] as? TypedFactory<P,T> {
-                return found.factory
-            }
-            #endif
-        }
-        if let found = manager.registrations[id] as? TypedFactory<P,T> {
+        if let found = container.manager.registrations[id] as? TypedFactory<P,T> {
             return found.factory
         }
         return factory
@@ -244,7 +241,7 @@ public struct FactoryRegistration<P,T> {
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
         let manager = unsafeCheckedContainer().manager
-        var options = manager.options[id] ?? FactoryOptions(scope: defaultScope)
+        var options = manager.options[id] ?? FactoryOptions(scope: manager.defaultScope)
         if options.once == once {
             mutate(&options)
             manager.options[id] = options
