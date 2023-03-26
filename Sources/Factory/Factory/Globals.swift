@@ -29,7 +29,31 @@ import Foundation
 // MARK: - Locking
 
 /// Master recursive lock
-internal var globalRecursiveLock = NSRecursiveLock()
+internal var globalRecursiveLock = RecursiveLock()
+
+internal final class RecursiveLock {
+    init() {
+        mutexAttr = UnsafeMutablePointer<pthread_mutexattr_t>.allocate(capacity: 1)
+        pthread_mutexattr_init(mutexAttr)
+        pthread_mutexattr_settype(mutexAttr, PTHREAD_MUTEX_RECURSIVE)
+        mutex = UnsafeMutablePointer<pthread_mutex_t>.allocate(capacity: 1)
+        pthread_mutex_init(mutex, mutexAttr)
+    }
+    deinit {
+        pthread_mutex_destroy(mutex)
+        mutex.deallocate()
+        pthread_mutexattr_destroy(mutexAttr)
+        mutexAttr.deallocate()
+    }
+    @inlinable func lock() {
+        pthread_mutex_lock(mutex)
+    }
+    @inlinable func unlock() {
+        pthread_mutex_unlock(mutex)
+    }
+    private var mutex: UnsafeMutablePointer<pthread_mutex_t>
+    private var mutexAttr: UnsafeMutablePointer<pthread_mutexattr_t>
+}
 
 // MARK: - Internal Variables
 
@@ -49,7 +73,7 @@ internal func resetAndTriggerFatalError(_ message: String, _ file: StaticString,
     globalDependencyChain = []
     globalDependencyChainMessages = []
     globalGraphResolutionDepth = 0
-    globalRecursiveLock = NSRecursiveLock()
+    globalRecursiveLock = RecursiveLock()
     globalTraceResolutions = []
     triggerFatalError(message, #file, #line) // GOES BOOM
 }

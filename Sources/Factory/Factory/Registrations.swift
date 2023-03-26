@@ -46,12 +46,11 @@ public struct FactoryRegistration<P,T> {
     }
 
     /// Support function performs autoRegistrationCheck and returns properly initialized container.
-    internal func unsafeCheckedContainer() -> ManagedContainer {
+    internal func unsafeCheckAutoRegistration() {
         if container.manager.autoRegistrationCheckNeeded {
             container.manager.autoRegistrationCheckNeeded = false
             (container as? AutoRegistering)?.autoRegister()
         }
-        return container
     }
 
     /// Support function for one-time only option updates
@@ -67,8 +66,8 @@ public struct FactoryRegistration<P,T> {
     internal func resolve(with parameters: P) -> T {
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
-
-        let manager = unsafeCheckedContainer().manager
+        unsafeCheckAutoRegistration()
+        let manager = container.manager
         let options = manager.options[id]
         let scope = options?.scope ?? manager.defaultScope
 
@@ -180,7 +179,8 @@ public struct FactoryRegistration<P,T> {
     internal func register(_ factory: @escaping (P) -> T) {
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
-        let manager = unsafeCheckedContainer().manager
+        unsafeCheckAutoRegistration()
+        let manager = container.manager
         if unsafeCanUpdateOptions() {
             manager.registrations[id] = TypedFactory(factory: factory)
             manager.cache.removeValue(forKey: id)
@@ -192,7 +192,8 @@ public struct FactoryRegistration<P,T> {
     internal func scope(_ scope: Scope?) {
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
-        let manager = unsafeCheckedContainer().manager
+        unsafeCheckAutoRegistration()
+        let manager = container.manager
         if var options = manager.options[id] {
             if once == options.once && scope !== options.scope {
                 options.scope = scope
@@ -240,7 +241,8 @@ public struct FactoryRegistration<P,T> {
     internal func options(mutate: (_ options: inout FactoryOptions) -> Void) {
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
-        let manager = unsafeCheckedContainer().manager
+        unsafeCheckAutoRegistration()
+        let manager = container.manager
         var options = manager.options[id] ?? FactoryOptions(scope: manager.defaultScope)
         if options.once == once {
             mutate(&options)
