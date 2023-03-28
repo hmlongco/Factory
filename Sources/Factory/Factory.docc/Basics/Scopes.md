@@ -14,7 +14,7 @@ This is easily done in Factory.
 
 ## Singleton
 
-Just ask the container for a singleton factory.
+Just specify a singleton factory.
 
 ```swift
 extension Container {
@@ -25,6 +25,8 @@ extension Container {
 }
 ```
 Now whenever someone requests an instance of `myService` they'll get the same instance of the object as everyone else.
+
+> Note: Singletons are global, meaning that they're *not* managed or cached by any specific container. If we create two instances of the above container and resolve `myService` from both, we'll get the same instance from both.
 
 ## Unique
 
@@ -46,6 +48,13 @@ extension Container {
     }
 }
 ```
+
+Unlike singletons, cached and shared scopes are managed by the container. If I create an instance of `Container` and use it to resolve `cachedService` three times, I'll get the same instance of the object each time.
+
+But if we create two instances of the above container and resolve `cachedService` from both, we'll get two different instances of the service.
+
+The cache is specific to the container.
+
 ## Custom Scopes
 
 You can also add your own special purpose caches to the mix. Try this.
@@ -97,35 +106,54 @@ extension Container {
 ```
 Both provider factories reference the same factory. When Factory is asked for an instance of `consumer`, both providers will receive the same instance of `MyService`.
 
-There are a few caveats and considerations for using graph. The first is that anyone who wants to participate in the graph needs to explicitely state as such using the graph scope. Note the scope parameter for `commonProviding`.
+There are a few caveats and considerations for using graph. The first is that anyone who wants to participate in the graph needs to explicitly state as such using the graph scope. Note the scope parameter for `commonProviding`.
 
 The second is that there needs to be a "root" to the graph. 
 
 In the above example, the `consumer` object is the root. Factory is asked for a consumer, which in turn requires two providers. 
 
-If you were to instantiate an instance of `ProtocolConsumer` yourself, each one of ProtocolConsumer's Injected property wrappers would initialize sequentually on the same thread, resulting in two separate and distinct resolution cycles.
+If you were to instantiate an instance of `ProtocolConsumer` yourself, each one of ProtocolConsumer's Injected property wrappers would initialize sequentially on the same thread, resulting in two separate and distinct resolution cycles.
 
 See: <doc:Cycle> for more on this.
 
 ## Lifecycles
 
-Scope caches are maintained by the Factory's container.
+Scope caches for all types except singletons are maintained by the Factory's container.
 
 > Warning: If a container ever goes out of scope, so will all of its registrations and cached objects.
 
 See the "Releasing a Container" discussion in <doc:Containers> for more information.
 
+## Default Scope
+
+As mentioned earlier, the default scope for a new Factory is `unique`; a new instance will be created each and every time the Factory is resolved.
+
+That default can be changed on a per-container basis.
+```swift
+extension Container: AutoRegistering {
+    func autoRegister() {
+        manager.defaultScope = .graph
+        ...
+    }
+}
+```
+Now any Factory registration that doesn't specify a scope of its own will use the `graph` scope by default.
+
 ## Reset
 
-As shown above, individual scope caches can be reset (cleared) if needed.
+As shown above, individual scope caches on a container can be reset (cleared) if needed.
 ```swift
 Container.shared.manager.reset(scope: .cached)
 ```
-Or you can reset the cache for every scope in a given container.
+Or you can reset the cache for all of the scopes managed by that container.
 ```swift
 Container.shared.manager.reset(options: .scope)
 ```
-> Important: Resetting a container or scope has no effect whatsoever on anything that's alreay been resolved by Factory. It only ensures that the *next* time a Factory is asked to resolve a dependency that dependency will be a new instance.
+As mentioned earlier, singletons are *not* managed by the container. If needed, the singleton scope can be reset directly.
+```swift
+Scope.singleton.reset()
+```
+> Important: Resetting a container or scope has no effect whatsoever on anything that's already been resolved by Factory. It only ensures that the *next* time a Factory is asked to resolve a dependency that dependency will be a new instance.
 
 ## Topics
 

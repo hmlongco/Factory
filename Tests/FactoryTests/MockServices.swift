@@ -120,6 +120,7 @@ extension Container {
     var uniqueServiceType: Factory<MyServiceType> { self { MyService() } }
 
     var promisedService: Factory<MyServiceType?> { self { nil } }
+    var strictPromisedService: Factory<MyServiceType?> { promised() }
 
 }
 
@@ -195,6 +196,16 @@ final class CustomContainer: SharedContainer, AutoRegistering {
             self.count += 1
         }
     }
+    var once: Factory<MyService> {
+        self {
+            MyService()
+        }
+        .scope(.singleton)
+        .decorator { _ in
+            self.count += 1
+        }
+        .once()
+    }
     func autoRegister() {
         print("CustomContainer AUTOREGISTERING")
         Self.count = 1
@@ -202,11 +213,11 @@ final class CustomContainer: SharedContainer, AutoRegistering {
         self.decorator { _ in
             Self.count += 1
         }
-#if DEBUG
+        #if DEBUG
         decorator {
             print("FACTORY: \(type(of: $0)) (\(Int(bitPattern: ObjectIdentifier($0 as AnyObject))))")
         }
-#endif
+        #endif
     }
     var manager = ContainerManager()
 }

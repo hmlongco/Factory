@@ -61,7 +61,8 @@ extension Container {
         self { self.implementsAB() }
     }
     private var implementsAB: Factory<AServiceType&BServiceType> {
-        self { ImplementsAB() }.graph
+        self { ImplementsAB() }
+            .graph
     }
     var networkService: Factory<NetworkService> {
         self { NetworkService() }
@@ -93,7 +94,7 @@ Again, cycleDemo wants an aService from implementsAB, which wants a networkServi
 
 But implementsAB was cached in the graph scope, and so the same instance (105553119821680) is returned (and which is why we don't see networkService resolved again).
 
-And with that Swift provides us with a fully initialized isntance of CycleDemo and its dependencies.
+And with that Swift provides us with a fully initialized instance of CycleDemo and its dependencies.
 
 That's a resolution cycle.
 

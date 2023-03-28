@@ -9,12 +9,21 @@ import XCTest
 
 final class FactoryDemoUITests: XCTestCase {
 
-    func testExample() throws {
+    func testExample1() throws {
         let app = XCUIApplication()
-        app.launchArguments.append("-mock1")
+        app.launchArguments.append("mock1")
         app.launch()
 
         let welcome = app.staticTexts["Mock Number 1! for Michael"]
+        XCTAssert(welcome.exists)
+    }
+
+    func testExample2() throws {
+        let app = XCUIApplication()
+        app.launchArguments.append("mock2")
+        app.launch()
+
+        let welcome = app.staticTexts["Mock Number 2! for Michael"]
         XCTAssert(welcome.exists)
     }
 

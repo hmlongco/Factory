@@ -1,13 +1,22 @@
 # Factory Changelog
 
+## 2.1.0
+
+* Contexts allow quick and easy Factory customization when doing previews, debugging and testing.
+* Provides once modifier which allows one-time initialization on a per-Factory basis.
+* Let's you define the default scope used for a given container.
+* Allows you to specify promised optionals that warn when registrations are not provided.
+* Singletons now span containers and are cached separately.
+* Factory library now implemented across multiple files.
+
 ## 2.0.3
 
 * AutoRegister should be retriggered after resetting registrations.
 
 ## 2.0.2
 
-* Registration on a new container could be overriden by auto registration on same Factory
-* Some internal code reorginization for performance
+* Registration on a new container could be overridden by auto registration on same Factory
+* Some internal code reorganization for performance
 
 ### 2.0.1
 
@@ -23,7 +32,7 @@
 * Adds ability to specify scope during dependency assembly and registration
 * Adds keyPath-based property wrappers
 * Adds a new InjectedObject property wrapper for SwiftUI Views
-* Fixes ciricular dependency check when same class name used in seprate modules.
+* Fixes circular dependency check when same class name used in separate modules.
 
 ### 1.3.5
 
@@ -35,7 +44,7 @@
 
 ### 1.3.3
 
-* Minor bugfix in circular dependency check to reset chain on error
+* Minor bug fix in circular dependency check to reset chain on error
 
 ### 1.3.2
 
@@ -91,7 +100,7 @@
 ### 1.2.0 - Stable release
 
 * Revised structure to better support ParameterFactory
-* Returned to more agressive locking mechanisms
+* Returned to more aggressive locking mechanisms
 * Revised caching code to eliminate multiple locks
 * Changes decorator behavior in favor of a single common decorator for new and cached instances
 
@@ -120,7 +129,7 @@
 
 * Fixed unneeded Factory retention in Injected Property Wrapper
 * Some internal name changes
-* Added Multipl Module examples in demo project
+* Added Multiple Module examples in demo project
 
 ### 1.0.4
 

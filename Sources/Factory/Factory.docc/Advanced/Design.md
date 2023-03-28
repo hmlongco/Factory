@@ -80,7 +80,7 @@ extension Container {
     }
 }
 ```
-Instead of a static on the container class, this Factory is a computed variable on the container iteself. Inside we define and return a Factory that matches the value promised by the computed variable.
+Instead of a static on the container class, this Factory is a computed variable on the container itself. Inside we define and return a Factory that matches the value promised by the computed variable.
 
 This double-definition mechanism is required primarily because Swift doesn't allow extensions to define new variables on an existing objects. As such, a computed variable was really the only choice.
 
@@ -120,7 +120,7 @@ This instance can be referenced directly if you still want to use a Service Loca
 ```swift
 let service = Container.shared.service()
 ```
-Or you can use the "shared" container as an application root container and pass it along to whereever it's needed. Let's take a look.
+Or you can use the "shared" container as an application root container and pass it along to wherever it's needed. Let's take a look.
 
 ## Passing Containers
 
@@ -133,7 +133,7 @@ class ContentViewModel {
     }
 }
 ```
-Addtional examples and methods can be seen on the <doc:Resolutions> page.
+Additional examples and methods can be seen on the <doc:Resolutions> page.
 
 ## Injected Property Wrappers
 

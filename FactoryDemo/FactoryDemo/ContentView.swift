@@ -25,6 +25,9 @@ struct ContentView: View {
             Button("Trigger Circular Dependency Crash") {
                 Container.testCircularDependencies()
             }
+            Button("Promised Crash") {
+                let _ = Container.shared.promisedSerice()
+            }
             ContainerDemoView()
         }
         .padding()
@@ -32,9 +35,22 @@ struct ContentView: View {
     
 }
 
+struct innerView: View {
+    var body: some View {
+        Text("Hello")
+            .foregroundColor(.red)
+    }
+}
+struct outerView: View {
+    var body: some View {
+        innerView()
+            .foregroundColor(.green)
+    }
+}
+
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        let _ = Container.shared.myServiceType.register { MockServiceN(6) }
+        // Depends on preview context set in FactoryDemoApp+AutoRegister.swift
         ContentView()
     }
 }
@@ -53,5 +69,3 @@ struct ContentView_Previews: PreviewProvider {
 //        }
 //    }
 //}
-
-

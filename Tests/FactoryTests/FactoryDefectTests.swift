@@ -107,28 +107,29 @@ final class FactoryDefectTests: XCTestCase {
     // Unable to correctly clear/set scope to unique using register function
     func testRegistrationClearsScope() throws {
         Container.shared.manager.reset()
-        let service1 = Container.shared.singletonService()
+        let service1 = Container.shared.cachedService()
         XCTAssertNotNil(service1)
-        XCTAssertFalse(Container.shared.manager.cache.isEmpty)
+        XCTAssertFalse(Container.shared.manager.isEmpty(.scope))
         Container.shared.manager.reset()
-        Container.shared.singletonService.register(scope: .unique) {
-            MyService()
-        }
-        let service2 = Container.shared.singletonService()
+        Container.shared.singletonService
+            .unique
+            .register { MyService() }
+        let service2 = Container.shared.cachedService()
         XCTAssertNotNil(service2)
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
-
+        // scope defined in factory definition will still override last change
+        XCTAssertFalse(Container.shared.manager.isEmpty(.scope))
         Container.shared.manager.reset()
         let service3 = Container.shared.scopedParameterService(8)
         XCTAssertNotNil(service3)
-        XCTAssertFalse(Container.shared.manager.cache.isEmpty)
+        XCTAssertFalse(Container.shared.manager.isEmpty(.scope))
         Container.shared.manager.reset()
-        Container.shared.scopedParameterService.register(scope: .unique) {
-            ParameterService(value: $0)
-        }
+        Container.shared.scopedParameterService
+            .unique
+            .register { ParameterService(value: $0) }
         let service4 = Container.shared.scopedParameterService(9)
         XCTAssertNotNil(service4)
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
+        // scope defined in factory definition will still override last change
+        XCTAssertFalse(Container.shared.manager.isEmpty(.scope))
     }
 
     // Registration on a new container could be overriden by auto registration

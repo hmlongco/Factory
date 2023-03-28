@@ -4,20 +4,16 @@ A new approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
 ## Factory 2.1
 
-Factory 2.1 is coming soon! See the [announcement in Discussions](https://github.com/hmlongco/Factory/discussions/83).
-
-## Factory 2.0
-
 Factory is strongly influenced by SwiftUI, and in my opinion is highly suited for use in that environment. Factory is...
 
 - **Adaptable**: Factory doesn't tie you down to a single dependency injection strategy or technique.
-- **Powerful**: Factory supports containers, scopes, passed parameters, decorators, unit tests, SwiftUI Previews, and much, much more.
+- **Powerful**: Factory supports containers, scopes, passed parameters, contexts, decorators, unit tests, SwiftUI Previews, and much, much more.
 - **Performant**: Little to no setup time is needed for the vast majority of your services, resolutions are extremely fast, and no compile-time scripts or build phases are needed.
 - **Safe**: Factory is compile-time safe; a factory for a given type must exist or the code simply will not compile.
 - **Concise**: Defining a registration usually takes just a single line of code. Same for resolution.
 - **Flexible**: Working with UIKIt or SwiftUI? iOS or macOS? Using MVVM? MVP? Clean? VIPER? No problem. Factory works with all of these and more.
 - **Documented**: Factory 2.0 has extensive DocC documentation and examples covering its classes, methods, and use cases.
-- **Lightweight**: With all of that Factory is slim and trim, just 428 lines of executable code and over half the size of Resolver.
+- **Lightweight**: With all of that Factory is slim and trim, under 700 lines of executable code.
 - **Tested**: Unit tests with 100% code coverage helps ensure correct operation of registrations, resolutions, and scopes.
 - **Free**: Factory is free and open source under the MIT License.
 
@@ -51,7 +47,7 @@ This particular view model uses one of Factory's `@Injected` property wrappers t
 
 And that's the core mechanism. In order to use the property wrapper you *must* define a factory within the specified container. That factory *must* return the desired type when asked. Fail to do either one and the code will simply not compile. As such, Factory is compile-time safe.
 
-By the way, if you're concerned about building Factory's on the fly, don't be. Like SwftUI Views, Factory structs and modifiers are lightweight and transitory value types. They're created inside computed variables **only** when they're needed and then immediately discarded once their purpose has been served.
+By the way, if you're concerned about building Factory's on the fly, don't be. Like SwiftUI Views, Factory structs and modifiers are lightweight and transitory value types. They're created inside computed variables **only** when they're needed and then immediately discarded once their purpose has been served.
 
 For more examples of Factory definitions that define scopes, use constructor injection, and do parameter passing, see the [Registrations](https://hmlongco.github.io/Factory/documentation/factory/registrations) page.
 
@@ -198,7 +194,7 @@ And if not, the concept is easy to understand: Just how long should an instance 
 
 You've no doubt stuffed an instance of a class into a variable and created a singleton at some point in your career. This is an example of a scope. A single instance is created and then used and shared by all of the methods and functions in the app.
 
-This can be done in Factory just by adding a scope modifer.
+This can be done in Factory just by adding a scope modifier.
 
 ```swift
 extension Container {
@@ -220,7 +216,7 @@ If no scope is specified the default scope is unique. A new instance of the serv
 
 Other common scopes are `cached` and `shared`. Cached items are persisted until the cache is reset, while shared items exist just as long as someone holds a strong reference to them. When the last reference goes away, the weakly held shared reference also goes away.
 
-Factory has other scope types, plus the ability to define your own. See [Scopes](https://hmlongco.github.io/Factory/documentation/factory/scopes) for additonal examples.
+Factory has other scope types, plus the ability to add more of your own. See [Scopes](https://hmlongco.github.io/Factory/documentation/factory/scopes) for additional examples.
 
 Scopes and scope management are powerful tools to have in your dependency injection arsenal.
 
@@ -240,11 +236,22 @@ extension Container {
 ```
 Both definitions provide the same exact result. The sugared function is even inlined, so there's not even a performance difference between the two versions.
 
+## Contexts
+
+One powerful new feature in Factory 2.1 is contexts. Let's say that for logistical reasons whenever your application runs in debug mode you *never* want it to make calls to your application's analytics engine.
+
+Easy. Just register an override for that particular context.
+
+```swift
+container.analytics.onDebug { 
+    StubAnalyticsEngine()
+}
+```
+There are other contexts for unit testing, for SwiftUI previews, and even when running UITests both in the simulator or when running an app on services like BrowserStack. See the documentation for more.
+
 ## Debugging
 
-Factory can also help you debug your code.
-
-For example, when running in DEBUG mode Factory allows you to trace the injection process and see every object created or returned during a given resolution cycle.
+Factory can also help you debug your code. When running in DEBUG mode Factory allows you to trace the injection process and see every object created or returned during a given resolution cycle.
 ```
 0: Factory.Container.cycleDemo = CycleDemo N:105553131389696
 1:     Factory.Container.aService = AServiceType N:105553119821680
@@ -262,6 +269,16 @@ See [Debugging](https://hmlongco.github.io/Factory/documentation/factory/debuggi
 A single README file barely scratches the surface. Fortunately, Factory is throughly documented. 
 
 Current DocC documentation can be found in the project as well as online on [GitHub Pages](https://hmlongco.github.io/Factory/documentation/factory).
+
+## Installation
+
+Factory supports CocoaPods and the Swift Package Manager.
+```
+pod "Factory"
+```
+Or download the source files and add the Factory folder to your project.
+
+Note that the current version of Factory (2.1) require Swift 5.1 minimum and that the minimum version of iOS currently supported with this release is iOS 11.
 
 ## Factory 2.0 Migration
 
@@ -287,6 +304,8 @@ Factory is available under the MIT license. See the LICENSE file for more info.
 If you want to support my work on Factory and Resolver, consider a [GitHub Sponsorship](https://github.com/sponsors/hmlongco)! Many levels exist for increased support and even for mentorship and company training. 
 
 Or you can just buy me a cup of coffee!
+
+And many thanks to my new sponsors: sueddeutsche, doozMen.
 
 ## Author
 

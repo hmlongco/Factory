@@ -40,6 +40,7 @@ extension ServiceContainer {
 
 extension ServiceContainer {
     static func test() {
+        #if DEBUG
         Self.shared.manager.trace.toggle()
         let _ = Self.staticServiceMethod1()
         let _ = Self.staticServiceMethod2()
@@ -47,5 +48,6 @@ extension ServiceContainer {
         let _ = Self.shared.extendedService()
         let _ = Self.shared.service2()
         Self.shared.manager.trace.toggle()
+        #endif
     }
 }

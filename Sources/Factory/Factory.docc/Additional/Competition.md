@@ -29,6 +29,8 @@ Swinject | - | - | - | -
 
 So let's talk about them. Note that I'm splitting these out into several distinct categories based on how each one works internally.
 
+> Note: This section is incomplete and in process. Check back again later.
+
 
 ## Type-Lookup Libraries
 

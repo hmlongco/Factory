@@ -58,6 +58,13 @@ final class FactoryCoreTests: XCTestCase {
         XCTAssertTrue(service2?.text() == "MyService")
     }
 
+    func testUnsugaredResolution() throws {
+        let service1 = Container.shared.myServiceType.resolve()
+        XCTAssertEqual(service1.text(), "MyService")
+        let service2 = Container.shared.parameterService.resolve(23)
+        XCTAssertEqual(service2.text(), "ParameterService23")
+    }
+
     func testResetOptions() {
         func registerAndResolve() {
             // Sneak in code coverage on with as well
@@ -69,51 +76,51 @@ final class FactoryCoreTests: XCTestCase {
             let _ = Container.shared.cachedService()
         }
 
-        XCTAssertTrue(Container.shared.manager.registrations.isEmpty)
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
+        XCTAssertTrue(Container.shared.manager.isEmpty(.registration))
+        XCTAssertTrue(Container.shared.manager.isEmpty(.scope))
 
         registerAndResolve()
 
         Container.shared.cachedService.reset(.none)
 
-        XCTAssertFalse(Container.shared.manager.registrations.isEmpty)
-        XCTAssertFalse(Container.shared.manager.cache.isEmpty)
+        XCTAssertFalse(Container.shared.manager.isEmpty(.registration))
+        XCTAssertFalse(Container.shared.manager.isEmpty(.scope))
 
         Container.shared.cachedService.reset(.all)
 
-        XCTAssertTrue(Container.shared.manager.registrations.isEmpty)
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
+        XCTAssertTrue(Container.shared.manager.isEmpty(.registration))
+        XCTAssertTrue(Container.shared.manager.isEmpty(.scope))
 
         registerAndResolve()
 
         Container.shared.manager.reset(options: .none)
 
-        XCTAssertFalse(Container.shared.manager.registrations.isEmpty)
-        XCTAssertFalse(Container.shared.manager.cache.isEmpty)
+        XCTAssertFalse(Container.shared.manager.isEmpty(.registration))
+        XCTAssertFalse(Container.shared.manager.isEmpty(.scope))
 
         Container.shared.cachedService.reset(.registration)
 
-        XCTAssertTrue(Container.shared.manager.registrations.isEmpty)
-        XCTAssertFalse(Container.shared.manager.cache.isEmpty)
+        XCTAssertTrue(Container.shared.manager.isEmpty(.registration))
+        XCTAssertFalse(Container.shared.manager.isEmpty(.scope))
 
         registerAndResolve()
 
         Container.shared.cachedService.reset(.scope)
 
-        XCTAssertFalse(Container.shared.manager.registrations.isEmpty)
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
+        XCTAssertFalse(Container.shared.manager.isEmpty(.registration))
+        XCTAssertTrue(Container.shared.manager.isEmpty(.scope))
 
         Container.shared.manager.reset(options: .registration)
 
-        XCTAssertTrue(Container.shared.manager.registrations.isEmpty)
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
+        XCTAssertTrue(Container.shared.manager.isEmpty(.registration))
+        XCTAssertTrue(Container.shared.manager.isEmpty(.scope))
 
         registerAndResolve()
 
         Container.shared.manager.reset(options: .scope)
 
-        XCTAssertFalse(Container.shared.manager.registrations.isEmpty)
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
+        XCTAssertFalse(Container.shared.manager.isEmpty(.registration))
+        XCTAssertTrue(Container.shared.manager.isEmpty(.scope))
 
     }
 
@@ -121,15 +128,46 @@ final class FactoryCoreTests: XCTestCase {
         XCTAssertEqual(CustomContainer.shared.count, 0)
         let _ = CustomContainer.shared.decorated()
         XCTAssertEqual(CustomContainer.shared.count, 2)
+        let _ = CustomContainer.shared.decorated()
+        XCTAssertEqual(CustomContainer.shared.count, 3)
+        let _ = CustomContainer.shared.decorated()
+        XCTAssertEqual(CustomContainer.shared.count, 4)
+    }
+
+    func testFactoryOnce() {
+        XCTAssertEqual(CustomContainer.shared.count, 0)
+        let service1 = CustomContainer.shared.once()
+        XCTAssertEqual(CustomContainer.shared.count, 2)
+        let service2 = CustomContainer.shared.once()
+        XCTAssertEqual(CustomContainer.shared.count, 3)
+        XCTAssertEqual(service1.id, service2.id)
+        CustomContainer.shared.once
+            .scope(.unique)
+            .decorator { _ in }
+        let service3 = CustomContainer.shared.once()
+        XCTAssertEqual(CustomContainer.shared.count, 3)
+        let service4 = CustomContainer.shared.once()
+        XCTAssertEqual(CustomContainer.shared.count, 3)
+        XCTAssertNotEqual(service3.id, service4.id)
     }
 
     func testCircularDependencyFailure() {
-        let message = "circular dependency chain - FactoryTests.RecursiveA > FactoryTests.RecursiveB > FactoryTests.RecursiveC > FactoryTests.RecursiveA"
+        let message = "FACTORY: Circular dependency chain - FactoryTests.RecursiveA > FactoryTests.RecursiveB > FactoryTests.RecursiveC > FactoryTests.RecursiveA"
         expectFatalError(expectedMessage: message) {
             let _ = Container.shared.recursiveA()
         }
-        expectFatalError(expectedMessage: message) {
-            let _ = Container.shared.recursiveA()
+    }
+
+    func testStrictPromise() {
+        // Expect non fatal error when strict and NOT in debug mode
+        Container.shared.manager.promiseTriggersError = false
+        expectNonFatalError {
+            let _ = Container.shared.strictPromisedService()
+        }
+        // Expect fatal error when strict and in debug mode
+        Container.shared.manager.promiseTriggersError = true
+        expectFatalError(expectedMessage: "MyServiceType was not registered") {
+            let _ = Container.shared.strictPromisedService()
         }
     }
 
@@ -145,6 +183,7 @@ final class FactoryCoreTests: XCTestCase {
         Container.shared.manager.logger = {
             print($0)
         }
+        XCTAssertNotNil(Container.shared.manager.logger)
         XCTAssertEqual(logged.count, 5)
         if logged.count == 5 {
             XCTAssert(logged[0].contains("consumer"))

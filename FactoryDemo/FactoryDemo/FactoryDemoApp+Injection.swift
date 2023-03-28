@@ -34,6 +34,14 @@ extension Container {
     var contentViewModel: Factory<ContentViewModel> { self { ContentViewModel() } }
 }
 
+extension Container {
+    var previewService: Factory<MyServiceType> {
+        self { MyService() }
+            .onPreview { MockServiceN(55) }
+            .singleton
+    }
+}
+
 extension SharedContainer {
     var myServiceType: Factory<MyServiceType> { self { MyService() } }
     var sharedService: Factory<MyServiceType> { self { MyService() }.shared }
@@ -143,11 +151,8 @@ extension Container {
     }
 }
 
-extension SharedContainer {
-//    @inlinable public func scope<T>(_ scope: Scope?, key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
-//        Factory(self, key: key, factory).custom(scope: scope)
-//    }
-//
-//    var someOtherService: Factory<MyServiceType> { scope(.shared) { MyService() } }
+extension Container {
+    var promisedSerice: Factory<MyServiceType?> {
+        promised()
+    }
 }
-

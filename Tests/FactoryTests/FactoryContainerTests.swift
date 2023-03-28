@@ -56,19 +56,22 @@ final class FactoryContainerTests: XCTestCase {
         XCTAssertTrue(service3.text() == "MyService")
     }
 
-    func testConvenienceFucntions() throws {
+    func testConvenienceFunctions() throws {
         XCTAssertNotNil(Container.shared.cachedCoverage())
         XCTAssertNotNil(Container.shared.graphCoverage())
         XCTAssertNotNil(Container.shared.scopeCoverage())
         XCTAssertNotNil(Container.shared.sharedCoverage())
         XCTAssertNotNil(Container.shared.singletonCoverage())
         XCTAssertNotNil(Container.shared.uniqueCoverage())
-//        XCTAssertNotNil(Container.shared.cachedCoverageParameter(1))
-//        XCTAssertNotNil(Container.shared.graphCoverageParameter(1))
-//        XCTAssertNotNil(Container.shared.scopeCoverageParameter(1))
-//        XCTAssertNotNil(Container.shared.sharedCoverageParameter(1))
-//        XCTAssertNotNil(Container.shared.singletonCoverageParameter(1))
-//        XCTAssertNotNil(Container.shared.uniqueCoverageParameter(1))
+    }
+
+    func testIsEmpty() throws {
+        XCTAssertTrue(Container.shared.manager.isEmpty(.all))
+        XCTAssertTrue(Container.shared.manager.isEmpty(.registration))
+        XCTAssertTrue(Container.shared.manager.isEmpty(.scope))
+        XCTAssertTrue(Container.shared.manager.isEmpty(.none))
+        Container.shared.myServiceType.once() // coverage
+        XCTAssertTrue(Container.shared.manager.isEmpty(.context))
     }
 
 }
@@ -80,10 +83,4 @@ private extension Container {
     var sharedCoverage: Factory<MyService?> { self { MyService() }.shared }
     var singletonCoverage: Factory<MyService?>  { self { MyService() }.singleton }
     var uniqueCoverage: Factory<MyService?>  { self { MyService() }.unique }
-//    var cachedCoverageParameter: ParameterFactory<Int, ParameterService?> { cached { ParameterService(value: $0) }. }
-//    var graphCoverageParameter: ParameterFactory<Int, ParameterService?> { graph { ParameterService(value: $0) } }
-//    var scopeCoverageParameter: ParameterFactory<Int, ParameterService?> { scope(.session) { ParameterService(value: $0) } }
-//    var sharedCoverageParameter: ParameterFactory<Int, ParameterService?> { shared { ParameterService(value: $0) } }
-//    var singletonCoverageParameter: ParameterFactory<Int, ParameterService?> { singleton { ParameterService(value: $0) } }
-//    var uniqueCoverageParameter: ParameterFactory<Int, ParameterService?>  { self { ParameterService(value: $0) } }
 }
