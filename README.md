@@ -216,7 +216,7 @@ If no scope is specified the default scope is unique. A new instance of the serv
 
 Other common scopes are `cached` and `shared`. Cached items are persisted until the cache is reset, while shared items exist just as long as someone holds a strong reference to them. When the last reference goes away, the weakly held shared reference also goes away.
 
-Factory has other scope types, plus the ability to define your own. See [Scopes](https://hmlongco.github.io/Factory/documentation/factory/scopes) for additional examples.
+Factory has other scope types, plus the ability to add more of your own. See [Scopes](https://hmlongco.github.io/Factory/documentation/factory/scopes) for additional examples.
 
 Scopes and scope management are powerful tools to have in your dependency injection arsenal.
 
@@ -235,6 +235,19 @@ extension Container {
 }
 ```
 Both definitions provide the same exact result. The sugared function is even inlined, so there's not even a performance difference between the two versions.
+
+## Contexts
+
+One powerful new feature in Factory 2.1 is contexts. Let's say that for logistical reasons whenever your application runs in debug mode you never want it to make calls to your application's analytics engine.
+
+Factory makes it easy. Just register an override for that particular context.
+
+```swift
+container.analytics.onDebug {
+    StubAnalyticsEngine()
+}
+```
+There are other contexts for testing, when doing previews, and even when running UITests both in the simulator or when using services like BrowserStack. See the documentation for more.
 
 ## Debugging
 
