@@ -238,16 +238,16 @@ Both definitions provide the same exact result. The sugared function is even inl
 
 ## Contexts
 
-One powerful new feature in Factory 2.1 is contexts. Let's say that for logistical reasons whenever your application runs in debug mode you never want it to make calls to your application's analytics engine.
+One powerful new feature in Factory 2.1 is contexts. Let's say that for logistical reasons whenever your application runs in debug mode you *never* want it to make calls to your application's analytics engine.
 
-Factory makes it easy. Just register an override for that particular context.
+Easy. Just register an override for that particular context.
 
 ```swift
-container.analytics.onDebug {
+container.analytics.onDebug { 
     StubAnalyticsEngine()
 }
 ```
-There are other contexts for testing, when doing previews, and even when running UITests both in the simulator or when using services like BrowserStack. See the documentation for more.
+There are other contexts for unit testing, for SwiftUI previews, and even when running UITests both in the simulator or when running an app on services like BrowserStack. See the documentation for more.
 
 ## Debugging
 
