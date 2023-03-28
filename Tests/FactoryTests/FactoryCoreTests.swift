@@ -76,51 +76,51 @@ final class FactoryCoreTests: XCTestCase {
             let _ = Container.shared.cachedService()
         }
 
-        XCTAssertTrue(Container.shared.manager.registrations.isEmpty)
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
+        XCTAssertTrue(Container.shared.manager.isEmpty(.registration))
+        XCTAssertTrue(Container.shared.manager.isEmpty(.scope))
 
         registerAndResolve()
 
         Container.shared.cachedService.reset(.none)
 
-        XCTAssertFalse(Container.shared.manager.registrations.isEmpty)
-        XCTAssertFalse(Container.shared.manager.cache.isEmpty)
+        XCTAssertFalse(Container.shared.manager.isEmpty(.registration))
+        XCTAssertFalse(Container.shared.manager.isEmpty(.scope))
 
         Container.shared.cachedService.reset(.all)
 
-        XCTAssertTrue(Container.shared.manager.registrations.isEmpty)
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
+        XCTAssertTrue(Container.shared.manager.isEmpty(.registration))
+        XCTAssertTrue(Container.shared.manager.isEmpty(.scope))
 
         registerAndResolve()
 
         Container.shared.manager.reset(options: .none)
 
-        XCTAssertFalse(Container.shared.manager.registrations.isEmpty)
-        XCTAssertFalse(Container.shared.manager.cache.isEmpty)
+        XCTAssertFalse(Container.shared.manager.isEmpty(.registration))
+        XCTAssertFalse(Container.shared.manager.isEmpty(.scope))
 
         Container.shared.cachedService.reset(.registration)
 
-        XCTAssertTrue(Container.shared.manager.registrations.isEmpty)
-        XCTAssertFalse(Container.shared.manager.cache.isEmpty)
+        XCTAssertTrue(Container.shared.manager.isEmpty(.registration))
+        XCTAssertFalse(Container.shared.manager.isEmpty(.scope))
 
         registerAndResolve()
 
         Container.shared.cachedService.reset(.scope)
 
-        XCTAssertFalse(Container.shared.manager.registrations.isEmpty)
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
+        XCTAssertFalse(Container.shared.manager.isEmpty(.registration))
+        XCTAssertTrue(Container.shared.manager.isEmpty(.scope))
 
         Container.shared.manager.reset(options: .registration)
 
-        XCTAssertTrue(Container.shared.manager.registrations.isEmpty)
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
+        XCTAssertTrue(Container.shared.manager.isEmpty(.registration))
+        XCTAssertTrue(Container.shared.manager.isEmpty(.scope))
 
         registerAndResolve()
 
         Container.shared.manager.reset(options: .scope)
 
-        XCTAssertFalse(Container.shared.manager.registrations.isEmpty)
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
+        XCTAssertFalse(Container.shared.manager.isEmpty(.registration))
+        XCTAssertTrue(Container.shared.manager.isEmpty(.scope))
 
     }
 
@@ -183,6 +183,7 @@ final class FactoryCoreTests: XCTestCase {
         Container.shared.manager.logger = {
             print($0)
         }
+        XCTAssertNotNil(Container.shared.manager.logger)
         XCTAssertEqual(logged.count, 5)
         if logged.count == 5 {
             XCTAssert(logged[0].contains("consumer"))

@@ -164,6 +164,23 @@ public final class ContainerManager {
         get { globalLogger }
         set { globalLogger = newValue }
     }
+
+    internal func isEmpty(_ options: FactoryResetOptions) -> Bool {
+        defer { globalRecursiveLock.unlock() }
+        globalRecursiveLock.lock()
+        switch options {
+        case .all:
+            return registrations.isEmpty && cache.isEmpty && self.options.isEmpty
+        case .context:
+            return self.options.allSatisfy { $1.argumentContexts == nil && $1.contexts == nil }
+        case .none:
+            return true
+        case .registration:
+            return registrations.isEmpty
+        case .scope:
+            return cache.isEmpty
+        }
+    }
     #endif
 
     /// Alias for Factory registration map.

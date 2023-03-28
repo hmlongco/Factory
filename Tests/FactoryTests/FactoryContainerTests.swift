@@ -56,13 +56,22 @@ final class FactoryContainerTests: XCTestCase {
         XCTAssertTrue(service3.text() == "MyService")
     }
 
-    func testConvenienceFucntions() throws {
+    func testConvenienceFunctions() throws {
         XCTAssertNotNil(Container.shared.cachedCoverage())
         XCTAssertNotNil(Container.shared.graphCoverage())
         XCTAssertNotNil(Container.shared.scopeCoverage())
         XCTAssertNotNil(Container.shared.sharedCoverage())
         XCTAssertNotNil(Container.shared.singletonCoverage())
         XCTAssertNotNil(Container.shared.uniqueCoverage())
+    }
+
+    func testIsEmpty() throws {
+        XCTAssertTrue(Container.shared.manager.isEmpty(.all))
+        XCTAssertTrue(Container.shared.manager.isEmpty(.registration))
+        XCTAssertTrue(Container.shared.manager.isEmpty(.scope))
+        XCTAssertTrue(Container.shared.manager.isEmpty(.none))
+        Container.shared.myServiceType.once() // coverage
+        XCTAssertTrue(Container.shared.manager.isEmpty(.context))
     }
 
 }
