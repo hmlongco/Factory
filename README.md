@@ -251,9 +251,7 @@ There are other contexts for unit testing, for SwiftUI previews, and even when r
 
 ## Debugging
 
-Factory can also help you debug your code.
-
-For example, when running in DEBUG mode Factory allows you to trace the injection process and see every object created or returned during a given resolution cycle.
+Factory can also help you debug your code. When running in DEBUG mode Factory allows you to trace the injection process and see every object created or returned during a given resolution cycle.
 ```
 0: Factory.Container.cycleDemo = CycleDemo N:105553131389696
 1:     Factory.Container.aService = AServiceType N:105553119821680
