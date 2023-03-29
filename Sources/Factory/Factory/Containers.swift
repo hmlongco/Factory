@@ -241,7 +241,7 @@ extension ContainerManager {
         switch scope {
         case is Scope.Singleton:
             #if DEBUG
-            globalLogger("FACTORY: Singleton scope not managed by container")
+            logger("FACTORY: Singleton scope not managed by container")
             #endif
             break
         default:
