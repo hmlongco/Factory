@@ -1,5 +1,9 @@
 # Factory Changelog
 
+## 2.1.2
+
+* Fix tag issue on github
+
 ## 2.1.1
 
 * Fix build error in SPM
