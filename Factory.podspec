@@ -6,7 +6,7 @@ Pod::Spec.new do |s|
   s.license      = "MIT"
   s.author       = "Michael Long"
   s.source       = { :git => "https://github.com/hmlongco/Factory.git", :tag => "#{s.version}" }
-  s.source_files  = "Classes", "Sources/Factory/*.swift"
+  s.source_files  = "Classes", "Sources/**/*.swift"
   s.swift_version = '5.1'
 
   s.ios.deployment_target = "11.0"
