@@ -1,5 +1,9 @@
 # Factory Changelog
 
+## 2.1.1
+
+* Fix build error in SPM
+
 ## 2.1.0
 
 * Contexts allow quick and easy Factory customization when doing previews, debugging and testing.
