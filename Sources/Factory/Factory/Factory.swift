@@ -73,7 +73,7 @@ public struct Factory<T>: FactoryModifying {
     ///   - key: Hidden value used to differentiate different instances of the same type in the same container.
     ///   - factory: A factory closure that produces an object of the desired type when required.
     public init(_ container: ManagedContainer, key: String = #function, _ factory: @escaping () -> T) {
-        self.registration = FactoryRegistration<Void,T>(id: "\(container.self).\(key)", container: container, factory: factory)
+        self.registration = FactoryRegistration<Void,T>(id: "\(key)<\(T.self)>", container: container, factory: factory)
     }
 
     /// Evaluates the factory and returns an object or service of the desired type. The resolved instance may be brand new or Factory may
@@ -199,7 +199,7 @@ public struct ParameterFactory<P,T>: FactoryModifying {
     ///   - key: Hidden value used to differentiate different instances of the same type in the same container.
     ///   - factory: A factory closure that produces an object of the desired type when required.
     public init(_ container: ManagedContainer, key: String = #function, _ factory: @escaping (P) -> T) {
-        self.registration = FactoryRegistration<P,T>(id: "\(container.self).\(key)", container: container, factory: factory)
+        self.registration = FactoryRegistration<P,T>(id: "\(key)<\(T.self)>", container: container, factory: factory)
     }
 
     /// Resolves a factory capable of taking parameters at runtime.

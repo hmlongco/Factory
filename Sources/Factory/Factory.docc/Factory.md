@@ -48,5 +48,4 @@ Ready to get started?
 
 ### Addtional Topics
 
-- <doc:Competition>
 - <doc:Migration>

@@ -4,14 +4,14 @@ Additional support for debugging resolution cycles, dependency chains and other 
 
 ## Tracing the Resolution Cycle
 
-When running in DEBUG mode Factory allows you to trace the injection process and see every object created or returned during a given <doc:Cycle>.
+When running in DEBUG mode Factory allows you to trace the injection process and see every object instantiated or returned from a cache during a given <doc:Cycle>.
 ```
-0: Factory.Container.cycleDemo = CycleDemo N:105553131389696
-1:     Factory.Container.aService = AServiceType N:105553119821680
-2:         Factory.Container.implementsAB = AServiceType & BServiceType N:105553119821680
-3:             Factory.Container.networkService = NetworkService N:105553119770688
-1:     Factory.Container.bService = BServiceType N:105553119821680
-2:         Factory.Container.implementsAB = AServiceType & BServiceType C:105553119821680
+0: Factory.Container.cycleDemo<CycleDemo> = N:105553131389696
+1:     Factory.Container.aService<AServiceType> = N:105553119821680
+2:         Factory.Container.implementsAB<AServiceType & BServiceType> = N:105553119821680
+3:             Factory.Container.networkService<NetworkService> = N:105553119770688
+1:     Factory.Container.bService<BServiceType> = N:105553119821680
+2:         Factory.Container.implementsAB<AServiceType & BServiceType> = C:105553119821680
 ```
 Each line in the trace shows the depth (with 0 as the root), the factory called, the type of the service created, and the id/address of the object itself. 
 

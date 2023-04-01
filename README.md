@@ -251,14 +251,14 @@ There are other contexts for unit testing, for SwiftUI previews, and even when r
 
 ## Debugging
 
-Factory can also help you debug your code. When running in DEBUG mode Factory allows you to trace the injection process and see every object created or returned during a given resolution cycle.
+Factory can also help you debug your code. When running in DEBUG mode Factory allows you to trace the injection process and see every object instantiated or returned from a cache during a given resolution cycle.
 ```
-0: Factory.Container.cycleDemo = CycleDemo N:105553131389696
-1:     Factory.Container.aService = AServiceType N:105553119821680
-2:         Factory.Container.implementsAB = AServiceType & BServiceType N:105553119821680
-3:             Factory.Container.networkService = NetworkService N:105553119770688
-1:     Factory.Container.bService = BServiceType N:105553119821680
-2:         Factory.Container.implementsAB = AServiceType & BServiceType C:105553119821680
+0: Factory.Container.cycleDemo<CycleDemo> = N:105553131389696
+1:     Factory.Container.aService<AServiceType> = N:105553119821680
+2:         Factory.Container.implementsAB<AServiceType & BServiceType> = N:105553119821680
+3:             Factory.Container.networkService<NetworkService> = N:105553119770688
+1:     Factory.Container.bService<BServiceType> = N:105553119821680
+2:         Factory.Container.implementsAB<AServiceType & BServiceType> = C:105553119821680
 ```
 This can make it a lot easier to see the entire dependency tree for a given object or service.
 

@@ -110,9 +110,8 @@ public struct FactoryRegistration<P,T> {
         #if DEBUG
         if manager.trace {
             let indent = String(repeating: "    ", count: globalGraphResolutionDepth)
-            let type = type(of: instance)
             let address = Int(bitPattern: ObjectIdentifier(instance as AnyObject))
-            let resolution = "\(globalGraphResolutionDepth): \(indent)\(id) = \(type) \(traceNew):\(address)"
+            let resolution = "\(globalGraphResolutionDepth): \(indent)\(container).\(id) = \(traceNew):\(address)"
             globalTraceResolutions[traceLevel] = resolution
             if globalGraphResolutionDepth == 0 {
                 globalTraceResolutions.forEach { globalLogger($0) }
