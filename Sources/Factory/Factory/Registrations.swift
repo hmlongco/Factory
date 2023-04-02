@@ -66,7 +66,9 @@ public struct FactoryRegistration<P,T> {
     internal func resolve(with parameters: P) -> T {
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
+
         unsafeCheckAutoRegistration()
+
         let manager = container.manager
         let options = manager.options[id]
         let scope = options?.scope ?? manager.defaultScope
@@ -105,14 +107,12 @@ public struct FactoryRegistration<P,T> {
         if !globalDependencyChain.isEmpty {
             globalDependencyChain.removeLast()
         }
-        #endif
 
-        #if DEBUG
         if manager.trace {
             let indent = String(repeating: "    ", count: globalGraphResolutionDepth)
-            let address = Int(bitPattern: ObjectIdentifier(instance as AnyObject))
-            let resolution = "\(globalGraphResolutionDepth): \(indent)\(container).\(id) = \(traceNew):\(address)"
-            globalTraceResolutions[traceLevel] = resolution
+            let address = (((instance as? OptionalProtocol)?.hasWrappedValue ?? true)) ? Int(bitPattern: ObjectIdentifier(instance as AnyObject)) : 0
+            let resolution = address == 0 ? "nil" : "\(traceNew):\(address)"
+            globalTraceResolutions[traceLevel] = "\(globalGraphResolutionDepth): \(indent)\(container).\(id) = \(resolution)"
             if globalGraphResolutionDepth == 0 {
                 globalTraceResolutions.forEach { globalLogger($0) }
                 globalTraceResolutions = []

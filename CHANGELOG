@@ -3,6 +3,7 @@
 ## 2.1.3
 
 * Fix singleton scope issue with SharedContainer across multiple container types. Issue - #92
+* Update to trace for better presentation of nil optionals
 
 ## 2.1.2
 
