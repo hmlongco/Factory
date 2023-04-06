@@ -67,6 +67,28 @@ final class FactoryCoreTests: XCTestCase {
 }
 ```
 
+## Singletons
+
+The Singleton scope cache is global, meaning that it's *not* managed by any specific container. 
+
+That being the case, neither the push/pull mechanism or the container rebuilding mechanisms described above will clear any cached singleton instances.
+
+Singletons are, after all, expected to be Singletons.
+
+You can reset *all* Singletons.
+
+```swift
+Scope.singleton.reset()
+```
+Or you can reset a specific singleton by reaching out to its factory.
+
+```swift
+// reset everything for that factory
+Container.shared.someSingletonFactory.reset()
+// reset just the scope cache
+Container.shared.someSingletonFactory.reset(options: .scope)
+```
+
 ## Passed Containers
 
 Or you can pass the container into the view model itself.
