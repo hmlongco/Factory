@@ -28,9 +28,14 @@ struct ContentView: View {
             Button("Promised Crash") {
                 let _ = Container.shared.promisedSerice()
             }
-            ContainerDemoView()
+            Text("Testing = \(isTest ? "Y" : "N")")
+            //ContainerDemoView()
         }
         .padding()
+    }
+
+    var isTest: Bool {
+        NSClassFromString("XCTest") != nil
     }
     
 }

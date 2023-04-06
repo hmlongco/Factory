@@ -4,7 +4,6 @@ import XCTest
 final class FactoryCoreTests: XCTestCase {
 
     override func setUp() {
-        super.setUp()
         Container.shared = Container()
         CustomContainer.shared = CustomContainer()
     }
