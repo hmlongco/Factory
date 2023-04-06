@@ -30,15 +30,15 @@ Now whenever someone requests an instance of `myService` they'll get the same in
 let a = container.myService()
 let b = container.myService()
 ```
-When we do this, both `a` and `b` reference the same instance.
+When we do this, both `a` and `b` refer to the same instance.
 
 Singletons are easy to create, but they should be used with care. Like static singletons you might create in your own code, using singleton scopes can become problematic when testing your code and often require special handling. See <doc:Testing> for more information on how to handle this.
 
-Another issue to keep in mind is that Singletons are global, meaning that they're *not* managed or cached by any specific container. If we create two instances of the above container and resolve `myService` from both, we'll get the *same* instance from both.
+Another issue to keep in mind is that singletons are global, meaning that they're *not* managed or cached by any specific container. If we create two instances of the above container and resolve `myService` from both, we'll get the *same* instance from both.
 
 Then again, that's kind of the idea, isn't it?
 
-Just keep in mind with Factory you have other options. Only use singleton if it absolutely must be a singleton.
+Just keep in mind with Factory you have other options. Only use define a scope as singleton when there's an overriding need for there to be one *and only one* instance of an object.
 
 So what do we do if we need our object to be cached?
 

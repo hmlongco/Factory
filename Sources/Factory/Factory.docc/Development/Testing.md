@@ -4,15 +4,60 @@ Using Factory for Unit and UI Testing.
 
 ## Overview
 
-Factory has a few additional provisions added to make unit testing easier. Let's take a look.
+Factory has a quite a few additional enhancements added to make unit testing and user interface testing simpler and easier. Some, like <doc:Contexts> you may have already seen and used. Others, like pushing/popping container state, resetting, and so on, are discussed below.
+
+But before we look at those, it's important to first understand Xcode's test process and environment, and consider what that means when writing your own unit tests using Factory.
+
+## The Unit Test Environment
+
+When you run a unit test, Xcode is launching and running your app in order to provide a relevant context for your test code. 
+
+This means that application main ran, that the application delegate's `didFinishLaunchingWithOptions` function ran, and all the code needed to get to your first screen ran. When your app reaches a state where RunLoop.main starts idling and waiting for user input, *then* XCTest will start constructing test classes and running test cases.
+
+All of which means that a LOT of code has already run before your first test has even fired. 
+
+**Including dependency injection code.**
+
+So when writing unit tests we need to keep in mind what our initial runtime application environment looks like, what Factory registrations may have already have occurred, and in particular, if any of those registrations were scoped and cached. 
+
+This is specially true when dealing with *singletons*. But again, let's save that topic for a bit later.
+
+## Changing, Not Rebuilding
+
+So our environment exists, running and awaiting our first test. All of our original runtime dependency injection extensions and registrations are also out there, ready to be resolved and injected when needed. 
+
+And that's great. A cryptographic hashing dependency can be used in production and in test with no repercussions. We don't need to change a thing. And in fact, the more working code we can test in its shipping state, the better.
+
+That said, other services, like an analytics engine, may want to be swapped out during testing. Again, <doc:Contexts> can help with that.
+
+But we're here to test, and one thing that we probably *do* care about is the code is talks to our APIs and other services. Those are the classes and services that we're probably going to want to mock and reregister so we can test our view models and business logic against stable test data.
+
+Again, Factory makes that easy.
+
+```swift
+func testNoAccounts() async {
+    // register a mock
+    Container.shared.accountLoading.register { MockNoAccounts() }
+    // instantiate the model that uses the mock
+    let model = Container.shared.accountsViewModel()
+    // and test...
+    await model.load()
+    XCTAssertTrue(model.isLoaded)
+    XCTAssertTrue(model.isEmpty)
+}
+```
+
+Only if we're running a lot of tests like this then we're going to making a lot of changes to the dependency injection environment. And that's problematic. We need to make sure that a change made in one test doesn't affect a later test that relied on the *original* object that demonstrated a *different* behavior.
+
+Fortunately, Factory can help with that.
 
 ## Pushing and Popping State
 
 In your unit test setUp function you can *push* the current state of the registration system and then register and test anything you want.
 
-Then in the teardown you can *pop* the stack, eliminating all of your changes and restoring the container to its original state before the push.
+Then in teardown you can *pop* the stack, eliminating all of your changes and restoring the container to its original state before the push.
 
-This lets each set of tests start from the same state, irregardless of what the prior tests had changed.
+This lets each set of tests start from the same state, irregardless of what any prior test had changed.
 
 The following example assumes we're using the shared container.
 
@@ -30,21 +75,44 @@ final class FactoryCoreTests: XCTestCase {
         Container.shared.manager.pop()
     }
     
-    func testSomething() throws {
-        Container.shared.myServiceType.register(factory: { MockService() })
-        let model = Container.shared.someViewModel()
-        model.load()
+    func testNoAccounts() async {
+        Container.shared.accountLoading.register { MockNoAccounts() }
+        let model = Container.shared.accountsViewModel()
+        await model.load()
         XCTAssertTrue(model.isLoaded)
+        XCTAssertTrue(model.isEmpty)
     }
 
-    func testError() throws {
-        Container.shared.myServiceType.register(factory: { MockErrorService() })
-        let model = Container.shared.someViewModel()
-        model.load()
+    func testError() async {
+        Container.shared.accountLoading.register { MockAccountError(404) }
+        let model = Container.shared.accountsViewModel()
+        await model.load()
         XCTAssertTrue(model.isError)
     }
 }
 ```
+That's pretty much it. Our `AccountsViewModel` depended on an `AccountsLoading` service. 
+
+Change the service provided and we change the *data* provided. Change the *data* provided and we change our view model's behavior.
+
+And then we test the results to see if everything matches up with our expectations.
+
+Note that the above is just one way of doing things. If, for example, our `AccountLoader` service depended on a custom network layer, we could reach further down the stack.
+
+```swift
+func testNoAccounts() async throws {
+    let json = #"{ "accounts": [] }"#
+    Container.shared.networking.register { MockJSON(json) }
+    let model = Container.shared.accountsViewModel()
+    // as before
+}
+```
+We create the `AccountsViewModel`, the view model injects the `AccountLoading` service, and that service injects our mock network service.
+
+Factory makes reaching deep into a dependency tree simple and easy.
+
+And keep in mind that Factory can also help you see what's *inside* that dependency tree. See <doc:Debugging> for more information.
+
 ## Rebuilding The Container
 
 In your unit test setUp function you can also just create a new container and start over from scratch. No teardown needed.
@@ -58,40 +126,16 @@ final class FactoryCoreTests: XCTestCase {
         Container.shared.setupMocks()
     }
     
-    func testSomething() throws {
-        Container.shared.myServiceType.register(factory: { MockService() })
-        let model = Container.shared.someViewModel()
-        model.load()
-        XCTAssertTrue(model.isLoaded)
+    func testNoAccounts() throws {
+        ...
     }
 }
 ```
-
-## Singletons
-
-The Singleton scope cache is global, meaning that it's *not* managed by any specific container. 
-
-That being the case, neither the push/pull mechanism or the container rebuilding mechanisms described above will clear any cached singleton instances.
-
-Singletons are, after all, expected to be Singletons.
-
-You can reset *all* Singletons.
-
-```swift
-Scope.singleton.reset()
-```
-Or you can reset a specific singleton by reaching out to its factory.
-
-```swift
-// reset everything for that factory
-Container.shared.someSingletonFactory.reset()
-// reset just the scope cache
-Container.shared.someSingletonFactory.reset(options: .scope)
-```
+Note that this is pretty safe to do in the majority of cases. Your application has already launched, obtained what it needed, and is now idling.
 
 ## Passed Containers
 
-Or you can pass the container into the view model itself.
+You can also pass the container into the view model itself.
 
 ```swift
 final class FactoryCoreTests: XCTestCase {
@@ -112,6 +156,58 @@ final class FactoryCoreTests: XCTestCase {
     }
 }
 ```
+
+This does, of course, assume that you structured your app appropriately.
+
+## Common Setup
+
+As shown in the previous examples, if we have several mocks that we use all of the time in our previews or unit tests, we can also add a setup function to a given container to make this easier.
+
+```swift
+extension Container {
+    func setupMocks() {
+        myService.register { MockServiceN(4) }
+        sharedService.register { MockService2() }
+    }
+}
+```
+Then again, if we always want the same result whenever we're previewing any screen, we just set it up once in the autoRegister function using a `preview` context:
+
+```swift
+extension Container: AutoRegistering {
+    public func autoRegister() {
+        #if DEBUG
+        myService.onPreview { MockServiceN(4)MockServiceN(1) }
+        sharedService.onPreview { MockService2() }
+        #endif
+    }
+}
+```
+
+## Singletons
+
+Let's talk singletons. The singleton scope cache is global, meaning that it's *not* managed by any specific container. 
+
+That being the case, neither the push/pull mechanism or the container rebuilding mechanisms described above will clear any cached singleton instances.
+
+Singletons are, after all, expected to be singletons.
+
+So what to do about it? Well, if needed we can reset every cached singleton with just a single method call by calling reset on that particular scope.
+
+```swift
+Scope.singleton.reset()
+```
+Or you can reset a specific singleton by reaching out to its factory.
+
+```swift
+// reset everything for that factory
+Container.shared.someSingletonFactory.reset()
+// reset just the scope cache
+Container.shared.someSingletonFactory.reset(options: .scope)
+// or simply register a new instance
+Container.shared.someSingletonFactory.register { MyNewMock() }
+```
+As with "normal" code, singletons should only be used when there's an overriding need for their to be one and only one instance of an object.
 
 ## Xcode UI Testing
 
@@ -164,28 +260,3 @@ extension Container: AutoRegistering {
 There are many contexts for testing, previews, and even UITesting. See <doc:Contexts> for more.
 
 Obviously, one can add as many different test cases and registrations as needed.
-
-## Common Setup
-
-As shown above, if we have several mocks that we use all of the time in our previews or unit tests, we can also add a setup function to a given container to make this easier.
-
-```swift
-extension Container {
-    func setupMocks() {
-        myService.register { MockServiceN(4) }
-        sharedService.register { MockService2() }
-    }
-}
-```
-Then again, if we always want the same result whenever we're previewing any screen, we just set it up once in the autoRegister function using a `preview` context:
-
-```swift
-extension Container: AutoRegistering {
-    public func autoRegister() {
-        #if DEBUG
-        myService.onPreview { MockServiceN(4)MockServiceN(1) }
-        sharedService.onPreview { MockService2() }
-        #endif
-    }
-}
-```

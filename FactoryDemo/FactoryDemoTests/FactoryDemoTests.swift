@@ -7,6 +7,7 @@
 
 import XCTest
 import Factory
+
 @testable import FactoryDemo
 
 final class FactoryDemoTests: XCTestCase {
@@ -19,11 +20,18 @@ final class FactoryDemoTests: XCTestCase {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
 
-    func testExample() throws {
+    func testExample() async throws {
         let test1 = Container.shared.commonType()
         XCTAssertNotNil(test1)
         let test2 = Container.shared.promisedType()
         XCTAssertNotNil(test2)
+        
+        for _ in 0..<100 {
+            let name = "tests2Example3"
+            Container.shared.contextService.register { ContextService(name: name) }
+            XCTAssertEqual(Container.shared.contextService().name, name)
+            try await Task.sleep(nanoseconds: 1_000_000)
+        }
     }
 
 }
