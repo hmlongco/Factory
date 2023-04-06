@@ -27,6 +27,7 @@
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES"
+      systemAttachmentLifetime = "keepNever"
       codeCoverageEnabled = "YES">
       <Testables>
          <TestableReference
@@ -37,6 +38,17 @@
                BlueprintIdentifier = "4CC6791C2966749400FFBB6C"
                BuildableName = "FactoryDemoUITests.xctest"
                BlueprintName = "FactoryDemoUITests"
+               ReferencedContainer = "container:FactoryDemo.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "4CA5899529DE482D00FA7845"
+               BuildableName = "FactoryDemoTests.xctest"
+               BlueprintName = "FactoryDemoTests"
                ReferencedContainer = "container:FactoryDemo.xcodeproj">
             </BuildableReference>
          </TestableReference>
