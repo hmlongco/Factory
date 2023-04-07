@@ -60,8 +60,8 @@ extension FactoryContext {
     internal static var arguments: [String] = ProcessInfo.processInfo.arguments
     /// Proxy check for application running in preview mode.
     internal static var isPreview: Bool = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
-    /// Proxy check for application running in unit test mode.
-    internal static var isTest: Bool = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+    /// Proxy check for application running in test mode.
+    internal static var isTest: Bool = NSClassFromString("XCTest") != nil
     /// Proxy check for application running in simulator.
     internal static var isSimulator: Bool = ProcessInfo.processInfo.environment["SIMULATOR_UDID"] != nil
     #if DEBUG

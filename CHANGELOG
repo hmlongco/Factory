@@ -3,7 +3,8 @@
 ## 2.1.3
 
 * Fix singleton scope issue with SharedContainer across multiple container types. Issue - #92
-* Update to trace for better presentation of nil optionals
+* Fix unit test context to detect when run from command line. Issue - #94
+* Minor update to trace logging for better presentation of nil optionals
 
 ## 2.1.2
 
