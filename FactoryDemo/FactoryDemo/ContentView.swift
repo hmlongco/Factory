@@ -13,29 +13,46 @@ struct ContentView: View {
     @InjectedObject(\.contentViewModel) var model: ContentViewModel
 
     var body: some View {
-        VStack(spacing: 20) {
-            Text(model.text() + " for \(model.name)")
-            TextField("Name", text: $model.name)
-            NavigationLink("Link") {
-                ContentView()
-            }
-            Button("Mutate") {
-                model.name += "z"
-            }
-            Button("Trigger Circular Dependency Crash") {
-                Container.testCircularDependencies()
-            }
-            Button("Promised Crash") {
-                let _ = Container.shared.promisedSerice()
-            }
-            Text("Testing = \(isTest ? "Y" : "N")")
-            //ContainerDemoView()
-        }
-        .padding()
-    }
+        List {
+            Section("View Model Bindings") {
+                Text(model.text() + " for \(model.name)")
+                HStack {
+                    Text("Name")
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    TextField("Name", text: $model.name)
+                        .multilineTextAlignment(.trailing)
+                }
 
-    var isTest: Bool {
-        NSClassFromString("XCTest") != nil
+                Button("Mutate") {
+                    model.name += "z"
+                }
+            }
+
+            Section("Navigation") {
+                NavigationLink("Link") {
+                    ContentView()
+                }
+            }
+
+            Section("Crash Tests") {
+                Button("Trigger Circular Dependency Crash") {
+                    Container.testCircularDependencies()
+                }
+                Button("Promised Crash") {
+                    let _ = Container.shared.promisedService()
+                }
+            }
+
+            Section("Miscellaneous") {
+                HStack {
+                    Text("Testing")
+                    Spacer()
+                    Text(model.testing)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
     }
     
 }

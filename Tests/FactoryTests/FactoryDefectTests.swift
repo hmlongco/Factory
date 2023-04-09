@@ -145,6 +145,23 @@ final class FactoryDefectTests: XCTestCase {
         XCTAssertEqual(service2.value, 64)
     }
 
+    // AutoRegistration should have no effect on singletons
+    func testAutoRegistrationAndSingletonCache() throws {
+        let container1 = AutoRegisteringContainer()
+        let service1 = container1.singletonTest()
+        // should be auto registration value
+        XCTAssertEqual(service1.value, 32)
+        container1.singletonTest.register {
+            MockServiceN(64)
+        }
+        let service2 = container1.singletonTest()
+        // register should have cleared singleton scope cache so should be new value
+        XCTAssertEqual(service2.value, 64)
+        let container2 = AutoRegisteringContainer()
+        let service3 = container2.singletonTest()
+        // auto registration should have no effect on scope cache
+        XCTAssertEqual(service3.value, 64)
+    }
 
 }
 
@@ -179,8 +196,12 @@ fileprivate final class AutoRegisteringContainer: SharedContainer, AutoRegisteri
     var test: Factory<MyServiceType> {
         self { MockServiceN(16) }
     }
+    var singletonTest: Factory<MyServiceType> {
+        self { MockServiceN(16) }.singleton
+    }
     func autoRegister() {
         test.register { MockServiceN(32) }
+        singletonTest.register { MockServiceN(32) }
     }
     var manager = ContainerManager()
 }

@@ -92,6 +92,7 @@ let common2 = MyContainer.shared.commonService()
 ```
 
 ## Custom Containers
+
 In a large project you might want to segregate factories into additional, smaller containers. 
 
 Defining your own container class is simple. Just use the following as a template. 
@@ -188,21 +189,7 @@ Note that resetting registrations also resets the container's auto registration 
 
 ## Pushing and Popping State
 
-As with Factory 1.0, the state of a container's registrations and scope caches can be saved (pushed), and then restored (popped).
-```swift
-// Save the current state
-Container.shared.manager.push()
-
-// Make a change
-Container.shared.someService.register { MockService() }
-
-// Pop the change and restore the manager's state to what it was before the registration.
-Container.shared.manager.pop()
-
-// Gets the original or previously registered service.
-let service = Container.shared.someService()
-```
-This can be handy in an unit test environment. Keep in mind that push/pop uses a stack, so it's possible to push and pop as many times as are needed.
+As with Factory 1.0, the state of a container's registrations and scope caches can be saved (pushed), and then restored (popped). See <doc:Testing> for more information on this.
 
 ## Releasing a Container
 

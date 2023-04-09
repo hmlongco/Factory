@@ -192,8 +192,10 @@ public final class ContainerManager {
 
     /// Internal closure decorates all factory resolutions for this container.
     internal var decorator: ((Any) -> ())?
-    /// Flag indicating autoregistration check needs to be performed and executed if needed.
+    /// Flag indicating auto registration check needs to be performed and executed if needed.
     internal var autoRegistrationCheckNeeded = true
+    /// Flag indicating auto registration is in process.
+    internal var autoRegistering = false
     /// Updated registrations for Factory's.
     internal lazy var registrations: FactoryMap = .init(minimumCapacity: 32)
     /// Updated options for Factory's.

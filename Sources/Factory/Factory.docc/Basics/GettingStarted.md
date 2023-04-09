@@ -105,6 +105,8 @@ container.service.register {
 
 This new factory registration overrides the original factory closure and then asks the container to clear its associated scope. The next time this factory is resolved Factory will evaluate the new closure and return an instance of the newly registered object instead.
 
+*This includes singletons, with a few caveats. See the Singleton section in <doc:Testing>*
+
 ## Mocking and Testing
 
 If we go back and look at our original view model code one might wonder why we've gone to all of this trouble? Why not simply say `let myService = MyService()` and be done with it? 
@@ -150,7 +152,7 @@ And when the wrapper asks the factory for an instance of `MyServiceType` it now 
 
 This is a powerful concept that lets us reach deep into a chain of dependencies and alter the behavior of a system as needed.
 
-See <doc:Testing> for more information.
+We're just scratching the surface here. Read more in the section on <doc:Testing>.
 
 ## Contexts
 

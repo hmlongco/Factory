@@ -209,7 +209,7 @@ extension Container {
 }
 ```
 
-## Singletons
+## Testing Singletons
 
 Let's talk singletons. The singleton scope cache is global, meaning that it's *not* managed by any specific container. 
 
@@ -217,7 +217,7 @@ That being the case, neither the push/pull mechanism or the container rebuilding
 
 Singletons are, after all, expected to be singletons.
 
-So what to do about it? Well, if needed we can reset every cached singleton with just a single method call by calling reset on that particular scope.
+So what to do about it? Well, if needed we can reset *every* cached singleton with just a single method call. Just call reset on that particular scope.
 
 ```swift
 Scope.singleton.reset()
@@ -232,7 +232,11 @@ Container.shared.someSingletonFactory.reset(options: .scope)
 // or simply register a new instance
 Container.shared.someSingletonFactory.register { MyNewMock() }
 ```
-So we can deal with them. But as a general rule, singletons should be avoided and only be used when there's an overriding need for there to be one and only one instance of an object.
+On that last point. Doing a registration change on a factory usually clears it's associated scope automatically. The assumption, of course, being that if you register something you expect it to be used. 
+
+This also applies to singletons *unless you're inside of a autoRegister block.* AutoRegistration can happen on every container creation, and automatically clearing a registered singleton each and every time that occurs kind of defeats the idea of multiple containers on one hand and singletons on the other.
+
+So all that said, we can deal with them. But as a general rule, singletons can complicate your life, your code, and your tests, and as such they should be avoided and only be used when there's an overriding need for there to be one and only one instance of an object.
 
 Got that, Highlander?
 
@@ -252,7 +256,7 @@ import XCTest
 final class FactoryDemoUITests: XCTestCase {
     func testExample() throws {
         let app = XCUIApplication()
-        app.launchArguments.append("mock1")
+        app.launchArguments.append("mock1") // passed parameter
         app.launch()
 
         let welcome = app.staticTexts["Mock Number 1! for Michael"]

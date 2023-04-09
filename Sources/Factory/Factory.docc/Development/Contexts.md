@@ -57,7 +57,9 @@ if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
     container.analytics.register { MockAnalyticsEngine() }
 }
 ```
-Plus it's a lot easier to remember...
+Using onTest is much easier.
+
+*By the way, checking the environment for XCTestConfigurationFilePath doesn't work if your tests are launched from the command line using swift test. So much for StackOverflow.*
 
 ### • onPreview
 
@@ -148,10 +150,17 @@ myStyleSystem { StandardTheme() }
 
 As you may have noticed above in the `arg` example, chaining multiple contexts together work just as you'd expect and are specified using Factory's modifier syntax.
 
+Here's an example of specifying separate services depending on context.
 ```swift
 container.myServiceType
     .onPreview { MockService() }
     .onTest { UnitTestMockService() }
+```
+
+And here's an example saying we want the same dependency under multiple contexts.
+```swift
+container.myServiceType
+    .context(.simulator, .test) { MockService() }
 ```
 Which brings us to...
 

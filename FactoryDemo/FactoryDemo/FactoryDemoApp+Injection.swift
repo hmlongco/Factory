@@ -152,7 +152,7 @@ extension Container {
 }
 
 extension Container {
-    var promisedSerice: Factory<MyServiceType?> {
+    var promisedService: Factory<MyServiceType?> {
         promised()
     }
 }

@@ -49,7 +49,9 @@ public struct FactoryRegistration<P,T> {
     internal func unsafeCheckAutoRegistration() {
         if container.manager.autoRegistrationCheckNeeded {
             container.manager.autoRegistrationCheckNeeded = false
+            container.manager.autoRegistering = true
             (container as? AutoRegistering)?.autoRegister()
+            container.manager.autoRegistering = false
         }
     }
 
@@ -182,7 +184,10 @@ public struct FactoryRegistration<P,T> {
         let manager = container.manager
         if unsafeCanUpdateOptions() {
             manager.registrations[id] = TypedFactory(factory: factory)
-            manager.cache.removeValue(forKey: id)
+            if manager.autoRegistering == false {
+                let cache = (manager.options[id]?.scope as? InternalScopeCaching)?.cache ?? manager.cache
+                cache.removeValue(forKey: id)
+            }
         }
     }
 

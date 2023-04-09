@@ -136,14 +136,17 @@ extension FactoryModifying {
     ///
     /// See <doc:Contexts>
     @discardableResult
-    public func context(_ context: FactoryContext, factory: @escaping (P) -> T) -> Self {
-        switch context {
-        case .arg, .args, .device, .simulator:
-            registration.context(context, id: registration.id, factory: factory)
-        default:
-            #if DEBUG
-            registration.context(context, id: registration.id, factory: factory)
-            #endif
+    public func context(_ contexts: FactoryContext..., factory: @escaping (P) -> T) -> Self {
+        for context in contexts {
+            switch context {
+            case .arg, .args, .device, .simulator:
+                registration.context(context, id: registration.id, factory: factory)
+            default:
+                #if DEBUG
+                registration.context(context, id: registration.id, factory: factory)
+                #endif
+                break
+            }
         }
         return self
     }

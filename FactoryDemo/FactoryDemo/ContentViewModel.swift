@@ -28,6 +28,11 @@ class ContentViewModel: ObservableObject {
         return service.text()
     }
 
+    var testing: String {
+        let test = NSClassFromString("XCTest") != nil
+        return test ? "Yes" : "No"
+    }
+
     func testFactory() {
         let m1 = CycleDemo()
         print("CycleDemo - W/O ROOT \(m1.aService === m1.bService)")
@@ -39,6 +44,11 @@ class ContentViewModel: ObservableObject {
 
         let n1 = Container.shared.networkType()
         n1.test()
+
+        let processors = TaggedContainer.shared.resolve(tagged: .pipelineProcessor)
+        processors.forEach { p in
+            print(p.name)
+        }
     }
 
 }
