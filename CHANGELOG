@@ -4,7 +4,7 @@
 
 * Fix singleton scope issue with SharedContainer across multiple container types. Issue - #92
 * Fix unit test context to detect when run from command line. Issue - #94
-* Fix new registration on Factory also clears singleton cache.
+* Fix where new registration on Factory also clears singleton cache. Issue - #96
 * Minor update to trace logging for better presentation of nil optionals
 
 ## 2.1.2
