@@ -139,6 +139,30 @@ struct ContentView_Previews: PreviewProvider {
 }
 ```
 
+### Singleton scope
+When mocking something from the singleton scope there is one additional step that is required. Before registering your new 'mock' singleton you need to 'clear' it from Factory's registry. This is needed due to the nature of the singleton scope. Consider the following example:
+
+```swift
+extension Container {
+    var networkService: Factory<NetworkProviding> { 
+        self { NetworkProvider() }
+            .singleton
+    }
+}
+```
+
+```swift
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        Container.shared.networkService.reset()
+        Container.shared.networkService.register { MockService2() }
+
+        ContentView()
+    }
+}
+```
+
 Note the line in our preview code where we’re gone back to our container and registered a new closure on our factory. This function overrides the default factory closure.
 
 Now when our preview is displayed `ContentView` creates a `ContentViewModel` which in turn has a dependency on `myService` using the `Injected` property wrapper. And when the wrapper asks the factory for an instance of `MyServiceType` it now gets a `MockService2` instead of the `MyService` type originally defined.
