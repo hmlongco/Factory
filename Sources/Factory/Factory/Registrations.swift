@@ -29,18 +29,22 @@ import Foundation
 /// Shared registration type for Factory and ParameterFactory. Used internally to manage the registration and resolution process.
 public struct FactoryRegistration<P,T> {
 
-    /// Id used to manage registrations and cached values. Usually looks something like "MyApp.Container.service".
-    internal var id: String
+    /// Type string for id and circular dependency chain check
+    public let type: String
+    /// ID used to manage registrations and cached values. Usually looks something like "service<MyApp.MyService>".
+    public let id: String
     /// A strong reference to the container supporting this Factory.
-    internal var container: ManagedContainer
+    internal let container: ManagedContainer
     /// Typed factory with scope and factory.
-    internal var factory: (P) -> T
-    /// Once flag
+    internal let factory: (P) -> T
+
+    /// Mutable once flag
     internal var once: Bool = false
 
     /// Initializer for registration sets passed values and default scope from container manager.
-    internal init(id: String, container: ManagedContainer, factory: @escaping (P) -> T) {
-        self.id = id
+    internal init(key: String, container: ManagedContainer, factory: @escaping (P) -> T) {
+        self.type = String(reflecting: T.self) // expensive, only do once
+        self.id = "\(key)<\(type)>"
         self.container = container
         self.factory = factory
     }
@@ -79,7 +83,7 @@ public struct FactoryRegistration<P,T> {
 
         #if DEBUG
         if manager.dependencyChainTestMax > 0 {
-            circularDependencyChainCheck(for: String(reflecting: T.self), max: manager.dependencyChainTestMax)
+            circularDependencyChainCheck(max: manager.dependencyChainTestMax)
         }
 
         let traceLevel = globalTraceResolutions.count
@@ -181,11 +185,11 @@ public struct FactoryRegistration<P,T> {
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
         unsafeCheckAutoRegistration()
-        let manager = container.manager
         if unsafeCanUpdateOptions() {
+            let manager = container.manager
             manager.registrations[id] = TypedFactory(factory: factory)
-            if manager.autoRegistering == false {
-                let cache = (manager.options[id]?.scope as? InternalScopeCaching)?.cache ?? manager.cache
+            if manager.autoRegistering == false, let scope = manager.options[id]?.scope {
+                let cache = (scope as? InternalScopeCaching)?.cache ?? manager.cache
                 cache.removeValue(forKey: id)
             }
         }
@@ -285,8 +289,8 @@ public struct FactoryRegistration<P,T> {
     }
 
     #if DEBUG
-    internal func circularDependencyChainCheck(for typeName: String, max: Int) {
-        let typeComponents = typeName.components(separatedBy: CharacterSet(charactersIn: "<>"))
+    internal func circularDependencyChainCheck(max: Int) {
+        let typeComponents = type.components(separatedBy: CharacterSet(charactersIn: "<>"))
         let typeName = typeComponents.count > 1 ? typeComponents[1] : typeComponents[0]
         let typeIndex = globalDependencyChain.firstIndex(where: { $0 == typeName })
         globalDependencyChain.append(typeName)

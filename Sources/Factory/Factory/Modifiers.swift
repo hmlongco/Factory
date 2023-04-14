@@ -58,8 +58,9 @@ extension FactoryModifying {
     ///         .cached
     /// }
     /// ```
-    @inlinable public var cached: Self {
-        scope(.cached)
+    public var cached: Self {
+        registration.scope(.cached)
+        return self
     }
     /// Syntactic sugar defines this Factory's dependency scope to be graph. See ``Scope/Graph-swift.class``.
     /// ```swift
@@ -68,8 +69,9 @@ extension FactoryModifying {
     ///         .graph
     /// }
     /// ```
-    @inlinable public var graph: Self {
-        scope(.graph)
+    public var graph: Self {
+        registration.scope(.graph)
+        return self
     }
     /// Syntactic sugar defines this Factory's dependency scope to be shared. See ``Scope/Graph-swift.class``.
     /// ```swift
@@ -78,8 +80,9 @@ extension FactoryModifying {
     ///         .shared
     /// }
     /// ```
-    @inlinable public var shared: Self {
-        scope(.shared)
+    public var shared: Self {
+        registration.scope(.shared)
+        return self
     }
     /// Syntactic sugar defines this Factory's dependency scope to be singleton. See ``Scope/Singleton-swift.class``.
     /// ```swift
@@ -88,8 +91,9 @@ extension FactoryModifying {
     ///         .singleton
     /// }
     /// ```
-    @inlinable public var singleton: Self {
-        scope(.singleton)
+    public var singleton: Self {
+        registration.scope(.singleton)
+        return self
     }
     /// Syntactic sugar defines defines unique scope. See ``Scope``.
     /// ```swift
@@ -99,8 +103,9 @@ extension FactoryModifying {
     /// }
     /// ```
     /// While you can add the modifier, Factory's are unique by default.
-    @inlinable public var unique: Self {
-        scope(.unique)
+    public var unique: Self {
+        registration.scope(.unique)
+        return self
     }
 }
 

@@ -45,8 +45,13 @@ class ContentViewModel: ObservableObject {
         let n1 = Container.shared.networkType()
         n1.test()
 
-        let processors = TaggedContainer.shared.resolve(tagged: .pipelineProcessor)
+        let processors = Container.shared.processors()
         processors.forEach { p in
+            print(p.name)
+        }
+        TaggedContainer.shared.autoRegister()
+        let processors2 = TaggedContainer.shared.resolve(tagged: .pipelineProcessor)
+        processors2.forEach { p in
             print(p.name)
         }
     }
