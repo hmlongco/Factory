@@ -1,5 +1,10 @@
 # Factory Changelog
 
+## 2.1.4
+
+* Fix singletons in multiple modules keyed with same type and name. Issue - #99
+* Fix building on Linux. Issue - #100
+
 ## 2.1.3
 
 * Fix singleton scope issue with SharedContainer across multiple container types. Issue - #92
