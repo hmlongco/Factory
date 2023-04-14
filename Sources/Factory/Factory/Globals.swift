@@ -35,7 +35,7 @@ internal final class RecursiveLock {
     init() {
         mutexAttr = UnsafeMutablePointer<pthread_mutexattr_t>.allocate(capacity: 1)
         pthread_mutexattr_init(mutexAttr)
-        pthread_mutexattr_settype(mutexAttr, PTHREAD_MUTEX_RECURSIVE)
+        pthread_mutexattr_settype(mutexAttr, Int32(PTHREAD_MUTEX_RECURSIVE))
         mutex = UnsafeMutablePointer<pthread_mutex_t>.allocate(capacity: 1)
         pthread_mutex_init(mutex, mutexAttr)
     }
