@@ -94,7 +94,7 @@ Now the question is: Do we now have an instance of `NullAnalyticsEngine`, or `Mo
 
 As may be apparent from the section title, we actually have an instance of `MockAnalyticsEngine`. But why? Didn't we just change it?
 
-We did. But then we called `Container.shared.myService` again, which built a new Factory, which defined a scope, and which **defined** `onTest`.
+We did. But then we called `Container.shared.myService` again, which built a new Factory, which defined a scope, and which once more **defined** `onTest`.
 
 And so Factory went with it's most recent definition.
 
@@ -179,7 +179,7 @@ And then later, when we resolve our service.
 ```swift
 let myService = Container.shared.myService()
 ```
-Our Factory is constructed, but the internal singleton has already occurred once, so it's ignored. Similarly, the internal onTest has already occurred once, so it too is ignored.
+Our Factory is constructed, but the internal singleton modifier has already occurred once, so it's ignored, keeping the current value. Similarly, the internal onTest has already occurred once, so it too is ignored, again maintaining the current value.
 
 Which means that we get our `NullAnalyticsEngine`, just like we wanted.
 

@@ -83,12 +83,12 @@ That Factory, in turn, asks Swift to make ImplementsAB, but again, *that* object
 
 Let's turn on Factory's trace function and see what we get. (Trace was edited for clarity.)
 ```
-0: Container.cycleDemo = CycleDemo N:105553131389696
-1:     Container.aService = AServiceType N:105553119821680
-2:         Container.implementsAB = AServiceType & BServiceType N:105553119821680
-3:             Container.networkService = NetworkService N:105553119770688
-1:     Container.bService = BServiceType N:105553119821680
-2:         Container.implementsAB = AServiceType & BServiceType C:105553119821680
+0: Container.cycleDemo<CycleDemo> = N:105553131389696
+1:     Container.aService<AServiceType> = N:105553119821680
+2:         Container.implementsAB<AServiceType & BServiceType> = N:105553119821680
+3:             Container.networkService<NetworkService> = N:105553119770688
+1:     Container.bService<BServiceType> = N:105553119821680
+2:         Container.implementsAB<AServiceType & BServiceType> = C:105553119821680
 ```
 Again, cycleDemo wants an aService from implementsAB, which wants a networkService. That's created and returned, and now cycleDemo wants an bService from implementsAB. 
 
@@ -108,7 +108,7 @@ Until next time.
 
 You might be wondering why the Preferences object used by NetworkService didn't appear. That's because it's using a LazyInjected property wrapper, and as such the Preferences object won't be created until it's accessed for the first time.
 
-Kicking off it's own resolution cycle.
+Kicking off its own resolution cycle.
 
 ## The Missing Graph
 
@@ -118,12 +118,12 @@ let demo = CycleDemo()
 ```
 Here's the trace.
 ```
-0: Container.aService = AServiceType N:105553119775792
-1:     Container.implementsAB = AServiceType & BServiceType N:105553119775792
-2:         Container.networkService = NetworkService N:105553119821280
-0: Container.bService = BServiceType N:105553119821360
-1:     Container.implementsAB = AServiceType & BServiceType N:105553119821360
-2:         Container.networkService = NetworkService N:105553119821600
+0: Container.aService<AServiceType> = N:105553119775792
+1:     Container.implementsAB<AServiceType & BServiceType> = N:105553119775792
+2:         Container.networkService<NetworkService> = N:105553119821280
+0: Container.bService<BServiceType> = N:105553119821360
+1:     Container.implementsAB<AServiceType & BServiceType> = N:105553119821360
+2:         Container.networkService<NetworkService> = N:105553119821600
 ```
 Since we didn't ask Factory to make CycleDemo for us we're not going to see it on the trace. But what we do see are **two** instances of networkService being resolved and two distinct instances of implementsAB. What gives?
 
@@ -144,14 +144,14 @@ Since a graph scope only caches object for the length of a single resolution cyc
 
 Swap out implementsAB's graph scope for, say, singleton, and you'd see the following:
 ```
-0: Container.aService = AServiceType N:105553118258000
-1:     Container.implementsAB = AServiceType & BServiceType N:105553118258000
-2:         Container.networkService = NetworkService N:105553118258480
-0: Container.bService = BServiceType N:105553118258000
-1:     Container.implementsAB = AServiceType & BServiceType C:105553118258000
+0: Container.aService<AServiceType> = N:105553118258000
+1:     Container.implementsAB<AServiceType & BServiceType> = N:105553118258000
+2:         Container.networkService<NetworkService> = N:105553118258480
+0: Container.bService<BServiceType> = N:105553118258000
+1:     Container.implementsAB<AServiceType & BServiceType> = C:105553118258000
 ```
 Which is what we'd expect.  (Note that now aService and bService are the same instance.)
 
 Our initial example worked because we asked Factory to make CycleDemo for us, and so everything after the fact occurred within a single resolution cycle launched from a single Factory.
 
-Graph scopes are powerful tools, but tricky to get right. Use them with caution.
+Graph scopes are powerful tools, and well-suited to a specific type of problem. That said, they're also tricky to get right. Use them with caution.

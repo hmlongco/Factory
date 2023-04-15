@@ -45,7 +45,8 @@ Ready to get started?
 - <doc:Cycle>
 - <doc:Optionals>
 - <doc:Functional>
+- <doc:Tags>
 
-### Addtional Topics
+### Additional Topics
 
 - <doc:Migration>

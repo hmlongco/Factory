@@ -49,11 +49,6 @@ class ContentViewModel: ObservableObject {
         processors.forEach { p in
             print(p.name)
         }
-        TaggedContainer.shared.autoRegister()
-        let processors2 = TaggedContainer.shared.resolve(tagged: .pipelineProcessor)
-        processors2.forEach { p in
-            print(p.name)
-        }
     }
 
 }
