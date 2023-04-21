@@ -385,6 +385,20 @@ final class FactoryScopeTests: XCTestCase {
         container1.manager.trace.toggle()
     }
 
+    func testSingletonScopeTimeToLive() throws {
+        let service1 = Container.shared.singletonService()
+        let service2 = Container.shared.singletonService()
+        XCTAssertTrue(service1.id == service2.id)
+        Container.shared.singletonService.timeToLive(-60)
+        let service3 = Container.shared.singletonService()
+        // should fail ttl test and return new instance
+        XCTAssertTrue(service2.id != service3.id)
+        Container.shared.singletonService.timeToLive(60)
+        let service4 = Container.shared.singletonService()
+        // should passs ttl test and return old instance
+        XCTAssertTrue(service3.id == service4.id)
+    }
+
 }
 
 extension SharedContainer {

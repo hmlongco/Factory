@@ -205,9 +205,29 @@ Scope is managed by the container.
 
 See the "Releasing a Container" discussion in <doc:Containers> for more information.
 
+## TimeToLive
+
+Factory provides a "time to live" option for scoped dependencies. 
+
+```swift
+extension Container {
+    var authenticatedUser: Factory<AuthenticatedUser> { 
+        self { AuthenticatedUser() }
+            .scope(.session)
+            .timeToLive(60 * 20) // (60 seconds * 20) = 20 minutes
+    }
+}
+```
+
+As shown above, set a time to live for 20 minutes and any new request for that dependency that occurs *after* that period will discard the previously cached item, caching and returning a new instance instead.
+
+Requesting a cached item before the timeout period ends returns the currently cached item and effectively restarts the clock for that item.
+
+Like registrations, setting a time to live on a dependency only affects the *next* resolution for that item. Anything already resolved and referenced stays resolved and referenced.
+
 ## Reset
 
-As shown above, individual scope caches on a container can be reset (cleared) if needed.
+As mentioned earlier in the discussion on custom scopes, individual scope caches on a container can be reset (cleared) if needed.
 ```swift
 // clear the default cached scope
 Container.shared.manager.reset(scope: .cached)

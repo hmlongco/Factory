@@ -78,6 +78,7 @@ public struct FactoryRegistration<P,T> {
         let manager = container.manager
         let options = manager.options[id]
         let scope = options?.scope ?? manager.defaultScope
+        let ttl = options?.ttl
 
         var factory: (P) -> T = factoryForCurrentContext(using: options)
 
@@ -99,7 +100,7 @@ public struct FactoryRegistration<P,T> {
         #endif
 
         globalGraphResolutionDepth += 1
-        let instance = scope?.resolve(using: manager.cache, id: id, factory: { factory(parameters) }) ?? factory(parameters)
+        let instance = scope?.resolve(using: manager.cache, id: id, ttl: ttl, factory: { factory(parameters) }) ?? factory(parameters)
         globalGraphResolutionDepth -= 1
 
         if globalGraphResolutionDepth == 0 {
@@ -328,6 +329,8 @@ public enum FactoryResetOptions {
 internal struct FactoryOptions {
     /// Managed scope for this factory instance
     var scope: Scope?
+    /// Time to live option for scopes
+    var ttl: TimeInterval?
     /// Contexts
     var argumentContexts: [String:AnyFactory]?
     /// Contexts

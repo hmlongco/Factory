@@ -53,31 +53,39 @@ public class Scope {
     fileprivate init() {}
 
     /// Internal function returns cached value if it exists. Otherwise it creates a new instance and caches that value for later reference.
-    internal func resolve<T>(using cache: Cache, id: String, factory: () -> T) -> T {
-        if let cached: T = unboxed(box: cache.value(forKey: id)) {
-            return cached
+    internal func resolve<T>(using cache: Cache, id: String, ttl: TimeInterval?, factory: () -> T) -> T {
+        if let box = cache.value(forKey: id), let cached: T = unboxed(box: box) {
+            if let ttl = ttl {
+                let now = CFAbsoluteTimeGetCurrent()
+                if (box.timestamp + ttl) > now {
+                    cache.set(timestamp: now, forKey: id)
+                    return cached
+                }
+            } else {
+                return cached
+            }
         }
         let instance = factory()
         if let box = box(instance) {
-            cache.set(value: box, forKey: id)
+             cache.set(value: box, forKey: id)
         }
         return instance
     }
 
     /// Internal function returns unboxed value if it exists
     fileprivate func unboxed<T>(box: AnyBox?) -> T? {
-        if let box = box as? StrongBox<T> {
-            return box.boxed
-        }
-        return nil
+        (box as? StrongBox<T>)?.boxed
     }
 
     /// Internal function correctly boxes value depending upon scope type
     fileprivate func box<T>(_ instance: T) -> AnyBox? {
         if let optional = instance as? OptionalProtocol {
-            return optional.hasWrappedValue ? StrongBox<T>(scopeID: scopeID, boxed: instance) : nil
+            if optional.hasWrappedValue {
+                return StrongBox<T>(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: instance)
+            }
+            return nil
         }
-        return StrongBox<T>(scopeID: scopeID, boxed: instance)
+        return StrongBox<T>(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: instance)
     }
 
     internal let scopeID: UUID = UUID()
@@ -106,9 +114,9 @@ extension Scope {
         public override init() {
             super.init()
         }
-        internal override func resolve<T>(using cache: Cache, id: String, factory: () -> T) -> T {
+        internal override func resolve<T>(using cache: Cache, id: String, ttl: TimeInterval?, factory: () -> T) -> T {
             // ignore container's cache in favor of our own
-            return super.resolve(using: self.cache, id: id, factory: factory)
+            return super.resolve(using: self.cache, id: id, ttl: ttl, factory: factory)
         }
         /// Private shared cache
         internal var cache = Cache()
@@ -138,10 +146,10 @@ extension Scope {
         fileprivate override func box<T>(_ instance: T) -> AnyBox? {
             if let optional = instance as? OptionalProtocol {
                 if let unwrapped = optional.wrappedValue, type(of: unwrapped) is AnyObject.Type {
-                    return WeakBox(scopeID: scopeID, boxed: unwrapped as AnyObject)
+                    return WeakBox(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: unwrapped as AnyObject)
                 }
             } else if type(of: instance as Any) is AnyObject.Type {
-                return WeakBox(scopeID: scopeID, boxed: instance as AnyObject)
+                return WeakBox(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: instance as AnyObject)
             }
             return nil
         }
@@ -154,9 +162,9 @@ extension Scope {
         public override init() {
             super.init()
         }
-        internal override func resolve<T>(using cache: Cache, id: String, factory: () -> T) -> T {
+        internal override func resolve<T>(using cache: Cache, id: String, ttl: TimeInterval?, factory: () -> T) -> T {
             // ignore container's cache in favor of our own
-            return super.resolve(using: self.cache, id: id, factory: factory)
+            return super.resolve(using: self.cache, id: id, ttl: ttl, factory: factory)
         }
         /// Private shared cache
         internal var cache = Cache()
@@ -177,7 +185,7 @@ extension Scope {
         public override init() {
             super.init()
         }
-        internal override func resolve<T>(using cache: Cache, id: String, factory: () -> T) -> T {
+        internal override func resolve<T>(using cache: Cache, id: String, ttl: TimeInterval?, factory: () -> T) -> T {
             factory()
         }
     }
@@ -196,6 +204,9 @@ extension Scope {
         }
         @inlinable func set(value: AnyBox, forKey key: String)  {
             cache[key] = value
+        }
+        @inlinable func set(timestamp: Double, forKey key: String)  {
+            cache[key]?.timestamp = timestamp
         }
         @inlinable func removeValue(forKey key: String) {
             cache.removeValue(forKey: key)
@@ -245,16 +256,19 @@ extension Optional: OptionalProtocol {
 /// Internal box protocol for scope functionality
 internal protocol AnyBox {
     var scopeID: UUID { get }
+    var timestamp: Double { get set }
 }
 
 /// Strong box for strong references to a type
 internal struct StrongBox<T>: AnyBox {
     let scopeID: UUID
+    var timestamp: Double
     let boxed: T
 }
 
 /// Weak box for shared scope
 internal struct WeakBox: AnyBox {
     let scopeID: UUID
+    var timestamp: Double
     weak var boxed: AnyObject?
 }

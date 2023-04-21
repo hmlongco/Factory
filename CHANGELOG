@@ -1,5 +1,9 @@
 # Factory Changelog
 
+## 2.1.5
+
+* Adds TimeToLive to scoped instances.
+
 ## 2.1.4
 
 * Fix singletons in multiple modules keyed with same type and name. Issue - #99

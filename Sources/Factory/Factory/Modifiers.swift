@@ -107,6 +107,16 @@ extension FactoryModifying {
         registration.scope(.unique)
         return self
     }
+
+    /// Adds time to live option for scopes. If the dependency has been cached for longer than the timeToLive period the
+    /// cached item will be discarded and a new instance created.
+    @discardableResult
+    public func timeToLive(_ seconds: TimeInterval) -> Self {
+        registration.options { options in
+            options.ttl = seconds
+        }
+        return self
+    }
 }
 
 // FactoryModifying Decorator Functionality
