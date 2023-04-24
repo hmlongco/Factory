@@ -33,17 +33,17 @@ internal var globalRecursiveLock = RecursiveLock()
 
 internal final class RecursiveLock {
     init() {
-        mutexAttr = UnsafeMutablePointer<pthread_mutexattr_t>.allocate(capacity: 1)
+        let mutexAttr = UnsafeMutablePointer<pthread_mutexattr_t>.allocate(capacity: 1)
         pthread_mutexattr_init(mutexAttr)
         pthread_mutexattr_settype(mutexAttr, Int32(PTHREAD_MUTEX_RECURSIVE))
         mutex = UnsafeMutablePointer<pthread_mutex_t>.allocate(capacity: 1)
         pthread_mutex_init(mutex, mutexAttr)
+        pthread_mutexattr_destroy(mutexAttr)
+        mutexAttr.deallocate()
     }
     deinit {
         pthread_mutex_destroy(mutex)
         mutex.deallocate()
-        pthread_mutexattr_destroy(mutexAttr)
-        mutexAttr.deallocate()
     }
     @inlinable func lock() {
         pthread_mutex_lock(mutex)
@@ -52,7 +52,6 @@ internal final class RecursiveLock {
         pthread_mutex_unlock(mutex)
     }
     private var mutex: UnsafeMutablePointer<pthread_mutex_t>
-    private var mutexAttr: UnsafeMutablePointer<pthread_mutexattr_t>
 }
 
 // MARK: - Internal Variables
