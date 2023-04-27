@@ -80,7 +80,15 @@ public struct FactoryRegistration<P,T> {
         let scope = options?.scope ?? manager.defaultScope
         let ttl = options?.ttl
 
-        var factory: (P) -> T = factoryForCurrentContext(using: options)
+        var current: (P) -> T
+
+        if let found = options?.factoryForCurrentContext() as? TypedFactory<P,T> {
+            current = found.factory
+        } else if let found = manager.registrations[id] as? TypedFactory<P,T> {
+            current = found.factory
+        } else {
+            current = factory
+        }
 
         #if DEBUG
         if manager.dependencyChainTestMax > 0 {
@@ -88,10 +96,10 @@ public struct FactoryRegistration<P,T> {
         }
 
         let traceLevel = globalTraceResolutions.count
-        var traceNew = "C"
+        var traceNew: String?
         if manager.trace {
-            let wrapped = factory
-            factory = {
+            let wrapped = current
+            current = {
                 traceNew = "N" // detects if new instance created
                 return wrapped($0)
             }
@@ -100,7 +108,7 @@ public struct FactoryRegistration<P,T> {
         #endif
 
         globalGraphResolutionDepth += 1
-        let instance = scope?.resolve(using: manager.cache, id: id, ttl: ttl, factory: { factory(parameters) }) ?? factory(parameters)
+        let instance = scope?.resolve(using: manager.cache, id: id, ttl: ttl, factory: { current(parameters) }) ?? current(parameters)
         globalGraphResolutionDepth -= 1
 
         if globalGraphResolutionDepth == 0 {
@@ -118,7 +126,7 @@ public struct FactoryRegistration<P,T> {
         if manager.trace {
             let indent = String(repeating: "    ", count: globalGraphResolutionDepth)
             let address = (((instance as? OptionalProtocol)?.hasWrappedValue ?? true)) ? Int(bitPattern: ObjectIdentifier(instance as AnyObject)) : 0
-            let resolution = address == 0 ? "nil" : "\(traceNew):\(address)"
+            let resolution = address == 0 ? "nil" : "\(traceNew ?? "C"):\(address)"
             globalTraceResolutions[traceLevel] = "\(globalGraphResolutionDepth): \(indent)\(container).\(id) = \(resolution)"
             if globalGraphResolutionDepth == 0 {
                 globalTraceResolutions.forEach { globalLogger($0) }
@@ -133,48 +141,6 @@ public struct FactoryRegistration<P,T> {
         manager.decorator?(instance)
 
         return instance
-    }
-
-    func factoryForCurrentContext(using options: FactoryOptions?) -> (P) -> T {
-        if let options = options {
-            if let contexts = options.argumentContexts, !contexts.isEmpty {
-                for arg in FactoryContext.arguments {
-                    if let found = contexts[arg] as? TypedFactory<P,T> {
-                        return found.factory
-                    }
-                }
-                for (_, arg) in FactoryContext.runtimeArguments {
-                    if let found = contexts[arg] as? TypedFactory<P,T> {
-                        return found.factory
-                    }
-                }
-            }
-            if let contexts = options.contexts, !contexts.isEmpty {
-                #if DEBUG
-                if FactoryContext.isPreview, let found = contexts["preview"] as? TypedFactory<P,T> {
-                    return found.factory
-                }
-                if FactoryContext.isTest, let found = contexts["test"] as? TypedFactory<P,T> {
-                    return found.factory
-                }
-                #endif
-                if FactoryContext.isSimulator, let found = contexts["simulator"] as? TypedFactory<P,T> {
-                    return found.factory
-                }
-                if !FactoryContext.isSimulator, let found = contexts["device"] as? TypedFactory<P,T> {
-                    return found.factory
-                }
-                #if DEBUG
-                if let found = contexts["debug"] as? TypedFactory<P,T> {
-                    return found.factory
-                }
-                #endif
-            }
-        }
-        if let found = container.manager.registrations[id] as? TypedFactory<P,T> {
-            return found.factory
-        }
-        return factory
     }
 
     /// Registers a new factory closure capable of producing an object or service of the desired type. This factory overrides the original factory and
@@ -339,6 +305,47 @@ internal struct FactoryOptions {
     var decorator: Any?
     /// Once flag for options
     var once: Bool = false
+}
+
+extension FactoryOptions {
+    /// Internal function to return factory based on current context
+    func factoryForCurrentContext() -> AnyFactory?  {
+        if let contexts = argumentContexts, !contexts.isEmpty {
+            for arg in FactoryContext.arguments {
+                if let found = contexts[arg] {
+                    return found
+                }
+            }
+            for (_, arg) in FactoryContext.runtimeArguments {
+                if let found = contexts[arg] {
+                    return found
+                }
+            }
+        }
+        if let contexts = contexts, !contexts.isEmpty {
+            #if DEBUG
+            if FactoryContext.isPreview, let found = contexts["preview"] {
+                return found
+            }
+            if FactoryContext.isTest, let found = contexts["test"] {
+                return found
+            }
+            #endif
+            if FactoryContext.isSimulator, let found = contexts["simulator"] {
+                return found
+            }
+            if !FactoryContext.isSimulator, let found = contexts["device"] {
+                return found
+            }
+            #if DEBUG
+            if let found = contexts["debug"] {
+                return found
+            }
+            #endif
+        }
+        return nil
+    }
+
 }
 
 // Internal Factory type
