@@ -218,7 +218,7 @@ public struct FactoryRegistration<P,T> {
         globalRecursiveLock.lock()
         unsafeCheckAutoRegistration()
         let manager = container.manager
-        var options = manager.options[id] ?? FactoryOptions(scope: manager.defaultScope)
+        var options = manager.options[id] ?? FactoryOptions()
         if options.once == once {
             mutate(&options)
             manager.options[id] = options
