@@ -170,12 +170,9 @@ public struct FactoryRegistration<P,T> {
     }
 
     private func getFactory(argumentContexts: [String : AnyFactory]) -> ((P) -> T)? {
-        for arg in FactoryContext.arguments {
-            if let found = argumentContexts[arg] as? TypedFactory<P,T> {
-                return found.factory
-            }
-        }
-        for (_, arg) in FactoryContext.runtimeArguments {
+        let arguments = FactoryContext.arguments + FactoryContext.runtimeArguments.values
+
+        for arg in arguments {
             if let found = argumentContexts[arg] as? TypedFactory<P,T> {
                 return found.factory
             }
