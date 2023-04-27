@@ -69,7 +69,7 @@ public struct FactoryRegistration<P,T> {
     ///
     /// - Parameter factory: Factory wanting resolution.
     /// - Returns: Instance of the desired type.
-    internal func resolve(with parameters: P) -> T {
+    internal func resolve(with parameters: P, resolveContext: FactoryContext? = nil) -> T {
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
 
@@ -82,7 +82,7 @@ public struct FactoryRegistration<P,T> {
 
         var current: (P) -> T
 
-        if let found = options?.factoryForCurrentContext() as? TypedFactory<P,T> {
+        if let found = options?.factoryForCurrentContext(resolveContext: resolveContext) as? TypedFactory<P,T> {
             current = found.factory
         } else if let found = manager.registrations[id] as? TypedFactory<P,T> {
             current = found.factory
@@ -309,32 +309,44 @@ internal struct FactoryOptions {
 
 extension FactoryOptions {
     /// Internal function to return factory based on current context
-    func factoryForCurrentContext() -> AnyFactory?  {
+    func factoryForCurrentContext(resolveContext: FactoryContext?) -> AnyFactory?  {
         if let contexts = argumentContexts, !contexts.isEmpty {
-            for arg in FactoryContext.arguments {
-                if let found = contexts[arg] {
-                    return found
-                }
-            }
-            for (_, arg) in FactoryContext.runtimeArguments {
+            let arguments = resolveContext?.arguments ?? FactoryContext.arguments + FactoryContext.runtimeArguments.values
+
+            for arg in arguments {
                 if let found = contexts[arg] {
                     return found
                 }
             }
         }
+
         if let contexts = contexts, !contexts.isEmpty {
+            let isPreview: Bool
+            let isTest: Bool
+            let isSimulator: Bool
+
+            if let resolveContext {
+                isPreview = resolveContext.isPreview || FactoryContext.isPreview
+                isTest = resolveContext.isTest || FactoryContext.isTest
+                isSimulator = resolveContext.simulator || !resolveContext.device || FactoryContext.isSimulator
+            } else {
+                isPreview = FactoryContext.isPreview
+                isTest = FactoryContext.isTest
+                isSimulator = FactoryContext.isSimulator
+            }
+
             #if DEBUG
-            if FactoryContext.isPreview, let found = contexts["preview"] {
+            if isPreview, let found = contexts["preview"] {
                 return found
             }
-            if FactoryContext.isTest, let found = contexts["test"] {
+            if isTest, let found = contexts["test"] {
                 return found
             }
             #endif
-            if FactoryContext.isSimulator, let found = contexts["simulator"] {
+            if isSimulator, let found = contexts["simulator"] {
                 return found
             }
-            if !FactoryContext.isSimulator, let found = contexts["device"] {
+            if !isSimulator, let found = contexts["device"] {
                 return found
             }
             #if DEBUG

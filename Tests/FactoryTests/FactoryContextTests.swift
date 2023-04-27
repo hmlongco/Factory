@@ -291,6 +291,20 @@ final class FactoryContextTests: XCTestCase {
         XCTAssertEqual(service2.name, "CHANGED")
     }
 
+    func testResolveInContext() {
+        XCTAssertEqual(Container.shared.foo.resolve(), "no arg")
+        XCTAssertEqual(Container.shared.foo.resolve(in: .arg("with arg")), "with arg")
+        XCTAssertEqual(Container.shared.foo.resolve(in: .args(["with arg"])), "with arg")
+        XCTAssertEqual(Container.shared.foo.resolve(in: .preview), "preview")
+        XCTAssertEqual(Container.shared.foo.resolve(), "no arg")
+
+        // set stuff that is set based on the build context
+        Container.shared.foo.onTest { "test"}
+        Container.shared.foo.onDevice { "device"}
+
+        XCTAssertEqual(Container.shared.foo.resolve(), "test")
+    }
+
 }
 
 struct ContextService {
@@ -298,6 +312,12 @@ struct ContextService {
 }
 
 extension Container {
+    fileprivate var foo: Factory<String> {
+        self { "no arg" }
+            .onArg("with arg") { "with arg"}
+            .onPreview { "preview" }
+    }
+
     fileprivate var externalContextService: Factory<ContextService> {
         self { ContextService(name: "FACTORY") }
     }

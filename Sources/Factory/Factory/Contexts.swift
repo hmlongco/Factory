@@ -42,6 +42,45 @@ public enum FactoryContext: Equatable {
     case simulator
     /// Context used when application is running on an actual device.
     case device
+
+    var arguments: [String]? {
+        switch self {
+            case .arg(let arg): return [arg]
+            case .args(let args): return args
+            default: return nil
+        }
+    }
+
+    var isPreview: Bool {
+        switch self {
+            case .preview: return true
+            default: return false
+        }
+    }
+    var isTest: Bool {
+        switch self {
+            case .test: return true
+            default: return false
+        }
+    }
+    var debug: Bool {
+        switch self {
+            case .debug: return true
+            default: return false
+        }
+    }
+    var simulator: Bool {
+        switch self {
+            case .simulator: return true
+            default: return false
+        }
+    }
+    var device: Bool {
+        switch self {
+            case .device: return true
+            default: return false
+        }
+    }
 }
 
 extension FactoryContext {

@@ -110,6 +110,10 @@ public struct Factory<T>: FactoryModifying {
         registration.resolve(with: ())
     }
 
+    public func resolve(in context: FactoryContext) -> T {
+        registration.resolve(with: (), resolveContext: context)
+    }
+
     /// Registers a new factory closure capable of producing an object or service of the desired type.
     ///
     /// This factory overrides the original factory closure and clears the associated scope so that the next time this factory is resolved
