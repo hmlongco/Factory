@@ -134,46 +134,76 @@ public struct FactoryRegistration<P,T> {
         return instance
     }
 
+    /// The lookup of a factory is done using the options provided
+    /// - Parameters:
+    ///   - options: options how the factory was constructions
+    /// - Returns: a factory taking into account the  options, if none are found the declared factory is used or
+    /// an updated registration that came after declaration including any updates to registrations
     func factoryForCurrentContext(using options: FactoryOptions?) -> (P) -> T {
-        if let options = options {
-            if let contexts = options.argumentContexts, !contexts.isEmpty {
-                for arg in FactoryContext.arguments {
-                    if let found = contexts[arg] as? TypedFactory<P,T> {
-                        return found.factory
-                    }
-                }
-                for (_, arg) in FactoryContext.runtimeArguments {
-                    if let found = contexts[arg] as? TypedFactory<P,T> {
-                        return found.factory
-                    }
-                }
-            }
-            if let contexts = options.contexts, !contexts.isEmpty {
-                #if DEBUG
-                if FactoryContext.isPreview, let found = contexts["preview"] as? TypedFactory<P,T> {
-                    return found.factory
-                }
-                if FactoryContext.isTest, let found = contexts["test"] as? TypedFactory<P,T> {
-                    return found.factory
-                }
-                #endif
-                if FactoryContext.isSimulator, let found = contexts["simulator"] as? TypedFactory<P,T> {
-                    return found.factory
-                }
-                if !FactoryContext.isSimulator, let found = contexts["device"] as? TypedFactory<P,T> {
-                    return found.factory
-                }
-                #if DEBUG
-                if let found = contexts["debug"] as? TypedFactory<P,T> {
-                    return found.factory
-                }
-                #endif
+        guard let options = options, let resultFromOptions = dealWith(options: options) else {
+            return getFactoryWithoutOptions()
+        }
+        return resultFromOptions
+    }
+
+    /// A factory without options
+    /// - Returns: the factory from the declaration or the updated version that came after declaration
+    private func getFactoryWithoutOptions() -> (P) -> T{
+        guard let found = container.manager.registrations[id] as? TypedFactory<P,T> else {
+            return factory
+        }
+        return found.factory
+    }
+
+    private func dealWith(options: FactoryOptions) -> ((P) -> T)? {
+        if let contexts = options.argumentContexts, !contexts.isEmpty,
+           let result = getFactory(argumentContexts: contexts) {
+            return result
+        }
+
+        if let contexts = options.contexts, !contexts.isEmpty,
+           let result = getFactory(buildContext: contexts) {
+            return result
+        }
+
+        return nil
+    }
+
+    private func getFactory(argumentContexts: [String : AnyFactory]) -> ((P) -> T)? {
+        for arg in FactoryContext.arguments {
+            if let found = argumentContexts[arg] as? TypedFactory<P,T> {
+                return found.factory
             }
         }
-        if let found = container.manager.registrations[id] as? TypedFactory<P,T> {
+        for (_, arg) in FactoryContext.runtimeArguments {
+            if let found = argumentContexts[arg] as? TypedFactory<P,T> {
+                return found.factory
+            }
+        }
+        return nil
+    }
+
+    private func getFactory(buildContext: [String : AnyFactory]) -> ((P) -> T)? {
+        #if DEBUG
+        if FactoryContext.isPreview, let found = buildContext["preview"] as? TypedFactory<P,T> {
             return found.factory
         }
-        return factory
+        if FactoryContext.isTest, let found = buildContext["test"] as? TypedFactory<P,T> {
+            return found.factory
+        }
+        #endif
+        if FactoryContext.isSimulator, let found = buildContext["simulator"] as? TypedFactory<P,T> {
+            return found.factory
+        }
+        if !FactoryContext.isSimulator, let found = buildContext["device"] as? TypedFactory<P,T> {
+            return found.factory
+        }
+        #if DEBUG
+        if let found = buildContext["debug"] as? TypedFactory<P,T> {
+            return found.factory
+        }
+        #endif
+        return nil
     }
 
     /// Registers a new factory closure capable of producing an object or service of the desired type. This factory overrides the original factory and
