@@ -73,7 +73,7 @@ extension FactoryModifying {
         registration.scope(.graph)
         return self
     }
-    /// Syntactic sugar defines this Factory's dependency scope to be shared. See ``Scope/Graph-swift.class``.
+    /// Syntactic sugar defines this Factory's dependency scope to be shared. See ``Scope/Shared-swift.class``.
     /// ```swift
     /// var service: Factory<ServiceType> {
     ///     self { MyService() }
