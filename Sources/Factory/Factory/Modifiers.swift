@@ -151,7 +151,7 @@ extension FactoryModifying {
     ///
     /// See <doc:Contexts>
     @discardableResult
-    public func context(_ contexts: FactoryContext..., factory: @escaping (P) -> T) -> Self {
+    public func context(_ contexts: FactoryContextType..., factory: @escaping (P) -> T) -> Self {
         for context in contexts {
             switch context {
             case .arg, .args, .device, .simulator:

@@ -39,7 +39,10 @@ extension Container: AutoRegistering {
             MockServiceN(2)
         }
 
-        #if DEBUG
+        // Demonstrates resolving a type
+        register { SimpleService() }
+
+       #if DEBUG
         // Demonstrate preview registration override
         myServiceType.onPreview {
             MockServiceN(66)
@@ -53,6 +56,7 @@ extension Container: AutoRegistering {
 
 }
 
+extension Container: Resolving {}
 
 private class PromisedCommonType: CommonType {
     public init() {}

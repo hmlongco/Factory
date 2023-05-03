@@ -27,7 +27,7 @@
 import Foundation
 
 /// Context types available for special purpose factory registrations.
-public enum FactoryContext: Equatable {
+public enum FactoryContextType: Equatable {
     /// Context used when application is launched with a particular argument.
     case arg(String)
     /// Context used when application is launched with a particular argument or arguments.
@@ -44,33 +44,36 @@ public enum FactoryContext: Equatable {
     case device
 }
 
-extension FactoryContext {
-    /// Add argument to global context.
-    public static func setArg(_ arg: String, forKey key: String) {
-        runtimeArguments[key] = arg
-    }
-    /// Add argument to global context.
-    public static func removeArg(forKey key: String) {
-        runtimeArguments.removeValue(forKey: key)
-    }
+struct FactoryContext {
+    /// Global current context.
+    public static var current = FactoryContext()
+    /// Proxy for application arguments.
+    public var arguments: [String] = ProcessInfo.processInfo.arguments
+    /// Runtime arguments
+    public var runtimeArguments: [String:String] = [:]
+    /// Proxy check for application running in preview mode.
+    public var isPreview: Bool = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
+    /// Proxy check for application running in test mode.
+    public var isTest: Bool = NSClassFromString("XCTest") != nil
+    /// Proxy check for application running in simulator.
+    public var isSimulator: Bool = ProcessInfo.processInfo.environment["SIMULATOR_UDID"] != nil
+    #if DEBUG
+    /// Proxy checks for application running in DEBUG mode.
+    public var isDebug: Bool = true
+    #else
+    /// Proxy check for application running in DEBUG mode.
+    public var isDebug: Bool = false
+    #endif
 }
 
 extension FactoryContext {
-    /// Proxy for application arguments.
-    internal static var arguments: [String] = ProcessInfo.processInfo.arguments
-    /// Proxy check for application running in preview mode.
-    internal static var isPreview: Bool = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
-    /// Proxy check for application running in test mode.
-    internal static var isTest: Bool = NSClassFromString("XCTest") != nil
-    /// Proxy check for application running in simulator.
-    internal static var isSimulator: Bool = ProcessInfo.processInfo.environment["SIMULATOR_UDID"] != nil
-    #if DEBUG
-    /// Proxy checks for application running in DEBUG mode.
-    internal static var isDebug: Bool = true
-    #else
-    /// Proxy check for application running in DEBUG mode.
-    internal static var isDebug: Bool = false
-    #endif
-    /// Runtime arguments
-    internal static var runtimeArguments: [String:String] = [:]
+    /// Add argument to global context.
+    public func setArg(_ arg: String, forKey key: String) {
+        FactoryContext.current.runtimeArguments[key] = arg
+    }
+    /// Add argument to global context.
+    public func removeArg(forKey key: String) {
+        FactoryContext.current.runtimeArguments.removeValue(forKey: key)
+    }
 }
+

@@ -229,6 +229,24 @@ import SwiftUI
     }
 }
 
+/// Basic property wrapper for optional injected types
+@propertyWrapper public struct InjectedType<T> {
+    private var dependency: T?
+    /// Initializes the property wrapper from the default Container. The dependency is resolved on initialization.
+    public init() {
+        self.dependency = (Container.shared as? Resolving)?.resolve()
+    }
+    /// Initializes the property wrapper from the default Container. The dependency is resolved on initialization.
+    public init(_ container: ManagedContainer) {
+        self.dependency = (container as? Resolving)?.resolve()
+    }
+    /// Manages the wrapped dependency.
+    public var wrappedValue: T? {
+        get { return dependency }
+        mutating set { dependency = newValue }
+    }
+}
+
 #if os(iOS) || os(macOS) || os(tvOS) || os(watchOS)
 /// Immediate injection property wrapper for SwiftUI ObservableObjects.
 ///

@@ -151,7 +151,7 @@ public final class ContainerManager {
     public var dependencyChainTestMax: Int = 8
 
     /// Public variable promise behavior
-    public var promiseTriggersError: Bool = FactoryContext.isDebug
+    public var promiseTriggersError: Bool = FactoryContext.current.isDebug
 
     /// Public var enabling factory resolution trace statements in debug mode for ALL containers.
     public var trace: Bool {
@@ -294,4 +294,16 @@ public protocol AutoRegistering {
     /// User provided function that supports first-time registration of needed dependencies prior to first resolution
     /// of a dependency on that container.
     func autoRegister()
+}
+
+extension ManagedContainer {
+    /// Performs autoRegistration check
+    internal func unsafeCheckAutoRegistration() {
+        if manager.autoRegistrationCheckNeeded {
+            manager.autoRegistrationCheckNeeded = false
+            manager.autoRegistering = true
+            (self as? AutoRegistering)?.autoRegister()
+            manager.autoRegistering = false
+        }
+    }
 }
