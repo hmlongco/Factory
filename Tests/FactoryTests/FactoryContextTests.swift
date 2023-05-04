@@ -148,10 +148,10 @@ final class FactoryContextTests: XCTestCase {
     func testRuntimeArgFunctions() {
         FactoryContext.current.isPreview = false
         FactoryContext.current.isTest = false
-        FactoryContext.current.setArg("ARG2", forKey: "CUSTOM")
+        FactoryContext.setArg("ARG2", forKey: "CUSTOM")
         let service1 = Container.shared.argsContextService()
         XCTAssertEqual(service1.name, "ARG")
-        FactoryContext.current.removeArg(forKey: "CUSTOM")
+        FactoryContext.removeArg(forKey: "CUSTOM")
         let service2 = Container.shared.argsContextService()
         XCTAssertEqual(service2.name, "FACTORY")
     }

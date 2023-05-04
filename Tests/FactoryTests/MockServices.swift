@@ -176,7 +176,7 @@ extension Container {
     private var commonProvider: Factory<MyService> { self { MyService() }.graph }
 }
 
-// Custom Conatiner
+// Custom Container
 
 final class CustomContainer: SharedContainer, AutoRegistering {
     static var shared = CustomContainer()

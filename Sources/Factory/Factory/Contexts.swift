@@ -45,8 +45,6 @@ public enum FactoryContextType: Equatable {
 }
 
 struct FactoryContext {
-    /// Global current context.
-    public static var current = FactoryContext()
     /// Proxy for application arguments.
     public var arguments: [String] = ProcessInfo.processInfo.arguments
     /// Runtime arguments
@@ -67,12 +65,17 @@ struct FactoryContext {
 }
 
 extension FactoryContext {
+    /// Global current context.
+    public static var current = FactoryContext()
+}
+
+extension FactoryContext {
     /// Add argument to global context.
-    public func setArg(_ arg: String, forKey key: String) {
+    public static func setArg(_ arg: String, forKey key: String) {
         FactoryContext.current.runtimeArguments[key] = arg
     }
     /// Add argument to global context.
-    public func removeArg(forKey key: String) {
+    public static func removeArg(forKey key: String) {
         FactoryContext.current.runtimeArguments.removeValue(forKey: key)
     }
 }
