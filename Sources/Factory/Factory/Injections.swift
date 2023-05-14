@@ -158,7 +158,7 @@ import SwiftUI
     }
 }
 
-/// Convenience property wrapper takes a factory and resolves an instance of the desired type the first time the wrapped value is requested.
+/// Convenience property wrapper takes a factory and resolves a weak instance of the desired type the first time the wrapped value is requested.
 ///
 /// This wrapper maintains a weak reference to the object in question, so it must exist elsewhere.t
 /// It's useful for delegate patterns and parent/child relationships.
