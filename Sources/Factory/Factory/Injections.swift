@@ -286,11 +286,11 @@ import SwiftUI
         self._dependency = StateObject(wrappedValue: C.shared[keyPath: keyPath]())
     }
     /// Manages the wrapped dependency.
-    @MainActor public var wrappedValue: T {
+    public var wrappedValue: T {
         get { dependency }
     }
     /// Manages the wrapped dependency.
-    @MainActor public var projectedValue: ObservedObject<T>.Wrapper {
+    public var projectedValue: ObservedObject<T>.Wrapper {
         return $dependency
     }
 }
