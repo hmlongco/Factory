@@ -226,19 +226,3 @@ extension FactoryModifying {
         registration.reset(options: options)
     }
 }
-
-// FactoryModifying Deprecated Functionality
-
-extension FactoryModifying {
-    /// Allows registering new factory closure and updating scope used after the fact.
-    /// - Parameters:
-    ///  - scope: Optional parameter that lets the registration redefine the scope used for this dependency.
-    ///  - factory: A new factory closure that produces an object of the desired type when needed.
-    @available(*, deprecated, message: "Use container.service.scope(.cached).register { Service() } instead")
-    @discardableResult
-    public func register(scope: Scope?, factory: @escaping (P) -> T) -> Self {
-        registration.register(factory)
-        registration.scope(scope)
-        return self
-    }
-}

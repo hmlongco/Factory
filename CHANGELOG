@@ -2,10 +2,19 @@
 
 ## 2.2.0
 
-* Adds Type-Based "Resolver" mode to Factory
 * Converts "shared" container variables from var to let. Issue - #111
-* Add convenience reset function to container. Issue - #111
+* Add convenience reset() function to container. Issue - #111
+
+  Note that issue #111 could be a breaking change if your code attempts to "replace" a shared container. Do reset instead.
+
+  Container.shared.reset() // Do this...
+  Container.shared = Container() // Not this...
+
 * Removes @MainActor from @InjectedObject property wrapper variables. Issue - #107
+
+* Removes func register(scope:factory:) function deprecated in 2.1
+
+  Use container.service.scope(.cached).register { Service() } instead.
 
 ## 2.1.5
 

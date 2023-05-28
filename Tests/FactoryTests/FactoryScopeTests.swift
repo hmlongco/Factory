@@ -353,7 +353,8 @@ final class FactoryScopeTests: XCTestCase {
         XCTAssertNotNil(service2)
         XCTAssertTrue(Container.shared.manager.isEmpty(.scope)) // nothing caches
         Container.shared.nilSService
-            .register(scope: .cached) { MyService() }
+            .scope(.cached)
+            .register { MyService() }
         let service3 = Container.shared.nilSService()
         XCTAssertNotNil(service3)
         XCTAssertFalse(Container.shared.manager.isEmpty(.scope)) // should be cached
