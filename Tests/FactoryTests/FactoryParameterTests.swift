@@ -5,7 +5,7 @@ final class FactoryParameterTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        Container.shared = Container()
+        Container.shared.reset()
     }
 
     func testParameterServiceResolutions() throws {

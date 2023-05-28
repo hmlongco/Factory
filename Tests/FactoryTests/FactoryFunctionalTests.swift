@@ -32,7 +32,7 @@ final class FactoryFunctionalTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        Container.shared = Container()
+        Container.shared.reset()
     }
 
 

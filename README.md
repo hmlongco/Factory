@@ -2,7 +2,7 @@
 
 A new approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
-## Factory 2.1
+## Factory 2.2
 
 Factory is strongly influenced by SwiftUI, and in my opinion is highly suited for use in that environment. Factory is...
 
@@ -154,7 +154,7 @@ final class FactoryCoreTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        Container.shared = Container()
+        Container.shared.reset()
     }
     
     func testLoaded() throws {

@@ -36,6 +36,7 @@
 		4CEEC35C2849309C00C979B3 /* FactoryDemoApp+Injection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CEEC35B2849309C00C979B3 /* FactoryDemoApp+Injection.swift */; };
 		4CEEC35E284930DB00C979B3 /* Services.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CEEC35D284930DB00C979B3 /* Services.swift */; };
 		4CEEC3602849311000C979B3 /* ContentViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CEEC35F2849311000C979B3 /* ContentViewModel.swift */; };
+		4CF40C3C2A228E5900935E49 /* IODemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CF40C3B2A228E5900935E49 /* IODemoView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -128,6 +129,7 @@
 		4CEEC35B2849309C00C979B3 /* FactoryDemoApp+Injection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FactoryDemoApp+Injection.swift"; sourceTree = "<group>"; };
 		4CEEC35D284930DB00C979B3 /* Services.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Services.swift; sourceTree = "<group>"; };
 		4CEEC35F2849311000C979B3 /* ContentViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentViewModel.swift; sourceTree = "<group>"; };
+		4CF40C3B2A228E5900935E49 /* IODemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IODemoView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -257,6 +259,7 @@
 				4C46E064295642BC00185E6E /* Concepts */,
 				4CCC83EA2868CF2100B474F7 /* Modules */,
 				4CEEC34E284927EF00C979B3 /* Preview Content */,
+				4CF40C3B2A228E5900935E49 /* IODemoView.swift */,
 			);
 			path = FactoryDemo;
 			sourceTree = "<group>";
@@ -491,6 +494,7 @@
 				4C947C332988A13800815704 /* ContainerDemoViewModel.swift in Sources */,
 				4C46E063295642B100185E6E /* GenericAPIs.swift in Sources */,
 				4CEEC349284927EE00C979B3 /* FactoryDemoApp.swift in Sources */,
+				4CF40C3C2A228E5900935E49 /* IODemoView.swift in Sources */,
 				4C3F6FE92932C5F80084A647 /* FactoryDemoApp+AutoRegister.swift in Sources */,
 				4CEEC35C2849309C00C979B3 /* FactoryDemoApp+Injection.swift in Sources */,
 				4C46E0662956433200185E6E /* CircularDependencies.swift in Sources */,
@@ -657,6 +661,7 @@
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
 			};
 			name = Debug;
 		};
@@ -710,6 +715,7 @@
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;

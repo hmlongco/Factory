@@ -179,7 +179,7 @@ extension Container {
 // Custom Container
 
 final class CustomContainer: SharedContainer, AutoRegistering {
-    static var shared = CustomContainer()
+    static let shared = CustomContainer()
     static var count = 0
     var count = 0
     var test: Factory<MyServiceType> {

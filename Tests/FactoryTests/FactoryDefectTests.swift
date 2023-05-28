@@ -5,7 +5,7 @@ final class FactoryDefectTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        Container.shared = Container()
+        Container.shared.reset()
     }
 
     // scope would not correctly resolve a factory with an optional type. e.g. Factory<MyType?>(scope: .cached) { nil }
@@ -192,7 +192,7 @@ fileprivate class LockingTestB {
 }
 
 fileprivate final class AutoRegisteringContainer: SharedContainer, AutoRegistering {
-    static var shared = AutoRegisteringContainer()
+    static let shared = AutoRegisteringContainer()
     var test: Factory<MyServiceType> {
         self { MockServiceN(16) }
     }

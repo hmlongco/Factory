@@ -6,8 +6,8 @@ final class FactoryContainerTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        Container.shared = Container()
-        CustomContainer.shared = CustomContainer()
+        Container.shared.reset()
+        CustomContainer.shared.reset()
     }
 
     func testDecorators() {

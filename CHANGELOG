@@ -3,6 +3,9 @@
 ## 2.2.0
 
 * Adds Type-Based "Resolver" mode to Factory
+* Converts "shared" container variables from var to let. Issue - #111
+* Add convenience reset function to container. Issue - #111
+* Removes @MainActor from @InjectedObject property wrapper variables. Issue - #107
 
 ## 2.1.5
 

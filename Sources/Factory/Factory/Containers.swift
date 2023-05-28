@@ -43,9 +43,9 @@ import Foundation
 ///  See <doc:Containers> for more information.
 public final class Container: SharedContainer {
     /// Define the default shared container.
-    public static var shared = Container()
+    public static let shared = Container()
     /// Define the container's manager.
-    public var manager: ContainerManager = ContainerManager()
+    public let manager: ContainerManager = ContainerManager()
     /// Public initializer
     public init() {}
 }
@@ -68,6 +68,9 @@ public protocol SharedContainer: ManagedContainer {
     ///
     /// This container is used by the various @Injected property wrappers to resolve the keyPath to a given Factory. Care should be taken in
     /// mixed environments where you're passing container references AND using the @Injected property wrappers.
+    ///
+    /// Note this should be defined as a 'let' variable, not 'var'. Using 'static var' will cause Swift to issue concurrency warnings in the
+    /// future whenever the container is accessed.
     static var shared: Self { get }
 }
 
@@ -119,6 +122,10 @@ extension ManagedContainer {
     /// Defines a decorator for the container. This decorator will see every dependency resolved by this container.
     public func decorator(_ decorator: ((Any) -> ())?) {
         manager.decorator = decorator
+    }
+    /// Defines a thread safe access mechanism to reset the container.
+    @inlinable public func reset(options: FactoryResetOptions = .all) {
+        manager.reset(options: options)
     }
     /// Defines a with function to allow container transformation on assignment.
     @discardableResult

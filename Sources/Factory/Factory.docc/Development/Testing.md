@@ -154,13 +154,13 @@ It can even help you see what's *inside* that dependency tree. See <doc:Debuggin
 
 ## Rebuilding The Container
 
-In your unit test setUp function you can also just create a new container and start over from scratch. No teardown needed.
+In your unit test setUp function you can also just reset the container and start over from scratch. No teardown needed.
 
 ```swift
 final class FactoryCoreTests: XCTestCase {
 
     override func setUp() {
-        Container.shared = Container()
+        Container.shared.reset()
         Container.shared.setupMocks()
     }
     

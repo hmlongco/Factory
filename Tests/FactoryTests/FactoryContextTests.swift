@@ -7,7 +7,7 @@ final class FactoryContextTests: XCTestCase {
         super.setUp()
 
         // start over
-        Container.shared = Container()
+        Container.shared.reset()
 
         // externally defined contexts
         Container.shared.externalContextService

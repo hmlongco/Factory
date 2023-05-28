@@ -46,7 +46,7 @@ final class FactoryResolverTests: XCTestCase {
 }
 
 fileprivate final class ResolvingContainer: SharedContainer, AutoRegistering, Resolving {
-    static var shared = ResolvingContainer()
+    static let shared = ResolvingContainer()
     func autoRegister() {
         register { MyService() }
     }

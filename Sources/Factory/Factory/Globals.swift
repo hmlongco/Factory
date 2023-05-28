@@ -31,7 +31,7 @@ import Foundation
 /// Master recursive lock
 internal var globalRecursiveLock = RecursiveLock()
 
-internal final class RecursiveLock {
+internal final class RecursiveLock: NSLocking {
     init() {
         let mutexAttr = UnsafeMutablePointer<pthread_mutexattr_t>.allocate(capacity: 1)
         pthread_mutexattr_init(mutexAttr)

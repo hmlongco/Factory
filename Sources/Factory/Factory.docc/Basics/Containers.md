@@ -99,8 +99,8 @@ Defining your own container class is simple. Just use the following as a templat
 
 ```swift
 public final class MyContainer: SharedContainer {
-     public static var shared = MyContainer()
-     public var manager = ContainerManager()
+     public static let shared = MyContainer()
+     public let manager = ContainerManager()
 }
 
 extension MyContainer {
@@ -110,6 +110,8 @@ extension MyContainer {
 }
 ```
 As mentioned, a container must derive from ``SharedContainer``, have its own ``ContainerManager``, and implement a static `shared` instance. It also must be marked `final`.
+
+Also remember to define the "shared" container as a 'let', not 'var'. Defining it as a 'static var' will cause Swift to issue concurrency warnings in the future whenever that variable is accessed.
 
 Don't forget that if need be you can reach across containers simply by specifying the full `container.factory` path.
 
@@ -170,6 +172,7 @@ Simple. Just reset it to bring back the original factory closure. Or, if desired
 ```Swift
 container.myService.reset() // resets this factory only
 container.manager.reset() // clears all registrations and caches
+container.reset() // shortcut, same as above
 ```
 We can also reset registrations and scope caches specifically, leaving the other intact.
 ```swift
@@ -190,30 +193,3 @@ Note that resetting registrations also resets the container's auto registration 
 ## Pushing and Popping State
 
 As with Factory 1.0, the state of a container's registrations and scope caches can be saved (pushed), and then restored (popped). See <doc:Testing> for more information on this.
-
-## Releasing a Container
-
-> Warning: If a container ever goes out of scope, so will all of its registrations and cached objects.
-
-To demonstrate, let's see what happens when we create and assign a new container to `MyContainer.shared`. Doing so releases the previous container, along with any registrations or objects that container may have cached. We'll use the `cachedService` Factory we defined above.
-
-```swift
-// Create an instance of our cached service.
-let service1 = MyContainer.shared.cachedService()
-
-// Repeat, which returns the same cached instance we obtained in service1.
-let service2 = MyContainer.shared.cachedService()
-assert(service1.id == service2.id)
-
-// Replace the existing shared container with a new one.
-MyContainer.shared = MyContainer()
-
-// Trying again gets a new instance since the old container and cache was released.
-let service3 = MyContainer.shared.cachedService()
-assert(service1.id != service3.id)
-
-// Repeat and receive the same cached instance we obtained in service3.
-let service4 = MyContainer.shared.cachedService()
-assert(service3.id == service4.id)
-```
-From a certain point of view, replacing a container with a new one is the ultimate reset mechanism.

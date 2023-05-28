@@ -4,8 +4,9 @@ import XCTest
 final class FactoryCoreTests: XCTestCase {
 
     override func setUp() {
-        Container.shared = Container()
-        CustomContainer.shared = CustomContainer()
+        Container.shared.reset()
+        CustomContainer.shared.reset()
+        CustomContainer.shared.count = 0
     }
 
     func testBasicResolution() throws {

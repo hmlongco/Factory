@@ -5,7 +5,7 @@ final class FactoryScopeTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        Container.shared = Container()
+        Container.shared.reset()
     }
 
     func testUniqueScope() throws {
@@ -407,7 +407,7 @@ extension SharedContainer {
 }
 
 fileprivate final class FirstSingletonContainer: SharedContainer, AutoRegistering {
-    static var shared = FirstSingletonContainer()
+    static let shared = FirstSingletonContainer()
     func autoRegister() {
         manager.defaultScope = .singleton
     }
@@ -418,7 +418,7 @@ fileprivate final class FirstSingletonContainer: SharedContainer, AutoRegisterin
 }
 
 fileprivate final class SecondSingletonContainer: SharedContainer, AutoRegistering {
-    static var shared = SecondSingletonContainer()
+    static let shared = SecondSingletonContainer()
     func autoRegister() {
         manager.defaultScope = .singleton
     }
