@@ -193,3 +193,33 @@ Note that resetting registrations also resets the container's auto registration 
 ## Pushing and Popping State
 
 As with Factory 1.0, the state of a container's registrations and scope caches can be saved (pushed), and then restored (popped). See <doc:Testing> for more information on this.
+
+## Releasing a Container
+
+> Warning: If a container ever goes out of scope, so will all of its registrations and cached objects.
+
+To demonstrate, let's see what happens when we create and assign a new container. Doing so releases the previous container, along with any registrations or objects that container may have cached. We'll use the `cachedService` Factory we defined above.
+
+```swift
+// Create an instance of our cached service.
+var container = MyContainer()
+let service1 = container.cachedService()
+
+// Repeat, which returns the same cached instance we obtained in service1.
+let service2 = container.cachedService()
+assert(service1.id == service2.id)
+
+// Replace the existing shared container with a new one.
+container = MyContainer()
+
+// Trying again gets a new instance since the old container and cache was released.
+let service3 = container.cachedService()
+assert(service1.id != service3.id)
+
+// Repeat and receive the same cached instance we obtained in service3.
+let service4 = container.cachedService()
+assert(service3.id == service4.id)
+```
+From a certain point of view, replacing a container with a new one is the ultimate reset mechanism.
+
+> Note: As of Factory 2.2 it's no longer possible to reassign the default "shared" container. This change clears several warnings that could be issued by Swift concurrency when "complete" checking is enabled.
