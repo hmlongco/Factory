@@ -40,8 +40,8 @@ Bingo. You now have your dependency.
 Factory ships with a single ``Container`` already constructed for your convenience.
 ```swift
 public final class Container: SharedContainer {
-    public static var shared = MyContainer()
-    public var manager = ContainerManager()
+    public static let shared = MyContainer()
+    public let manager = ContainerManager()
 }
 ```
 You've seen it used and extended in all of the examples we've seen thus far, and most projects can simply extend it and go.
@@ -111,7 +111,9 @@ extension MyContainer {
 ```
 As mentioned, a container must derive from ``SharedContainer``, have its own ``ContainerManager``, and implement a static `shared` instance. It also must be marked `final`.
 
-Also remember to define the "shared" container as a 'let', not 'var'. Defining it as a 'static var' will cause Swift to issue concurrency warnings in the future whenever that variable is accessed.
+> Note: Remember to define the "shared" container as a `let`, not `var`. Defining it as a `static var` will cause Swift to issue concurrency warnings in the future whenever that variable is accessed.
+
+## Referencing Other Containers
 
 Don't forget that if need be you can reach across containers simply by specifying the full `container.factory` path.
 
@@ -198,7 +200,7 @@ As with Factory 1.0, the state of a container's registrations and scope caches c
 
 > Warning: If a container ever goes out of scope, so will all of its registrations and cached objects.
 
-To demonstrate, let's see what happens when we create and assign a new container. Doing so releases the previous container, along with any registrations or objects that container may have cached. We'll use the `cachedService` Factory we defined above.
+To demonstrate, let's see what happens when we create and then reassign a new container. Doing so releases the previous container, along with any registrations or objects that container may have cached. We'll use the `cachedService` Factory we defined above.
 
 ```swift
 // Create an instance of our cached service.
@@ -222,4 +224,4 @@ assert(service3.id == service4.id)
 ```
 From a certain point of view, replacing a container with a new one is the ultimate reset mechanism.
 
-> Note: As of Factory 2.2 it's no longer possible to reassign the default "shared" container. This change clears several warnings that could be issued by Swift concurrency when "complete" checking is enabled.
+> Note: As of Factory 2.2 it's no longer possible to reassign the default "shared" container. This change clears several warnings that could be issued by Swift concurrency when "complete" checking is enabled and one attempts to access the container via the shared static variable (e.g. `let s = Container.shared.myService()`).
