@@ -24,6 +24,7 @@
 // THE SOFTWARE.
 //
 
+import CoreFoundation
 import Foundation
 
 // MARK: - Scope
