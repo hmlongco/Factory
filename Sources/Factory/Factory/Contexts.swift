@@ -44,7 +44,7 @@ public enum FactoryContextType: Equatable {
     case device
 }
 
-struct FactoryContext {
+public struct FactoryContext {
     /// Proxy for application arguments.
     public var arguments: [String] = ProcessInfo.processInfo.arguments
     /// Runtime arguments
