@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4C0AF2022A2BB0F200CA46FE /* FactoryDemoApp+AA.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C0AF2012A2BB0F200CA46FE /* FactoryDemoApp+AA.swift */; };
+		4C0AF2042A2BB11B00CA46FE /* FactoryDemoTestsAA.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C0AF2032A2BB11B00CA46FE /* FactoryDemoTestsAA.swift */; };
 		4C3F6FE92932C5F80084A647 /* FactoryDemoApp+AutoRegister.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C3F6FE82932C5F80084A647 /* FactoryDemoApp+AutoRegister.swift */; };
 		4C46E063295642B100185E6E /* GenericAPIs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C46E062295642B100185E6E /* GenericAPIs.swift */; };
 		4C46E0662956433200185E6E /* CircularDependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C46E0652956433200185E6E /* CircularDependencies.swift */; };
@@ -100,6 +102,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4C0AF2012A2BB0F200CA46FE /* FactoryDemoApp+AA.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "FactoryDemoApp+AA.swift"; sourceTree = "<group>"; };
+		4C0AF2032A2BB11B00CA46FE /* FactoryDemoTestsAA.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FactoryDemoTestsAA.swift; sourceTree = "<group>"; };
 		4C3F6FE82932C5F80084A647 /* FactoryDemoApp+AutoRegister.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FactoryDemoApp+AutoRegister.swift"; sourceTree = "<group>"; };
 		4C46E062295642B100185E6E /* GenericAPIs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericAPIs.swift; sourceTree = "<group>"; };
 		4C46E0652956433200185E6E /* CircularDependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircularDependencies.swift; sourceTree = "<group>"; };
@@ -182,6 +186,7 @@
 				4CA5899829DE482D00FA7845 /* FactoryDemoTests.swift */,
 				4C51167329DE95DF00B4ADD4 /* FactoryDemoTests2.swift */,
 				4C51167529DE961900B4ADD4 /* FactoryDemoTests3.swift */,
+				4C0AF2032A2BB11B00CA46FE /* FactoryDemoTestsAA.swift */,
 				4C51167729DF03C900B4ADD4 /* FactoryDemoTestsServices.swift */,
 			);
 			path = FactoryDemoTests;
@@ -250,6 +255,7 @@
 				4CEEC348284927EE00C979B3 /* FactoryDemoApp.swift */,
 				4CEEC35B2849309C00C979B3 /* FactoryDemoApp+Injection.swift */,
 				4C3F6FE82932C5F80084A647 /* FactoryDemoApp+AutoRegister.swift */,
+				4C0AF2012A2BB0F200CA46FE /* FactoryDemoApp+AA.swift */,
 				4CEEC34A284927EE00C979B3 /* ContentView.swift */,
 				4CEEC35F2849311000C979B3 /* ContentViewModel.swift */,
 				4C6914432988A05D0083A78F /* ContainerDemoView.swift */,
@@ -466,6 +472,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4C51167429DE95DF00B4ADD4 /* FactoryDemoTests2.swift in Sources */,
+				4C0AF2042A2BB11B00CA46FE /* FactoryDemoTestsAA.swift in Sources */,
 				4C51167829DF03C900B4ADD4 /* FactoryDemoTestsServices.swift in Sources */,
 				4CA5899929DE482D00FA7845 /* FactoryDemoTests.swift in Sources */,
 				4C51167629DE961900B4ADD4 /* FactoryDemoTests3.swift in Sources */,
@@ -491,6 +498,7 @@
 				4C51169829E1B3E900B4ADD4 /* Tags.swift in Sources */,
 				4CEEC35E284930DB00C979B3 /* Services.swift in Sources */,
 				4C4ED1F828FDADB3009E41A5 /* FunctionInjection.swift in Sources */,
+				4C0AF2022A2BB0F200CA46FE /* FactoryDemoApp+AA.swift in Sources */,
 				4C947C332988A13800815704 /* ContainerDemoViewModel.swift in Sources */,
 				4C46E063295642B100185E6E /* GenericAPIs.swift in Sources */,
 				4CEEC349284927EE00C979B3 /* FactoryDemoApp.swift in Sources */,
