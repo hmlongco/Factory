@@ -28,17 +28,22 @@ import Foundation
 
 /// Public protocol with functionality common to all Factory's. Used to add scope and decorator modifiers to Factory.
 public protocol FactoryModifying {
+
     /// The parameter type of the Factory, if any. Will be `Void` on the standard Factory.
     associatedtype P
+
     /// The return type of the Factory's dependency.
     associatedtype T
+
     /// Internal information that describes this Factory.
     var registration: FactoryRegistration<P,T> { get set }
+
 }
 
 // FactoryModifying Scope Functionality
 
 extension FactoryModifying {
+
     /// Defines a dependency scope for this Factory. See ``Scope``.
     /// ```swift
     /// var service: Factory<ServiceType> {
@@ -51,6 +56,7 @@ extension FactoryModifying {
         registration.scope(scope)
         return self
     }
+
     /// Syntactic sugar defines this Factory's dependency scope to be cached. See ``Scope/Cached-swift.class``.
     /// ```swift
     /// var service: Factory<ServiceType> {
@@ -62,6 +68,7 @@ extension FactoryModifying {
         registration.scope(.cached)
         return self
     }
+
     /// Syntactic sugar defines this Factory's dependency scope to be graph. See ``Scope/Graph-swift.class``.
     /// ```swift
     /// var service: Factory<ServiceType> {
@@ -73,6 +80,7 @@ extension FactoryModifying {
         registration.scope(.graph)
         return self
     }
+
     /// Syntactic sugar defines this Factory's dependency scope to be shared. See ``Scope/Shared-swift.class``.
     /// ```swift
     /// var service: Factory<ServiceType> {
@@ -84,6 +92,7 @@ extension FactoryModifying {
         registration.scope(.shared)
         return self
     }
+
     /// Syntactic sugar defines this Factory's dependency scope to be singleton. See ``Scope/Singleton-swift.class``.
     /// ```swift
     /// var service: Factory<ServiceType> {
@@ -95,6 +104,7 @@ extension FactoryModifying {
         registration.scope(.singleton)
         return self
     }
+
     /// Syntactic sugar defines defines unique scope. See ``Scope``.
     /// ```swift
     /// var service: Factory<ServiceType> {
@@ -117,11 +127,13 @@ extension FactoryModifying {
         }
         return self
     }
+
 }
 
 // FactoryModifying Decorator Functionality
 
 extension FactoryModifying {
+
     /// Adds a factory specific decorator. The decorator will be *always* be called with the resolved dependency
     /// for further examination or manipulation.
     ///
@@ -140,11 +152,13 @@ extension FactoryModifying {
         registration.decorator(decorator)
         return self
     }
+
 }
 
 // FactoryModifying Context Functionality
 
 extension FactoryModifying {
+
     /// Registers a factory closure to be used only when running in a specific context.
     ///
     /// A context might be be when running in SwiftUI preview mode, or when running unit tests.
@@ -165,46 +179,55 @@ extension FactoryModifying {
         }
         return self
     }
+
     /// Factory builder shortcut for context(.arg("test") { .. }
     @discardableResult
     public func onArg(_ argument: String, factory: @escaping (P) -> T) -> Self {
         context(.arg(argument), factory: factory)
     }
+
     /// Factory builder shortcut for context(.args["test1","test2") { .. }
     @discardableResult
     public func onArgs(_ args: [String], factory: @escaping (P) -> T) -> Self {
         context(.args(args), factory: factory)
     }
+
     /// Factory builder shortcut for context(.preview) { .. }
     @discardableResult
     public func onPreview(factory: @escaping (P) -> T) -> Self {
         context(.preview, factory: factory)
     }
+
     /// Factory builder shortcut for context(.test) { .. }
     @discardableResult
     public func onTest(factory: @escaping (P) -> T) -> Self {
         context(.test, factory: factory)
     }
+
     /// Factory builder shortcut for context(.debug) { .. }
     @discardableResult
     public func onDebug(factory: @escaping (P) -> T) -> Self {
         context(.debug, factory: factory)
     }
+
     /// Factory builder shortcut for context(.simulator) { .. }
     @discardableResult
     public func onSimulator(factory: @escaping (P) -> T) -> Self {
         context(.simulator, factory: factory)
     }
+
     /// Factory builder shortcut for context(.device) { .. }
     @discardableResult
     public func onDevice(factory: @escaping (P) -> T) -> Self {
         context(.device, factory: factory)
     }
+
 }
 
 // FactoryModifying Once Functionality
 
 extension FactoryModifying {
+
     /// Adds ability to mutate Factory on first instantiation only.
     @discardableResult
     public func once() -> Self {
@@ -215,14 +238,17 @@ extension FactoryModifying {
         mutable.registration.once = true
         return mutable
     }
+
 }
 
 // FactoryModifying Common Functionality
 
 extension FactoryModifying {
+
     /// Resets the Factory's behavior to its original state, removing any registrations and clearing any cached items from the specified scope.
     /// - Parameter options: options description
     public func reset(_ options: FactoryResetOptions = .all) {
         registration.reset(options: options)
     }
+    
 }

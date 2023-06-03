@@ -1,5 +1,5 @@
 //
-// Globals.swift
+// Locking.swift
 //  
 // GitHub Repo and Documentation: https://github.com/hmlongco/Factory
 //
@@ -26,30 +26,37 @@
 
 import Foundation
 
-// MARK: - Internal Variables
+// MARK: - Locking
 
-/// Master graph resolution depth counter
-internal var globalGraphResolutionDepth = 0
+/// Master recursive lock
+internal var globalRecursiveLock = RecursiveLock()
 
-#if DEBUG
-/// Internal variables used for debugging
-internal var globalDependencyChain: [String] = []
-internal var globalDependencyChainMessages: [String] = []
-internal var globalTraceFlag: Bool = false
-internal var globalTraceResolutions: [String] = []
-internal var globalLogger: (String) -> Void = { print($0) }
+/// Custom recursive lock class
+internal final class RecursiveLock: NSLocking {
 
-/// Triggers fatalError after resetting enough stuff so unit tests can continue
-internal func resetAndTriggerFatalError(_ message: String, _ file: String, _ line: Int) -> Never {
-    globalDependencyChain = []
-    globalDependencyChainMessages = []
-    globalGraphResolutionDepth = 0
-    globalRecursiveLock = RecursiveLock()
-    globalTraceResolutions = []
-    triggerFatalError(message, #file, #line) // GOES BOOM
+    init() {
+        let mutexAttr = UnsafeMutablePointer<pthread_mutexattr_t>.allocate(capacity: 1)
+        pthread_mutexattr_init(mutexAttr)
+        pthread_mutexattr_settype(mutexAttr, Int32(PTHREAD_MUTEX_RECURSIVE))
+        mutex = UnsafeMutablePointer<pthread_mutex_t>.allocate(capacity: 1)
+        pthread_mutex_init(mutex, mutexAttr)
+        pthread_mutexattr_destroy(mutexAttr)
+        mutexAttr.deallocate()
+    }
+
+    deinit {
+        pthread_mutex_destroy(mutex)
+        mutex.deallocate()
+    }
+
+    @inlinable func lock() {
+        pthread_mutex_lock(mutex)
+    }
+
+    @inlinable func unlock() {
+        pthread_mutex_unlock(mutex)
+    }
+
+    private var mutex: UnsafeMutablePointer<pthread_mutex_t>
+
 }
-
-/// Allow unit test interception of any fatal errors that may occur running the circular dependency check
-/// Variation of solution: https://stackoverflow.com/questions/32873212/unit-test-fatalerror-in-swift#
-internal var triggerFatalError = Swift.fatalError
-#endif
