@@ -11,6 +11,7 @@
   Container.shared = Container() // Not this...
 
 * Removes @MainActor from @InjectedObject property wrapper variables. Issue - #107
+* Fix FactoryContext not public. Issue - #116
 
 * Removes func register(scope:factory:) function deprecated in 2.1
 
