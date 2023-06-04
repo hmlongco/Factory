@@ -98,7 +98,7 @@ public struct FactoryRegistration<P,T> {
         #endif
 
         globalGraphResolutionDepth += 1
-        let instance = scope?.resolve(using: manager.cache, id: id, ttl: ttl, factory: { current(parameters) }) ?? current(parameters)
+        let instance: T = scope?.resolve(using: manager.cache, id: id, ttl: ttl, factory: { current(parameters) }) ?? current(parameters)
         globalGraphResolutionDepth -= 1
 
         if globalGraphResolutionDepth == 0 {
@@ -194,6 +194,7 @@ public struct FactoryRegistration<P,T> {
                 }
                 options.contexts?["\(context)"] = TypedFactory(factory: factory)
             }
+            container.manager.cache.removeValue(forKey: id)
         }
     }
 

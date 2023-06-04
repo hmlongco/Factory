@@ -13,7 +13,7 @@ protocol AAService {
 }
 
 final class AADefaultService: AAService {
-    let name = "DefaulfService"
+    let name = "DefaultService"
 }
 
 final class AAMockService: AAService {

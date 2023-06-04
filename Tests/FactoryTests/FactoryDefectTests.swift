@@ -163,6 +163,19 @@ final class FactoryDefectTests: XCTestCase {
         XCTAssertEqual(service3.value, 64)
     }
 
+    // setting a context would not clear scope cache as does register
+    func testContextNotClearingScope() throws {
+        let service1 = Container.shared.cachedService()
+        let service2 = Container.shared.cachedService()
+        XCTAssertTrue(service1.id == service2.id)
+        Container.shared.cachedService.onTest {
+            MyService()
+        }
+        let service3 = Container.shared.cachedService()
+        XCTAssertFalse(service1.id == service3.id)
+    }
+
+
 }
 
 extension Container {
