@@ -168,13 +168,24 @@ final class FactoryDefectTests: XCTestCase {
         let service1 = Container.shared.cachedService()
         let service2 = Container.shared.cachedService()
         XCTAssertTrue(service1.id == service2.id)
+        XCTAssertFalse(Container.shared.manager.cache.isEmpty)
+        // test register
+        Container.shared.cachedService.register {
+            MyService()
+        }
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
+        let service3 = Container.shared.cachedService()
+        XCTAssertFalse(service1.id == service3.id)
+        XCTAssertFalse(Container.shared.manager.cache.isEmpty)
+        // test context
         Container.shared.cachedService.onTest {
             MyService()
         }
-        let service3 = Container.shared.cachedService()
-        XCTAssertFalse(service1.id == service3.id)
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
+        let service4 = Container.shared.cachedService()
+        XCTAssertFalse(service1.id == service4.id)
+        XCTAssertFalse(service3.id == service4.id)
     }
-
 
 }
 
