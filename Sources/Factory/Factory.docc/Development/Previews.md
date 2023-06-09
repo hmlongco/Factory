@@ -11,21 +11,21 @@ Factory can make SwiftUI Previews easier when we're using View Models and those 
 Factory can be used in SwiftUI to assign a dependency to a `StateObject` or `ObservedObject`.
 
 ```swift
-class ContentView: ObservableObject {
+struct ContentView: View {
     @StateObject private var viewModel = Container.shared.contentViewModel()
     var body: some View {
         ...
     }
 }
 ```
-Keep in mind that if you assign to an `ObservedObject` your Factory is responsible for managing the object's lifecycle (see the section on Scopes above).
+Keep in mind that if you assign to an `ObservedObject` your Factory is responsible for managing the object's lifecycle (see the section on Scopes).
 
 ## SwiftUI Previews
 
 Here's an example of updating a view model's service dependency in order to setup a particular state for  preview.
 
 ```swift
-class ContentView: ObservableObject {
+struct ContentView: View {
     @StateObject var viewModel = ContentViewModel()
     var body: some View {
         ...
