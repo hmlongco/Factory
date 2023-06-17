@@ -49,16 +49,6 @@ public struct FactoryRegistration<P,T> {
         self.factory = factory
     }
 
-    /// Support function performs autoRegistrationCheck and returns properly initialized container.
-    internal func unsafeCheckAutoRegistration() {
-        if container.manager.autoRegistrationCheckNeeded {
-            container.manager.autoRegistrationCheckNeeded = false
-            container.manager.autoRegistering = true
-            (container as? AutoRegistering)?.autoRegister()
-            container.manager.autoRegistering = false
-        }
-    }
-
     /// Support function for one-time only option updates
     internal func unsafeCanUpdateOptions() -> Bool {
         let options = container.manager.options[id]
@@ -73,7 +63,7 @@ public struct FactoryRegistration<P,T> {
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
 
-        unsafeCheckAutoRegistration()
+        container.unsafeCheckAutoRegistration()
 
         let manager = container.manager
         let options = manager.options[id]
@@ -108,7 +98,7 @@ public struct FactoryRegistration<P,T> {
         #endif
 
         globalGraphResolutionDepth += 1
-        let instance = scope?.resolve(using: manager.cache, id: id, ttl: ttl, factory: { current(parameters) }) ?? current(parameters)
+        let instance: T = scope?.resolve(using: manager.cache, id: id, ttl: ttl, factory: { current(parameters) }) ?? current(parameters)
         globalGraphResolutionDepth -= 1
 
         if globalGraphResolutionDepth == 0 {
@@ -127,7 +117,9 @@ public struct FactoryRegistration<P,T> {
             let indent = String(repeating: "    ", count: globalGraphResolutionDepth)
             let address = (((instance as? OptionalProtocol)?.hasWrappedValue ?? true)) ? Int(bitPattern: ObjectIdentifier(instance as AnyObject)) : 0
             let resolution = address == 0 ? "nil" : "\(traceNew ?? "C"):\(address)"
-            globalTraceResolutions[traceLevel] = "\(globalGraphResolutionDepth): \(indent)\(container).\(id) = \(resolution)"
+            if globalTraceResolutions.count > traceLevel {
+                globalTraceResolutions[traceLevel] = "\(globalGraphResolutionDepth): \(indent)\(container).\(id) = \(resolution)"
+            }
             if globalGraphResolutionDepth == 0 {
                 globalTraceResolutions.forEach { globalLogger($0) }
                 globalTraceResolutions = []
@@ -151,7 +143,7 @@ public struct FactoryRegistration<P,T> {
     internal func register(_ factory: @escaping (P) -> T) {
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
-        unsafeCheckAutoRegistration()
+        container.unsafeCheckAutoRegistration()
         if unsafeCanUpdateOptions() {
             let manager = container.manager
             manager.registrations[id] = TypedFactory(factory: factory)
@@ -167,7 +159,7 @@ public struct FactoryRegistration<P,T> {
     internal func scope(_ scope: Scope?) {
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
-        unsafeCheckAutoRegistration()
+        container.unsafeCheckAutoRegistration()
         let manager = container.manager
         if var options = manager.options[id] {
             if once == options.once && scope !== options.scope {
@@ -181,7 +173,7 @@ public struct FactoryRegistration<P,T> {
     }
 
     /// Registers a new context.
-    internal func context(_ context: FactoryContext, id: String, factory: @escaping (P) -> T) {
+    internal func context(_ context: FactoryContextType, id: String, factory: @escaping (P) -> T) {
         options { options in
             switch context {
             case .arg(let arg):
@@ -202,6 +194,7 @@ public struct FactoryRegistration<P,T> {
                 }
                 options.contexts?["\(context)"] = TypedFactory(factory: factory)
             }
+            container.manager.cache.removeValue(forKey: id)
         }
     }
 
@@ -216,7 +209,7 @@ public struct FactoryRegistration<P,T> {
     internal func options(mutate: (_ options: inout FactoryOptions) -> Void) {
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
-        unsafeCheckAutoRegistration()
+        container.unsafeCheckAutoRegistration()
         let manager = container.manager
         var options = manager.options[id] ?? FactoryOptions()
         if options.once == once {
@@ -311,12 +304,12 @@ extension FactoryOptions {
     /// Internal function to return factory based on current context
     func factoryForCurrentContext() -> AnyFactory?  {
         if let contexts = argumentContexts, !contexts.isEmpty {
-            for arg in FactoryContext.arguments {
+            for arg in FactoryContext.current.arguments {
                 if let found = contexts[arg] {
                     return found
                 }
             }
-            for (_, arg) in FactoryContext.runtimeArguments {
+            for (_, arg) in FactoryContext.current.runtimeArguments {
                 if let found = contexts[arg] {
                     return found
                 }
@@ -324,17 +317,17 @@ extension FactoryOptions {
         }
         if let contexts = contexts, !contexts.isEmpty {
             #if DEBUG
-            if FactoryContext.isPreview, let found = contexts["preview"] {
+            if FactoryContext.current.isPreview, let found = contexts["preview"] {
                 return found
             }
-            if FactoryContext.isTest, let found = contexts["test"] {
+            if FactoryContext.current.isTest, let found = contexts["test"] {
                 return found
             }
             #endif
-            if FactoryContext.isSimulator, let found = contexts["simulator"] {
+            if FactoryContext.current.isSimulator, let found = contexts["simulator"] {
                 return found
             }
-            if !FactoryContext.isSimulator, let found = contexts["device"] {
+            if !FactoryContext.current.isSimulator, let found = contexts["device"] {
                 return found
             }
             #if DEBUG

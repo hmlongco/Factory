@@ -43,9 +43,9 @@ import Foundation
 ///  See <doc:Containers> for more information.
 public final class Container: SharedContainer {
     /// Define the default shared container.
-    public static var shared = Container()
+    public static let shared = Container()
     /// Define the container's manager.
-    public var manager: ContainerManager = ContainerManager()
+    public let manager: ContainerManager = ContainerManager()
     /// Public initializer
     public init() {}
 }
@@ -68,6 +68,9 @@ public protocol SharedContainer: ManagedContainer {
     ///
     /// This container is used by the various @Injected property wrappers to resolve the keyPath to a given Factory. Care should be taken in
     /// mixed environments where you're passing container references AND using the @Injected property wrappers.
+    ///
+    /// Note this should be defined as a 'let' variable, not 'var'. Using 'static var' will cause Swift to issue concurrency warnings in the
+    /// future whenever the container is accessed.
     static var shared: Self { get }
 }
 
@@ -120,6 +123,10 @@ extension ManagedContainer {
     public func decorator(_ decorator: ((Any) -> ())?) {
         manager.decorator = decorator
     }
+    /// Defines a thread safe access mechanism to reset the container.
+    @inlinable public func reset(options: FactoryResetOptions = .all) {
+        manager.reset(options: options)
+    }
     /// Defines a with function to allow container transformation on assignment.
     @discardableResult
     public func with(_ transform: (Self) -> Void) -> Self {
@@ -151,7 +158,7 @@ public final class ContainerManager {
     public var dependencyChainTestMax: Int = 8
 
     /// Public variable promise behavior
-    public var promiseTriggersError: Bool = FactoryContext.isDebug
+    public var promiseTriggersError: Bool = FactoryContext.current.isDebug
 
     /// Public var enabling factory resolution trace statements in debug mode for ALL containers.
     public var trace: Bool {
@@ -294,4 +301,16 @@ public protocol AutoRegistering {
     /// User provided function that supports first-time registration of needed dependencies prior to first resolution
     /// of a dependency on that container.
     func autoRegister()
+}
+
+extension ManagedContainer {
+    /// Performs autoRegistration check
+    internal func unsafeCheckAutoRegistration() {
+        if manager.autoRegistrationCheckNeeded {
+            manager.autoRegistrationCheckNeeded = false
+            manager.autoRegistering = true
+            (self as? AutoRegistering)?.autoRegister()
+            manager.autoRegistering = false
+        }
+    }
 }

@@ -24,7 +24,7 @@ extension SharedContainer {
 //}
 
 final class TaggedContainer: SharedContainer {
-    static var shared = TaggedContainer()
+    static let shared = TaggedContainer()
     var manager = ContainerManager()
 }
 
@@ -41,7 +41,7 @@ struct Tag<T> {
 }
 
 extension Container {
-    static var processors: [Tag<Processor>] = [
+    static let processors: [Tag<Processor>] = [
         Tag(path: \.processor1, priority: 20),
         Tag(path: \.processor2, priority: 10),
     ]

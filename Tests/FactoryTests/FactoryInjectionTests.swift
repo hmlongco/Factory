@@ -106,7 +106,7 @@ final class FactoryInjectionTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        Container.shared = Container()
+        Container.shared.reset()
     }
 
     func testBasicInjection() throws {
@@ -230,6 +230,21 @@ final class FactoryInjectionTests: XCTestCase {
         XCTAssertNil(service.service)
     }
 
+    @available(iOS 14, *)
+    func testInjectedType() throws {
+        let vm1 = ResolvingViewModel()
+        XCTAssertNil(vm1.service1)
+        XCTAssertNil(vm1.service2)
+        Container.shared.register {
+            MyService()
+        }
+        let vm2 = ResolvingViewModel()
+        XCTAssertNotNil(vm2.service1)
+        XCTAssertNotNil(vm2.service2)
+        vm2.service1 = nil
+        XCTAssertNil(vm2.service1)
+    }
+
     #if canImport(SwiftUI)
     @available(iOS 14, *)
     @MainActor
@@ -272,3 +287,11 @@ extension CustomContainer {
     }
 }
 #endif
+
+@available(iOS 14, *)
+class ResolvingViewModel: ObservableObject {
+    @InjectedType var service1: MyService?
+    @InjectedType(Container.shared) var service2: MyService?
+}
+
+extension Container: Resolving {}

@@ -96,7 +96,7 @@ You can also add your own special purpose caches to the mix. Try this.
 
 ```swift
 extension Scope {
-    static var session = Cached()
+    static let session = Cached()
 }
 
 extension Container {
@@ -118,6 +118,8 @@ func logout() {
         ...
     }
 ```
+One note: Like shared variables in custom containers, don't forget to define the new scope as a 'let' variable, not 'var'. Defining it as a 'static var' will cause Swift to issue concurrency warnings in the future whenever that variable is accessed.
+
 Custom scopes are powerful tools to have in your arsenal. Use them.
 
 ## Graph Scope

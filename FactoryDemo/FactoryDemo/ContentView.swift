@@ -15,7 +15,6 @@ struct ContentView: View {
     var body: some View {
         List {
             Section("View Model Bindings") {
-                Text(model.text() + " for \(model.name)")
                 HStack {
                     Text("Name")
                         .foregroundColor(.secondary)
@@ -27,6 +26,8 @@ struct ContentView: View {
                 Button("Mutate") {
                     model.name += "z"
                 }
+
+                child()
             }
 
             Section("Navigation") {
@@ -54,6 +55,11 @@ struct ContentView: View {
             }
         }
     }
+
+    @ViewBuilder func child() -> some View {
+        ChildContentView(model: model)
+            .foregroundColor(.secondary)
+    }
     
 }
 
@@ -69,6 +75,14 @@ struct outerView: View {
             .foregroundColor(.green)
     }
 }
+
+struct ChildContentView: View {
+    @ObservedObject var model: ContentViewModel
+    var body: some View {
+        Text(model.text() + " for \(model.name)")
+    }
+}
+
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {

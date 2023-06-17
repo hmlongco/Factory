@@ -5,7 +5,7 @@ final class FactoryScopeTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        Container.shared = Container()
+        Container.shared.reset()
     }
 
     func testUniqueScope() throws {
@@ -353,7 +353,8 @@ final class FactoryScopeTests: XCTestCase {
         XCTAssertNotNil(service2)
         XCTAssertTrue(Container.shared.manager.isEmpty(.scope)) // nothing caches
         Container.shared.nilSService
-            .register(scope: .cached) { MyService() }
+            .scope(.cached)
+            .register { MyService() }
         let service3 = Container.shared.nilSService()
         XCTAssertNotNil(service3)
         XCTAssertFalse(Container.shared.manager.isEmpty(.scope)) // should be cached
@@ -407,7 +408,7 @@ extension SharedContainer {
 }
 
 fileprivate final class FirstSingletonContainer: SharedContainer, AutoRegistering {
-    static var shared = FirstSingletonContainer()
+    static let shared = FirstSingletonContainer()
     func autoRegister() {
         manager.defaultScope = .singleton
     }
@@ -418,7 +419,7 @@ fileprivate final class FirstSingletonContainer: SharedContainer, AutoRegisterin
 }
 
 fileprivate final class SecondSingletonContainer: SharedContainer, AutoRegistering {
-    static var shared = SecondSingletonContainer()
+    static let shared = SecondSingletonContainer()
     func autoRegister() {
         manager.defaultScope = .singleton
     }

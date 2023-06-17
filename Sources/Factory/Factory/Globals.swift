@@ -26,34 +26,6 @@
 
 import Foundation
 
-// MARK: - Locking
-
-/// Master recursive lock
-internal var globalRecursiveLock = RecursiveLock()
-
-internal final class RecursiveLock {
-    init() {
-        let mutexAttr = UnsafeMutablePointer<pthread_mutexattr_t>.allocate(capacity: 1)
-        pthread_mutexattr_init(mutexAttr)
-        pthread_mutexattr_settype(mutexAttr, Int32(PTHREAD_MUTEX_RECURSIVE))
-        mutex = UnsafeMutablePointer<pthread_mutex_t>.allocate(capacity: 1)
-        pthread_mutex_init(mutex, mutexAttr)
-        pthread_mutexattr_destroy(mutexAttr)
-        mutexAttr.deallocate()
-    }
-    deinit {
-        pthread_mutex_destroy(mutex)
-        mutex.deallocate()
-    }
-    @inlinable func lock() {
-        pthread_mutex_lock(mutex)
-    }
-    @inlinable func unlock() {
-        pthread_mutex_unlock(mutex)
-    }
-    private var mutex: UnsafeMutablePointer<pthread_mutex_t>
-}
-
 // MARK: - Internal Variables
 
 /// Master graph resolution depth counter

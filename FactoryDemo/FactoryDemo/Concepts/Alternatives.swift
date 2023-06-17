@@ -39,7 +39,7 @@ public struct NewFactory<T> {
 }
 
 public final class NewContainer {
-    public static var shared = NewContainer()
+    public static let shared = NewContainer()
     internal func registration<T>(id: String, container: NewContainer, factory: @escaping FactoryType<T>) -> NewRegistration<T> {
         defer { lock.unlock() }
         lock.lock()
@@ -116,9 +116,9 @@ internal class NewRegistration<T>: AnyRegistration, CacheProviding {
 
 public class NewFactoryScope {}
 public extension NewFactoryScope {
-    static var cached: NewFactoryScope = NewFactoryScope()
-    static var shared: NewFactoryScope = NewFactoryScope()
-    static var singleton: NewFactoryScope = NewFactoryScope()
+    static let cached: NewFactoryScope = NewFactoryScope()
+    static let shared: NewFactoryScope = NewFactoryScope()
+    static let singleton: NewFactoryScope = NewFactoryScope()
 }
 
 extension NewContainer {

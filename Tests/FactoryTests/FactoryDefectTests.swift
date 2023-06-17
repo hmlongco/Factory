@@ -5,7 +5,7 @@ final class FactoryDefectTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        Container.shared = Container()
+        Container.shared.reset()
     }
 
     // scope would not correctly resolve a factory with an optional type. e.g. Factory<MyType?>(scope: .cached) { nil }
@@ -163,6 +163,30 @@ final class FactoryDefectTests: XCTestCase {
         XCTAssertEqual(service3.value, 64)
     }
 
+    // setting a context would not clear scope cache as does register
+    func testContextNotClearingScope() throws {
+        let service1 = Container.shared.cachedService()
+        let service2 = Container.shared.cachedService()
+        XCTAssertTrue(service1.id == service2.id)
+        XCTAssertFalse(Container.shared.manager.cache.isEmpty)
+        // test register
+        Container.shared.cachedService.register {
+            MyService()
+        }
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
+        let service3 = Container.shared.cachedService()
+        XCTAssertFalse(service1.id == service3.id)
+        XCTAssertFalse(Container.shared.manager.cache.isEmpty)
+        // test context
+        Container.shared.cachedService.onTest {
+            MyService()
+        }
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
+        let service4 = Container.shared.cachedService()
+        XCTAssertFalse(service1.id == service4.id)
+        XCTAssertFalse(service3.id == service4.id)
+    }
+
 }
 
 extension Container {
@@ -192,7 +216,7 @@ fileprivate class LockingTestB {
 }
 
 fileprivate final class AutoRegisteringContainer: SharedContainer, AutoRegistering {
-    static var shared = AutoRegisteringContainer()
+    static let shared = AutoRegisteringContainer()
     var test: Factory<MyServiceType> {
         self { MockServiceN(16) }
     }

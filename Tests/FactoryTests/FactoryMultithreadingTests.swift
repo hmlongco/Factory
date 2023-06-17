@@ -10,7 +10,7 @@ final class FactoryMultithreadingTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        MultiThreadedContainer.shared = MultiThreadedContainer()
+        MultiThreadedContainer.shared.reset()
     }
 
     func testMultiThreading() throws {
@@ -151,7 +151,7 @@ fileprivate class E {
 }
 
 fileprivate final class MultiThreadedContainer: SharedContainer {
-    fileprivate static var shared = MultiThreadedContainer()
+    fileprivate static let shared = MultiThreadedContainer()
     fileprivate var a: Factory<A> { self { A(b: self.b()) } }
     fileprivate var b: Factory<B> { self { B(c: self.c()) } }
     fileprivate var c: Factory<C> { self { C(d: self.d()) } }

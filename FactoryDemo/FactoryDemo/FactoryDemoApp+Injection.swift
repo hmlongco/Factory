@@ -48,7 +48,7 @@ extension SharedContainer {
 }
 
 final class DemoContainer: ObservableObject, SharedContainer {
-    static var shared = DemoContainer()
+    static let shared = DemoContainer()
 
     var optionalService: Factory<SimpleService?> { self { nil } }
 
@@ -88,7 +88,7 @@ extension DemoContainer {
 #endif
 
 extension Scope {
-    static var session = Cached()
+    static let session = Cached()
 }
 
 extension Container {

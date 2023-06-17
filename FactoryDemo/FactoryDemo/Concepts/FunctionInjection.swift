@@ -8,27 +8,27 @@
 import SwiftUI
 import Factory
 
-typealias OpenURLFunction = (_ url: URL) -> Bool
-
-extension Container {
-    var openURL: Factory<OpenURLFunction> {
-        self { UIApplication.shared.openURL }
-    }
-}
-
-struct OpenView: View {
-    let site: String
-    @Injected(\.openURL) var openURL
-    var body: some View {
-        Button("Open") {
-            _ = openURL(URL(string: site)!)
-        }
-    }
-}
-
-struct OpenView_Previews: PreviewProvider {
-    static var previews: some View {
-        let _ = Container.shared.openURL.register { { _ in false } }
-        OpenView(site: "https://www.google.com")
-    }
-}
+//typealias OpenURLFunction = (_ url: URL) -> Bool
+//
+//extension Container {
+//    var openURL: Factory<OpenURLFunction> {
+//        self { UIApplication.shared.openURL }
+//    }
+//}
+//
+//struct OpenView: View {
+//    let site: String
+//    @Injected(\.openURL) var openURL
+//    var body: some View {
+//        Button("Open") {
+//            _ = openURL(URL(string: site)!)
+//        }
+//    }
+//}
+//
+//struct OpenView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        let _ = Container.shared.openURL.register { { _ in false } }
+//        OpenView(site: "https://www.google.com")
+//    }
+//}

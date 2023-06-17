@@ -15,7 +15,7 @@ final class FactoryDemoTests3: XCTestCase {
     let delay: UInt64 = 250_000_000
 
     override func setUpWithError() throws {
-        Container.shared = Container()
+        Container.shared.reset()
     }
 
     override func tearDownWithError() throws {

@@ -176,10 +176,10 @@ extension Container {
     private var commonProvider: Factory<MyService> { self { MyService() }.graph }
 }
 
-// Custom Conatiner
+// Custom Container
 
 final class CustomContainer: SharedContainer, AutoRegistering {
-    static var shared = CustomContainer()
+    static let shared = CustomContainer()
     static var count = 0
     var count = 0
     var test: Factory<MyServiceType> {

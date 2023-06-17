@@ -22,6 +22,7 @@ class ContentViewModel: ObservableObject {
     init() {
         print("ContentViewModel Initialized")
         testFactory()
+        testResolving()
     }
 
     func text() -> String {
@@ -49,6 +50,22 @@ class ContentViewModel: ObservableObject {
         processors.forEach { p in
             print(p.name)
         }
+    }
+
+    @InjectedType private var simple: SimpleService?
+
+    func testResolving() {
+        let c = Container.shared
+        let s1: MyService? = c.resolve()
+        print(s1?.id as Any)
+        c.register { MyService() as MyServiceType }
+            .scope(.singleton)
+        let s2: MyServiceType? = c.resolve()
+        print(s2?.id as Any)
+        let s3: MyServiceType? = c.resolve()
+        print(s3?.id as Any)
+        // injected
+        print(simple?.text() as Any)
     }
 
 }

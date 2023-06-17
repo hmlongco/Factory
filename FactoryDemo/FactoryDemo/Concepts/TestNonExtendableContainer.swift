@@ -10,7 +10,7 @@ import Factory
 
 final class ServiceContainer: SharedContainer {
     // CONFORMANCE
-    static var shared = ServiceContainer()
+    static let shared = ServiceContainer()
     var manager = ContainerManager()
 
     // DON'T DO THIS

@@ -3,15 +3,11 @@ import XCTest
 
 final class FactoryContextTests: XCTestCase {
 
-    var saveArguments: [String] = []
-    var savePreview: Bool = false
-    var saveTest: Bool = false
-
     override func setUp() {
         super.setUp()
 
         // start over
-        Container.shared = Container()
+        Container.shared.reset()
 
         // externally defined contexts
         Container.shared.externalContextService
@@ -35,19 +31,12 @@ final class FactoryContextTests: XCTestCase {
         // define arg contexts
         Container.shared.argsContextService
             .onArgs(["ARG1","ARG2"]) { ContextService(name: "ARG") }
-
-        // save current arg state
-        saveArguments = FactoryContext.arguments
-        savePreview = FactoryContext.isPreview
-        saveTest = FactoryContext.isTest
     }
 
     override func tearDown() {
         super.tearDown()
         // restore current arg state
-        FactoryContext.arguments = saveArguments
-        FactoryContext.isPreview =  savePreview
-        FactoryContext.isTest = saveTest
+        FactoryContext.current = FactoryContext()
     }
 
     func testDefaultRunningUnitTest() {
@@ -55,7 +44,7 @@ final class FactoryContextTests: XCTestCase {
         XCTAssertEqual(service1.name, "TEST")
         let service2 = Container.shared.internalContextService()
         XCTAssertEqual(service2.name, "TEST")
-        if FactoryContext.isSimulator {
+        if FactoryContext.current.isSimulator {
             let service3 = Container.shared.simulatorContextService()
             XCTAssertEqual(service3.name, "SIMULATOR")
         } else {
@@ -67,8 +56,8 @@ final class FactoryContextTests: XCTestCase {
     }
 
     func testNoPreviewNoTest() {
-        FactoryContext.isPreview = false
-        FactoryContext.isTest = false
+        FactoryContext.current.isPreview = false
+        FactoryContext.current.isTest = false
         let service1 = Container.shared.externalContextService()
         XCTAssertEqual(service1.name, "REGISTERED")
         let service2 = Container.shared.internalContextService()
@@ -78,8 +67,8 @@ final class FactoryContextTests: XCTestCase {
     }
 
     func testWithPreview() {
-        FactoryContext.isPreview = true
-        FactoryContext.isTest = false
+        FactoryContext.current.isPreview = true
+        FactoryContext.current.isTest = false
         let service1 = Container.shared.externalContextService()
         XCTAssertEqual(service1.name, "PREVIEW")
         let service2 = Container.shared.internalContextService()
@@ -89,8 +78,8 @@ final class FactoryContextTests: XCTestCase {
     }
 
     func testWithTest() {
-        FactoryContext.isPreview = false
-        FactoryContext.isTest = true
+        FactoryContext.current.isPreview = false
+        FactoryContext.current.isTest = true
         let service1 = Container.shared.externalContextService()
         XCTAssertEqual(service1.name, "TEST")
         let service2 = Container.shared.internalContextService()
@@ -100,9 +89,9 @@ final class FactoryContextTests: XCTestCase {
     }
 
     func testWithSimulator() {
-        FactoryContext.isPreview = false
-        FactoryContext.isTest = false
-        FactoryContext.isSimulator = true
+        FactoryContext.current.isPreview = false
+        FactoryContext.current.isTest = false
+        FactoryContext.current.isSimulator = true
         let service1 = Container.shared.simulatorContextService()
         XCTAssertEqual(service1.name, "SIMULATOR")
         let service3 = Container.shared.argsContextService()
@@ -110,9 +99,9 @@ final class FactoryContextTests: XCTestCase {
     }
 
     func testWithDevice() {
-        FactoryContext.isPreview = false
-        FactoryContext.isTest = false
-        FactoryContext.isSimulator = false
+        FactoryContext.current.isPreview = false
+        FactoryContext.current.isTest = false
+        FactoryContext.current.isSimulator = false
         let service1 = Container.shared.simulatorContextService()
         XCTAssertEqual(service1.name, "DEVICE")
         let service3 = Container.shared.argsContextService()
@@ -120,8 +109,8 @@ final class FactoryContextTests: XCTestCase {
     }
 
     func testDebugWithNoPreviewNoTest() {
-        FactoryContext.isPreview = false
-        FactoryContext.isTest = false
+        FactoryContext.current.isPreview = false
+        FactoryContext.current.isTest = false
         Container.shared.externalContextService
             .onDebug { ContextService(name: "DEBUG") }
         let service1 = Container.shared.externalContextService()
@@ -133,9 +122,9 @@ final class FactoryContextTests: XCTestCase {
     }
 
     func testWithArgument() {
-        FactoryContext.isPreview = false
-        FactoryContext.isTest = false
-        FactoryContext.arguments = ["ARG"]
+        FactoryContext.current.isPreview = false
+        FactoryContext.current.isTest = false
+        FactoryContext.current.arguments = ["ARG"]
         let service1 = Container.shared.externalContextService()
         XCTAssertEqual(service1.name, "ARG")
         let service2 = Container.shared.internalContextService()
@@ -144,10 +133,10 @@ final class FactoryContextTests: XCTestCase {
         XCTAssertEqual(service3.name, "FACTORY")
     }
 
-    func testWithArgumenst() {
-        FactoryContext.isPreview = false
-        FactoryContext.isTest = false
-        FactoryContext.arguments = ["ARG2"]
+    func testWithArguments() {
+        FactoryContext.current.isPreview = false
+        FactoryContext.current.isTest = false
+        FactoryContext.current.arguments = ["ARG2"]
         let service1 = Container.shared.externalContextService()
         XCTAssertEqual(service1.name, "REGISTERED")
         let service2 = Container.shared.internalContextService()
@@ -157,8 +146,8 @@ final class FactoryContextTests: XCTestCase {
     }
 
     func testRuntimeArgFunctions() {
-        FactoryContext.isPreview = false
-        FactoryContext.isTest = false
+        FactoryContext.current.isPreview = false
+        FactoryContext.current.isTest = false
         FactoryContext.setArg("ARG2", forKey: "CUSTOM")
         let service1 = Container.shared.argsContextService()
         XCTAssertEqual(service1.name, "ARG")
@@ -168,9 +157,9 @@ final class FactoryContextTests: XCTestCase {
     }
 
     func testUnmatchedArgument() {
-        FactoryContext.arguments = ["ARG3"]
-        FactoryContext.isPreview = false
-        FactoryContext.isTest = false
+        FactoryContext.current.arguments = ["ARG3"]
+        FactoryContext.current.isPreview = false
+        FactoryContext.current.isTest = false
         let service1 = Container.shared.externalContextService()
         XCTAssertEqual(service1.name, "REGISTERED")
         let service2 = Container.shared.internalContextService()
@@ -180,9 +169,9 @@ final class FactoryContextTests: XCTestCase {
     }
 
     func testResettingContext1() {
-        FactoryContext.arguments = ["ARG"]
-        FactoryContext.isPreview = true
-        FactoryContext.isTest = true
+        FactoryContext.current.arguments = ["ARG"]
+        FactoryContext.current.isPreview = true
+        FactoryContext.current.isTest = true
         Container.shared.externalContextService.reset(.context)
         let service1 = Container.shared.externalContextService()
         // contexts cleared, registration visible
@@ -196,9 +185,9 @@ final class FactoryContextTests: XCTestCase {
     }
 
     func testResettingContext2() {
-        FactoryContext.arguments = ["ARG"]
-        FactoryContext.isPreview = true
-        FactoryContext.isTest = true
+        FactoryContext.current.arguments = ["ARG"]
+        FactoryContext.current.isPreview = true
+        FactoryContext.current.isTest = true
         Container.shared.internalContextService.reset(.context)
         let service1 = Container.shared.externalContextService()
         // no effect on service1
@@ -212,9 +201,9 @@ final class FactoryContextTests: XCTestCase {
     }
 
     func testResettingContainer() {
-        FactoryContext.arguments = ["ARG"]
-        FactoryContext.isPreview = true
-        FactoryContext.isTest = true
+        FactoryContext.current.arguments = ["ARG"]
+        FactoryContext.current.isPreview = true
+        FactoryContext.current.isTest = true
         // reset container registrations and contexts
         Container.shared.manager.reset()
         let service1 = Container.shared.externalContextService()
@@ -226,9 +215,9 @@ final class FactoryContextTests: XCTestCase {
     }
 
     func testResettingContainerRegistrations() {
-        FactoryContext.arguments = ["ARG"]
-        FactoryContext.isPreview = true
-        FactoryContext.isTest = true
+        FactoryContext.current.arguments = ["ARG"]
+        FactoryContext.current.isPreview = true
+        FactoryContext.current.isTest = true
         // reset container registrations and contexts
         Container.shared.manager.reset(options: .registration)
         let service1 = Container.shared.externalContextService()
@@ -240,9 +229,9 @@ final class FactoryContextTests: XCTestCase {
     }
 
     func testResettingContainerContexts() {
-        FactoryContext.arguments = ["ARG"]
-        FactoryContext.isPreview = true
-        FactoryContext.isTest = true
+        FactoryContext.current.arguments = ["ARG"]
+        FactoryContext.current.isPreview = true
+        FactoryContext.current.isTest = true
         // reset container contexts
         Container.shared.manager.reset(options: .context)
         let service1 = Container.shared.externalContextService()
@@ -254,9 +243,9 @@ final class FactoryContextTests: XCTestCase {
     }
 
     func testResettingContainerContextsWithOnce() {
-        FactoryContext.arguments = []
-        FactoryContext.isPreview = true
-        FactoryContext.isTest = true
+        FactoryContext.current.arguments = []
+        FactoryContext.current.isPreview = true
+        FactoryContext.current.isTest = true
         // reset container contexts
         let service1 = Container.shared.onceContextService()
         // will see once
@@ -280,9 +269,9 @@ final class FactoryContextTests: XCTestCase {
     }
 
     func testChaining() {
-        FactoryContext.arguments = []
-        FactoryContext.isPreview = false
-        FactoryContext.isTest = false
+        FactoryContext.current.arguments = []
+        FactoryContext.current.isPreview = false
+        FactoryContext.current.isTest = false
         let service1 = Container.shared.internalContextService()
         XCTAssertEqual(service1.name, "DEBUG")
         let service2 = Container.shared.internalContextService
