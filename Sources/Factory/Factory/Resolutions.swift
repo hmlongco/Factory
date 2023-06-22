@@ -1,5 +1,5 @@
 //
-// Keypaths.swift
+// Resolutions.swift
 //
 // GitHub Repo and Documentation: https://github.com/hmlongco/Factory
 //

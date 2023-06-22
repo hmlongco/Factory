@@ -118,9 +118,11 @@ final class FactoryInjectionTests: XCTestCase {
 
     func testLazyInjection() throws {
         let services = Services2()
+        XCTAssertNil(services.$service.resolvedOrNil())
         XCTAssertEqual(services.service.text(), "MyService")
         XCTAssertEqual(services.mock.text(), "MockService")
         XCTAssertEqual(services.test.text(), "MockService32")
+        XCTAssertNotNil(services.$service.resolvedOrNil())
     }
 
     func testLazyInjectionOccursOnce() throws {
@@ -139,9 +141,11 @@ final class FactoryInjectionTests: XCTestCase {
         var parent: ServicesP? = Container.shared.servicesP()
         let child = Container.shared.servicesC()
         let test = CustomContainer.shared.test()
+        XCTAssertNil(child.$testService.resolvedOrNil())
         XCTAssertEqual(parent?.test(), "Child")
         XCTAssertEqual(child.test(), "Parent")
         XCTAssertEqual(child.testService?.text(), test.text())
+        XCTAssertNotNil(child.$testService.resolvedOrNil())
         parent = nil
         XCTAssertNil(child.test())
     }

@@ -16,6 +16,13 @@ final class FactoryCoreTests: XCTestCase {
         XCTAssertTrue(service2.text() == "MockService")
     }
 
+    func testGlobalResolutionFunctions() throws {
+        let service1 = resolve(\.myServiceType)
+        XCTAssertTrue(service1.text() == "MyService")
+        let service2 = resolve(\Container.myServiceType)
+        XCTAssertTrue(service2.text() == "MyService")
+    }
+
     func testBasicResolutionOverride() throws {
         let service1 = Container.shared.myServiceType()
         XCTAssertTrue(service1.text() == "MyService")

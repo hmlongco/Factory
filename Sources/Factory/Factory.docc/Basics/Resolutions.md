@@ -71,6 +71,16 @@ struct ContentView: View {
 ```
 See ``Injected``, ``LazyInjected``, ``WeakLazyInjected``, and ``InjectedObject`` for more.
 
+### Global Keypath Resolution from Shared Container
+Factory provides two global functions that utilize keypaths for resolution. 
+```swift
+class ContentViewModel: ObservableObject {
+    let service1 = resolve(\.constructedService)
+    let service2 = resolve(\MyContainer.anotherService)
+}
+```
+The end result is identical to using a keypath with the @Injected property wrapper. 
+
 ### Parameterized Initialization from Passed Container
 Passing a required parameter to a factory for resolution.
 ```swift
