@@ -79,7 +79,7 @@ Next, we implement part of the "same module" solution shown above, but with a tw
 ```swift
 // Public Factory
 extension Container {
-    public var accountLoading: Factory<AccountLoading?> { self { nil } }
+    public var accountLoader: Factory<AccountLoading?> { self { nil } }
 }
 ```
 
@@ -155,7 +155,7 @@ Some might worry that an developer might slip up and forget to provide a needed 
 One *could* also do something like the following …
 ```swift
 extension Container {
-    public var accountLoading: Factory<AccountLoading?> { self { fatalError() } }
+    public var accountLoader: Factory<AccountLoading?> { self { fatalError() } }
 }
 ```
 Which provides the factory closure with `fatalError` that will cause the application to crash the very first time an unregistered Factory is accessed. And some people actually prefer this "fail fast" approach.
@@ -166,7 +166,7 @@ Not a good look. Fortunately, Factory 2.1 provides a solution.
 
 ```swift
 extension Container {
-    public var accountLoading: Factory<AccountLoading?> { promised() }
+    public var accountLoader: Factory<AccountLoading?> { promised() }
 }
 ```
 When run in debug mode and the application attempts to resolve an unregistered accountLoader, `promised()` will trigger a fatalError to inform you of the mistake. But in a released application, `promised()` simply returns nil and your application can continue on.
@@ -185,12 +185,12 @@ In those cases, we're going to need a level of indirection.
 
 Everyone sees what they saw before, plus everyone who's dependent on ModuleP can also see a new module called `Services` which is a new cross-module framework where our empty registrations are defined. `Services` in turn, can only see ModuleP in order to get the model and protocol definitions it needs to create its Factory's.
 
-Our original `accountLoading` Factory, which lived in ModuleP in the original example, now lives in Services.
+Our original `accountLoader` Factory, which lived in ModuleP in the original example, now lives in Services.
 
 ```swift
 // Public Factory
 extension Container {
-    public var accountLoading: Factory<AccountLoading?> { self { nil } }
+    public var accountLoader: Factory<AccountLoading?> { self { nil } }
 }
 ```
 And the application, which can see everything, cross wires the various service registrations provided by `Services` together, just as it did before.

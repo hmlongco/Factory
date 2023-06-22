@@ -2,15 +2,16 @@
 
 ## 2.2.0
 
-* Converts "shared" container variables from var to let. Issue - #111
-* Add convenience reset() function to container. Issue - #111
+* Converts "shared" container variables from var to let. - Issue #111
+* Add convenience reset() function to container. - Issue #111
   Note that issue #111 could be a breaking change if your code attempts to "replace" a shared container. Do reset instead.
     Container.shared.reset() // Do this...
     Container.shared = Container() // Not this...
-* Removes @MainActor from @InjectedObject property wrapper variables. Issue - #107
-* Fix registering a new context doesn't clear existing cache as did register. Issue - #114
-* Fix FactoryContext not public. Issue - #116
-* Adds $service.resolvedOrNil() function to LazyInjected and WeakLazyInjected. Issue - #122
+* Removes @MainActor from @InjectedObject property wrapper variables. - Issue #107
+* Fix registering a new context doesn't clear existing cache as did register. - Issue #114
+* Fix FactoryContext not public. - Issue #116
+* Update Modular Application documentation. - Issue #121
+* Adds $service.resolvedOrNil() function to LazyInjected and WeakLazyInjected. - Issue #122
 * Adds keypath-based global resolutions functions for shared containers.
 * Removes func register(scope:factory:) function deprecated in 2.1
   Use container.service.scope(.cached).register { Service() } instead.
@@ -21,14 +22,14 @@
 
 ## 2.1.4
 
-* Fix singletons in multiple modules keyed with same type and name. Issue - #99
-* Fix building on Linux. Issue - #100
+* Fix singletons in multiple modules keyed with same type and name. - Issue #99
+* Fix building on Linux. - Issue #100
 
 ## 2.1.3
 
-* Fix singleton scope issue with SharedContainer across multiple container types. Issue - #92
-* Fix unit test context to detect when run from command line. Issue - #94
-* Fix where new registration on Factory also clears singleton cache. Issue - #96
+* Fix singleton scope issue with SharedContainer across multiple container types. - Issue #92
+* Fix unit test context to detect when run from command line. - Issue #94
+* Fix where new registration on Factory also clears singleton cache. - Issue #96
 * Minor update to trace logging for better presentation of nil optionals
 
 ## 2.1.2
