@@ -10,6 +10,8 @@
 * Removes @MainActor from @InjectedObject property wrapper variables. Issue - #107
 * Fix registering a new context doesn't clear existing cache as did register. Issue - #114
 * Fix FactoryContext not public. Issue - #116
+* Adds $service.resolvedOrNil() function to LazyInjected and WeakLazyInjected. Issue - #122
+* Adds keypath-based global resolutions functions for shared containers.
 * Removes func register(scope:factory:) function deprecated in 2.1
   Use container.service.scope(.cached).register { Service() } instead.
 

@@ -10,7 +10,8 @@ import Factory
 
 struct ContentView: View {
 
-    @InjectedObject(\.contentViewModel) var model: ContentViewModel
+    //@InjectedObject(\.contentViewModel)
+    @StateObject var model = resolve(\.contentViewModel)
 
     var body: some View {
         List {

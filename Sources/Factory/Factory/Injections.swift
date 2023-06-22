@@ -107,23 +107,23 @@ import SwiftUI
 ///
 /// > Note: Lazy injection is resolved the first time the dependency is referenced by the code, and **not** on initialization.
 @propertyWrapper public struct LazyInjected<T> {
-
+    
     private var reference: BoxedFactoryReference
     private var dependency: T!
     private var initialize = true
-
+    
     /// Initializes the property wrapper. The dependency isn't resolved until the wrapped value is accessed for the first time.
     /// - Parameter keyPath: KeyPath to a Factory on the default Container.
     public init(_ keyPath: KeyPath<Container, Factory<T>>) {
         self.reference = FactoryReference<Container, T>(keypath: keyPath)
     }
-
+    
     /// Initializes the property wrapper. The dependency isn't resolved until the wrapped value is accessed for the first time.
     /// - Parameter keyPath: KeyPath to a Factory on the specified Container.
     public init<C:SharedContainer>(_ keyPath: KeyPath<C, Factory<T>>) {
         self.reference = FactoryReference<C, T>(keypath: keyPath)
     }
-
+    
     /// Manages the wrapped dependency, which is resolved when this value is accessed for the first time.
     public var wrappedValue: T {
         mutating get {
@@ -138,24 +138,37 @@ import SwiftUI
             dependency = newValue
         }
     }
-
+    
     /// Unwraps the property wrapper granting access to the resolve/reset function.
     public var projectedValue: LazyInjected<T> {
         get { return self }
         mutating set { self = newValue }
     }
-
+    
     /// Grants access to the internal Factory.
     public var factory: Factory<T> {
         reference.factory()
     }
-
+    
     /// Allows the user to force a Factory resolution at their discretion.
     public mutating func resolve(reset options: FactoryResetOptions = .none) {
         factory.reset(options)
         dependency = factory()
         initialize = false
     }
+
+    /// Projected function returns resolved instance if it exists.
+    ///
+    /// This can come in handy when you need to perform some sort of cleanup, but you don't want to resolve
+    /// the property wrapper instance if it hasn't already been resolved.
+    /// ```swift
+    /// deinit {
+    ///     $myService.resolvedOrNil()?.cleanup()
+    /// }
+    public func resolvedOrNil() -> T? {
+        dependency
+    }
+
 }
 
 /// Convenience property wrapper takes a factory and resolves a weak instance of the desired type the first time the wrapped value is requested.
@@ -178,23 +191,23 @@ import SwiftUI
 ///
 /// > Note: Lazy injection is resolved the first time the dependency is referenced by the code, **not** on initialization.
 @propertyWrapper public struct WeakLazyInjected<T> {
-
+    
     private var reference: BoxedFactoryReference
     private weak var dependency: AnyObject?
     private var initialize = true
-
+    
     /// Initializes the property wrapper. The dependency isn't resolved until the wrapped value is accessed for the first time.
     /// - Parameter keyPath: KeyPath to a Factory on the default Container.
     public init(_ keyPath: KeyPath<Container, Factory<T>>) {
         self.reference = FactoryReference<Container, T>(keypath: keyPath)
     }
-
+    
     /// Initializes the property wrapper. The dependency isn't resolved until the wrapped value is accessed for the first time.
     /// - Parameter keyPath: KeyPath to a Factory on the specified Container.
     public init<C:SharedContainer>(_ keyPath: KeyPath<C, Factory<T>>) {
         self.reference = FactoryReference<C, T>(keypath: keyPath)
     }
-
+    
     /// Manages the wrapped dependency, which is resolved when this value is accessed for the first time.
     public var wrappedValue: T? {
         mutating get {
@@ -209,24 +222,37 @@ import SwiftUI
             dependency = newValue as AnyObject
         }
     }
-
+    
     /// Unwraps the property wrapper granting access to the resolve/reset function.
     public var projectedValue: WeakLazyInjected<T> {
         get { return self }
         mutating set { self = newValue }
     }
-
+    
     /// Grants access to the internal Factory.
     public var factory: Factory<T> {
         reference.factory()
     }
-
+    
     /// Allows the user to force a Factory resolution at their discretion.
     public mutating func resolve(reset options: FactoryResetOptions = .none) {
         factory.reset(options)
         dependency = factory() as AnyObject
         initialize = false
     }
+
+    /// Projected function returns resolved instance if it exists.
+    ///
+    /// This can come in handy when you need to perform some sort of cleanup, but you don't want to resolve
+    /// the property wrapper instance if it hasn't already been resolved.
+    /// ```swift
+    /// deinit {
+    ///     $myService.resolvedOrNil()?.cleanup()
+    /// }
+    public func resolvedOrNil() -> T? {
+        dependency as? T
+    }
+
 }
 
 /// Basic property wrapper for optional injected types
@@ -314,9 +340,9 @@ internal protocol BoxedFactoryReference {
 
 /// Helps resolve a reference to an injected factory's shared container without actually storing a Factory along
 /// with its hard, reference-counted pointer to that container.
-internal struct FactoryReference<C: SharedContainer, T>: BoxedFactoryReference {
+internal struct FactoryReference<C: SharedContainer, R>: BoxedFactoryReference {
     /// The stored factory keypath on the container
-    let keypath: KeyPath<C, Factory<T>>
+    let keypath: KeyPath<C, Factory<R>>
     /// Resolves the current shared container on the given type and returns the Factory referenced by the keyPath.
     /// Note that types matched going in, so it's safe to explicitly cast it coming back out.
     func factory<T>() -> Factory<T> {
