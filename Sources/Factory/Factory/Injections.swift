@@ -157,7 +157,14 @@ import SwiftUI
         initialize = false
     }
 
-    /// Returns resolved value if it exists
+    /// Projected function returns resolved instance if it exists.
+    ///
+    /// This can come in handy when you need to perform some sort of cleanup, but you don't want to resolve
+    /// the property wrapper instance if it hasn't already been resolved.
+    /// ```swift
+    /// deinit {
+    ///     $myService.resolvedOrNil()?.cleanup()
+    /// }
     public func resolvedOrNil() -> T? {
         dependency
     }
@@ -234,7 +241,14 @@ import SwiftUI
         initialize = false
     }
 
-    /// Returns resolved value if it exists
+    /// Projected function returns resolved instance if it exists.
+    ///
+    /// This can come in handy when you need to perform some sort of cleanup, but you don't want to resolve
+    /// the property wrapper instance if it hasn't already been resolved.
+    /// ```swift
+    /// deinit {
+    ///     $myService.resolvedOrNil()?.cleanup()
+    /// }
     public func resolvedOrNil() -> T? {
         dependency as? T
     }
@@ -326,9 +340,9 @@ internal protocol BoxedFactoryReference {
 
 /// Helps resolve a reference to an injected factory's shared container without actually storing a Factory along
 /// with its hard, reference-counted pointer to that container.
-internal struct FactoryReference<C: SharedContainer, T>: BoxedFactoryReference {
+internal struct FactoryReference<C: SharedContainer, R>: BoxedFactoryReference {
     /// The stored factory keypath on the container
-    let keypath: KeyPath<C, Factory<T>>
+    let keypath: KeyPath<C, Factory<R>>
     /// Resolves the current shared container on the given type and returns the Factory referenced by the keyPath.
     /// Note that types matched going in, so it's safe to explicitly cast it coming back out.
     func factory<T>() -> Factory<T> {
