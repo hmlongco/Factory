@@ -1,3 +1,6 @@
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fhmlongco%2FFactory%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/hmlongco/Factory)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fhmlongco%2FFactory%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/hmlongco/Factory)
+
 ![](https://github.com/hmlongco/Factory/blob/main/Logo.png?raw=true)
 
 A new approach to Container-Based Dependency Injection for Swift and SwiftUI.
