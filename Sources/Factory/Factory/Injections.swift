@@ -271,7 +271,7 @@ import SwiftUI
     }
 }
 
-#if canImport(Darwin)
+#if canImport(SwiftUI)
 /// Immediate injection property wrapper for SwiftUI ObservableObjects.
 ///
 /// This wrapper is meant for use in SwiftUI Views and exposes bindable objects similar to that of SwiftUI @StateObject
