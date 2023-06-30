@@ -7,10 +7,17 @@ Pod::Spec.new do |s|
   s.author       = "Michael Long"
   s.source       = { :git => "https://github.com/hmlongco/Factory.git", :tag => "#{s.version}" }
   s.source_files  = "Sources/**/*.swift"
-  s.swift_version = '5.6'
+  s.swift_version = '5.7'
 
   s.ios.deployment_target = "11.0"
-  s.tvos.deployment_target = "13.0"
-  s.watchos.deployment_target = "8.2"
-  s.osx.deployment_target = "10.14"
+  s.ios.framework = 'UIKit'
+
+  s.tvos.deployment_target = "11.0"
+  s.ios.framework = 'UIKit'
+
+  s.watchos.deployment_target = "4.0"
+  s.ios.framework = 'SwiftUI'
+
+  s.osx.deployment_target = "10.13"
+  s.osx.framework = 'AppKit'
 end
