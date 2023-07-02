@@ -40,13 +40,13 @@ internal var globalTraceResolutions: [String] = []
 internal var globalLogger: (String) -> Void = { print($0) }
 
 /// Triggers fatalError after resetting enough stuff so unit tests can continue
-internal func resetAndTriggerFatalError(_ message: String, _ file: String, _ line: Int) -> Never {
+internal func resetAndTriggerFatalError(_ message: String, _ file: StaticString, _ line: UInt) -> Never {
     globalDependencyChain = []
     globalDependencyChainMessages = []
     globalGraphResolutionDepth = 0
     globalRecursiveLock = RecursiveLock()
     globalTraceResolutions = []
-    triggerFatalError(message, #file, #line) // GOES BOOM
+    triggerFatalError(message, file, line) // GOES BOOM
 }
 
 /// Allow unit test interception of any fatal errors that may occur running the circular dependency check
