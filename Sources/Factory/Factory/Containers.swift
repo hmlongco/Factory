@@ -119,6 +119,20 @@ extension ManagedContainer {
             #endif
         }
     }
+    /// Syntactic sugar allows container to create a factory where registration is promised before resolution.
+    public func promised<P,T>(key: String = #function) -> ParameterFactory<P,T?>  {
+        ParameterFactory<P,T?>(self, key: key) { _ in
+            #if DEBUG
+            if self.manager.promiseTriggersError {
+                resetAndTriggerFatalError("\(T.self) was not registered", #file, #line)
+            } else {
+                return nil
+            }
+            #else
+            nil
+            #endif
+        }
+    }
     /// Defines a decorator for the container. This decorator will see every dependency resolved by this container.
     public func decorator(_ decorator: ((Any) -> ())?) {
         manager.decorator = decorator

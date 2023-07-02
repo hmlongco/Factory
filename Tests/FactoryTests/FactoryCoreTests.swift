@@ -18,9 +18,9 @@ final class FactoryCoreTests: XCTestCase {
 
     func testGlobalResolutionFunctions() throws {
         let service1 = resolve(\.myServiceType)
-        XCTAssertTrue(service1.text() == "MyService")
-        let service2 = resolve(\Container.myServiceType)
-        XCTAssertTrue(service2.text() == "MyService")
+        XCTAssertEqual(service1.text(), "MyService")
+        let service2 = resolve(\CustomContainer.test)
+        XCTAssertEqual(service2.text(), "MockService32")
     }
 
     func testBasicResolutionOverride() throws {
@@ -62,8 +62,16 @@ final class FactoryCoreTests: XCTestCase {
         XCTAssertTrue(service1?.text() == nil)
         Container.shared.promisedService.register { MyService() }
         let service2: MyServiceType? = Container.shared.promisedService()
-        XCTAssertTrue(service2?.text() == "MyService")
+        XCTAssertEqual(service2?.text(), "MyService")
     }
+
+    func testPromisedParameterRegistrationAndOptionalResolution() throws {
+        let service1: ParameterService? = Container.shared.promisedParameterService(23)
+        XCTAssertTrue(service1?.text() == nil)
+        Container.shared.promisedParameterService.register { ParameterService(value: $0) }
+        let service2: ParameterService? = Container.shared.promisedParameterService(23)
+        XCTAssertEqual(service2?.text(), "ParameterService23")
+   }
 
     func testUnsugaredResolution() throws {
         let service1 = Container.shared.myServiceType.resolve()
@@ -175,6 +183,19 @@ final class FactoryCoreTests: XCTestCase {
         Container.shared.manager.promiseTriggersError = true
         expectFatalError(expectedMessage: "MyServiceType was not registered") {
             let _ = Container.shared.strictPromisedService()
+        }
+    }
+
+    func testStrictParameterPromise() {
+        // Expect non fatal error when strict and NOT in debug mode
+        Container.shared.manager.promiseTriggersError = false
+        expectNonFatalError {
+            let _ = Container.shared.strictPromisedParameterService(23)
+        }
+        // Expect fatal error when strict and in debug mode
+        Container.shared.manager.promiseTriggersError = true
+        expectFatalError(expectedMessage: "ParameterService was not registered") {
+            let _ = Container.shared.strictPromisedParameterService(23)
         }
     }
 

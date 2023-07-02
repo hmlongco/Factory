@@ -1,5 +1,10 @@
 # Factory Changelog
 
+## 2.2.1
+
+* Fix resetAndTriggerFatalError was not forwarding the file and line parameters to triggerFatalError. - Issue #133
+* Add Promised ParameterFactory - Issue #133
+
 ## 2.2.0
 
 * Converts "shared" container variables from var to let. - Issue #111

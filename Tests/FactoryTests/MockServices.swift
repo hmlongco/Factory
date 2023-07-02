@@ -122,6 +122,9 @@ extension Container {
     var promisedService: Factory<MyServiceType?> { self { nil } }
     var strictPromisedService: Factory<MyServiceType?> { promised() }
 
+    var promisedParameterService: ParameterFactory<Int, ParameterService?> { self { _ in nil } }
+    var strictPromisedParameterService: ParameterFactory<Int, ParameterService?> { promised() }
+
 }
 
 // For parameter tests
