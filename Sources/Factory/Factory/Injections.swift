@@ -30,8 +30,6 @@ import Foundation
 import SwiftUI
 #endif
 
-#if swift(>=5.1)
-
 /// Convenience property wrapper takes a factory and resolves an instance of the desired type.
 ///
 /// Property wrappers implement an annotation pattern to resolving dependencies, similar to using
@@ -273,7 +271,7 @@ import SwiftUI
     }
 }
 
-#if os(iOS) || os(macOS) || os(tvOS) || os(watchOS)
+#if canImport(SwiftUI)
 /// Immediate injection property wrapper for SwiftUI ObservableObjects.
 ///
 /// This wrapper is meant for use in SwiftUI Views and exposes bindable objects similar to that of SwiftUI @StateObject
@@ -349,5 +347,3 @@ internal struct FactoryReference<C: SharedContainer, R>: BoxedFactoryReference {
         C.shared[keyPath: keypath] as! Factory<T>
     }
 }
-
-#endif
