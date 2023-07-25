@@ -168,7 +168,7 @@ Note that this can come in handy when you want to register instances of objects 
 
 ## Resetting a Container
 
-Using `register` on a factory lets us change the state of the system. But what if we need to revert back to the original behavior?
+Using `register` on a factory lets us change the state of the system. But what if we need to revert to the original behavior?
 
 Simple. Just reset it to bring back the original factory closure. Or, if desired, you can reset *everything* back to square one with a single command.
 ```Swift
