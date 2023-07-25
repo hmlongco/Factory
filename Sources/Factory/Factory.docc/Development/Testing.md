@@ -37,7 +37,7 @@ So our environment exists, running and awaiting our first test. All of our origi
 
 And that's great. A cryptographic hashing dependency can be used in production and in test with no repercussions. We don't need to change a thing. And in fact, the more working code we can test in its shipping state, the better.
 
-That said, other services like analytics might want to be swapped out during testing. Don't want to fed the system all of your dummy test data. Again, <doc:Contexts> can help with that.
+That said, other services like analytics might want to be swapped out during testing. Don't want to feed the system all of your dummy test data. Again, <doc:Contexts> can help with that.
 
 But we're here to test, and one thing we probably *do* care about is the code is talks to our APIs and other services. Those are the classes and services that we're probably going to want to mock and reregister so we can test our view models and business logic against stable test data.
 
@@ -85,7 +85,7 @@ In your unit test setUp function you can *push* the current state of the registr
 
 Then in teardown you can *pop* the stack, eliminating all of your changes and restoring the container to its original state before the push.
 
-This lets each set of tests start from the same initial state, irregardless of what any prior test had changed.
+This lets each set of tests start from the same initial state, regardless of what any prior test had changed.
 
 The following example assumes we're using the shared container.
 
