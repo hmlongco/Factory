@@ -62,7 +62,7 @@ let b = container.cachedService()
 ```
 When we do this we see that both `a` and `b` reference the same instance, just as we saw with the singleton example above.
 
-Cached scopes are Factory's' workhorses. They make unit testing a lot easier and should be your first choice when you're looking for a caching solution.
+Cached scopes are Factories' workhorses. They make unit testing a lot easier and should be your first choice when you're looking for a caching solution.
 
 ## Shared
 
