@@ -118,7 +118,7 @@ final class ServiceContainer: SharedContainer {
     }
 }
 ```
-Note the last "lazy" definition of `service2`. This may seem like a reasonable equivalent, but it hides a fatal flaw. Factory's are designed to be transient. They're lightweight structs created to do a job and then they're discarded.
+Note the last "lazy" definition of `service2`. This may seem like a reasonable equivalent, but it hides a fatal flaw. Factories are designed to be transient. They're lightweight structs created to do a job and then they're discarded.
 
 In order to accomplish this task, each Factory that's created needs to maintain a strong reference to its enclosing container. And now you should be able to see the problem.
 
