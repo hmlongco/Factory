@@ -106,11 +106,11 @@ extension ManagedContainer {
         ParameterFactory(self, key: key, factory)
     }
     /// Syntactic sugar allows container to create a factory where registration is promised before resolution.
-    public func promised<T>(key: String = #function) -> Factory<T?>  {
+    public func promised<T>(key: String = #function, file: StaticString = #file, line: UInt = #line) -> Factory<T?>  {
         Factory<T?>(self, key: key) {
             #if DEBUG
             if self.manager.promiseTriggersError {
-                resetAndTriggerFatalError("\(T.self) was not registered", #file, #line)
+                resetAndTriggerFatalError("\(T.self) was not registered", file, line)
             } else {
                 return nil
             }
@@ -120,11 +120,11 @@ extension ManagedContainer {
         }
     }
     /// Syntactic sugar allows container to create a factory where registration is promised before resolution.
-    public func promised<P,T>(key: String = #function) -> ParameterFactory<P,T?>  {
+    public func promised<P,T>(key: String = #function, file: StaticString = #file, line: UInt = #line) -> ParameterFactory<P,T?>  {
         ParameterFactory<P,T?>(self, key: key) { _ in
             #if DEBUG
             if self.manager.promiseTriggersError {
-                resetAndTriggerFatalError("\(T.self) was not registered", #file, #line)
+                resetAndTriggerFatalError("\(T.self) was not registered", file, line)
             } else {
                 return nil
             }
