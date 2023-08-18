@@ -37,10 +37,8 @@ public struct FactoryRegistration<P,T> {
     internal let factory: (P) -> T
 
     #if DEBUG
-    /// Internal debug type
-    internal let debugType: String
-    /// Internal debug key
-    internal let debugKey: String
+    /// Internal debug
+    internal let debug: FactoryDebugInformation
     #endif
 
     /// Mutable once flag
@@ -48,15 +46,20 @@ public struct FactoryRegistration<P,T> {
 
     /// Initializer for registration sets passed values and default scope from container manager.
     internal init(key: StaticString, container: ManagedContainer, factory: @escaping (P) -> T) {
-        globalSpinLock.lock()
-        self.key = .init(type: T.self, key: key)
+        self.key = FactoryKey(type: T.self, key: key)
         self.container = container
         self.factory = factory
         #if DEBUG
-        self.debugType = String(reflecting: T.self) // expensive
-        self.debugKey = "\(key)<\(debugType))>"
-        #endif
+        globalSpinLock.lock()
+        if let debug = globalDebugInformation[self.key] {
+            self.debug = debug
+        } else {
+            let type = String(reflecting: T.self) // expensive operation
+            self.debug = .init(type: type, key: "\(key)<\(type))>")
+            globalDebugInformation[self.key] = self.debug
+        }
         globalSpinLock.unlock()
+        #endif
     }
 
     /// Support function for one-time only option updates
@@ -128,7 +131,7 @@ public struct FactoryRegistration<P,T> {
             let address = (((instance as? OptionalProtocol)?.hasWrappedValue ?? true)) ? Int(bitPattern: ObjectIdentifier(instance as AnyObject)) : 0
             let resolution = address == 0 ? "nil" : "\(traceNew ?? "C"):\(address)"
             if globalTraceResolutions.count > traceLevel {
-                 globalTraceResolutions[traceLevel] = "\(globalGraphResolutionDepth): \(indent)\(container).\(debugKey) = \(resolution)"
+                globalTraceResolutions[traceLevel] = "\(globalGraphResolutionDepth): \(indent)\(container).\(debug.key) = \(resolution)"
             }
             if globalGraphResolutionDepth == 0 {
                 globalTraceResolutions.forEach { globalLogger($0) }
@@ -260,7 +263,7 @@ public struct FactoryRegistration<P,T> {
 
     #if DEBUG
     internal func circularDependencyChainCheck(max: Int) {
-        let typeComponents = debugType.components(separatedBy: CharacterSet(charactersIn: "<>"))
+        let typeComponents = debug.type.components(separatedBy: CharacterSet(charactersIn: "<>"))
         let typeName = typeComponents.count > 1 ? typeComponents[1] : typeComponents[0]
         let typeIndex = globalDependencyChain.firstIndex(where: { $0 == typeName })
         globalDependencyChain.append(typeName)
@@ -293,6 +296,11 @@ public enum FactoryResetOptions {
     case context
     /// Resets all scope caches on this container
     case scope
+}
+
+internal struct FactoryDebugInformation {
+    let type: String
+    let key: String
 }
 
 internal struct FactoryOptions {

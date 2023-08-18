@@ -2,9 +2,9 @@
 
 ## 2.3.0
 
-* Performance enhancements:
-  Almost 2x faster in debug builds!
-  Over 3x faster in production builds!
+* Dramatic performance enhancements:
+  Over 2x faster in debug builds!
+  Over 4x faster in production builds!
 
 ## 2.2.1
 
