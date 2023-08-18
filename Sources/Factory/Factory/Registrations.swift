@@ -54,8 +54,7 @@ public struct FactoryRegistration<P,T> {
         if let debug = globalDebugInformation[self.key] {
             self.debug = debug
         } else {
-            let type = String(reflecting: T.self) // expensive operation
-            self.debug = .init(type: type, key: "\(key)<\(type))>")
+            self.debug = .init(type: String(reflecting: T.self), key: key)
             globalDebugInformation[self.key] = self.debug
         }
         globalSpinLock.unlock()
@@ -301,6 +300,10 @@ public enum FactoryResetOptions {
 internal struct FactoryDebugInformation {
     let type: String
     let key: String
+    internal init(type: String, key: StaticString) {
+        self.type = type
+        self.key = "\(key)<\(type)>"
+    }
 }
 
 internal struct FactoryOptions {
