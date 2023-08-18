@@ -80,10 +80,6 @@ internal struct SpinLock {
         os_unfair_lock_unlock(oslock)
     }
 
-    func trylock() -> Bool {
-        return os_unfair_lock_trylock(oslock)
-    }
-
     private let oslock: UnsafeMutablePointer<os_unfair_lock>
 
 }

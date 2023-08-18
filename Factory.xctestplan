@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "79B179A8-356F-4A63-AB5F-71D19855F82F",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "FactoryTests",
+        "name" : "FactoryTests"
+      }
+    }
+  ],
+  "version" : 1
+}
