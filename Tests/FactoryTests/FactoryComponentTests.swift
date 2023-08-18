@@ -1,10 +1,13 @@
 import XCTest
 @testable import Factory
 
+let key1String = StaticString(stringLiteral: "s1")
+let key2String = StaticString(stringLiteral: "s2")
+
 final class FactoryComponentTests: XCTestCase {
 
-    let key1 = UUID().uuidString
-    let key2 = UUID().uuidString
+    let key1 = FactoryKey(type: UUID.self, key: key1String)
+    let key2 = FactoryKey(type: UUID.self, key: key2String)
 
     override func setUp() {
         super.setUp()

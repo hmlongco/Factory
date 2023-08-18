@@ -169,10 +169,10 @@ extension FactoryModifying {
         for context in contexts {
             switch context {
             case .arg, .args, .device, .simulator:
-                registration.context(context, id: registration.id, factory: factory)
+                registration.context(context, key: registration.key, factory: factory)
             default:
                 #if DEBUG
-                registration.context(context, id: registration.id, factory: factory)
+                registration.context(context, key: registration.key, factory: factory)
                 #endif
                 break
             }

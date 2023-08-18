@@ -38,6 +38,7 @@ internal var globalDependencyChainMessages: [String] = []
 internal var globalTraceFlag: Bool = false
 internal var globalTraceResolutions: [String] = []
 internal var globalLogger: (String) -> Void = { print($0) }
+internal var globalResolverKey: StaticString = "*"
 
 /// Triggers fatalError after resetting enough stuff so unit tests can continue
 internal func resetAndTriggerFatalError(_ message: String, _ file: StaticString, _ line: UInt) -> Never {

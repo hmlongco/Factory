@@ -31,8 +31,8 @@ import Foundation
 /// Master recursive lock
 internal var globalRecursiveLock = RecursiveLock()
 
-/// Custom recursive lock class
-internal final class RecursiveLock: NSLocking {
+/// Custom recursive lock
+internal struct RecursiveLock {
 
     init() {
         let mutexAttr = UnsafeMutablePointer<pthread_mutexattr_t>.allocate(capacity: 1)
@@ -44,10 +44,10 @@ internal final class RecursiveLock: NSLocking {
         mutexAttr.deallocate()
     }
 
-    deinit {
-        pthread_mutex_destroy(mutex)
-        mutex.deallocate()
-    }
+//    deinit {
+//        pthread_mutex_destroy(mutex)
+//        mutex.deallocate()
+//    }
 
     @inlinable func lock() {
         pthread_mutex_lock(mutex)
@@ -57,6 +57,33 @@ internal final class RecursiveLock: NSLocking {
         pthread_mutex_unlock(mutex)
     }
 
-    private var mutex: UnsafeMutablePointer<pthread_mutex_t>
+    private let mutex: UnsafeMutablePointer<pthread_mutex_t>
+
+}
+
+/// Master spin lock
+internal let globalSpinLock = SpinLock()
+
+/// Custom spin lock
+internal struct SpinLock {
+
+    init() {
+        oslock = UnsafeMutablePointer<os_unfair_lock>.allocate(capacity: 1)
+        oslock.initialize(to: .init())
+    }
+
+    @inlinable func lock() {
+        os_unfair_lock_lock(oslock)
+    }
+
+    @inlinable func unlock() {
+        os_unfair_lock_unlock(oslock)
+    }
+
+    func trylock() -> Bool {
+        return os_unfair_lock_trylock(oslock)
+    }
+
+    private let oslock: UnsafeMutablePointer<os_unfair_lock>
 
 }

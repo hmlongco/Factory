@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "Factory"
-  s.version      = "2.2.1"
+  s.version      = "2.3.0"
   s.summary      = "A Modern Dependency Injection / Service Locator framework for Swift on iOS."
   s.homepage     = "https://github.com/hmlongco/Factory"
   s.license      = "MIT"

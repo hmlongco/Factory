@@ -1,5 +1,11 @@
 # Factory Changelog
 
+## 2.3.0
+
+* Performance enhancements:
+  2x faster in debug builds!
+  3x faster production builds!
+
 ## 2.2.1
 
 * Fix resetAndTriggerFatalError was not forwarding the file and line parameters to triggerFatalError. - Issue #133

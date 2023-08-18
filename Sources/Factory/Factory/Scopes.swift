@@ -54,12 +54,12 @@ public class Scope {
     fileprivate init() {}
 
     /// Internal function returns cached value if it exists. Otherwise it creates a new instance and caches that value for later reference.
-    internal func resolve<T>(using cache: Cache, id: String, ttl: TimeInterval?, factory: () -> T) -> T {
-        if let box = cache.value(forKey: id), let cached: T = unboxed(box: box) {
+    internal func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, factory: () -> T) -> T {
+        if let box = cache.value(forKey: key), let cached: T = unboxed(box: box) {
             if let ttl = ttl {
                 let now = CFAbsoluteTimeGetCurrent()
                 if (box.timestamp + ttl) > now {
-                    cache.set(timestamp: now, forKey: id)
+                    cache.set(timestamp: now, forKey: key)
                     return cached
                 }
             } else {
@@ -68,7 +68,7 @@ public class Scope {
         }
         let instance = factory()
         if let box = box(instance) {
-             cache.set(value: box, forKey: id)
+             cache.set(value: box, forKey: key)
         }
         return instance
     }
@@ -115,9 +115,9 @@ extension Scope {
         public override init() {
             super.init()
         }
-        internal override func resolve<T>(using cache: Cache, id: String, ttl: TimeInterval?, factory: () -> T) -> T {
+        internal override func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, factory: () -> T) -> T {
             // ignore container's cache in favor of our own
-            return super.resolve(using: self.cache, id: id, ttl: ttl, factory: factory)
+            return super.resolve(using: self.cache, key: key, ttl: ttl, factory: factory)
         }
         /// Private shared cache
         internal var cache = Cache()
@@ -163,9 +163,9 @@ extension Scope {
         public override init() {
             super.init()
         }
-        internal override func resolve<T>(using cache: Cache, id: String, ttl: TimeInterval?, factory: () -> T) -> T {
+        internal override func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, factory: () -> T) -> T {
             // ignore container's cache in favor of our own
-            return super.resolve(using: self.cache, id: id, ttl: ttl, factory: factory)
+            return super.resolve(using: self.cache, key: key, ttl: ttl, factory: factory)
         }
         /// Private shared cache
         internal var cache = Cache()
@@ -186,7 +186,7 @@ extension Scope {
         public override init() {
             super.init()
         }
-        internal override func resolve<T>(using cache: Cache, id: String, ttl: TimeInterval?, factory: () -> T) -> T {
+        internal override func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, factory: () -> T) -> T {
             factory()
         }
     }
@@ -198,18 +198,18 @@ extension Scope {
 extension Scope {
     /// Internal class that manages scope caching for containers and scopes.
     internal final class Cache {
-        typealias CacheMap = [String:AnyBox]
+        typealias CacheMap = [FactoryKey:AnyBox]
         /// Internal support functions
-        @inlinable func value(forKey key: String) -> AnyBox? {
+        @inlinable func value(forKey key: FactoryKey) -> AnyBox? {
             cache[key]
         }
-        @inlinable func set(value: AnyBox, forKey key: String)  {
+        @inlinable func set(value: AnyBox, forKey key: FactoryKey)  {
             cache[key] = value
         }
-        @inlinable func set(timestamp: Double, forKey key: String)  {
+        @inlinable func set(timestamp: Double, forKey key: FactoryKey)  {
             cache[key]?.timestamp = timestamp
         }
-        @inlinable func removeValue(forKey key: String) {
+        @inlinable func removeValue(forKey key: FactoryKey) {
             cache.removeValue(forKey: key)
         }
         internal func reset(scopeID: UUID) {

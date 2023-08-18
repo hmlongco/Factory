@@ -14,6 +14,7 @@ final class FactoryMultithreadingTests: XCTestCase {
     }
 
     func testMultiThreading() throws {
+
         // basically tests that nothing locks up or crashes while doing registrations and resolutions.
         // behavior is pretty apparent if locks are disabled.
 

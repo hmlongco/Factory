@@ -98,15 +98,15 @@ public protocol ManagedContainer: AnyObject {
 /// Defines the default factory helpers for containers
 extension ManagedContainer {
     /// Syntactic sugar allows container to create a properly bound Factory.
-    @inlinable public func callAsFunction<T>(key: String = #function, _ factory: @escaping () -> T) -> Factory<T> {
+    @inlinable public func callAsFunction<T>(key: StaticString = #function, _ factory: @escaping () -> T) -> Factory<T> {
         Factory(self, key: key, factory)
     }
     /// Syntactic sugar allows container to create a properly bound ParameterFactory.
-    @inlinable public func callAsFunction<P,T>(key: String = #function, _ factory: @escaping (P) -> T) -> ParameterFactory<P,T> {
+    @inlinable public func callAsFunction<P,T>(key: StaticString = #function, _ factory: @escaping (P) -> T) -> ParameterFactory<P,T> {
         ParameterFactory(self, key: key, factory)
     }
     /// Syntactic sugar allows container to create a factory where registration is promised before resolution.
-    public func promised<T>(key: String = #function) -> Factory<T?>  {
+    public func promised<T>(key: StaticString = #function) -> Factory<T?>  {
         Factory<T?>(self, key: key) {
             #if DEBUG
             if self.manager.promiseTriggersError {
@@ -120,7 +120,7 @@ extension ManagedContainer {
         }
     }
     /// Syntactic sugar allows container to create a factory where registration is promised before resolution.
-    public func promised<P,T>(key: String = #function) -> ParameterFactory<P,T?>  {
+    public func promised<P,T>(key: StaticString = #function) -> ParameterFactory<P,T?>  {
         ParameterFactory<P,T?>(self, key: key) { _ in
             #if DEBUG
             if self.manager.promiseTriggersError {
@@ -205,9 +205,9 @@ public final class ContainerManager {
     #endif
 
     /// Alias for Factory registration map.
-    internal typealias FactoryMap = [String:AnyFactory]
+    internal typealias FactoryMap = [FactoryKey:AnyFactory]
     /// Alias for Factory options map.
-    internal typealias FactoryOptionsMap = [String:FactoryOptions]
+    internal typealias FactoryOptionsMap = [FactoryKey:FactoryOptions]
     /// Alias for Factory once set.
     internal typealias FactoryOnceSet = Set<String>
 
