@@ -6,7 +6,7 @@
 //
 
 import Foundation
-
+import Factory
 
 public class SimpleService {
     func text() -> String{
@@ -73,6 +73,18 @@ class MyConstructedService: MyServiceType {
     init(service: MyServiceType) {
         self.service = service
     }
+
+    func text() -> String {
+        "Well, " + service.text()
+    }
+
+}
+
+class InjectedService: MyServiceType {
+
+    var id = UUID()
+    
+    @Injected(\.simpleService) var service
 
     func text() -> String {
         "Well, " + service.text()

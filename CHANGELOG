@@ -10,6 +10,7 @@
   Add a manual reset.
     Container.shared.myService.reset(.scope).onTest { MockService() }
   See The Factory Wins section in the Modifiers documentation for more on this.
+* Update trace output to show actual instance type
 
 ## 2.2.1
 

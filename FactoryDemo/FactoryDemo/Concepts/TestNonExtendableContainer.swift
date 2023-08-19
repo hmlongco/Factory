@@ -15,26 +15,26 @@ final class ServiceContainer: SharedContainer {
 
     // DON'T DO THIS
     lazy var service1: Factory<MyServiceType> = self {
-        MyService()
+        InjectedService()
     }
     // DO THIS INSTEAD
     var service2: Factory<MyServiceType> {
-        self { MyService() }
+        self { InjectedService() }
     }
 }
 
 extension ServiceContainer {
     var extendedService: Factory<MyServiceType> {
-        self { MyService() }
+        self { InjectedService() }.cached
     }
 }
 
 extension ServiceContainer {
     static var staticServiceMethod1: Factory<MyServiceType> {
-        Factory(shared) { MyService() }
+        Factory(shared) { InjectedService() }
     }
     static var staticServiceMethod2: Factory<MyServiceType> {
-        ServiceContainer.shared.self { MyService() }
+        ServiceContainer.shared.self { InjectedService() }
     }
 }
 
@@ -45,8 +45,9 @@ extension ServiceContainer {
         let _ = Self.staticServiceMethod1()
         let _ = Self.staticServiceMethod2()
         let _ = Self.shared.service1()
-        let _ = Self.shared.extendedService()
         let _ = Self.shared.service2()
+        let _ = Self.shared.extendedService()
+        let _ = Self.shared.extendedService()
         Self.shared.manager.trace.toggle()
         #endif
     }

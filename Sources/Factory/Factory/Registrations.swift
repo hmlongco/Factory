@@ -128,7 +128,7 @@ public struct FactoryRegistration<P,T> {
         if manager.trace {
             let indent = String(repeating: "    ", count: globalGraphResolutionDepth)
             let address = (((instance as? OptionalProtocol)?.hasWrappedValue ?? true)) ? Int(bitPattern: ObjectIdentifier(instance as AnyObject)) : 0
-            let resolution = address == 0 ? "nil" : "\(traceNew ?? "C"):\(address)"
+            let resolution = address == 0 ? "nil" : "\(traceNew ?? "C"):\(address) \(type(of: instance as Any))"
             if globalTraceResolutions.count > traceLevel {
                 globalTraceResolutions[traceLevel] = "\(globalGraphResolutionDepth): \(indent)\(container).\(debug.key) = \(resolution)"
             }
