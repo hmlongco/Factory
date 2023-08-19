@@ -136,7 +136,7 @@ It's easy. Just replace `MyService` with a mock that also conforms to `MyService
 ```swift
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        let _ = Container.myService.register { MockService2() }
+        let _ = Container.shared.myService.register { MockService2() }
         ContentView()
     }
 }
