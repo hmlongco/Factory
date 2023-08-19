@@ -163,8 +163,8 @@ final class FactoryDefectTests: XCTestCase {
         XCTAssertEqual(service3.value, 64)
     }
 
-    // setting a context would not clear scope cache as does register
-    func testContextNotClearingScope() throws {
+    // #114 #146 setting a context would not clear scope cache as does register
+    func testContextClearingScope() throws {
         let service1 = Container.shared.cachedService()
         let service2 = Container.shared.cachedService()
         XCTAssertTrue(service1.id == service2.id)
@@ -177,14 +177,23 @@ final class FactoryDefectTests: XCTestCase {
         let service3 = Container.shared.cachedService()
         XCTAssertFalse(service1.id == service3.id)
         XCTAssertFalse(Container.shared.manager.cache.isEmpty)
-        // test context
+        // test context set doesn't reset scope #146
         Container.shared.cachedService.onTest {
             MyService()
         }
-        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
+        XCTAssertFalse(Container.shared.manager.cache.isEmpty)
         let service4 = Container.shared.cachedService()
-        XCTAssertFalse(service1.id == service4.id)
-        XCTAssertFalse(service3.id == service4.id)
+        XCTAssertTrue(service3.id == service4.id)
+        // test context manually resetting scope
+        Container.shared.cachedService
+            .reset(.scope)
+            .onTest {
+                MyService()
+            }
+        XCTAssertTrue(Container.shared.manager.cache.isEmpty)
+        let service5 = Container.shared.cachedService()
+        XCTAssertFalse(service4.id == service5.id)
+        XCTAssertFalse(service3.id == service5.id)
     }
 
 }

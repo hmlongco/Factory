@@ -78,7 +78,7 @@ That fully configure Factory is what's returned to the caller, either to be modi
 
 That may seem like a lot of overhead, but it actually isn't. As we've mentioned elsewhere, Factory's are like SwiftUI Views. Its structs and modifiers are lightweight and transitory value types, created when needed and then immediately discarded once their purpose has been served.
 
-There is, however, one consideration.
+There are, however, several things we need to consider.
 
 ## The Factory Wins
 
@@ -94,9 +94,13 @@ Now the question is: Do we now have an instance of `NullAnalyticsEngine`, or `Mo
 
 As may be apparent from the section title, we actually have an instance of `MockAnalyticsEngine`. But why? Didn't we just change it?
 
-We did. But then we called `Container.shared.myService` again, which built a new Factory, which defined a scope, and which once more **defined** `onTest`.
+We did. But there are a couple of things going on here. 
 
-And so Factory went with it's most recent definition.
+First is that we told Factory to cache the instance in the singleton scope. So it's entirely possible that we could be seeing the cached value.
+
+Second is that when we resolved `myService` we called `Container.shared.myService` again, which built a new Factory, which defined a scope, **and which once more defined `onTest`**.
+
+And so Factory went with its most recent definition.
 
 ## SwiftUI
 Similar behavior can be seen in SwiftUI itself.
@@ -142,6 +146,15 @@ extension Container: AutoRegistering {
     }
 }
 ```
+## Reset
+
+Keep in mind that if  we want to change a Factory's 'context but that Factory defines a scope, then we're also going to need to manually clear the scope cache for that object. 
+```swift
+Container.shared.myService
+    .onTest { NullAnalyticsEngine() }
+    .reset(.scope)
+```
+> Warning: With `reset` make sure you specify that you only want to clear the scope. Calling `reset` without a parameter clears everything, including contexts like the one you just set! 
 
 ## Chaining
 

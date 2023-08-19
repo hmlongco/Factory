@@ -184,3 +184,15 @@ Note that any context marked with an asterisk (*) is only available in a DEBUG b
 Keep in mind that contexts are global. The entire app is running in debug more or it's not. It was passed a "mock0" argument at runtime or it wasn't. 
 
 The `onArg` and `onDebug` and other context modifiers basically define how the app should respond to that particular context. 
+
+## Changing a Context
+
+Keep in mind that if we ever want to change a Factory's context but that Factory defines a scope, then we're also going to need to **manually** clear the scope cache for that object. 
+```swift
+Container.shared.myService
+    .onTest { NullAnalyticsEngine() }
+    .reset(.scope)
+```
+> Warning: With `reset` make sure you specify that you only want to clear the scope. Calling `reset` without a parameter clears everything, including contexts like the one you just set! 
+
+See the section on *The Factory Wins* in <doc:Modifiers> for more information on this and other scenarios.

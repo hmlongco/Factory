@@ -3,8 +3,9 @@
 ## 2.3.0
 
 * Dramatic performance enhancements:
-  Over 2x faster in debug builds!
-  Over 4x faster in production builds!
+  Up to 2x faster in debug builds!
+  Up to 4x faster in production builds!
+* Fixed bug where registering a context in the Factory definition cleared the scope cache. - Issue #146
 
 ## 2.2.1
 

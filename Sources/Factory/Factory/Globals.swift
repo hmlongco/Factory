@@ -39,7 +39,7 @@ internal var globalTraceFlag: Bool = false
 internal var globalTraceResolutions: [String] = []
 internal var globalLogger: (String) -> Void = { print($0) }
 internal var globalResolverKey: StaticString = "*"
-internal var globalDebugInformation: [FactoryKey:FactoryDebugInformation] = [:]
+internal var globalDebugInformationMap: [FactoryKey:FactoryDebugInformation] = [:]
 
 /// Triggers fatalError after resetting enough stuff so unit tests can continue
 internal func resetAndTriggerFatalError(_ message: String, _ file: StaticString, _ line: UInt) -> Never {

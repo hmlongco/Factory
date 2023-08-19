@@ -51,11 +51,11 @@ public struct FactoryRegistration<P,T> {
         self.factory = factory
         #if DEBUG
         globalSpinLock.lock()
-        if let debug = globalDebugInformation[self.key] {
+        if let debug = globalDebugInformationMap[self.key] {
             self.debug = debug
         } else {
             self.debug = .init(type: String(reflecting: T.self), key: key)
-            globalDebugInformation[self.key] = self.debug
+            globalDebugInformationMap[self.key] = self.debug
         }
         globalSpinLock.unlock()
         #endif
@@ -206,7 +206,7 @@ public struct FactoryRegistration<P,T> {
                 }
                 options.contexts?["\(context)"] = TypedFactory(factory: factory)
             }
-            container.manager.cache.removeValue(forKey: key)
+            // #146 container.manager.cache.removeValue(forKey: key)
         }
     }
 
@@ -297,15 +297,6 @@ public enum FactoryResetOptions {
     case scope
 }
 
-internal struct FactoryDebugInformation {
-    let type: String
-    let key: String
-    internal init(type: String, key: StaticString) {
-        self.type = type
-        self.key = "\(key)<\(type)>"
-    }
-}
-
 internal struct FactoryOptions {
     /// Managed scope for this factory instance
     var scope: Scope?
@@ -361,6 +352,17 @@ extension FactoryOptions {
     }
 
 }
+
+#if DEBUG
+internal struct FactoryDebugInformation {
+    let type: String
+    let key: String
+    internal init(type: String, key: StaticString) {
+        self.type = type
+        self.key = "\(key)<\(type)>"
+    }
+}
+#endif
 
 // Internal Factory type
 internal protocol AnyFactory {}

@@ -247,8 +247,10 @@ extension FactoryModifying {
 
     /// Resets the Factory's behavior to its original state, removing any registrations and clearing any cached items from the specified scope.
     /// - Parameter options: options description
-    public func reset(_ options: FactoryResetOptions = .all) {
+    @discardableResult
+    public func reset(_ options: FactoryResetOptions = .all) -> Self {
         registration.reset(options: options)
+        return self
     }
     
 }
