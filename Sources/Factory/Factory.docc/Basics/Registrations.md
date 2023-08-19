@@ -126,7 +126,7 @@ In order to accomplish this task, each Factory that's created needs to maintain 
 
 Should you attempt to release such a container it will never go away, and you'll have a memory leak on your hands.
 
-### Static Factories
+### Static Factory's
 Example of a static Factory 2.0 registration container.
 
 ```swift

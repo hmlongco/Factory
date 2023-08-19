@@ -76,7 +76,7 @@ All containers conform to the ``SharedContainer`` protocol. That basically means
 
 SharedContainer also defines some common functionality for each container, like the `unique` convenience function we've seen used throughout.
 
-Note that you can extend SharedContainer with your own Factories.
+Note that you can extend SharedContainer with your own Factory's.
 
 ```swift
 extension SharedContainer {

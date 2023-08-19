@@ -31,7 +31,7 @@ extension Container {
 We extended a Factory `Container` and within that container we defined a new computed variable of type `Factory<ServiceType>`. The type must be explicitly defined, and is usually a
 protocol to which the returned dependency conforms.
 
-So our computed variable needs to return a Factory. But Factories are complex creatures. They need to communicate with their enclosing containers and they need to be provided with a closure that can be called to create an instance of our dependency when required. 
+So our computed variable needs to return a Factory. But Factory's are complex creatures. They need to communicate with their enclosing containers and they need to be provided with a closure that can be called to create an instance of our dependency when required. 
 
 As such, a complete, formal Factory definition would look like this...
 ```swift

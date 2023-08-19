@@ -148,7 +148,15 @@ extension Container: AutoRegistering {
 ```
 ## Reset
 
-Keep in mind that if  we want to change a Factory's 'context but that Factory defines a scope, then we're also going to need to manually clear the scope cache for that object. 
+Keep in mind that if  we want to change a Factory's context but that Factory defines a scope, then we're also going to need to manually clear the scope cache for that object. So given.
+```swift
+public func myService: Factory<MyServiceType>() {
+    self { MyService() }
+        .singleton
+        .onTest { MockAnalyticsEngine() }
+}
+```
+We'd probably want to add a reset modifier to our test code.
 ```swift
 Container.shared.myService
     .onTest { NullAnalyticsEngine() }
@@ -196,4 +204,6 @@ Our Factory is constructed, but the internal singleton modifier has already occu
 
 Which means that we get our `NullAnalyticsEngine`, just like we wanted.
 
-Once is a useful tool to have around, but in reality it's probably best simply to be careful in regard to what goes into our basic Factory definition.
+Once is a useful tool to have around, but in reality it's probably best simply to be careful in regard to what goes into our basic Factory definition. 
+
+Contexts, in particular, should probably be defined in the Container's autoRegister function.
