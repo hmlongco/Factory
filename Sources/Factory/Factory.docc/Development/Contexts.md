@@ -90,7 +90,7 @@ Pretty apparent. What may not be so apparent, however, is that unlike all of the
 
 ### • onArg
 
-The `arg` context is a powerful tool to have when you want to UITest your application and you want to change it's behavior.
+The `arg` context is a powerful tool to have when you want to UITest your application and you want to change its behavior.
 
 As shown in the <doc:Testing> section the test case itself is pretty standard.
 
