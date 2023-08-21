@@ -79,7 +79,6 @@ public struct FactoryRegistration<P,T> {
 
         let manager = container.manager
         let options = manager.options[key]
-        let scope = options?.scope ?? manager.defaultScope
         let ttl = options?.ttl
 
         var current: (P) -> T
@@ -97,7 +96,7 @@ public struct FactoryRegistration<P,T> {
             circularDependencyChainCheck(max: manager.dependencyChainTestMax)
         }
 
-        let traceLevel = globalTraceResolutions.count
+        let traceLevel: Int = globalTraceResolutions.count
         var traceNew: String?
         if manager.trace {
             let wrapped = current
@@ -110,7 +109,12 @@ public struct FactoryRegistration<P,T> {
         #endif
 
         globalGraphResolutionDepth += 1
-        let instance: T = scope?.resolve(using: manager.cache, key: key, ttl: ttl, factory: { current(parameters) }) ?? current(parameters)
+        let instance: T
+        if let scope = options?.scope ?? manager.defaultScope {
+            instance = scope.resolve(using: manager.cache, key: key, ttl: ttl, factory: { current(parameters) }) }
+        else {
+            instance = current(parameters)
+        }
         globalGraphResolutionDepth -= 1
 
         if globalGraphResolutionDepth == 0 {

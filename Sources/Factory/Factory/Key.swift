@@ -14,7 +14,11 @@ public struct FactoryKey: Hashable {
 
     internal init(type: Any.Type, key: StaticString) {
         self.type = Int(bitPattern: ObjectIdentifier(type))
-        self.key = Int(bitPattern: key.utf8Start)
+        if key.hasPointerRepresentation {
+            self.key = Int(bitPattern: key.utf8Start)
+        } else {
+            self.key = Int(key.unicodeScalar.value)
+        }
     }
 
 }
