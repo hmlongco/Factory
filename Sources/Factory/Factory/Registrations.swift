@@ -50,14 +50,14 @@ public struct FactoryRegistration<P,T> {
         self.container = container
         self.factory = factory
         #if DEBUG
-        globalSpinLock.lock()
+        globalDebugLock.lock()
         if let debug = globalDebugInformationMap[self.key] {
             self.debug = debug
         } else {
             self.debug = .init(type: String(reflecting: T.self), key: key)
             globalDebugInformationMap[self.key] = self.debug
         }
-        globalSpinLock.unlock()
+        globalDebugLock.unlock()
         #endif
     }
 

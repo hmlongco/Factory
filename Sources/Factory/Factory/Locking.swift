@@ -62,7 +62,7 @@ internal struct RecursiveLock {
 }
 
 /// Master spin lock
-internal let globalSpinLock = SpinLock()
+internal let globalDebugLock = SpinLock()
 
 /// Custom spin lock
 internal struct SpinLock {

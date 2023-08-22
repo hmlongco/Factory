@@ -12,13 +12,45 @@ public struct FactoryKey: Hashable {
     public let type: Int
     public let key: Int
 
-    internal init(type: Any.Type, key: StaticString) {
+    internal init(type: Any.Type, key: StaticString = #function) {
         self.type = Int(bitPattern: ObjectIdentifier(type))
-        if key.hasPointerRepresentation {
-            self.key = Int(bitPattern: key.utf8Start)
-        } else {
-            self.key = Int(key.unicodeScalar.value)
-        }
+        self.key = key.hasPointerRepresentation ? Int(bitPattern: key.utf8Start) : Int(key.unicodeScalar.value)
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(type)
+        hasher.combine(key)
+    }
+
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.type == rhs.type && lhs.key == rhs.key
     }
 
 }
+
+//public struct FactoryKey: Hashable {
+//
+//#if DEBUG
+//    let type: String
+//#endif
+//
+//    let key: String
+//
+//    internal init(type: Any.Type, key: StaticString = #function) {
+//#if DEBUG
+//        self.type = String(reflecting: type)
+//        self.key = "\(key)<\(self.type)>"
+//#else
+//        self.key = "\(key)<\(String(reflecting: type))>"
+//#endif
+//    }
+//
+//    public func hash(into hasher: inout Hasher) {
+//        hasher.combine(key)
+//    }
+//
+//    public static func == (lhs: Self, rhs: Self) -> Bool {
+//        lhs.key == rhs.key
+//    }
+//
+//}
