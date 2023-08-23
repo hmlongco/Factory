@@ -3,14 +3,14 @@
 ## 2.3.0
 
 * Dramatic performance enhancements:
-  Up to 2x faster in debug builds!
-  Up to 4x faster in production builds!
+  Up to 200% faster in debug builds!
+  Up to 400% faster in production builds!
 * Fixed bug where registering a context in the Factory definition cleared the scope cache. - Issue #146
   Note that issue #146 could be a breaking change if your code attempts to replace a scoped context registration.
   Add a manual reset.
     Container.shared.myService.reset(.scope).onTest { MockService() }
   See The Factory Wins section in the Modifiers documentation for more on this.
-* Update trace output to show actual instance type
+* Update trace output to also show actual instance type
 
 ## 2.2.1
 
