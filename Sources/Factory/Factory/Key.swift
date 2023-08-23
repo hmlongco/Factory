@@ -40,6 +40,7 @@ public struct FactoryKey: Hashable {
             // not the same string, but same value?
             return strcmp(lhs.key.utf8Start, rhs.key.utf8Start) == 0
         } else if lhs.key.hasPointerRepresentation == false && rhs.key.hasPointerRepresentation == false {
+            // should never, ever be scalar values but just to be complete...
             return lhs.key.unicodeScalar.value == rhs.key.unicodeScalar.value
         }
         // in this context if one's a scalar and one's a pointer unequal
