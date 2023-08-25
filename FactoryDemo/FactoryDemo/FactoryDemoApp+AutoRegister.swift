@@ -44,13 +44,13 @@ extension Container: AutoRegistering {
 
        #if DEBUG
         // Demonstrate preview registration override
-        myServiceType.onPreview {
-            MockServiceN(66)
-        }
+//        myServiceType.onPreview {
+//            MockServiceN(66)
+//        }
         // Demonstrate debug registration override
-        myServiceType.onDebug {
-            MockServiceN(77)
-        }
+//        myServiceType.onDebug {
+//            MockServiceN(77)
+//        }
         #endif
     }
 

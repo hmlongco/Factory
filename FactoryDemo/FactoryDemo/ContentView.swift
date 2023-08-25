@@ -10,8 +10,9 @@ import Factory
 
 struct ContentView: View {
 
-    //@InjectedObject(\.contentViewModel)
-    @StateObject var model = resolve(\.contentViewModel)
+//    @InjectedObject(\.contentViewModel)
+//    @StateObject var model = resolve(\.contentViewModel)
+    @StateObject var model = ContentViewModel()
 
     var body: some View {
         List {
@@ -85,15 +86,30 @@ struct ChildContentView: View {
 }
 
 
+// Illustrates single
+//struct ContentView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        // Depends on preview context set in FactoryDemoApp+AutoRegister.swift
+//        ContentView()
+//    }
+//}
+
+// Illustrates multiple
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        // Depends on preview context set in FactoryDemoApp+AutoRegister.swift
-        ContentView()
+        Group {
+            let _ = Container.shared.myServiceType.onPreview { MockServiceN(44) }
+            let model1 = ContentViewModel()
+            ContentView(model: model1)
+            let _ = Container.shared.myServiceType.onPreview { MockServiceN(88) }
+            let model2 = ContentViewModel()
+            ContentView(model: model2)
+        }
     }
 }
 
-// Illustrates multiple
-//struct ContentView_Previews2: PreviewProvider {
+// Illustrates multiple w/injectedobject
+//struct ContentView_Previews: PreviewProvider {
 //    static var previews: some View {
 //        Group {
 //            let _ = Container.shared.myServiceType.register { MockServiceN(44) }
