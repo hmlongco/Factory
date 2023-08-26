@@ -79,7 +79,6 @@ public struct FactoryRegistration<P,T> {
 
         let manager = container.manager
         let options = manager.options[key]
-        let ttl = options?.ttl
 
         var current: (P) -> T
 
@@ -111,7 +110,7 @@ public struct FactoryRegistration<P,T> {
         globalGraphResolutionDepth += 1
         let instance: T
         if let scope = options?.scope ?? manager.defaultScope {
-            instance = scope.resolve(using: manager.cache, key: key, ttl: ttl, factory: { current(parameters) }) }
+            instance = scope.resolve(using: manager.cache, key: key, ttl: options?.ttl, factory: { current(parameters) }) }
         else {
             instance = current(parameters)
         }
@@ -146,7 +145,9 @@ public struct FactoryRegistration<P,T> {
         if let decorator = options?.decorator as? (T) -> Void {
             decorator(instance)
         }
-        manager.decorator?(instance)
+        if let decorator = manager.decorator {
+            decorator(instance)
+        }
 
         return instance
     }
