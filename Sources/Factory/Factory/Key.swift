@@ -7,11 +7,10 @@
 
 import Foundation
 
-// FactoryKey6
 public struct FactoryKey: Hashable {
 
-    public let type: ObjectIdentifier
-    public let key: StaticString
+    @usableFromInline let type: ObjectIdentifier
+    @usableFromInline let key: StaticString
 
     @inlinable public init(type: Any.Type, key: StaticString = #function) {
         self.type = ObjectIdentifier(type)
@@ -20,6 +19,11 @@ public struct FactoryKey: Hashable {
 
     @inlinable public func hash(into hasher: inout Hasher) {
         hasher.combine(self.type)
+        if key.hasPointerRepresentation {
+            hasher.combine(bytes: UnsafeRawBufferPointer(start: key.utf8Start, count: key.utf8CodeUnitCount))
+        } else {
+            hasher.combine(key.unicodeScalar.value)
+        }
     }
 
     @inlinable public static func == (lhs: Self, rhs: Self) -> Bool {
