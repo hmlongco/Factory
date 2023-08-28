@@ -19,11 +19,6 @@ public struct FactoryKey: Hashable {
 
     @inlinable public func hash(into hasher: inout Hasher) {
         hasher.combine(self.type)
-        if key.hasPointerRepresentation {
-            hasher.combine(bytes: UnsafeRawBufferPointer(start: key.utf8Start, count: key.utf8CodeUnitCount))
-        } else {
-            hasher.combine(key.unicodeScalar.value)
-        }
     }
 
     @inlinable public static func == (lhs: Self, rhs: Self) -> Bool {
