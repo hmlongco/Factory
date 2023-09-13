@@ -49,15 +49,15 @@ internal struct RecursiveLock {
 //        mutex.deallocate()
 //    }
 
-    @inlinable func lock() {
+    @inline(__always) func lock() {
         pthread_mutex_lock(mutex)
     }
 
-    @inlinable func unlock() {
+    @inline(__always) func unlock() {
         pthread_mutex_unlock(mutex)
     }
 
-    private let mutex: UnsafeMutablePointer<pthread_mutex_t>
+    @usableFromInline let mutex: UnsafeMutablePointer<pthread_mutex_t>
 
 }
 
@@ -72,14 +72,14 @@ internal struct SpinLock {
         oslock.initialize(to: .init())
     }
 
-    @inlinable func lock() {
+    @inline(__always) func lock() {
         os_unfair_lock_lock(oslock)
     }
 
-    @inlinable func unlock() {
+    @inline(__always) func unlock() {
         os_unfair_lock_unlock(oslock)
     }
 
-    private let oslock: UnsafeMutablePointer<os_unfair_lock>
+    @usableFromInline let oslock: UnsafeMutablePointer<os_unfair_lock>
 
 }
