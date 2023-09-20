@@ -221,7 +221,10 @@ extension Scope {
                 cache.removeAll(keepingCapacity: true)
             }
         }
-        var cache: CacheMap = .init(minimumCapacity: 32)
+        var cache: CacheMap
+        internal init(minimumCapacity: Int = 1024) {
+            self.cache = .init(minimumCapacity: minimumCapacity)
+        }
         #if DEBUG
         internal var isEmpty: Bool {
             cache.isEmpty

@@ -217,12 +217,14 @@ public final class ContainerManager {
     internal var autoRegistrationCheckNeeded = true
     /// Flag indicating auto registration is in process.
     internal var autoRegistering = false
+    /// Minimum capacity for structures
+    internal var minimumCapacity: Int = 256
     /// Updated registrations for Factory's.
-    internal lazy var registrations: FactoryMap = .init(minimumCapacity: 32)
+    internal lazy var registrations: FactoryMap = .init(minimumCapacity: minimumCapacity)
     /// Updated options for Factory's.
-    internal lazy var options: FactoryOptionsMap = .init(minimumCapacity: 32)
+    internal lazy var options: FactoryOptionsMap = .init(minimumCapacity: minimumCapacity)
     /// Scope cache for Factory's managed by this container.
-    internal lazy var cache: Scope.Cache = Scope.Cache()
+    internal lazy var cache: Scope.Cache = Scope.Cache(minimumCapacity: minimumCapacity)
     /// Push/Pop stack for registrations, options, cache, and so on.
     internal lazy var stack: [(FactoryMap, FactoryOptionsMap, Scope.Cache.CacheMap, Bool)] = []
 
