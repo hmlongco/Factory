@@ -13,7 +13,7 @@ Consider the following typealias and Factory.
 typealias AccountProviding = () async throws -> [Account]
 
 extension Container {
-    let accountProvider: Factory<AccountProviding> {
+    var accountProvider: Factory<AccountProviding> {
         self {{ try await Network.get(path: "/accounts") }}
     }
 }
