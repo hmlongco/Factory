@@ -9,7 +9,7 @@ Pod::Spec.new do |s|
   s.source_files  = "Sources/**/*.swift"
   s.swift_version = '5.7'
 
-  s.ios.deployment_target = "11.0"
+  s.ios.deployment_target = "12.0"
   s.ios.framework  = 'UIKit'
 
   s.tvos.deployment_target = "13.0"

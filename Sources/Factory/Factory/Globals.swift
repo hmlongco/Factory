@@ -31,6 +31,9 @@ import Foundation
 /// Master graph resolution depth counter
 internal var globalGraphResolutionDepth = 0
 
+/// Internal key used for Resolver mode
+internal var globalResolverKey: StaticString = "*"
+
 #if DEBUG
 /// Internal variables used for debugging
 internal var globalDependencyChain: [String] = []
@@ -38,7 +41,6 @@ internal var globalDependencyChainMessages: [String] = []
 internal var globalTraceFlag: Bool = false
 internal var globalTraceResolutions: [String] = []
 internal var globalLogger: (String) -> Void = { print($0) }
-internal var globalResolverKey: StaticString = "*"
 internal var globalDebugInformationMap: [FactoryKey:FactoryDebugInformation] = [:]
 
 /// Triggers fatalError after resetting enough stuff so unit tests can continue
