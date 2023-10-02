@@ -234,6 +234,7 @@ final class FactoryInjectionTests: XCTestCase {
         XCTAssertNil(service.service)
     }
 
+    #if canImport(SwiftUI)
     @available(iOS 14, *)
     func testInjectedType() throws {
         let vm1 = ResolvingViewModel()
@@ -249,7 +250,6 @@ final class FactoryInjectionTests: XCTestCase {
         XCTAssertNil(vm2.service1)
     }
 
-    #if canImport(SwiftUI)
     @available(iOS 14, *)
     @MainActor
     func testInjectedObject() throws {
@@ -290,7 +290,6 @@ extension CustomContainer {
         self { ContentViewModel() }
     }
 }
-#endif
 
 @available(iOS 14, *)
 class ResolvingViewModel: ObservableObject {
@@ -299,3 +298,6 @@ class ResolvingViewModel: ObservableObject {
 }
 
 extension Container: Resolving {}
+
+#endif
+
