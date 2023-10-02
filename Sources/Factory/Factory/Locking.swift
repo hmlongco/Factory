@@ -26,7 +26,7 @@
 
 import Foundation
 
-#if os(macOS)
+#if os(macOS) || os(iOS) || os(watchOS)
 // MARK: - Locking
 
 /// Master recursive lock
