@@ -26,7 +26,6 @@
 
 import Foundation
 
-#if os(macOS) || os(iOS) || os(watchOS)
 // MARK: - Locking
 
 /// Master recursive lock
@@ -65,6 +64,7 @@ internal struct RecursiveLock {
 /// Master spin lock
 internal let globalDebugLock = SpinLock()
 
+#if os(macOS) || os(iOS) || os(watchOS)
 /// Custom spin lock
 internal struct SpinLock {
 
@@ -84,42 +84,7 @@ internal struct SpinLock {
     @usableFromInline let oslock: UnsafeMutablePointer<os_unfair_lock>
 
 }
-
 #else
-
-// MARK: - Locking
-
-/// Master recursive lock
-internal var globalRecursiveLock = RecursiveLock()
-
-/// Custom recursive lock
-internal struct RecursiveLock {
-
-    init() {
-        let mutexAttr = UnsafeMutablePointer<pthread_mutexattr_t>.allocate(capacity: 1)
-        pthread_mutexattr_init(mutexAttr)
-        pthread_mutexattr_settype(mutexAttr, Int32(PTHREAD_MUTEX_RECURSIVE))
-        mutex = UnsafeMutablePointer<pthread_mutex_t>.allocate(capacity: 1)
-        pthread_mutex_init(mutex, mutexAttr)
-        pthread_mutexattr_destroy(mutexAttr)
-        mutexAttr.deallocate()
-    }
-
-    @inline(__always) func lock() {
-        pthread_mutex_lock(mutex)
-    }
-
-    @inline(__always) func unlock() {
-        pthread_mutex_unlock(mutex)
-    }
-
-    @usableFromInline let mutex: UnsafeMutablePointer<pthread_mutex_t>
-
-}
-
-/// Master spin lock
-internal var globalDebugLock = SpinLock()
-
 /// Custom spin lock compatible with Linux
 internal struct SpinLock {
 

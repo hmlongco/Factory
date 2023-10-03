@@ -1,5 +1,9 @@
 # Factory Changelog
 
+## 2.3.1
+
+* Fix for SpinLock on Linux
+
 ## 2.3.0
 
 * Dramatic performance enhancements:
