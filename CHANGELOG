@@ -3,6 +3,7 @@
 ## 2.3.1
 
 * Fix for SpinLock on Linux
+* Add action to test linux - Issue #113
 
 ## 2.3.0
 
