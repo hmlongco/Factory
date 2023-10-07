@@ -4,6 +4,7 @@
 
 * Fix for SpinLock on Linux
 * Add action to test linux - Issue #113
+* Add various aliases to avoid external naming conflicts - Issue #154
 
 ## 2.3.0
 
