@@ -26,10 +26,10 @@
 
 import Foundation
 
-typealias FactoryAutoRegistering = AutoRegistering
-typealias FactoryContainer = Container
-typealias FactoryContainerManager = ContainerManager
-typealias FactoryManagedContainer = ManagedContainer
-typealias FactoryResolving = Resolving
-typealias FactoryScope = Scope
-typealias FactorySharedContainer = SharedContainer
+public typealias FactoryAutoRegistering = AutoRegistering
+public typealias FactoryContainer = Container
+public typealias FactoryContainerManager = ContainerManager
+public typealias FactoryManagedContainer = ManagedContainer
+public typealias FactoryResolving = Resolving
+public typealias FactoryScope = Scope
+public typealias FactorySharedContainer = SharedContainer
