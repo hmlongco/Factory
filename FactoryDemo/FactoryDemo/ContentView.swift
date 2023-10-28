@@ -48,6 +48,9 @@ struct ContentView: View {
             }
 
             Section("Miscellaneous") {
+                if #available(iOS 17, *) {
+                    ObservableView()
+                }
                 HStack {
                     Text("Testing")
                     Spacer()
