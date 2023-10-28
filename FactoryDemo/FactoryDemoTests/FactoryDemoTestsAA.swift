@@ -37,6 +37,7 @@ final class FactoryDemoTestsAA: XCTestCase {
         AAContainer.shared.service.onTest {
             AAMockService()
         }
+        AAContainer.shared.service.reset(.scope)
         let sut = AAViewModel()
         XCTAssertEqual(sut.name, "MockService")
     }
