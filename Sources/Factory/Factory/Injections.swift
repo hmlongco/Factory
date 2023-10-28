@@ -326,7 +326,7 @@ extension InjectedObject {
     /// Still has issue with attempting to pass dependency into existing view when existing InjectedObject has keyPath.
     /// https://forums.swift.org/t/allow-property-wrappers-with-multiple-arguments-to-defer-initialization-when-wrappedvalue-is-not-specified
     public init(_ wrappedValue: T) {
-        self._dependency = StateObject(wrappedValue: wrappedValue)
+        self._dependency = StateObject<T>(wrappedValue: wrappedValue)
     }
 }
 #endif
