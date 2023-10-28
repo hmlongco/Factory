@@ -302,12 +302,12 @@ import SwiftUI
     /// Initializes the property wrapper. The dependency is resolved on initialization.
     /// - Parameter keyPath: KeyPath to a Factory on the default Container.
     public init(_ keyPath: KeyPath<Container, Factory<T>>) {
-        self._dependency = StateObject(wrappedValue: Container.shared[keyPath: keyPath]())
+        self._dependency = StateObject<T>(wrappedValue: Container.shared[keyPath: keyPath]())
     }
     /// Initializes the property wrapper. The dependency is resolved on initialization.
     /// - Parameter keyPath: KeyPath to a Factory on the specified Container.
     public init<C:SharedContainer>(_ keyPath: KeyPath<C, Factory<T>>) {
-        self._dependency = StateObject(wrappedValue: C.shared[keyPath: keyPath]())
+        self._dependency = StateObject<T>(wrappedValue: C.shared[keyPath: keyPath]())
     }
     /// Manages the wrapped dependency.
     public var wrappedValue: T {
