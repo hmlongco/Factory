@@ -25,7 +25,10 @@ class ObservationService: ObservationServiceType {
 @available(iOS 17, *)
 @Observable
 class MockObservationService: ObservationServiceType {
-    var name: String = "MockObservationService"
+    var name: String
+    init(name: String) {
+        self.name = name
+    }
 }
 
 @available(iOS 17, *)
@@ -46,12 +49,55 @@ struct ObservableView: View {
                 observableService.name += " *"
             }
         }
-        .padding()
+    }
+}
+
+// With traditional inline register
+@available(iOS 17, *)
+#Preview {
+    let _ = Container.shared.observableService.register {
+        MockObservationService(name: "MockObservationService1")
+    }
+    return ObservableView().padding()
+}
+
+@available(iOS 17, *)
+extension Container {
+    var observableServiceWithPreview: Factory<ObservationServiceType> {
+        self { ObservationService() }
+            .onPreview {
+                MockObservationService(name: "MockObservationService2")
+            }
     }
 }
 
 @available(iOS 17, *)
+struct ObservableView2: View {
+    @Injected(\.observableServiceWithPreview) var observableService
+    var body: some View {
+        HStack {
+            Text(observableService.name)
+            Spacer()
+            Button("Mutate") {
+                observableService.name += " *"
+            }
+        }
+    }
+}
+
+// With onPreview
+@available(iOS 17, *)
 #Preview {
-    let _ = Container.shared.observableService.register { MockObservationService() }
-    return ObservableView()
+    ObservableView2().padding()
+}
+
+// With onPreview
+@available(iOS 17, *)
+#Preview {
+    Group {
+        let _ = Container.shared.observableService.register {
+            MockObservationService(name: "MockObservationService3")
+        }
+        ObservableView().padding()
+    }
 }

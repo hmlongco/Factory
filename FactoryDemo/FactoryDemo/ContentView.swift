@@ -88,28 +88,42 @@ struct ChildContentView: View {
     }
 }
 
-
 // Illustrates single
-//struct ContentView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        // Depends on preview context set in FactoryDemoApp+AutoRegister.swift
-//        ContentView()
-//    }
-//}
-
-// Illustrates multiple
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        Group {
-            let _ = Container.shared.myServiceType.onPreview { MockServiceN(44) }
-            let model1 = ContentViewModel()
-            ContentView(model: model1)
-            let _ = Container.shared.myServiceType.onPreview { MockServiceN(88) }
-            let model2 = ContentViewModel()
-            ContentView(model: model2)
-        }
+        // Depends on preview context set in FactoryDemoApp+AutoRegister.swift
+        ContentView()
     }
 }
+
+// New Previews
+#Preview {
+    Group {
+        let _ = Container.shared.myServiceType.register { MockServiceN(4) }
+        ContentView()
+    }
+}
+
+#Preview {
+    Group {
+        let _ = Container.shared.myServiceType.register { MockServiceN(8) }
+        ContentView()
+    }
+}
+
+// Illustrates multiple
+//struct ContentView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        Group {
+//            let _ = Container.shared.myServiceType.onPreview { MockServiceN(44) }
+//            let model1 = ContentViewModel()
+//            ContentView(model: model1)
+//            let _ = Container.shared.myServiceType.onPreview { MockServiceN(88) }
+//            let model2 = ContentViewModel()
+//            ContentView(model: model2)
+//        }
+//    }
+//}
 
 // Illustrates multiple w/injectedobject
 //struct ContentView_Previews: PreviewProvider {

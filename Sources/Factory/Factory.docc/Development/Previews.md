@@ -40,20 +40,25 @@ struct ContentView_Previews: PreviewProvider {
 }
 ```
 If we can control where the view model gets its data then we can put the view model into pretty much any state we choose.
-
+
 ## SwiftUI #Previews
 
-The same can be done for the new #Preview option, with one minor change.
+The same can be done using the new macro-based #Preview option added to Xcode 15 and iOS 17... but there's a problem. Attempting to do the above gives us an error.
 
+```swift
+#Preview {
+    let _ = Container.myService.register { MockServiceN(4) }
+    ContentView() // error: Result of 'ContentView' initializer is unused
+}
+```
+The solution lies in recognizing the fact that the #Preview closure is not a ViewBuilder. To fix it we just need to explicitly return our view.
 ```swift
 #Preview {
     let _ = Container.myService.register { MockServiceN(4) }
     return ContentView()
 }
 ```
-The #Preview closure is not a ViewBuilder, so if we add our let statement we just need to explicitly return our view.
-
-Or we could simply turn it into a ViewBuilder using our old friend, Group.
+Or we could simply turn the expression into a ViewBuilder using our old friend, Group.
 ```swift
 #Preview {
     Group {
@@ -85,6 +90,22 @@ struct ContentView_Previews: PreviewProvider {
     }
 }
 ```
+Of course, it's even easier with #Preview.
+```swift
+#Preview {
+    Group {
+        let _ = Container.shared.myService.register { MockServiceN(4) }
+        ContentView()
+    }
+}
+#Preview {
+    Group {
+        let _ = Container.shared.myService.register { MockServiceN(8) }
+        ContentView()
+    }
+}
+```
+Since #Preview has been back-ported to iOS 13, I'd use it from now on. (Assuming of course that you can migrate your project to Xcode 15.)
 
 ## InjectedObject
 
@@ -131,6 +152,7 @@ struct ContentView_Previews: PreviewProvider {
 }
 ```
 But due a bug in how Swift manages property wrappers with built in initializers, doing multiple previews is just a little different than shown earlier.
+
 ```swift
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
@@ -147,6 +169,22 @@ struct ContentView_Previews: PreviewProvider {
 }
 ```
 Instead of passing the model to the view directly, we need to create the entire `InjectedObject(model1)` pair and pass that.
+
+That said, and as we've shown before, it's even easier with #Preview.
+```swift
+#Preview {
+    Group {
+        let _ = Container.shared.myService.register { MockServiceN(4) }
+        ContentView()
+    }
+}
+#Preview {
+    Group {
+        let _ = Container.shared.myService.register { MockServiceN(8) }
+        ContentView()
+    }
+}
+```
 
 ## Common Setup
 
