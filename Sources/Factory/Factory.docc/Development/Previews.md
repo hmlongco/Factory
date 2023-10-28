@@ -40,6 +40,29 @@ struct ContentView_Previews: PreviewProvider {
 }
 ```
 If we can control where the view model gets its data then we can put the view model into pretty much any state we choose.
+
+## SwiftUI #Previews
+
+The same can be done for the new #Preview option, with one minor change.
+
+```swift
+#Preview {
+    let _ = Container.myService.register { MockServiceN(4) }
+    return ContentView()
+}
+```
+The #Preview closure is not a ViewBuilder, so if we add our let statement we just need to explicitly return our view.
+
+Or we could simply turn it into a ViewBuilder using our old friend, Group.
+```swift
+#Preview {
+    Group {
+        let _ = Container.myService.register { MockServiceN(4) }
+        ContentView()
+    }
+}
+```
+Group actually has a few additional uses...
 
 ## Multiple Previews
 
