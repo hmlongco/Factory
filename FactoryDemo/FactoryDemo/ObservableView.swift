@@ -11,7 +11,6 @@ import Observation
 #endif
 import SwiftUI
 
-@available(iOS 17, *)
 protocol ObservationServiceType: AnyObject {
     var name: String { get set }
 }
@@ -54,7 +53,7 @@ struct ObservableView: View {
 
 // With traditional inline register
 @available(iOS 17, *)
-#Preview {
+#Preview("Register") {
     let _ = Container.shared.observableService.register {
         MockObservationService(name: "MockObservationService1")
     }
@@ -87,17 +86,6 @@ struct ObservableView2: View {
 
 // With onPreview
 @available(iOS 17, *)
-#Preview {
+#Preview("onPreview") {
     ObservableView2().padding()
-}
-
-// With onPreview
-@available(iOS 17, *)
-#Preview {
-    Group {
-        let _ = Container.shared.observableService.register {
-            MockObservationService(name: "MockObservationService3")
-        }
-        ObservableView().padding()
-    }
 }
