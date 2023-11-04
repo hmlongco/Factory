@@ -51,6 +51,7 @@ struct ContentView: View {
                 if #available(iOS 17, *) {
                     ObservableView()
                 }
+                ModelTest()
                 HStack {
                     Text("Testing")
                     Spacer()

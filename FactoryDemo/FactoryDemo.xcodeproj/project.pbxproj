@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4C02802F2AF6D62A00768BA9 /* ModelTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C02802E2AF6D62A00768BA9 /* ModelTest.swift */; };
 		4C0AF2022A2BB0F200CA46FE /* FactoryDemoApp+AA.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C0AF2012A2BB0F200CA46FE /* FactoryDemoApp+AA.swift */; };
 		4C0AF2042A2BB11B00CA46FE /* FactoryDemoTestsAA.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C0AF2032A2BB11B00CA46FE /* FactoryDemoTestsAA.swift */; };
 		4C38E9D22AED7166002063CD /* ObservableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C38E9D12AED7166002063CD /* ObservableView.swift */; };
@@ -112,6 +113,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4C02802E2AF6D62A00768BA9 /* ModelTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelTest.swift; sourceTree = "<group>"; };
 		4C0AF2012A2BB0F200CA46FE /* FactoryDemoApp+AA.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "FactoryDemoApp+AA.swift"; sourceTree = "<group>"; };
 		4C0AF2032A2BB11B00CA46FE /* FactoryDemoTestsAA.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FactoryDemoTestsAA.swift; sourceTree = "<group>"; };
 		4C38E9D12AED7166002063CD /* ObservableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservableView.swift; sourceTree = "<group>"; };
@@ -277,6 +279,7 @@
 				4C46E064295642BC00185E6E /* Concepts */,
 				4CEEC34E284927EF00C979B3 /* Preview Content */,
 				4CF40C3B2A228E5900935E49 /* IODemoView.swift */,
+				4C02802E2AF6D62A00768BA9 /* ModelTest.swift */,
 			);
 			path = FactoryDemo;
 			sourceTree = "<group>";
@@ -522,6 +525,7 @@
 				4C6EB40628D792D400D17E7D /* Alternatives.swift in Sources */,
 				4C977B3B29A2AD3A0072FC17 /* SimpleContainer.swift in Sources */,
 				4CEEC3602849311000C979B3 /* ContentViewModel.swift in Sources */,
+				4C02802F2AF6D62A00768BA9 /* ModelTest.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

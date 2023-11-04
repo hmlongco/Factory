@@ -94,6 +94,7 @@ extension Scope {
 extension Container {
     func setupMocks() {
         DemoContainer.shared.optionalService.register { SimpleService() }
+        let _ = Container.shared.modelData()
     }
 }
 
