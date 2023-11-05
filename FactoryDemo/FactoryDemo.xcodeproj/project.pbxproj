@@ -8,10 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		4C02802F2AF6D62A00768BA9 /* ModelTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C02802E2AF6D62A00768BA9 /* ModelTest.swift */; };
+		4C0280302AF7F44800768BA9 /* Common.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C38E9BA2AEC88E9002063CD /* Common.framework */; };
+		4C0280312AF7F44900768BA9 /* Common.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 4C38E9BA2AEC88E9002063CD /* Common.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		4C0AF2022A2BB0F200CA46FE /* FactoryDemoApp+AA.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C0AF2012A2BB0F200CA46FE /* FactoryDemoApp+AA.swift */; };
 		4C0AF2042A2BB11B00CA46FE /* FactoryDemoTestsAA.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C0AF2032A2BB11B00CA46FE /* FactoryDemoTestsAA.swift */; };
 		4C38E9D22AED7166002063CD /* ObservableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C38E9D12AED7166002063CD /* ObservableView.swift */; };
-		4C38E9D32AED74DC002063CD /* CommonTests.xctest in Embed PlugIns */ = {isa = PBXBuildFile; fileRef = 4C38E9BC2AEC88E9002063CD /* CommonTests.xctest */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		4C38E9D52AED74E3002063CD /* Networking.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C38E9C22AEC88F2002063CD /* Networking.framework */; };
 		4C38E9D62AED74E3002063CD /* Networking.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 4C38E9C22AEC88F2002063CD /* Networking.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		4C3F6FE92932C5F80084A647 /* FactoryDemoApp+AutoRegister.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C3F6FE82932C5F80084A647 /* FactoryDemoApp+AutoRegister.swift */; };
@@ -88,17 +89,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		4C38E9D42AED74DC002063CD /* Embed PlugIns */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 13;
-			files = (
-				4C38E9D32AED74DC002063CD /* CommonTests.xctest in Embed PlugIns */,
-			);
-			name = "Embed PlugIns";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		4CCC84432868CFBA00B474F7 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -106,6 +96,7 @@
 			dstSubfolderSpec = 10;
 			files = (
 				4C38E9D62AED74E3002063CD /* Networking.framework in Embed Frameworks */,
+				4C0280312AF7F44900768BA9 /* Common.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -169,6 +160,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4C0280302AF7F44800768BA9 /* Common.framework in Frameworks */,
 				4C38E9D52AED74E3002063CD /* Networking.framework in Frameworks */,
 				4CEEC35A28492BD200C979B3 /* Factory in Frameworks */,
 			);
@@ -357,7 +349,6 @@
 				4CEEC342284927EE00C979B3 /* Frameworks */,
 				4CEEC343284927EE00C979B3 /* Resources */,
 				4CCC84432868CFBA00B474F7 /* Embed Frameworks */,
-				4C38E9D42AED74DC002063CD /* Embed PlugIns */,
 			);
 			buildRules = (
 			);
