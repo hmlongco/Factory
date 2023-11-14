@@ -157,7 +157,7 @@ final class FactoryCoreTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        Container.shared.reset()
+        Container.shared.manager.reset()
     }
     
     func testLoaded() throws {
