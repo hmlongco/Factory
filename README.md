@@ -41,7 +41,15 @@ Unlike Resolver which often requires defining a plethora of nested registration 
 Injecting an instance of our service is equally straightforward. Here's just one of the many ways Factory can be used.
 
 ```swift
+// Pre iOS 17 with ObservableObject
 class ContentViewModel: ObservableObject {
+    @Injected(\.myService) private var myService
+    ...
+}
+
+// Post iOS 17 with Observation
+@Observable class ContentViewModel {
+    @ObservationIgnored
     @Injected(\.myService) private var myService
     ...
 }
