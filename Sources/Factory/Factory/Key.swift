@@ -12,14 +12,8 @@ public struct FactoryKey: Hashable {
     @usableFromInline let type: ObjectIdentifier
     @usableFromInline let key: StaticString
 
-    @inlinable
-    @inline(__always)
     public init(type: Any.Type, key: StaticString = #function) {
-        self.init(type: ObjectIdentifier(type),key: key)
-    }
-    
-    public init(type: ObjectIdentifier, key: StaticString) {
-        self.type = type
+        self.type = ObjectIdentifier(type)
         self.key = key
     }
 
