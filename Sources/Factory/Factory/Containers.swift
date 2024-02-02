@@ -162,7 +162,9 @@ extension ManagedContainer {
 public final class ContainerManager {
 
     /// Public initializer
-    public init() {}
+    public init(autoRegistrationCheckNeeded: Bool = true) {
+      self.autoRegistrationCheckNeeded = autoRegistrationCheckNeeded
+    }
 
     /// Default scope
     public var defaultScope: Scope?
@@ -214,7 +216,7 @@ public final class ContainerManager {
     /// Internal closure decorates all factory resolutions for this container.
     internal var decorator: ((Any) -> ())?
     /// Flag indicating auto registration check needs to be performed and executed if needed.
-    internal var autoRegistrationCheckNeeded = true
+    public var autoRegistrationCheckNeeded = true
     /// Flag indicating auto registration is in process.
     internal var autoRegistering = false
     /// Minimum capacity for structures
