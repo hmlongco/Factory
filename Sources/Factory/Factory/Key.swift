@@ -12,15 +12,12 @@ public struct FactoryKey: Hashable {
     @usableFromInline let type: ObjectIdentifier
     @usableFromInline let key: StaticString
 
-    @inlinable
-    @inline(__always)
-    init(type: Any.Type, key: StaticString = #function) {
+    public init(type: Any.Type, key: StaticString = #function) {
         self.type = ObjectIdentifier(type)
         self.key = key
     }
 
     @inlinable
-    @inline(__always)
     public func hash(into hasher: inout Hasher) {
         hasher.combine(self.type)
         if key.hasPointerRepresentation {
