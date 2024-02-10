@@ -316,7 +316,7 @@ If you want to support my work on Factory and Resolver, consider a [GitHub Spons
 
 Or you can just buy me a cup of coffee!
 
-And many thanks to my new sponsors: sueddeutsche, doozMen.
+And many thanks to my sponsors: sueddeutsche, doozMen, and Mercedes-Benz!
 
 ## Author
 
