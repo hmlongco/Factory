@@ -30,7 +30,7 @@ import Foundation
 public struct FactoryRegistration<P,T> {
 
     /// Key used to manage registrations and cached values.
-    public let key: FactoryKey
+    internal let key: FactoryKey
     /// A strong reference to the container supporting this Factory.
     internal let container: ManagedContainer
     /// Typed factory with scope and factory.
