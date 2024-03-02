@@ -12,13 +12,11 @@ internal struct FactoryKey: Hashable {
     let type: ObjectIdentifier
     let key: StaticString
 
-    @inlinable
-    internal init(type: Any.Type, key: StaticString = #function) {
+    internal init(type: Any.Type, key: StaticString) {
         self.type = ObjectIdentifier(type)
         self.key = key
     }
 
-    @inlinable
     internal func hash(into hasher: inout Hasher) {
         hasher.combine(self.type)
         if key.hasPointerRepresentation {
@@ -28,7 +26,6 @@ internal struct FactoryKey: Hashable {
         }
     }
 
-    @inlinable
     internal static func == (lhs: Self, rhs: Self) -> Bool {
         guard lhs.type == rhs.type && lhs.key.hasPointerRepresentation == rhs.key.hasPointerRepresentation else {
             return false
