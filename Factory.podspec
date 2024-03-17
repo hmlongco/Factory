@@ -21,7 +21,4 @@ Pod::Spec.new do |s|
 
   s.osx.deployment_target = "10.14"
   s.osx.framework  = 'AppKit'
-
-  s.visionos.deployment_target = "1.0"
-  s.visionos.framework  = 'SwiftUI'
 end
