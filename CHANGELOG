@@ -1,5 +1,14 @@
 # Factory Changelog
 
+## 2.3.2
+
+* Project updated CocoaPods to 1.15.2
+* Public aliases for masked Factory objects - Issue #154
+* Fix key issue when building xcframeworks - Issue #173
+* Add VisionOS target to podspec and package.swift - PR #186
+* Add Privacy Manifest file - PR #180
+* Update README to include example for use with Swift's new Observable macro - PR #172
+
 ## 2.3.1
 
 * Fix for SpinLock on Linux
