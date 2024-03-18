@@ -3,6 +3,9 @@
 
 import PackageDescription
 
+let swiftSettings: [SwiftSetting]
+swiftSettings = [.unsafeFlags(["-no-verify-emitted-module-interface"], .when(configuration: .release))]
+
 let package = Package(
     name: "Factory",
     platforms: [
@@ -28,7 +31,8 @@ let package = Package(
         .target(
             name: "Factory",
             dependencies: [],
-            resources: [.copy("PrivacyInfo.xcprivacy")]),
+            resources: [.copy("PrivacyInfo.xcprivacy")],
+            swiftSettings: swiftSettings),
         .testTarget(
             name: "FactoryTests",
             dependencies: ["Factory"]),
