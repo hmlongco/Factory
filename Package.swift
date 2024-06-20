@@ -32,5 +32,8 @@ let package = Package(
         .testTarget(
             name: "FactoryTests",
             dependencies: ["Factory"]),
+    ],
+    swiftLanguageVersions: [
+      .v5
     ]
 )
