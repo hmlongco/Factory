@@ -42,8 +42,13 @@ import Foundation
 ///
 ///  See <doc:Containers> for more information.
 public final class Container: SharedContainer {
+    #if compiler(>=6.0)
+    /// Define the default shared container.
+    public nonisolated(unsafe) static let shared = Container()
+    #else
     /// Define the default shared container.
     public static let shared = Container()
+    #endif
     /// Define the container's manager.
     public let manager: ContainerManager = ContainerManager()
     /// Public initializer
