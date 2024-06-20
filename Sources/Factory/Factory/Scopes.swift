@@ -123,8 +123,13 @@ extension Scope {
         internal var cache = Cache()
     }
 
+    #if compiler(>=6.0)
+    /// A reference to the default shared scope manager.
+    public nonisolated(unsafe) static let shared = Shared()
+    #else
     /// A reference to the default shared scope manager.
     public static let shared = Shared()
+    #endif
     /// Defines a shared (weak) scope. The same instance will be returned by the factory as long as someone maintains a strong reference.
     public final class Shared: Scope {
         public override init() {
@@ -156,8 +161,13 @@ extension Scope {
         }
     }
 
+    #if compiler(>=6.0)
+    /// A reference to the default singleton scope manager.
+    public nonisolated(unsafe) static let singleton = Singleton()
+    #else
     /// A reference to the default singleton scope manager.
     public static let singleton = Singleton()
+    #endif
     /// Defines the singleton scope. The same instance will always be returned by the factory.
     public final class Singleton: Scope, InternalScopeCaching {
         public override init() {
@@ -177,10 +187,18 @@ extension Scope {
         }
     }
 
+    #if compiler(>=6.0)
+    /// A reference to the default unique scope.
+    ///
+    /// If no scope cache is specified then Factory is running in unique more.
+    public nonisolated(unsafe) static let unique = Unique()
+    #else
     /// A reference to the default unique scope.
     ///
     /// If no scope cache is specified then Factory is running in unique more.
     public static let unique = Unique()
+    #endif
+
     /// Defines the unique scope. A new instance of a given type will be returned on every resolution cycle.
     public final class Unique: Scope {
         public override init() {
