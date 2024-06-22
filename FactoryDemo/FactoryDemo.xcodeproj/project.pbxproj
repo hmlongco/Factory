@@ -24,7 +24,6 @@
 		4C51167629DE961900B4ADD4 /* FactoryDemoTests3.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C51167529DE961900B4ADD4 /* FactoryDemoTests3.swift */; };
 		4C51167829DF03C900B4ADD4 /* FactoryDemoTestsServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C51167729DF03C900B4ADD4 /* FactoryDemoTestsServices.swift */; };
 		4C51169829E1B3E900B4ADD4 /* Tags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C51169729E1B3E900B4ADD4 /* Tags.swift */; };
-		4C6EB40628D792D400D17E7D /* Alternatives.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C6EB40528D792D400D17E7D /* Alternatives.swift */; };
 		4C947C332988A13800815704 /* ContainerDemoViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C947C322988A13800815704 /* ContainerDemoViewModel.swift */; };
 		4C947C342988A1A100815704 /* ContainerDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C6914432988A05D0083A78F /* ContainerDemoView.swift */; };
 		4C977B3B29A2AD3A0072FC17 /* SimpleContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C977B3A29A2AD3A0072FC17 /* SimpleContainer.swift */; };
@@ -117,7 +116,6 @@
 		4C51167729DF03C900B4ADD4 /* FactoryDemoTestsServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FactoryDemoTestsServices.swift; sourceTree = "<group>"; };
 		4C51169729E1B3E900B4ADD4 /* Tags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tags.swift; sourceTree = "<group>"; };
 		4C6914432988A05D0083A78F /* ContainerDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerDemoView.swift; sourceTree = "<group>"; };
-		4C6EB40528D792D400D17E7D /* Alternatives.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Alternatives.swift; sourceTree = "<group>"; };
 		4C947C322988A13800815704 /* ContainerDemoViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContainerDemoViewModel.swift; sourceTree = "<group>"; };
 		4C977B3A29A2AD3A0072FC17 /* SimpleContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleContainer.swift; sourceTree = "<group>"; };
 		4C977B3C29A3DAC70072FC17 /* TestNonExtendableContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestNonExtendableContainer.swift; sourceTree = "<group>"; };
@@ -191,7 +189,6 @@
 			isa = PBXGroup;
 			children = (
 				4CA223FF28CFC49900944456 /* Actors.swift */,
-				4C6EB40528D792D400D17E7D /* Alternatives.swift */,
 				4C46E0652956433200185E6E /* CircularDependencies.swift */,
 				4C4ED1F728FDADB3009E41A5 /* FunctionInjection.swift */,
 				4C46E062295642B100185E6E /* GenericAPIs.swift */,
@@ -513,7 +510,6 @@
 				4C3F6FE92932C5F80084A647 /* FactoryDemoApp+AutoRegister.swift in Sources */,
 				4CEEC35C2849309C00C979B3 /* FactoryDemoApp+Injection.swift in Sources */,
 				4C46E0662956433200185E6E /* CircularDependencies.swift in Sources */,
-				4C6EB40628D792D400D17E7D /* Alternatives.swift in Sources */,
 				4C977B3B29A2AD3A0072FC17 /* SimpleContainer.swift in Sources */,
 				4CEEC3602849311000C979B3 /* ContentViewModel.swift in Sources */,
 				4C02802F2AF6D62A00768BA9 /* ModelTest.swift in Sources */,
@@ -553,7 +549,7 @@
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FactoryDemo.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FactoryDemo";
 			};
@@ -576,7 +572,7 @@
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FactoryDemo.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FactoryDemo";
 			};
@@ -595,7 +591,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.hmlong.FactoryDemoUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = FactoryDemo;
 			};
@@ -614,7 +610,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.hmlong.FactoryDemoUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = FactoryDemo;
 			};
@@ -678,6 +674,7 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
 		};
@@ -732,6 +729,7 @@
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -761,7 +759,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.hmlong.FactoryDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -791,7 +789,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.hmlong.FactoryDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;

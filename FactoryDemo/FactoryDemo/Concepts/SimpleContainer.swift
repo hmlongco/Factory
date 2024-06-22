@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol SimpleContaining: AnyObject {
+protocol SimpleContaining: AnyObject, Sendable  {
     var registrations: [ObjectIdentifier:() -> Any] { get set }
 }
 
@@ -43,7 +43,7 @@ class SimpleContainerTest {
     }
 }
 
-class SimpleContainer: SimpleContaining {
+final class SimpleContainer: SimpleContaining, @unchecked Sendable  {
     static let shared = SimpleContainer()
     var registrations: [ObjectIdentifier:() -> Any] = [:]
 }

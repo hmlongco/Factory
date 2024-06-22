@@ -11,12 +11,12 @@ import Factory
 final class ServiceContainer: SharedContainer {
     // CONFORMANCE
     static let shared = ServiceContainer()
-    var manager = ContainerManager()
+    let manager = ContainerManager()
 
     // DON'T DO THIS
-    lazy var service1: Factory<MyServiceType> = self {
-        InjectedService()
-    }
+//    lazy var service1: Factory<MyServiceType> = self {
+//        InjectedService()
+//    }
     // DO THIS INSTEAD
     var service2: Factory<MyServiceType> {
         self { InjectedService() }
@@ -44,7 +44,6 @@ extension ServiceContainer {
         Self.shared.manager.trace.toggle()
         let _ = Self.staticServiceMethod1()
         let _ = Self.staticServiceMethod2()
-        let _ = Self.shared.service1()
         let _ = Self.shared.service2()
         let _ = Self.shared.extendedService()
         let _ = Self.shared.extendedService()

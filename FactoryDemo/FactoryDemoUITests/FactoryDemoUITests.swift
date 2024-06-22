@@ -9,6 +9,7 @@ import XCTest
 
 final class FactoryDemoUITests: XCTestCase {
 
+    @MainActor
     func testExample1() throws {
         let app = XCUIApplication()
         app.launchArguments.append("mock1")
@@ -18,6 +19,7 @@ final class FactoryDemoUITests: XCTestCase {
         XCTAssert(welcome.exists)
     }
 
+    @MainActor
     func testExample2() throws {
         let app = XCUIApplication()
         app.launchArguments.append("mock2")

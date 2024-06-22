@@ -1,5 +1,8 @@
 # Factory Changelog
 
+## 2.4.0
+* Updated to properly manage new concurrency warnings and errors in Xcode 16 and Swift 6
+
 ## 2.3.2
 
 * Project updated CocoaPods to 1.15.2

@@ -25,7 +25,7 @@ extension SharedContainer {
 
 final class TaggedContainer: SharedContainer {
     static let shared = TaggedContainer()
-    var manager = ContainerManager()
+    let manager = ContainerManager()
 }
 
 //extension TaggedContainer: AutoRegistering {
@@ -41,7 +41,7 @@ struct Tag<T> {
 }
 
 extension Container {
-    static let processors: [Tag<Processor>] = [
+    nonisolated(unsafe) static let processors: [Tag<Processor>] = [
         Tag(path: \.processor1, priority: 20),
         Tag(path: \.processor2, priority: 10),
     ]

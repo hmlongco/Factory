@@ -29,10 +29,10 @@ import Foundation
 // MARK: - Locking
 
 /// Master recursive lock
-internal var globalRecursiveLock = RecursiveLock()
+nonisolated(unsafe) internal var globalRecursiveLock = RecursiveLock()
 
 /// Custom recursive lock
-internal struct RecursiveLock {
+internal final class RecursiveLock: NSLocking {
 
     init() {
         let mutexAttr = UnsafeMutablePointer<pthread_mutexattr_t>.allocate(capacity: 1)
@@ -44,49 +44,49 @@ internal struct RecursiveLock {
         mutexAttr.deallocate()
     }
 
-//    deinit {
-//        pthread_mutex_destroy(mutex)
-//        mutex.deallocate()
-//    }
+    deinit {
+        pthread_mutex_destroy(mutex)
+        mutex.deallocate()
+    }
 
-    @inline(__always) func lock() {
+    @inlinable @inline(__always) func lock() {
         pthread_mutex_lock(mutex)
     }
 
-    @inline(__always) func unlock() {
+    @inlinable @inline(__always) func unlock() {
         pthread_mutex_unlock(mutex)
     }
 
-    @usableFromInline let mutex: UnsafeMutablePointer<pthread_mutex_t>
+    private let mutex: UnsafeMutablePointer<pthread_mutex_t>
 
 }
 
 /// Master spin lock
-internal let globalDebugLock = SpinLock()
+nonisolated(unsafe) internal let globalDebugLock = SpinLock()
 
 #if os(macOS) || os(iOS) || os(watchOS)
 /// Custom spin lock
-internal struct SpinLock {
+internal final class SpinLock: NSLocking {
 
     init() {
         oslock = UnsafeMutablePointer<os_unfair_lock>.allocate(capacity: 1)
         oslock.initialize(to: .init())
     }
 
-    @inline(__always) func lock() {
+    @inlinable @inline(__always) func lock() {
         os_unfair_lock_lock(oslock)
     }
 
-    @inline(__always) func unlock() {
+    @inlinable @inline(__always) func unlock() {
         os_unfair_lock_unlock(oslock)
     }
 
-    @usableFromInline let oslock: UnsafeMutablePointer<os_unfair_lock>
+    private let oslock: UnsafeMutablePointer<os_unfair_lock>
 
 }
 #else
 /// Custom spin lock compatible with Linux
-internal struct SpinLock {
+internal final class SpinLock: NSLocking {
 
     init() {
         mutex = UnsafeMutablePointer<pthread_mutex_t>.allocate(capacity: 1)
@@ -98,14 +98,14 @@ internal struct SpinLock {
         attributes.deallocate()
     }
 
-    @inline(__always) func lock() {
+    @inlinable @inline(__always) func lock() {
         pthread_mutex_lock(mutex)
     }
 
-    @inline(__always) func unlock() {
+    @inlinable @inline(__always) func unlock() {
         pthread_mutex_unlock(mutex)
     }
 
-    @usableFromInline let mutex: UnsafeMutablePointer<pthread_mutex_t>
+    private let mutex: UnsafeMutablePointer<pthread_mutex_t>
 }
 #endif

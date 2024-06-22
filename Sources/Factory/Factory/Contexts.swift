@@ -66,7 +66,7 @@ public struct FactoryContext {
 
 extension FactoryContext {
     /// Global current context.
-    public static var current = FactoryContext()
+    nonisolated(unsafe) public static var current = FactoryContext()
 }
 
 extension FactoryContext {

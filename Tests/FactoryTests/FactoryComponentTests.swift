@@ -24,8 +24,8 @@ final class FactoryComponentTests: XCTestCase {
     func testScopeCache() {
         let cache = Scope.Cache()
         let scopeID = UUID()
-        let strongBox = StrongBox(scopeID: scopeID, timestamp: 0, boxed: { MyService() })
-        let anotherBox = StrongBox(scopeID: UUID(), timestamp: 0, boxed: { MyService() })
+        let strongBox = StrongBox(scopeID: scopeID, timestamp: 0, boxed: { MyService() })!
+        let anotherBox = StrongBox(scopeID: UUID(), timestamp: 0, boxed: { MyService() })!
         // Finds nothing
         XCTAssertNil(cache.value(forKey: key1))
         XCTAssertNil(cache.value(forKey: key2))

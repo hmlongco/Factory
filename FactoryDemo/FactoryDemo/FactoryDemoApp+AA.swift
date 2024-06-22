@@ -22,7 +22,7 @@ final class AAMockService: AAService {
 
 final class AAContainer: SharedContainer {
     static let shared = AAContainer()
-    var manager = ContainerManager()
+    let manager = ContainerManager()
 
     var service: Factory<AAService> {
         self { AADefaultService() }

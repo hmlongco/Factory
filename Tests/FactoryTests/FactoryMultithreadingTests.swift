@@ -1,7 +1,7 @@
 import XCTest
 @testable import Factory
 
-final class FactoryMultithreadingTests: XCTestCase {
+final class FactoryMultithreadingTests: XCTestCase, @unchecked Sendable {
 
     let qa = DispatchQueue(label: "A", qos: .userInteractive, attributes: .concurrent)
     let qb = DispatchQueue(label: "B", qos: .userInitiated, attributes: .concurrent)
@@ -11,6 +11,7 @@ final class FactoryMultithreadingTests: XCTestCase {
     override func setUp() {
         super.setUp()
         MultiThreadedContainer.shared.reset()
+        iterations = 0
     }
 
     func testMultiThreading() throws {
@@ -94,7 +95,7 @@ final class FactoryMultithreadingTests: XCTestCase {
 
 }
 
-var iterations = 0
+nonisolated(unsafe) var iterations = 0
 let lock = NSRecursiveLock()
 
 func interationValue() -> Int {
@@ -162,16 +163,5 @@ fileprivate final class MultiThreadedContainer: SharedContainer {
     fileprivate var c: Factory<C> { self { C(d: self.d()) } }
     fileprivate var d: Factory<D> { self { D() }.cached }
     fileprivate var e: Factory<E> { self { E() } }
-    var manager = ContainerManager()
-}
-
-extension XCTestCase {
-    func wait(interval: TimeInterval = 0.1 , completion: @escaping (() -> Void)) {
-        let exp = expectation(description: "")
-        DispatchQueue.main.asyncAfter(deadline: .now() + interval) {
-            completion()
-            exp.fulfill()
-        }
-        waitForExpectations(timeout: interval + 0.1) // add 0.1 for sure async after called
-    }
+    let manager = ContainerManager()
 }

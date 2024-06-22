@@ -89,7 +89,7 @@ public protocol SharedContainer: ManagedContainer {
 /// }
 /// ```
 ///  See <doc:Containers> for more information.
-public protocol ManagedContainer: AnyObject {
+public protocol ManagedContainer: AnyObject, Sendable {
     /// Defines the ContainerManager used to manage registrations, resolutions, and scope caching for that container. Encapsulating the code in
     /// this fashion makes creating and using your own custom containers much simpler.
     var manager: ContainerManager { get }
@@ -98,11 +98,11 @@ public protocol ManagedContainer: AnyObject {
 /// Defines the default factory helpers for containers
 extension ManagedContainer {
     /// Syntactic sugar allows container to create a properly bound Factory.
-    @inline(__always) public func callAsFunction<T>(key: StaticString = #function, _ factory: @escaping () -> T) -> Factory<T> {
+    @inlinable @inline(__always) public func callAsFunction<T>(key: StaticString = #function, _ factory: @escaping () -> T) -> Factory<T> {
         Factory(self, key: key, factory)
     }
     /// Syntactic sugar allows container to create a properly bound ParameterFactory.
-    @inline(__always) public func callAsFunction<P,T>(key: StaticString = #function, _ factory: @escaping (P) -> T) -> ParameterFactory<P,T> {
+    @inlinable @inline(__always) public func callAsFunction<P,T>(key: StaticString = #function, _ factory: @escaping (P) -> T) -> ParameterFactory<P,T> {
         ParameterFactory(self, key: key, factory)
     }
     /// Syntactic sugar allows container to create a factory where registration is promised before resolution.
@@ -135,10 +135,12 @@ extension ManagedContainer {
     }
     /// Defines a decorator for the container. This decorator will see every dependency resolved by this container.
     public func decorator(_ decorator: ((Any) -> ())?) {
-        manager.decorator = decorator
+        globalDebugLock.withLock {
+            manager.decorator = decorator
+        }
     }
     /// Defines a thread safe access mechanism to reset the container.
-    @inlinable public func reset(options: FactoryResetOptions = .all) {
+    public func reset(options: FactoryResetOptions = .all) {
         manager.reset(options: options)
     }
     /// Defines a with function to allow container transformation on assignment.
@@ -159,31 +161,40 @@ extension ManagedContainer {
 /// to a pristine state, as well as push/pop methods that can save and restore the current state.
 ///
 /// Those functions are designed primarily for testing.
-public final class ContainerManager {
+public final class ContainerManager: @unchecked Sendable {
 
     /// Public initializer
     public init() {}
 
     /// Default scope
-    public var defaultScope: Scope?
+    public var defaultScope: Scope? {
+        get { globalDebugLock.withLock { _defaultScope } }
+        set { globalDebugLock.withLock { _defaultScope = newValue } }
+    }
 
     #if DEBUG
     /// Public variable exposing dependency chain test maximum
-    public var dependencyChainTestMax: Int = 8
+    public var dependencyChainTestMax: Int {
+        get { globalDebugLock.withLock { _dependencyChainTestMax } }
+        set { globalDebugLock.withLock { _dependencyChainTestMax = newValue } }
+    }
 
     /// Public variable promise behavior
-    public var promiseTriggersError: Bool = FactoryContext.current.isDebug
+    public var promiseTriggersError: Bool {
+        get { globalDebugLock.withLock { _promiseTriggersError } }
+        set { globalDebugLock.withLock { _promiseTriggersError = newValue } }
+    }
 
     /// Public var enabling factory resolution trace statements in debug mode for ALL containers.
     public var trace: Bool {
-        get { globalTraceFlag }
-        set { globalTraceFlag = newValue }
+        get { globalDebugLock.withLock { globalTraceFlag } }
+        set { globalDebugLock.withLock { globalTraceFlag = newValue } }
     }
 
     /// Public access to logging facility in debug mode for ALL containers.
     public var logger: (String) -> Void {
-        get { globalLogger }
-        set { globalLogger = newValue }
+        get { globalDebugLock.withLock { globalLogger } }
+        set { globalDebugLock.withLock { globalLogger = newValue } }
     }
 
     internal func isEmpty(_ options: FactoryResetOptions) -> Bool {
@@ -217,16 +228,19 @@ public final class ContainerManager {
     internal var autoRegistrationCheckNeeded = true
     /// Flag indicating auto registration is in process.
     internal var autoRegistering = false
-    /// Minimum capacity for structures
-    internal var minimumCapacity: Int = 256
     /// Updated registrations for Factory's.
-    internal lazy var registrations: FactoryMap = .init(minimumCapacity: minimumCapacity)
+    internal lazy var registrations: FactoryMap = .init(minimumCapacity: 256)
     /// Updated options for Factory's.
-    internal lazy var options: FactoryOptionsMap = .init(minimumCapacity: minimumCapacity)
+    internal lazy var options: FactoryOptionsMap = .init(minimumCapacity: 256)
     /// Scope cache for Factory's managed by this container.
-    internal lazy var cache: Scope.Cache = Scope.Cache(minimumCapacity: minimumCapacity)
+    internal lazy var cache: Scope.Cache = Scope.Cache(minimumCapacity: 256)
     /// Push/Pop stack for registrations, options, cache, and so on.
     internal lazy var stack: [(FactoryMap, FactoryOptionsMap, Scope.Cache.CacheMap, Bool)] = []
+
+    // Protected public mutable state
+    private var _defaultScope: Scope?
+    private var _dependencyChainTestMax: Int = 8
+    private var _promiseTriggersError: Bool = FactoryContext.current.isDebug
 
 }
 

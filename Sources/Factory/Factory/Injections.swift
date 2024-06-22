@@ -297,7 +297,7 @@ import SwiftUI
 /// }
 /// ```
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
-@frozen @propertyWrapper public struct InjectedObject<T>: DynamicProperty where T: ObservableObject {
+@MainActor @frozen @propertyWrapper public struct InjectedObject<T>: DynamicProperty where T: ObservableObject {
     @StateObject fileprivate var dependency: T
     /// Initializes the property wrapper. The dependency is resolved on initialization.
     /// - Parameter keyPath: KeyPath to a Factory on the default Container.

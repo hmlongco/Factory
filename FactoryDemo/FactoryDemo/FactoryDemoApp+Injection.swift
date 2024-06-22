@@ -63,7 +63,7 @@ final class DemoContainer: ObservableObject, SharedContainer {
             .scope(.session)
     }
 
-    var manager = ContainerManager()
+    let manager = ContainerManager()
 }
 
 extension DemoContainer {

@@ -140,7 +140,7 @@ extension Container {
 // Custom scope
 
 extension Scope {
-    static var session = Cached()
+    nonisolated(unsafe) static var session = Cached()
 }
 
 // Class for recursive scope test
@@ -183,8 +183,8 @@ extension Container {
 
 final class CustomContainer: SharedContainer, AutoRegistering {
     static let shared = CustomContainer()
-    static var count = 0
-    var count = 0
+    nonisolated(unsafe) static var count = 0
+    nonisolated(unsafe) var count = 0
     var test: Factory<MyServiceType> {
         self {
             MockServiceN(32)
@@ -222,5 +222,5 @@ final class CustomContainer: SharedContainer, AutoRegistering {
         }
         #endif
     }
-    var manager = ContainerManager()
+    let manager = ContainerManager()
 }

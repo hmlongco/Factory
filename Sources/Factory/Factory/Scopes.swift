@@ -49,7 +49,9 @@ import Foundation
 ///
 /// If no scope is associated with a given Factory then the scope is considered to be unique and a new instance
 /// of the dependency will be created each and every time that factory is resolved.
-public class Scope {
+///
+/// Class in @unchecked Sendable as all state is managed via global locking mechanisms
+public class Scope: @unchecked Sendable {
 
     fileprivate init() {}
 
@@ -80,13 +82,7 @@ public class Scope {
 
     /// Internal function correctly boxes value depending upon scope type
     fileprivate func box<T>(_ instance: T) -> AnyBox? {
-        if let optional = instance as? OptionalProtocol {
-            if optional.hasWrappedValue {
-                return StrongBox<T>(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: instance)
-            }
-            return nil
-        }
-        return StrongBox<T>(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: instance)
+        StrongBox<T>(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: instance)
     }
 
     internal let scopeID: UUID = UUID()
@@ -100,7 +96,7 @@ extension Scope {
     /// A reference to the default cached scope manager.
     public static let cached = Cached()
     /// Defines a cached scope. The same instance will be returned by the factory until the cache is reset.
-    public final class Cached: Scope {
+    public final class Cached: Scope, @unchecked Sendable {
         public override init() {
             super.init()
         }
@@ -111,7 +107,7 @@ extension Scope {
     /// Defines the graph scope. A single instance of a given type will be returned during a given resolution cycle.
     ///
     /// This scope is managed and cleared by the main resolution function at the end of each resolution cycle.
-    public final class Graph: Scope {
+    public final class Graph: Scope, @unchecked Sendable  {
         public override init() {
             super.init()
         }
@@ -126,40 +122,27 @@ extension Scope {
     /// A reference to the default shared scope manager.
     public static let shared = Shared()
     /// Defines a shared (weak) scope. The same instance will be returned by the factory as long as someone maintains a strong reference.
-    public final class Shared: Scope {
+    public final class Shared: Scope, @unchecked Sendable  {
         public override init() {
             super.init()
         }
         /// Internal function returns cached value if exists
         fileprivate override func unboxed<T>(box: AnyBox?) -> T? {
-            if let box = box as? WeakBox, let instance = box.boxed as? T {
-                if let optional = instance as? OptionalProtocol {
-                    if optional.hasWrappedValue {
-                        return instance
-                    }
-                } else {
-                    return instance
-                }
+            if let box = box as? WeakBox<T>, let unboxed = box.boxed, let instance = unboxed as? T {
+                return instance
             }
             return nil
         }
         /// Override function correctly boxes weak cache value
         fileprivate override func box<T>(_ instance: T) -> AnyBox? {
-            if let optional = instance as? OptionalProtocol {
-                if let unwrapped = optional.wrappedValue, type(of: unwrapped) is AnyObject.Type {
-                    return WeakBox(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: unwrapped as AnyObject)
-                }
-            } else if type(of: instance as Any) is AnyObject.Type {
-                return WeakBox(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: instance as AnyObject)
-            }
-            return nil
+            WeakBox(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: instance)
         }
     }
 
     /// A reference to the default singleton scope manager.
     public static let singleton = Singleton()
     /// Defines the singleton scope. The same instance will always be returned by the factory.
-    public final class Singleton: Scope, InternalScopeCaching {
+    public final class Singleton: Scope, InternalScopeCaching, @unchecked Sendable  {
         public override init() {
             super.init()
         }
@@ -179,10 +162,10 @@ extension Scope {
 
     /// A reference to the default unique scope.
     ///
-    /// If no scope cache is specified then Factory is running in unique more.
+    /// If no scope cache is specified then Factory is running in unique mode.
     public static let unique = Unique()
     /// Defines the unique scope. A new instance of a given type will be returned on every resolution cycle.
-    public final class Unique: Scope {
+    public final class Unique: Scope, @unchecked Sendable  {
         public override init() {
             super.init()
         }
@@ -200,23 +183,23 @@ extension Scope {
     internal final class Cache {
         typealias CacheMap = [FactoryKey:AnyBox]
         /// Internal support functions
-        @inlinable func value(forKey key: FactoryKey) -> AnyBox? {
+        @inlinable @inline(__always) func value(forKey key: FactoryKey) -> AnyBox? {
             cache[key]
         }
-        @inlinable func set(value: AnyBox, forKey key: FactoryKey)  {
+        @inlinable @inline(__always) func set(value: AnyBox, forKey key: FactoryKey)  {
             cache[key] = value
         }
-        @inlinable func set(timestamp: Double, forKey key: FactoryKey)  {
+        @inlinable @inline(__always) func set(timestamp: Double, forKey key: FactoryKey)  {
             cache[key]?.timestamp = timestamp
         }
-        @inlinable func removeValue(forKey key: FactoryKey) {
+        @inlinable @inline(__always) func removeValue(forKey key: FactoryKey) {
             cache.removeValue(forKey: key)
         }
         internal func reset(scopeID: UUID) {
             cache = cache.filter { $1.scopeID != scopeID }
         }
         /// Internal function to clear cache if needed
-        @inlinable func reset() {
+        internal func reset() {
             if !cache.isEmpty {
                 cache.removeAll(keepingCapacity: true)
             }
@@ -239,24 +222,6 @@ internal protocol InternalScopeCaching {
     var cache: Scope.Cache { get }
 }
 
-/// Internal protocol used to evaluate optional types for caching
-internal protocol OptionalProtocol {
-    var hasWrappedValue: Bool { get }
-    var wrappedValue: Any? { get }
-}
-
-extension Optional: OptionalProtocol {
-    @inlinable internal var hasWrappedValue: Bool {
-        wrappedValue != nil
-    }
-    @inlinable internal var wrappedValue: Any? {
-        if case .some(let value) = self {
-            return value
-        }
-        return nil
-    }
-}
-
 /// Internal box protocol for scope functionality
 internal protocol AnyBox {
     var scopeID: UUID { get }
@@ -268,11 +233,21 @@ internal struct StrongBox<T>: AnyBox {
     let scopeID: UUID
     var timestamp: Double
     let boxed: T
+    internal init?(scopeID: UUID, timestamp: Double, boxed: T) {
+        self.scopeID = scopeID
+        self.timestamp = timestamp
+        self.boxed = boxed
+    }
 }
 
 /// Weak box for shared scope
-internal struct WeakBox: AnyBox {
+internal struct WeakBox<T>: AnyBox {
     let scopeID: UUID
     var timestamp: Double
     weak var boxed: AnyObject?
+    internal init?(scopeID: UUID, timestamp: Double, boxed: T) {
+        self.scopeID = scopeID
+        self.timestamp = timestamp
+        self.boxed = boxed as AnyObject
+    }
 }
