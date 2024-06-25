@@ -2,7 +2,6 @@
 
 ## 2.4.0
 * Updated to properly manage new concurrency warnings and errors in Xcode 16 and Swift 6
-* Updated to fix shared scope caching issues introduced by Swift 6
 
 ## 2.3.2
 

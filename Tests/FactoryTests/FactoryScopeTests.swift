@@ -257,54 +257,54 @@ final class FactoryScopeTests: XCTestCase {
         XCTAssertNotNil(service2)
     }
 
-//    func testNilScopedServiceCaching() throws {
-//        Container.shared.nilCachedService.reset()
-//        XCTAssertTrue(Container.shared.manager.isEmpty(.scope))
-//        let service1 = Container.shared.nilCachedService()
-//        XCTAssertNil(service1)
-//        XCTAssertTrue(Container.shared.manager.isEmpty(.scope)) // nothing caches
-//        let service2 = Container.shared.nilCachedService()
-//        XCTAssertNil(service2)
-//        XCTAssertTrue(Container.shared.manager.isEmpty(.scope)) // nothing caches
-//        Container.shared.nilCachedService.register {
-//            MyService()
-//        }
-//        let service3 = Container.shared.nilCachedService()
-//        XCTAssertNotNil(service3)
-//        XCTAssertFalse(Container.shared.manager.isEmpty(.scope)) // cached value
-//        Container.shared.nilCachedService.register {
-//            nil
-//        }
-//        let service4 = Container.shared.nilCachedService()
-//        XCTAssertNil(service4) // cache was reset by registration
-//        XCTAssertTrue(Container.shared.manager.isEmpty(.scope)) // nothing cached
-//    }
-//
-//    func testNilSharedServiceCaching() throws {
-//        Container.shared.nilSharedService.reset()
-//        XCTAssertTrue(Container.shared.manager.isEmpty(.scope))
-//        let service1 = Container.shared.nilSharedService()
-//        XCTAssertNil(service1)
-//        XCTAssertTrue(Container.shared.manager.isEmpty(.scope)) // nothing caches
-//        let service2 = Container.shared.nilSharedService()
-//        XCTAssertNil(service2)
-//        XCTAssertTrue(Container.shared.manager.isEmpty(.scope)) // nothing caches
-//        Container.shared.nilSharedService.register {
-//            MyService()
-//        }
-//        let service3 = Container.shared.nilSharedService()
-//        XCTAssertNotNil(service3)
-//        let service4 = Container.shared.nilSharedService()
-//        XCTAssertNotNil(service4)
-//        XCTAssertTrue(service3?.id == service4?.id)
-//        XCTAssertFalse(Container.shared.manager.isEmpty(.scope)) // cached value
-//        Container.shared.nilSharedService.register {
-//            nil
-//        }
-//        let service5 = Container.shared.nilSharedService()
-//        XCTAssertNil(service5) // cache was reset by registration
-//        XCTAssertTrue(Container.shared.manager.isEmpty(.scope)) // nothing cached
-//    }
+    func testNilScopedServiceCaching() throws {
+        Container.shared.nilCachedService.reset()
+        XCTAssertTrue(Container.shared.manager.isEmpty(.scope))
+        let service1 = Container.shared.nilCachedService()
+        XCTAssertNil(service1)
+        XCTAssertTrue(Container.shared.manager.isEmpty(.scope)) // nothing caches
+        let service2 = Container.shared.nilCachedService()
+        XCTAssertNil(service2)
+        XCTAssertTrue(Container.shared.manager.isEmpty(.scope)) // nothing caches
+        Container.shared.nilCachedService.register {
+            MyService()
+        }
+        let service3 = Container.shared.nilCachedService()
+        XCTAssertNotNil(service3)
+        XCTAssertFalse(Container.shared.manager.isEmpty(.scope)) // cached value
+        Container.shared.nilCachedService.register {
+            nil
+        }
+        let service4 = Container.shared.nilCachedService()
+        XCTAssertNil(service4) // cache was reset by registration
+        XCTAssertTrue(Container.shared.manager.isEmpty(.scope)) // nothing cached
+    }
+
+    func testNilSharedServiceCaching() throws {
+        Container.shared.nilSharedService.reset()
+        XCTAssertTrue(Container.shared.manager.isEmpty(.scope))
+        let service1 = Container.shared.nilSharedService()
+        XCTAssertNil(service1)
+        XCTAssertTrue(Container.shared.manager.isEmpty(.scope)) // nothing caches
+        let service2 = Container.shared.nilSharedService()
+        XCTAssertNil(service2)
+        XCTAssertTrue(Container.shared.manager.isEmpty(.scope)) // nothing caches
+        Container.shared.nilSharedService.register {
+            MyService()
+        }
+        let service3 = Container.shared.nilSharedService()
+        XCTAssertNotNil(service3)
+        let service4 = Container.shared.nilSharedService()
+        XCTAssertNotNil(service4)
+        XCTAssertTrue(service3?.id == service4?.id)
+        XCTAssertFalse(Container.shared.manager.isEmpty(.scope)) // cached value
+        Container.shared.nilSharedService.register {
+            nil
+        }
+        let service5 = Container.shared.nilSharedService()
+        XCTAssertNil(service5) // cache was reset by registration
+        XCTAssertTrue(Container.shared.manager.isEmpty(.scope)) // nothing cached
+    }
 
     func testImplementsGraphScope() throws {
         // Has base to graph scope

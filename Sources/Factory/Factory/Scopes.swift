@@ -82,7 +82,13 @@ public class Scope: @unchecked Sendable {
 
     /// Internal function correctly boxes value depending upon scope type
     fileprivate func box<T>(_ instance: T) -> AnyBox? {
-        StrongBox<T>(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: instance)
+        if let optional = instance as? OptionalProtocol {
+            if optional.hasWrappedValue {
+                return StrongBox<T>(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: instance)
+            }
+            return nil
+        }
+        return StrongBox<T>(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: instance)
     }
 
     internal let scopeID: UUID = UUID()
@@ -126,16 +132,28 @@ extension Scope {
         public override init() {
             super.init()
         }
-        /// Internal function returns cached value if exists
         fileprivate override func unboxed<T>(box: AnyBox?) -> T? {
-            if let box = box as? WeakBox<T>, let unboxed = box.boxed, let instance = unboxed as? T {
-                return instance
+            if let box = box as? WeakBox, let instance = box.boxed as? T {
+                if let optional = instance as? OptionalProtocol {
+                    if optional.hasWrappedValue {
+                        return instance
+                    }
+                } else {
+                    return instance
+                }
             }
             return nil
         }
         /// Override function correctly boxes weak cache value
         fileprivate override func box<T>(_ instance: T) -> AnyBox? {
-            WeakBox(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: instance)
+            if let optional = instance as? OptionalProtocol {
+                if let unwrapped = optional.wrappedValue, type(of: unwrapped) is AnyObject.Type {
+                    return WeakBox(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: unwrapped as AnyObject)
+                }
+            } else if type(of: instance as Any) is AnyObject.Type {
+                return WeakBox(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: instance as AnyObject)
+            }
+            return nil
         }
     }
 
@@ -233,21 +251,29 @@ internal struct StrongBox<T>: AnyBox {
     let scopeID: UUID
     var timestamp: Double
     let boxed: T
-    internal init?(scopeID: UUID, timestamp: Double, boxed: T) {
-        self.scopeID = scopeID
-        self.timestamp = timestamp
-        self.boxed = boxed
-    }
 }
 
 /// Weak box for shared scope
-internal struct WeakBox<T>: AnyBox {
+internal struct WeakBox: AnyBox {
     let scopeID: UUID
     var timestamp: Double
     weak var boxed: AnyObject?
-    internal init?(scopeID: UUID, timestamp: Double, boxed: T) {
-        self.scopeID = scopeID
-        self.timestamp = timestamp
-        self.boxed = boxed as AnyObject
+}
+
+/// Internal protocol used to evaluate optional types for caching
+internal protocol OptionalProtocol {
+    var hasWrappedValue: Bool { get }
+    var wrappedValue: Any? { get }
+}
+
+extension Optional: OptionalProtocol {
+    @inlinable internal var hasWrappedValue: Bool {
+        wrappedValue != nil
+    }
+    @inlinable internal var wrappedValue: Any? {
+        if case .some(let value) = self {
+            return value
+        }
+        return nil
     }
 }
