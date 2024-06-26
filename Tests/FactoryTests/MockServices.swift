@@ -140,7 +140,7 @@ extension Container {
 // Custom scope
 
 extension Scope {
-    nonisolated(unsafe) static var session = Cached()
+    static let session = Cached()
 }
 
 // Class for recursive scope test

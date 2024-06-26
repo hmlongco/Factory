@@ -161,6 +161,8 @@ extension ManagedContainer {
 /// to a pristine state, as well as push/pop methods that can save and restore the current state.
 ///
 /// Those functions are designed primarily for testing.
+///
+/// Class is @unchecked Sendable as all public state is managed via global locking mechanisms
 public final class ContainerManager: @unchecked Sendable {
 
     /// Public initializer

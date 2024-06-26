@@ -50,7 +50,7 @@ import Foundation
 /// If no scope is associated with a given Factory then the scope is considered to be unique and a new instance
 /// of the dependency will be created each and every time that factory is resolved.
 ///
-/// Class in @unchecked Sendable as all state is managed via global locking mechanisms
+/// Class is @unchecked Sendable as all public state is managed via global locking mechanisms
 public class Scope: @unchecked Sendable {
 
     fileprivate init() {}
