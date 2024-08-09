@@ -271,7 +271,7 @@ final class FactoryContextTests: XCTestCase {
         XCTAssertEqual(service4.name, "ONCE")
     }
 
-    func testChaining() {
+    func testOnDebugChainingAndResolution() {
         FactoryContext.current.arguments = []
         FactoryContext.current.isPreview = false
         FactoryContext.current.isTest = false
@@ -279,6 +279,18 @@ final class FactoryContextTests: XCTestCase {
         XCTAssertEqual(service1.name, "DEBUG")
         let service2 = Container.shared.internalContextService
             .onDebug { ContextService(name: "CHANGED") }
+            .resolve()
+        XCTAssertEqual(service2.name, "CHANGED")
+    }
+
+    func testOverrideTestContext() {
+        FactoryContext.current.arguments = []
+        FactoryContext.current.isPreview = false
+        FactoryContext.current.isTest = true
+        let service1 = Container.shared.testContextService()
+        XCTAssertEqual(service1.name, "TEST")
+        let service2 = Container.shared.testContextService
+            .onTest { ContextService(name: "CHANGED") }
             .resolve()
         XCTAssertEqual(service2.name, "CHANGED")
     }
@@ -296,6 +308,10 @@ extension Container {
     fileprivate var internalContextService: Factory<ContextService> {
         self { ContextService(name: "FACTORY") }
             .onDebug { ContextService(name: "DEBUG") }
+    }
+    fileprivate var testContextService: Factory<ContextService> {
+        self { ContextService(name: "FACTORY") }
+            .onTest { ContextService(name: "TEST") }
     }
     fileprivate var simulatorContextService: Factory<ContextService> {
         self { ContextService(name: "FACTORY") }

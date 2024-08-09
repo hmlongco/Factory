@@ -8,6 +8,13 @@
 import Foundation
 @testable import Factory
 
+// Swift 6
+extension Container: @retroactive AutoRegistering {
+    public func autoRegister() {
+        // print("Container.autoRegister")
+    }
+}
+
 protocol IDProviding {
     var id: UUID { get }
 }

@@ -30,6 +30,7 @@
 		4C977B3D29A3DAC70072FC17 /* TestNonExtendableContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C977B3C29A3DAC70072FC17 /* TestNonExtendableContainer.swift */; };
 		4CA2240028CFC49900944456 /* Actors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CA223FF28CFC49900944456 /* Actors.swift */; };
 		4CA5899929DE482D00FA7845 /* FactoryDemoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CA5899829DE482D00FA7845 /* FactoryDemoTests.swift */; };
+		4CAA10E02C2C7EAC00799300 /* AsyncInit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CAA10DF2C2C7EAC00799300 /* AsyncInit.swift */; };
 		4CC679202966749400FFBB6C /* FactoryDemoUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CC6791F2966749400FFBB6C /* FactoryDemoUITests.swift */; };
 		4CEEC349284927EE00C979B3 /* FactoryDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CEEC348284927EE00C979B3 /* FactoryDemoApp.swift */; };
 		4CEEC34B284927EE00C979B3 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CEEC34A284927EE00C979B3 /* ContentView.swift */; };
@@ -122,6 +123,7 @@
 		4CA223FF28CFC49900944456 /* Actors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Actors.swift; sourceTree = "<group>"; };
 		4CA5899629DE482D00FA7845 /* FactoryDemoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FactoryDemoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4CA5899829DE482D00FA7845 /* FactoryDemoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FactoryDemoTests.swift; sourceTree = "<group>"; };
+		4CAA10DF2C2C7EAC00799300 /* AsyncInit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncInit.swift; sourceTree = "<group>"; };
 		4CC6791D2966749400FFBB6C /* FactoryDemoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FactoryDemoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4CC6791F2966749400FFBB6C /* FactoryDemoUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FactoryDemoUITests.swift; sourceTree = "<group>"; };
 		4CCC840D2868CF5B00B474F7 /* Common.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Common.xcodeproj; path = Common/Common.xcodeproj; sourceTree = "<group>"; };
@@ -188,6 +190,7 @@
 		4C46E064295642BC00185E6E /* Concepts */ = {
 			isa = PBXGroup;
 			children = (
+				4CAA10DF2C2C7EAC00799300 /* AsyncInit.swift */,
 				4CA223FF28CFC49900944456 /* Actors.swift */,
 				4C46E0652956433200185E6E /* CircularDependencies.swift */,
 				4C4ED1F728FDADB3009E41A5 /* FunctionInjection.swift */,
@@ -510,6 +513,7 @@
 				4C3F6FE92932C5F80084A647 /* FactoryDemoApp+AutoRegister.swift in Sources */,
 				4CEEC35C2849309C00C979B3 /* FactoryDemoApp+Injection.swift in Sources */,
 				4C46E0662956433200185E6E /* CircularDependencies.swift in Sources */,
+				4CAA10E02C2C7EAC00799300 /* AsyncInit.swift in Sources */,
 				4C977B3B29A2AD3A0072FC17 /* SimpleContainer.swift in Sources */,
 				4CEEC3602849311000C979B3 /* ContentViewModel.swift in Sources */,
 				4C02802F2AF6D62A00768BA9 /* ModelTest.swift in Sources */,

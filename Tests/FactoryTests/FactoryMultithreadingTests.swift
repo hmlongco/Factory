@@ -78,7 +78,7 @@ final class FactoryMultithreadingTests: XCTestCase, @unchecked Sendable {
         self.qc.async {  expC.fulfill() }
         self.qd.async {  expD.fulfill() }
 
-        wait(for: [expA, expB, expC, expD], timeout: 20)
+        wait(for: [expA, expB, expC, expD], timeout: 60)
 
         // threads not quite done yet
 

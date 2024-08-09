@@ -105,7 +105,14 @@ extension ManagedContainer {
     @inlinable @inline(__always) public func callAsFunction<P,T>(key: StaticString = #function, _ factory: @escaping (P) -> T) -> ParameterFactory<P,T> {
         ParameterFactory(self, key: key, factory)
     }
-    /// Syntactic sugar allows container to create a factory where registration is promised before resolution.
+    /// Syntactic sugar allows container to create a factory whose optional registration is promised before resolution.
+    /// ```swift
+    /// extension Container {
+    ///     public var accountLoader: Factory<AccountLoading?> { promised() }
+    /// }
+    /// ```
+    /// When run in debug mode and the application attempts to resolve an unregistered accountLoader, `promised()` will trigger a fatalError to
+    /// inform you of the mistake. But in a released application, `promised()` simply returns nil and your application can continue on.
     public func promised<T>(key: StaticString = #function) -> Factory<T?>  {
         Factory<T?>(self, key: key) {
             #if DEBUG
@@ -119,7 +126,14 @@ extension ManagedContainer {
             #endif
         }
     }
-    /// Syntactic sugar allows container to create a factory where registration is promised before resolution.
+    /// Syntactic sugar allows container to create a parameter factory whose optional registration is promised before resolution.
+    /// ```swift
+    /// extension Container {
+    ///     public var accountLoader: Factory<Int, AccountLoading?> { _ in promised() }
+    /// }
+    /// ```
+    /// When run in debug mode and the application attempts to resolve an unregistered accountLoader, `promised()` will trigger a fatalError to
+    /// inform you of the mistake. But in a released application, `promised()` simply returns nil and your application can continue on.
     public func promised<P,T>(key: StaticString = #function) -> ParameterFactory<P,T?>  {
         ParameterFactory<P,T?>(self, key: key) { _ in
             #if DEBUG
@@ -316,7 +330,7 @@ extension ContainerManager {
 /// Add this protocol to a container to support first-time registration of needed dependencies prior to first resolution
 /// of a dependency on that container.
 /// ```swift
-/// extension Container: AutoRegistering {
+/// extension Container: @retroactive AutoRegistering {
 ///     func autoRegister() {
 ///         someService.register {
 ///             CrossModuleService()
@@ -329,6 +343,8 @@ extension ContainerManager {
 ///
 /// > Warning: Calling `container.manager.reset(options: .all)` restores the container to it's initial state
 /// and autoRegister will be called again if it exists.
+///
+/// The `@retroactive` attribute is needed as of Swift 6 to silence a conformance warning.
 public protocol AutoRegistering {
     /// User provided function that supports first-time registration of needed dependencies prior to first resolution
     /// of a dependency on that container.

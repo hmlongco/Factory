@@ -156,7 +156,7 @@ let service2 = MyContainer.shared.cachedService()
 
 From time to time you may find that you need to register or change some instances prior to application initialization. If so you can do the following.
 ```swift
-extension Container: AutoRegistering {
+extension MyContainer: AutoRegistering {
     func autoRegister() {
         someService.register { ModuleB.SomeService() }
     }
@@ -165,6 +165,23 @@ extension Container: AutoRegistering {
 Just make your container conform to ``AutoRegistering`` and provide the `autoRegister` function. This function will be called *once* prior to the very first Factory service resolution on that container.
 
 Note that this can come in handy when you want to register instances of objects obtained across different modules, or change settings in the container manager.
+
+## AutoRegister and the Default Container
+
+One can add auto registration capabilities to Factory's default container as well, but as of Swift 6 you'll need to add the `@retroactive` 
+attribute to the `AutoRegistering` protocol definition.
+
+```swift
+extension Container: @retroactive AutoRegistering {
+    func autoRegister() {
+        someService.register { ModuleB.SomeService() }
+    }
+}
+```
+This new attribute silences the warning, "Extension declares a conformance of imported type 'Container' to imported protocol 'AutoRegistering'; 
+this will not behave correctly if the owners of 'Factory' introduce this conformance in the future". 
+
+Yeah. Me too. I know the developers of Swift mean well, but sometimes...
 
 ## Resetting a Container
 

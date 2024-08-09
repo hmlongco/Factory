@@ -44,14 +44,14 @@ let package = Package(
             dependencies: [],
             resources: [.copy("PrivacyInfo.xcprivacy")],
             swiftSettings: [
-                .swiftLanguageVersion(.v6)
+                .swiftLanguageMode(.v6)
             ]
         ),
         .testTarget(
             name: "FactoryTests",
             dependencies: ["Factory"],
             swiftSettings: [
-                .swiftLanguageVersion(.v6)
+                .swiftLanguageMode(.v6)
             ]
         ),
     ]
