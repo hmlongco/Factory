@@ -148,7 +148,7 @@ extension FactoryModifying {
     /// ```
     /// As shown, decorator can come in handy when you need to perform some operation or manipulation after the fact.
     @discardableResult
-    public func decorator(_ decorator: @escaping (_ instance: T) -> Void) -> Self {
+    public func decorator(_ decorator: @escaping @Sendable (_ instance: T) -> Void) -> Self {
         registration.decorator(decorator)
         return self
     }
@@ -165,7 +165,7 @@ extension FactoryModifying {
     ///
     /// See <doc:Contexts>
     @discardableResult
-    public func context(_ contexts: FactoryContextType..., factory: @escaping (P) -> T) -> Self {
+    public func context(_ contexts: FactoryContextType..., factory: @escaping @Sendable (P) -> T) -> Self {
         for context in contexts {
             switch context {
             case .arg, .args, .device, .simulator:
@@ -182,43 +182,43 @@ extension FactoryModifying {
 
     /// Factory builder shortcut for context(.arg("test") { .. }
     @discardableResult
-    public func onArg(_ argument: String, factory: @escaping (P) -> T) -> Self {
+    public func onArg(_ argument: String, factory: @escaping @Sendable (P) -> T) -> Self {
         context(.arg(argument), factory: factory)
     }
 
     /// Factory builder shortcut for context(.args["test1","test2") { .. }
     @discardableResult
-    public func onArgs(_ args: [String], factory: @escaping (P) -> T) -> Self {
+    public func onArgs(_ args: [String], factory: @escaping @Sendable (P) -> T) -> Self {
         context(.args(args), factory: factory)
     }
 
     /// Factory builder shortcut for context(.preview) { .. }
     @discardableResult
-    public func onPreview(factory: @escaping (P) -> T) -> Self {
+    public func onPreview(factory: @escaping @Sendable (P) -> T) -> Self {
         context(.preview, factory: factory)
     }
 
     /// Factory builder shortcut for context(.test) { .. }
     @discardableResult
-    public func onTest(factory: @escaping (P) -> T) -> Self {
+    public func onTest(factory: @escaping @Sendable (P) -> T) -> Self {
         context(.test, factory: factory)
     }
 
     /// Factory builder shortcut for context(.debug) { .. }
     @discardableResult
-    public func onDebug(factory: @escaping (P) -> T) -> Self {
+    public func onDebug(factory: @escaping @Sendable (P) -> T) -> Self {
         context(.debug, factory: factory)
     }
 
     /// Factory builder shortcut for context(.simulator) { .. }
     @discardableResult
-    public func onSimulator(factory: @escaping (P) -> T) -> Self {
+    public func onSimulator(factory: @escaping @Sendable (P) -> T) -> Self {
         context(.simulator, factory: factory)
     }
 
     /// Factory builder shortcut for context(.device) { .. }
     @discardableResult
-    public func onDevice(factory: @escaping (P) -> T) -> Self {
+    public func onDevice(factory: @escaping @Sendable (P) -> T) -> Self {
         context(.device, factory: factory)
     }
 
