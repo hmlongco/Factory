@@ -27,6 +27,13 @@ class Services3 {
     init() {}
 }
 
+class Services4 {
+    @DynamicInjected(\.myServiceType) var service
+    @DynamicInjected(\.mockService) var mock
+    @DynamicInjected(\CustomContainer.test) var test
+    init() {}
+}
+
 class Services5 {
     @Injected(\.optionalService) var service
     init() {}
@@ -55,6 +62,7 @@ extension Container {
     fileprivate var services1: Factory<Services1> { self { Services1() } }
     fileprivate var services2: Factory<Services2> { self { Services2() } }
     fileprivate var services3: Factory<Services3> { self { Services3() } }
+    fileprivate var services4: Factory<Services4> { self { Services4() } }
     fileprivate var servicesP: Factory<ServicesP> { self { ServicesP() }.shared }
     fileprivate var servicesC: Factory<ServicesC> { self { ServicesC() }.shared }
 }
@@ -123,6 +131,13 @@ final class FactoryInjectionTests: XCTestCase {
         XCTAssertEqual(services.mock.text(), "MockService")
         XCTAssertEqual(services.test.text(), "MockService32")
         XCTAssertNotNil(services.$service.resolvedOrNil())
+    }
+    
+    func testDynamicInjection() throws {
+        let services = Services4()
+        XCTAssertEqual(services.service.text(), "MyService")
+        XCTAssertEqual(services.mock.text(), "MockService")
+        XCTAssertEqual(services.test.text(), "MockService32")
     }
 
     func testLazyInjectionOccursOnce() throws {
@@ -232,6 +247,14 @@ final class FactoryInjectionTests: XCTestCase {
         service.$service.resolve()
 
         XCTAssertNil(service.service)
+    }
+    
+    func testDynamicInjectionResolve() throws {
+        let object = Container.shared.services4()
+        let oldId = object.service.id
+        // should have new instance
+        let newId = object.service.id
+        XCTAssertTrue(oldId != newId)
     }
 
     #if canImport(SwiftUI)

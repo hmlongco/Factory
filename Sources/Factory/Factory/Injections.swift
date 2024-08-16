@@ -253,6 +253,50 @@ import SwiftUI
 
 }
 
+/// Convenience property wrapper takes a factory and resolves an instance of the desired type.
+///
+/// Property wrappers implement an annotation pattern to resolving dependencies, similar to using
+/// EnvironmentObject in SwiftUI.
+/// ```swift
+/// class MyViewModel {
+///    @DynamicInjected(\.myService) var service
+///    @DynamicInjected(\MyCustomContainer.myService) var service
+/// }
+/// ```
+/// The provided keypath resolves to a Factory definition on the `shared` container required for each Container type.
+/// The short version of the keyPath resolves to the default container, while the expanded version
+/// allows you to point an instance on your own customer container type.
+///
+/// - Note: The @DynamicInjected property wrapper will be resolved on **access**. In the above example
+/// the referenced dependencies will be acquired each time the property is accessed.
+@propertyWrapper public struct DynamicInjected<T> {
+
+    private let reference: BoxedFactoryReference
+
+    /// Initializes the property wrapper. The dependency is resolved on access.
+    /// - Parameter keyPath: KeyPath to a Factory on the default Container.
+    public init(_ keyPath: KeyPath<Container, Factory<T>>) {
+        self.reference = FactoryReference<Container, T>(keypath: keyPath)
+    }
+
+    /// Initializes the property wrapper. The dependency is resolved on access.
+    /// - Parameter keyPath: KeyPath to a Factory on the specified Container.
+    public init<C: SharedContainer>(_ keyPath: KeyPath<C, Factory<T>>) {
+        self.reference = FactoryReference<C, T>(keypath: keyPath)
+    }
+
+    /// Manages the wrapped dependency.
+    public var wrappedValue: T {
+        get { return reference.factory().resolve() }
+    }
+
+    /// Unwraps the property wrapper granting access to the resolve/reset function.
+    public var projectedValue: Factory<T> {
+        get { return reference.factory() }
+    }
+}
+
+
 /// Basic property wrapper for optional injected types
 @propertyWrapper public struct InjectedType<T> {
     private var dependency: T?

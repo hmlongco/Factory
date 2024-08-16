@@ -97,7 +97,7 @@ Finally, you can also use the @Injected property wrapper. That's changed too, an
 ```
 The @Injected property wrapper looks for dependencies in the shared container, so this example is functionally identical to the `Container.shared.service()` version shown above.
 
-See ``Injected``, ``LazyInjected``, ``WeakLazyInjected``, and ``InjectedObject`` for more.
+See ``Injected``, ``LazyInjected``, ``WeakLazyInjected``, ``DynamicInjected`` and ``InjectedObject`` for more.
 
 ```swift
 // Factory 1.0 version for reference

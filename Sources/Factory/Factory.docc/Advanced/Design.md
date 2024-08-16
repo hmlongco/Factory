@@ -146,7 +146,7 @@ class ContentViewModel: ObservableObject {
 ```
 Factory 2.0 also updates the syntax to use keyPaths, much like SwiftUI environment variables.
 
-See ``Injected``, ``LazyInjected``, ``WeakLazyInjected``, and ``InjectedObject`` for more.
+See ``Injected``, ``LazyInjected``, ``WeakLazyInjected``, ``DynamicInjected`` and ``InjectedObject`` for more.
 
 ## Breaking Changes
 
