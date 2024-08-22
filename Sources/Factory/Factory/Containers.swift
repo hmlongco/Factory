@@ -109,13 +109,10 @@ extension ManagedContainer {
     public func promised<T>(key: StaticString = #function) -> Factory<T?>  {
         Factory<T?>(self, key: key) {
             #if DEBUG
-            if self.manager.promiseTriggersError {
-                resetAndTriggerFatalError("\(T.self) was not registered", #file, #line)
-            } else {
-                return nil
-            }
+            guard self.manager.promiseTriggersError && !FactoryContext.current.isPreview else { return nil }
+            resetAndTriggerFatalError("\(T.self) was not registered", #file, #line)
             #else
-            nil
+            return nil
             #endif
         }
     }
@@ -123,13 +120,10 @@ extension ManagedContainer {
     public func promised<P,T>(key: StaticString = #function) -> ParameterFactory<P,T?>  {
         ParameterFactory<P,T?>(self, key: key) { _ in
             #if DEBUG
-            if self.manager.promiseTriggersError {
-                resetAndTriggerFatalError("\(T.self) was not registered", #file, #line)
-            } else {
-                return nil
-            }
+            guard self.manager.promiseTriggersError && !FactoryContext.current.isPreview else { return nil }
+            resetAndTriggerFatalError("\(T.self) was not registered", #file, #line)
             #else
-            nil
+            return nil
             #endif
         }
     }
