@@ -17,6 +17,7 @@ private class MyViewModel {
     }
 }
 
+@available(iOS 16.0, *)
 final class OpenURLFunctionMock: Sendable {
     let openedURL: OSAllocatedUnfairLock<URL?> = .init(initialState: nil)
     init() {
@@ -29,13 +30,13 @@ final class OpenURLFunctionMock: Sendable {
     }
 }
 
+@available(iOS 16.0, *)
 final class FactoryFunctionalTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
         Container.shared.reset()
     }
-
 
     func testOpenFuctionality() throws {
         let openedURL: OSAllocatedUnfairLock<URL?> = .init(initialState: nil)
