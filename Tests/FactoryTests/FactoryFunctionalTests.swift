@@ -1,4 +1,5 @@
 import XCTest
+import os
 @testable import Factory
 
 typealias OpenURLFunction = (_ url: URL) -> Bool
@@ -16,12 +17,12 @@ private class MyViewModel {
     }
 }
 
-class OpenURLFunctionMock {
-    var openedURL: URL?
+final class OpenURLFunctionMock: Sendable {
+    let openedURL: OSAllocatedUnfairLock<URL?> = .init(initialState: nil)
     init() {
-        Container.shared.openURL.register {
+      Container.shared.openURL.register {
             { [weak self] url in
-                self?.openedURL = url
+              self?.openedURL.withLock { $0 = url }
                 return false
             }
         }
@@ -37,23 +38,23 @@ final class FactoryFunctionalTests: XCTestCase {
 
 
     func testOpenFuctionality() throws {
-        var openedURL: URL?
+        let openedURL: OSAllocatedUnfairLock<URL?> = .init(initialState: nil)
         Container.shared.openURL.register {
             { url in
-                openedURL = url
+                openedURL.withLock { $0 = url }
                 return false
             }
         }
         let viewModel = MyViewModel()
         viewModel.open(site: "https://google.com")
-        XCTAssert(openedURL != nil)
+        XCTAssert(openedURL.withLock { $0 } != nil)
     }
 
     func testMockFuctionality() throws {
         let mock = OpenURLFunctionMock()
         let viewModel = MyViewModel()
         viewModel.open(site: "https://google.com")
-        XCTAssert(mock.openedURL != nil)
+        XCTAssert(mock.openedURL.withLock { $0 } != nil)
     }
 
 }

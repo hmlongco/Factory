@@ -27,14 +27,14 @@
 import Foundation
 
 /// Shared registration type for Factory and ParameterFactory. Used internally to manage the registration and resolution process.
-public struct FactoryRegistration<P,T> {
+public struct FactoryRegistration<P,T>: Sendable {
 
     /// Key used to manage registrations and cached values.
     internal let key: FactoryKey
     /// A strong reference to the container supporting this Factory.
     internal let container: ManagedContainer
     /// Typed factory with scope and factory.
-    internal let factory: (P) -> T
+    internal let factory: @Sendable (P) -> T
 
     #if DEBUG
     /// Internal debug
@@ -45,7 +45,7 @@ public struct FactoryRegistration<P,T> {
     internal var once: Bool = false
 
     /// Initializer for registration sets passed values and default scope from container manager.
-    internal init(key: StaticString, container: ManagedContainer, factory: @escaping (P) -> T) {
+    internal init(key: StaticString, container: ManagedContainer, factory: @escaping @Sendable (P) -> T) {
         self.key = FactoryKey(type: T.self, key: key)
         self.container = container
         self.factory = factory
@@ -157,7 +157,7 @@ public struct FactoryRegistration<P,T> {
     /// - Parameters:
     ///   - id: ID of associated Factory.
     ///   - factory: Factory closure called to create a new instance of the service when needed.
-    internal func register(_ factory: @escaping (P) -> T) {
+    internal func register(_ factory: @escaping @Sendable (P) -> T) {
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
         container.unsafeCheckAutoRegistration()
@@ -190,7 +190,7 @@ public struct FactoryRegistration<P,T> {
     }
 
     /// Registers a new context.
-    internal func context(_ context: FactoryContextType, key: FactoryKey, factory: @escaping (P) -> T) {
+    internal func context(_ context: FactoryContextType, key: FactoryKey, factory: @escaping @Sendable (P) -> T) {
         options { options in
             switch context {
             case .arg(let arg):
@@ -373,5 +373,5 @@ internal struct FactoryDebugInformation {
 internal protocol AnyFactory {}
 
 internal struct TypedFactory<P,T>: AnyFactory {
-    let factory: (P) -> T
+    let factory: @Sendable (P) -> T
 }

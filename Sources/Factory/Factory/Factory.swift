@@ -72,7 +72,7 @@ public struct Factory<T>: FactoryModifying {
     ///   current container as well defining the scope.
     ///   - key: Hidden value used to differentiate different instances of the same type in the same container.
     ///   - factory: A factory closure that produces an object of the desired type when required.
-    public init(_ container: ManagedContainer, key: StaticString = #function, _ factory: @escaping () -> T) {
+    public init(_ container: ManagedContainer, key: StaticString = #function, _ factory: @escaping @Sendable () -> T) {
         self.registration = FactoryRegistration<Void,T>(key: key, container: container, factory: factory)
     }
 
@@ -133,7 +133,7 @@ public struct Factory<T>: FactoryModifying {
     ///  - factory: A new factory closure that produces an object of the desired type when needed.
     /// Allows updating registered factory and scope.
     @discardableResult
-    public func register(factory: @escaping () -> T) -> Self {
+    public func register(factory: @escaping @Sendable () -> T) -> Self {
         registration.register(factory)
         return self
     }
@@ -143,6 +143,8 @@ public struct Factory<T>: FactoryModifying {
     public var registration: FactoryRegistration<Void,T>
 
 }
+
+extension Factory: Sendable where T: Sendable {}
 
 // MARK: - ParameterFactory
 
@@ -198,7 +200,7 @@ public struct ParameterFactory<P,T>: FactoryModifying {
     ///   current container as well defining the scope.
     ///   - key: Hidden value used to differentiate different instances of the same type in the same container.
     ///   - factory: A factory closure that produces an object of the desired type when required.
-    public init(_ container: ManagedContainer, key: StaticString = #function, _ factory: @escaping (P) -> T) {
+    public init(_ container: ManagedContainer, key: StaticString = #function, _ factory: @escaping @Sendable (P) -> T) {
         self.registration = FactoryRegistration<P,T>(key: key, container: container, factory: factory)
     }
 
@@ -224,7 +226,7 @@ public struct ParameterFactory<P,T>: FactoryModifying {
     /// - Parameters:
     ///  - factory: A new factory closure that produces an object of the desired type when needed.
     @discardableResult
-    public func register(factory: @escaping (P) -> T) -> Self {
+    public func register(factory: @escaping @Sendable (P) -> T) -> Self {
         registration.register(factory)
         return self
     }

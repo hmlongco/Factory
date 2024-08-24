@@ -32,7 +32,7 @@ import Foundation
 public protocol Resolving: ManagedContainer {
 
     /// Registers a new type and associated factory closure with this container.
-    func register<T>(_ type: T.Type, factory: @escaping () -> T) -> Factory<T>
+    func register<T>(_ type: T.Type, factory: @escaping @Sendable () -> T) -> Factory<T>
 
     /// Returns a registered factory for this type from this container.
     func factory<T>(_ type: T.Type) -> Factory<T>?
@@ -48,7 +48,7 @@ extension Resolving {
     ///
     /// Also returns Factory for further specialization for scopes, decorators, etc.
     @discardableResult
-    public func register<T>(_ type: T.Type = T.self, factory: @escaping () -> T) -> Factory<T> {
+    public func register<T>(_ type: T.Type = T.self, factory: @escaping @Sendable () -> T) -> Factory<T> {
         defer { globalRecursiveLock.unlock() }
         globalRecursiveLock.lock()
         // Perform autoRegistration check
