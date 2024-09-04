@@ -37,7 +37,8 @@ final class FactoryIsolationTests: XCTestCase {
   func testInjectSendableDependency() {
     let _: SomeSendableType = Container.shared.sendable()
   }
-
+    
+  @MainActor
   func testInjectMainActorDependency() async {
     let _: SomeMainActorType = await Container.shared.mainActor().wrapped()
   }

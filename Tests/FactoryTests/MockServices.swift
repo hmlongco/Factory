@@ -9,7 +9,7 @@ import Foundation
 @testable import Factory
 
 // Swift 6
-extension Container: @retroactive AutoRegistering {
+extension Container: AutoRegistering {
     public func autoRegister() {
         // print("Container.autoRegister")
     }
