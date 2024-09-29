@@ -235,3 +235,5 @@ public struct ParameterFactory<P,T>: FactoryModifying {
     public var registration: FactoryRegistration<P,T>
 
 }
+
+extension ParameterFactory: Sendable where T: Sendable {}
