@@ -65,7 +65,7 @@ For more examples of Factory definitions that define scopes, use constructor inj
 
 ## Resolving a Factory
 
-To resolve a Factory and obtain an object or service of the desired type, one simply calls the Factory as s function. Here we use the `shared` container that's provided for each and every container type. 
+To resolve a Factory and obtain an object or service of the desired type, one simply calls the Factory as a function. Here we use the `shared` container that's provided for each and every container type. 
 ```swift
 class ContentViewModel: ObservableObject {
     private let myService = Container.shared.service()
