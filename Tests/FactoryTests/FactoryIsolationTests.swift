@@ -3,10 +3,6 @@ import XCTest
 
 private struct SomeSendableType: Sendable {}
 
-private struct AsyncInitWrapper<T>: Sendable {
-  let wrapped: @Sendable () async -> T
-}
-
 @MainActor
 private final class SomeMainActorType: Sendable {
   init() {}
@@ -17,12 +13,9 @@ extension Container {
     self { .init() }
   }
 
-  @MainActor
-  fileprivate var mainActor: Factory<AsyncInitWrapper<SomeMainActorType>> {
+  fileprivate var mainActor: MainActorFactory<SomeMainActorType> {
     self {
-      .init {
-        await SomeMainActorType()
-      }
+      SomeMainActorType()
     }
   }
 }
@@ -39,7 +32,7 @@ final class FactoryIsolationTests: XCTestCase {
   }
 
   func testInjectMainActorDependency() async {
-    let _: SomeMainActorType = await Container.shared.mainActor().wrapped()
+    let _: SomeMainActorType = await Container.shared.mainActor().factory()
   }
 
 }
