@@ -105,6 +105,19 @@ extension ManagedContainer {
     @inlinable @inline(__always) public func callAsFunction<P,T>(key: StaticString = #function, _ factory: @escaping @Sendable (P) -> T) -> ParameterFactory<P,T> {
         ParameterFactory(self, key: key, factory)
     }
+    
+    /// Syntactic sugar allows container to create a properly bound Factory on MainActor.
+    @MainActor
+    @inlinable @inline(__always) public func callAsFunction<T: Sendable>(key: StaticString = #function, _ factory: @escaping @MainActor () -> T) -> Factory<T> {
+        return Factory(self, key: key, factory)
+    }
+    
+    /// Syntactic sugar allows container to create a properly bound ParameterFactory on MainActor.
+    @MainActor
+    @inlinable @inline(__always) public func callAsFunction<P,T: Sendable>(key: StaticString = #function, _ factory: @escaping @MainActor (P) -> T) -> ParameterFactory<P,T> {
+        return ParameterFactory(self, key: key, factory)
+    }
+    
     /// Syntactic sugar allows container to create a factory whose optional registration is promised before resolution.
     /// ```swift
     /// extension Container {

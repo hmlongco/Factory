@@ -32,7 +32,7 @@ import Foundation
 nonisolated(unsafe) internal var globalGraphResolutionDepth = 0
 
 /// Internal key used for Resolver mode
-nonisolated(unsafe) internal let globalResolverKey: StaticString = "*"
+internal let globalResolverKey: StaticString = "*"
 
 #if DEBUG
 /// Internal variables used for debugging
