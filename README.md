@@ -15,8 +15,8 @@ Factory is strongly influenced by SwiftUI, and in my opinion is highly suited fo
 - **Safe**: Factory is compile-time safe; a factory for a given type must exist or the code simply will not compile.
 - **Concise**: Defining a registration usually takes just a single line of code. Same for resolution.
 - **Flexible**: Working with UIKIt or SwiftUI? iOS or macOS? Using MVVM? MVP? Clean? VIPER? No problem. Factory works with all of these and more.
-- **Documented**: Factory 2.0 has extensive DocC documentation and examples covering its classes, methods, and use cases.
-- **Lightweight**: With all of that Factory is slim and trim, under 800 lines of executable code.
+- **Documented**: Factory has extensive DocC documentation and examples covering its classes, methods, and use cases.
+- **Lightweight**: With all of that Factory is slim and trim, under 1,000 lines of executable code.
 - **Tested**: Unit tests with 100% code coverage helps ensure correct operation of registrations, resolutions, and scopes.
 - **Free**: Factory is free and open source under the MIT License.
 
@@ -193,6 +193,31 @@ final class FactoryCoreTests: XCTestCase {
 ```
 Again, Factory makes it easy to reach into a chain of dependencies and make specific changes to the system as needed. This makes testing loading states, empty states, and error conditions simple.
 
+Factory also works with Xcode 16's new Swift Testing framework.
+
+```swift
+import Testing
+
+@Suite(.serialized) struct AppTests {
+  @Test(arguments: Parameters.allCases) func testA(parameter: Parameters) {
+    // This function will be invoked serially, once per parameter, because the
+    // containing suite has the .serialized trait.
+    Container.shared.someService.register { MockService(parameter: parameter) }
+    let service = Container.shared.someService()
+    #expect(service.parameter == parameter)
+  }
+
+
+  @Test func testB() async throws {
+    // This function will not run while testA(parameter:) is running. One test
+    // must end before the other will start.
+    Container.shared.someService.register { ErrorService() }
+    let service = Container.shared.someService()
+    #expect(service.error == "Oops")
+  }
+}
+```
+
 But we're not done yet. 
 
 Factory has quite a few more tricks up its sleeve...
@@ -301,6 +326,10 @@ If you started with Factory 1.x a [migration document is available here](https:/
 * Factory 2.0 adds debug trace support
 * Factory 2.0 adds keyPath-based property wrappers
 * Factory 2.0 adds a new InjectedObject property wrapper for SwiftUI Views
+
+## Factory 2.4 Migration
+
+Factory 2.4 works with Xcode 16 under Strict Concurrency guidelines.
 
 ## Discussion Forum
 
