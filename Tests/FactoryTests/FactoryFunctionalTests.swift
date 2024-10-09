@@ -1,3 +1,5 @@
+#if canImport(os)
+
 import XCTest
 import os
 @testable import Factory
@@ -61,3 +63,4 @@ final class FactoryFunctionalTests: XCTestCase {
 
 }
 
+#endif
