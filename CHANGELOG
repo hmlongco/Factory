@@ -3,6 +3,7 @@
 ## 2.4.0
 * Updated to properly manage new concurrency warnings and errors in Xcode 16 and Swift 6
 * Updated documentation in light of Xcode 16's new Swift Testing framework
+* Fixes issue with Promised generating errors during Previews
 
 ## 2.3.2
 

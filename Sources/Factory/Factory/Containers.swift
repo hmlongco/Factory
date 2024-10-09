@@ -256,7 +256,7 @@ public final class ContainerManager: @unchecked Sendable {
     // Protected public mutable state
     private var _defaultScope: Scope?
     private var _dependencyChainTestMax: Int = 8
-    private var _promiseTriggersError: Bool = FactoryContext.current.isDebug
+    private var _promiseTriggersError: Bool = FactoryContext.current.isDebug && !FactoryContext.current.isPreview
 
 }
 
