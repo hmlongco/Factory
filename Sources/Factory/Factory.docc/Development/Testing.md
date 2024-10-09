@@ -302,26 +302,55 @@ Obviously, one can add as many different test cases and registrations as needed.
 
 So can we use Factory with Swift Testing in Xcode 16? 
 
-As usual, the answer to that is complicated.
+As usual, the answer to that is complicated, but it basically boils down to what you're testing and whether or not those tests can be run in parallel.
 
-If you access Container.shared or use one of the @injected property wrappers that depend on Container.shared, then your tests need to be serialized.
+Consider the following.
+
+```swift
+import Testing
+
+struct AppTests {
+  @Test(arguments: Parameters.allCases) func testA(parameter: Parameters) {
+    Container.shared.someService.register { MockService(parameter: parameter) }
+    let service = Container.shared.someService()
+    #expect(service.parameter == parameter)
+  }
+
+  @Test func testB() async throws {
+    Container.shared.someService.register { ErrorService() }
+    let service = Container.shared.someService()
+    #expect(service.error == "Oops")
+  }
+}
+```
+Examine the code and you'll see that the two tests both register different values for `someService` on the same shared container. 
+
+Which means that these tests could suffer from race conditions should they be run in parallel.
+
+Which in turn would result in tests failing randomly. And that's bad.
+
+### Serialized Testing
+
+The rules are relatively straightforward.
+
+* If you're accessing a shared container **or** if you're using one of the @injected property wrappers
+* And if you're altering common dependencies
+
+Then those tests need to be serialized using `@Suite(.serialized)`. 
+
+Here's an example.
 
 ```swift
 import Testing
 
 @Suite(.serialized) struct AppTests {
   @Test(arguments: Parameters.allCases) func testA(parameter: Parameters) {
-    // This function will be invoked serially, once per parameter, because the
-    // containing suite has the .serialized trait.
     Container.shared.someService.register { MockService(parameter: parameter) }
     let service = Container.shared.someService()
     #expect(service.parameter == parameter)
   }
 
-
   @Test func testB() async throws {
-    // This function will not run while testA(parameter:) is running. One test
-    // must end before the other will start.
     Container.shared.someService.register { ErrorService() }
     let service = Container.shared.someService()
     #expect(service.error == "Oops")
@@ -329,11 +358,9 @@ import Testing
 }
 ```
 
-The two tests above both register different values for `someService` and as such could suffer from race conditions should those tests be run in parallel.
+Now testA will complete before testB is started, and both will obtain the expected services from the shared container. 
 
-Which results in tests failing randomly.
-
-## Swift Testing and Container Injection
+### Swift Testing and Container Injection
 
 If you inject a specific container instance into your view models or services, then you can build and inject a separate container for each set of tests so that parallel testing works.
 
@@ -353,7 +380,6 @@ class ContentViewModel {
     #expect(model.parameter == parameter)
   }
 
-
   @Test func testB() async throws {
     let container = Container()
     container.someService.register { ErrorService() }
@@ -363,9 +389,9 @@ class ContentViewModel {
 }
 ```
 
-Here, every instance of ContentViewModel gets its own dedicated container and as such parallel testing will work as expected.
+Here, every instance of ContentViewModel gets its own dedicated container and as such parallel testing should work as expected.
 
-## Swift Testing and Global Shared and Static Values
+### Swift Testing and Global Shared and Static Values
 
 This issue isn't specific to Factor or Resolver, and in fact impacts other scenarios like using a [URLProtocol](https://www.swiftwithvincent.com/blog/how-to-mock-any-network-call-with-urlprotocol) on URLSession.shared, or testing any code that depends on a global or statically shared variable.
 
