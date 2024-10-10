@@ -36,13 +36,13 @@ import SwiftUI
 /// EnvironmentObject in SwiftUI.
 /// ```swift
 /// class MyViewModel {
-///    @Injected(\.myService) var service
-///    @Injected(\MyCustomContainer.myService) var service
+///    @Injected(\.myService) var service1
+///    @Injected(\MyCustomContainer.myService) var service2
 /// }
 /// ```
 /// The provided keypath resolves to a Factory definition on the `shared` container required for each Container type.
 /// The short version of the keyPath resolves to the default container, while the expanded version
-/// allows you to point an instance on your own customer container type.
+/// allows you to point an instance of your own custom container type.
 ///
 /// > Note: The @Injected property wrapper will be resolved on **initialization**. In the above example
 /// the referenced dependencies will be acquired when the parent class is created.
@@ -95,13 +95,13 @@ import SwiftUI
 /// EnvironmentObject in SwiftUI.
 /// ```swift
 /// class MyViewModel {
-///    @LazyInjected(\.myService) var service
-///    @LazyInjected(\MyCustomContainer.myService) var service
+///    @LazyInjected(\.myService) var service1
+///    @LazyInjected(\MyCustomContainer.myService) var service2
 /// }
 /// ```
 /// The provided keypath resolves to a Factory definition on the `shared` container required for each Container type.
 /// The short version of the keyPath resolves to the default container, while the expanded version
-/// allows you to point an instance on your own customer container type.
+/// allows you to point an instance of your own custom container type.
 ///
 /// > Note: Lazy injection is resolved the first time the dependency is referenced by the code, and **not** on initialization.
 @propertyWrapper public struct LazyInjected<T> {
@@ -179,13 +179,13 @@ import SwiftUI
 ///
 /// ```swift
 /// class MyViewModel {
-///    @LazyInjected(\.myService) var service
-///    @LazyInjected(\MyCustomContainer.myService) var service
+///    @LazyInjected(\.myService) var service1
+///    @LazyInjected(\MyCustomContainer.myService) var service2
 /// }
 /// ```
 /// The provided keypath resolves to a Factory definition on the `shared` container required for each Container type.
 /// The short version of the keyPath resolves to the default container, while the expanded version
-/// allows you to point an instance on your own customer container type.
+/// allows you to point an instance of your own custom container type.
 ///
 /// > Note: Lazy injection is resolved the first time the dependency is referenced by the code, **not** on initialization.
 @propertyWrapper public struct WeakLazyInjected<T> {
@@ -259,16 +259,29 @@ import SwiftUI
 /// EnvironmentObject in SwiftUI.
 /// ```swift
 /// class MyViewModel {
-///    @DynamicInjected(\.myService) var service
-///    @DynamicInjected(\MyCustomContainer.myService) var service
+///    @DynamicInjected(\.myService) var service1
+///    @DynamicInjected(\MyCustomContainer.myService) var service2
 /// }
 /// ```
 /// The provided keypath resolves to a Factory definition on the `shared` container required for each Container type.
 /// The short version of the keyPath resolves to the default container, while the expanded version
-/// allows you to point an instance on your own customer container type.
+/// allows you to point an instance of your own custom container type.
 ///
-/// - Note: The @DynamicInjected property wrapper will be resolved on **access**. In the above example
-/// the referenced dependencies will be acquired each time the property is accessed.
+/// - Important: The @DynamicInjected property wrapper's Factory will be resolved on each and every **access**.
+///
+/// In the above example the referenced dependencies will be resolved and acquired each and every time one of the
+/// properties are accessed.
+///
+/// If the dependency is stateless this shouldn't be an issue. If the dependency needs to maintain state, however,
+/// then it probably needs to be cached using one of Factory's caching mechanisms.
+///
+/// ```swift
+/// extension Container {
+///     var myService: Factory<MyServiceType> {
+///         self { MyService() }.cached
+///     }
+/// }
+/// ```
 @propertyWrapper public struct DynamicInjected<T> {
 
     private let reference: BoxedFactoryReference
