@@ -69,7 +69,7 @@ struct ContentView: View {
     }
 }
 ```
-See ``Injected``, ``LazyInjected``, ``WeakLazyInjected``, and ``InjectedObject`` for more.
+See ``Injected``, ``LazyInjected``, ``WeakLazyInjected``, ``DynamicInjected`` and ``InjectedObject`` for more.
 
 ### Global Keypath Resolution from Shared Container
 Factory provides two global functions that utilize keypaths for resolution. 
