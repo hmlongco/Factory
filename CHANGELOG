@@ -1,5 +1,8 @@
 # Factory Changelog
 
+## 2.4.1
+* Adds DynamicProperty wrapper - PR #220
+
 ## 2.4.0
 * Updated to properly manage new concurrency warnings and errors in Xcode 16 and Swift 6
 * Updated documentation in light of Xcode 16's new Swift Testing framework
