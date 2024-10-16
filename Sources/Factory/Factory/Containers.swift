@@ -98,11 +98,17 @@ public protocol ManagedContainer: AnyObject, Sendable {
 /// Defines the default factory helpers for containers
 extension ManagedContainer {
     /// Syntactic sugar allows container to create a properly bound Factory.
-    @inlinable @inline(__always) public func callAsFunction<T>(key: StaticString = #function, _ factory: @escaping @Sendable () -> T) -> Factory<T> {
+    @inlinable @inline(__always) public func callAsFunction<T>(
+        key: StaticString = #function,
+        _ factory: @escaping @Sendable @isolated(any) () -> T
+    ) -> Factory<T> {
         Factory(self, key: key, factory)
     }
     /// Syntactic sugar allows container to create a properly bound ParameterFactory.
-    @inlinable @inline(__always) public func callAsFunction<P,T>(key: StaticString = #function, _ factory: @escaping @Sendable (P) -> T) -> ParameterFactory<P,T> {
+    @inlinable @inline(__always) public func callAsFunction<P,T>(
+        key: StaticString = #function,
+        _ factory: @escaping @Sendable @isolated(any) (P) -> T
+    ) -> ParameterFactory<P,T> {
         ParameterFactory(self, key: key, factory)
     }
     /// Syntactic sugar allows container to create a factory whose optional registration is promised before resolution.
