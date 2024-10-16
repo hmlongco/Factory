@@ -1,5 +1,8 @@
 # Factory Changelog
 
+## 2.4.2
+* Adds isolated(any) in order to properly resolve actor-isolated Factory's'
+
 ## 2.4.1
 * Adds DynamicProperty wrapper - PR #220
 
