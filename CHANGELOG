@@ -1,5 +1,8 @@
 # Factory Changelog
 
+## 2.4.3
+* Conditional code support to fix isolated(any) issue - Issue #250
+
 ## 2.4.2
 * Adds isolated(any) in order to properly resolve actor-isolated Factory's'
 
