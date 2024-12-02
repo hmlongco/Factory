@@ -314,7 +314,7 @@ pod "Factory"
 ```
 Or download the source files and add the Factory folder to your project.
 
-Note that the current version of Factory (2.1) require Swift 5.1 minimum and that the minimum version of iOS currently supported with this release is iOS 11.
+Note that the current version of Factory (2.4.3) require Swift 5.10 minimum and that the minimum version of iOS currently supported with this release is iOS 13.
 
 ## Factory 2.0 Migration
 
@@ -345,15 +345,13 @@ If you want to support my work on Factory and Resolver, consider a [GitHub Spons
 
 Or you can just buy me a cup of coffee!
 
-And many thanks to my current sponsor, sueddeutsche!
-
 ## Author
 
 Factory is designed, implemented, documented, and maintained by [Michael Long](https://www.linkedin.com/in/hmlong/), a Lead iOS Software Engineer and a Top 1,000 Technology Writer on Medium.
 
 * LinkedIn: [@hmlong](https://www.linkedin.com/in/hmlong/)
 * Medium: [@michaellong](https://medium.com/@michaellong)
-* Twitter: [@hmlco](https://twitter.com/hmlco)
+* BlueSky: [@hmlongco](https://bsky.app/profile/hmlongco.bsky.social)
 
 Michael was also one of Google's [Open Source Peer Reward](https://opensource.googleblog.com/2021/09/announcing-latest-open-source-peer-bonus-winners.html) winners in 2021 for his work on Resolver.
 
