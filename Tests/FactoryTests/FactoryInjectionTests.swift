@@ -255,6 +255,8 @@ final class FactoryInjectionTests: XCTestCase {
         // should have new instance
         let newId = object.service.id
         XCTAssertTrue(oldId != newId)
+        let newId2 = object.$service.resolve().id
+        XCTAssertTrue(newId2 != newId)
     }
 
     #if canImport(SwiftUI)
