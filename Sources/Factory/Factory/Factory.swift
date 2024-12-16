@@ -132,7 +132,7 @@ public struct Factory<T>: FactoryModifying {
     /// This is how default functionality is overridden in order to change the nature of the system at runtime, and is the primary mechanism
     /// used to provide mocks and testing doubles.
     ///
-    /// Registration "overrides" are stored in the associated container. If the container ever goes our of scope, so
+    /// Registration "overrides" are stored in the associated container. If the container ever goes out of scope, so
     /// will all of its registrations.
     ///
     /// The original factory closure is preserved, and may be restored by resetting the Factory to its original state.
