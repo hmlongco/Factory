@@ -134,7 +134,7 @@ extension FactoryModifying {
 
 extension FactoryModifying {
 
-    /// Adds a factory specific decorator. The decorator will be *always* be called with the resolved dependency
+    /// Adds a factory specific decorator. The decorator will *always* be called with the resolved dependency
     /// for further examination or manipulation.
     ///
     /// This includes previously created items that may have been cached by a scope.
