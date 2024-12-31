@@ -13,7 +13,7 @@ extension Container {
 
 // Factory with MainActor-based class and initializer
 @MainActor
-private final class SomeMainActorType: Sendable {
+private final class SomeMainActorType {
     init() {}
 }
 
@@ -24,9 +24,9 @@ extension Container {
     }
 }
 
-// Factory with MainActor-based class and nonioslated initializer
+// Factory with MainActor-based class and nonisolated initializer
 @MainActor
-private final class NonIsolatedMainActorType: Sendable {
+private final class NonIsolatedMainActorType {
     nonisolated init() {}
     func test() {}
 }
