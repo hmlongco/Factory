@@ -158,7 +158,7 @@ This is a powerful concept that lets us reach deep into a chain of dependencies 
 
 ## Testing
 
-The same concept can be used used when writing unit tests. Consider the following.
+The same concept can be used when writing unit tests. Consider the following.
 
 ```swift
 final class FactoryCoreTests: XCTestCase {
