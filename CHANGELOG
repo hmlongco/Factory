@@ -1,5 +1,11 @@
 # Factory Changelog
 
+## 2.4.4
+
+* Fix warning when annotating context factories with @MainActor - Issue #256
+* Fix failure to build XCFramework - Issue #252
+* Typo in README - Issue #259
+
 ## 2.4.3
 * Conditional code support to fix isolated(any) issue - Issue #250
 
