@@ -156,7 +156,6 @@ extension FactoryModifying {
 }
 
 // FactoryModifying Context Functionality
-
 extension FactoryModifying {
 
     /// Registers a factory closure to be used only when running in a specific context.
@@ -165,7 +164,7 @@ extension FactoryModifying {
     ///
     /// See <doc:Contexts>
     @discardableResult
-    public func context(_ contexts: FactoryContextType..., factory: @escaping @Sendable (P) -> T) -> Self {
+    public func context(_ contexts: FactoryContextType..., factory: @escaping ParameterFactoryType<P, T>) -> Self {
         for context in contexts {
             switch context {
             case .arg, .args, .device, .simulator:
@@ -182,43 +181,43 @@ extension FactoryModifying {
 
     /// Factory builder shortcut for context(.arg("test") { .. }
     @discardableResult
-    public func onArg(_ argument: String, factory: @escaping @Sendable (P) -> T) -> Self {
+    public func onArg(_ argument: String, factory: @escaping ParameterFactoryType<P, T>) -> Self {
         context(.arg(argument), factory: factory)
     }
 
     /// Factory builder shortcut for context(.args["test1","test2") { .. }
     @discardableResult
-    public func onArgs(_ args: [String], factory: @escaping @Sendable (P) -> T) -> Self {
+    public func onArgs(_ args: [String], factory: @escaping ParameterFactoryType<P, T>) -> Self {
         context(.args(args), factory: factory)
     }
 
     /// Factory builder shortcut for context(.preview) { .. }
     @discardableResult
-    public func onPreview(factory: @escaping @Sendable (P) -> T) -> Self {
+    public func onPreview(factory: @escaping ParameterFactoryType<P, T>) -> Self {
         context(.preview, factory: factory)
     }
 
     /// Factory builder shortcut for context(.test) { .. }
     @discardableResult
-    public func onTest(factory: @escaping @Sendable (P) -> T) -> Self {
+    public func onTest(factory: @escaping ParameterFactoryType<P, T>) -> Self {
         context(.test, factory: factory)
     }
 
     /// Factory builder shortcut for context(.debug) { .. }
     @discardableResult
-    public func onDebug(factory: @escaping @Sendable (P) -> T) -> Self {
+    public func onDebug(factory: @escaping ParameterFactoryType<P, T>) -> Self {
         context(.debug, factory: factory)
     }
 
     /// Factory builder shortcut for context(.simulator) { .. }
     @discardableResult
-    public func onSimulator(factory: @escaping @Sendable (P) -> T) -> Self {
+    public func onSimulator(factory: @escaping ParameterFactoryType<P, T>) -> Self {
         context(.simulator, factory: factory)
     }
 
     /// Factory builder shortcut for context(.device) { .. }
     @discardableResult
-    public func onDevice(factory: @escaping @Sendable (P) -> T) -> Self {
+    public func onDevice(factory: @escaping ParameterFactoryType<P, T>) -> Self {
         context(.device, factory: factory)
     }
 

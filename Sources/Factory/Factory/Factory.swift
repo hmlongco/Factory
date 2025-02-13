@@ -26,6 +26,15 @@
 
 import Foundation
 
+#if swift(<6.0)
+public typealias ParameterFactoryType<P, T> = @Sendable (P) -> T
+public typealias VoidFactoryType<T> = @Sendable () -> T
+#else
+public typealias ParameterFactoryType<P, T> = @Sendable @isolated(any) (P) -> T
+public typealias VoidFactoryType<T> = @Sendable @isolated(any) () -> T
+#endif
+
+
 // MARK: - Factory
 
 /// A Factory manages the dependency injection process for a specific object or service.
@@ -72,17 +81,9 @@ public struct Factory<T>: FactoryModifying {
     ///   current container as well defining the scope.
     ///   - key: Hidden value used to differentiate different instances of the same type in the same container.
     ///   - factory: A factory closure that produces an object of the desired type when required.
-    #if swift(<6.0)
-    public init(_ container: ManagedContainer, key: StaticString = #function,
-            _ factory: @escaping @Sendable () -> T) {
+    public init(_ container: ManagedContainer, key: StaticString = #function, _ factory: @escaping VoidFactoryType<T>) {
         self.registration = FactoryRegistration<Void,T>(key: key, container: container, factory: factory)
     }
-    #else
-    public init(_ container: ManagedContainer, key: StaticString = #function,
-                _ factory: @escaping @Sendable @isolated(any) () -> T) {
-        self.registration = FactoryRegistration<Void,T>(key: key, container: container, factory: factory)
-    }
-    #endif
 
     /// Evaluates the factory and returns an object or service of the desired type. The resolved instance may be brand new or Factory may
     /// return a cached value from the specified scope.
@@ -140,19 +141,11 @@ public struct Factory<T>: FactoryModifying {
     /// - Parameters:
     ///  - factory: A new factory closure that produces an object of the desired type when needed.
     /// Allows updating registered factory and scope.
-    #if swift(<6.0)
     @discardableResult
-    public func register(factory: @escaping @Sendable () -> T) -> Self {
+    public func register(factory: @escaping VoidFactoryType<T>) -> Self {
         registration.register(factory)
         return self
     }
-    #else
-    @discardableResult
-    public func register(factory: @escaping @Sendable @isolated(any) () -> T) -> Self {
-        registration.register(factory)
-        return self
-    }
-    #endif
 
     /// Internal parameters for this Factory including id, container, the factory closure itself, the scope,
     /// and others.
@@ -216,17 +209,9 @@ public struct ParameterFactory<P,T>: FactoryModifying {
     ///   current container as well defining the scope.
     ///   - key: Hidden value used to differentiate different instances of the same type in the same container.
     ///   - factory: A factory closure that produces an object of the desired type when required.
-    #if swift(<6.0)
-    public init(_ container: ManagedContainer, key: StaticString = #function,
-                _ factory: @escaping @Sendable (P) -> T) {
+    public init(_ container: ManagedContainer, key: StaticString = #function, _ factory: @escaping ParameterFactoryType<P, T>) {
         self.registration = FactoryRegistration<P,T>(key: key, container: container, factory: factory)
     }
-    #else
-    public init(_ container: ManagedContainer, key: StaticString = #function,
-                _ factory: @escaping @Sendable @isolated(any) (P) -> T) {
-        self.registration = FactoryRegistration<P,T>(key: key, container: container, factory: factory)
-    }
-    #endif
 
     /// Resolves a factory capable of taking parameters at runtime.
     /// ```swift
@@ -249,19 +234,11 @@ public struct ParameterFactory<P,T>: FactoryModifying {
     /// ```
     /// - Parameters:
     ///  - factory: A new factory closure that produces an object of the desired type when needed.
-    #if swift(<6.0)
     @discardableResult
-    public func register(factory: @escaping @Sendable (P) -> T) -> Self {
+    public func register(factory: @escaping ParameterFactoryType<P, T>) -> Self {
         registration.register(factory)
         return self
     }
-    #else
-    @discardableResult
-    public func register(factory: @escaping @Sendable @isolated(any) (P) -> T) -> Self {
-        registration.register(factory)
-        return self
-    }
-    #endif
 
     /// Required registration
     public var registration: FactoryRegistration<P,T>
