@@ -387,6 +387,64 @@ extension InjectedObject {
         self._dependency = StateObject<T>(wrappedValue: wrappedValue)
     }
 }
+
+/// A property wrapper that injects an observable dependency into a SwiftUI view.
+///
+/// `InjectedObservable` is designed to automatically resolve and inject dependencies
+/// from a shared container, allowing for easy management of observable objects within
+/// SwiftUI views. This property wrapper ensures that the dependency is resolved at
+/// initialization and provides both direct access and binding capabilities.
+///
+/// - Note: This property wrapper is available on iOS 17.0, macOS 14.0, tvOS 17.0, and watchOS 10.0.
+/// - Requires: The wrapped type `T` must conform to the `Observable` protocol.
+@available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
+@MainActor @frozen @propertyWrapper public struct InjectedObservable<T>: DynamicProperty where T: Observable {
+    
+    /// The observable dependency managed by this property wrapper.
+    @State fileprivate var dependency: T
+    
+    /**
+     Initializes the `InjectedObservable` property wrapper, resolving the dependency from the default container.
+     
+     - Parameter keyPath: A key path to a `Factory` on the default `Container` that resolves the dependency.
+     
+     **Example Usage:**
+     ```swift
+     @InjectedObservable(\.contentViewModel) var viewModel: ContentViewModel
+     ```
+     */
+    public init(_ keyPath: KeyPath<Container, Factory<T>>) {
+        self._dependency = State<T>(wrappedValue: Container.shared[keyPath: keyPath]())
+    }
+    
+    /// Initializes the property wrapper. The dependency is resolved on initialization.
+    /// - Parameter keyPath: KeyPath to a Factory on the specified Container.
+    public init<C: SharedContainer>(_ keyPath: KeyPath<C, Factory<T>>) {
+        self._dependency = State<T>(wrappedValue: C.shared[keyPath: keyPath]())
+    }
+    
+    /// Provides direct access to the wrapped observable dependency.
+    public var wrappedValue: T {
+        get { dependency }
+    }
+    
+    /// Provides a binding to the wrapped observable dependency, allowing for dynamic updates.
+    public var projectedValue: Binding<T> {
+        return $dependency
+    }
+}
+
+@available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
+extension InjectedObservable {
+    /// Simple initializer with passed parameter bypassing injection.
+    ///
+    /// Still has issue with attempting to pass dependency into existing view when existing InjectedObject has keyPath.
+    /// https://forums.swift.org/t/allow-property-wrappers-with-multiple-arguments-to-defer-initialization-when-wrappedvalue-is-not-specified
+    public init(_ wrappedValue: T) {
+        self._dependency = State<T>(wrappedValue: wrappedValue)
+    }
+}
+
 #endif
 
 /// Boxed wrapper to provide a Factory when asked
