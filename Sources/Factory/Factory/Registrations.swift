@@ -82,11 +82,26 @@ public struct FactoryRegistration<P,T>: Sendable {
 
         var current: (P) -> T
 
+        #if DEBUG
+        let traceLevel: Int = globalTraceResolutions.count
+        var traceNew: String?
+        var traceNewType: String?
+        #endif
+
         if let found = options?.factoryForCurrentContext() as? TypedFactory<P,T> {
+            #if DEBUG
+            traceNewType = "O" // .onTest, .onDebug, etc.
+            #endif
             current = found.factory
         } else if let found = manager.registrations[key] as? TypedFactory<P,T> {
+            #if DEBUG
+            traceNewType = "R" // .register {}
+            #endif
             current = found.factory
         } else {
+            #if DEBUG
+            traceNewType = "F" // Factory { ... }
+            #endif
             current = factory
         }
 
@@ -94,13 +109,10 @@ public struct FactoryRegistration<P,T>: Sendable {
         if manager.dependencyChainTestMax > 0 {
             circularDependencyChainCheck(max: manager.dependencyChainTestMax)
         }
-
-        let traceLevel: Int = globalTraceResolutions.count
-        var traceNew: String?
         if manager.trace {
             let wrapped = current
             current = {
-                traceNew = "N" // detects if new instance created
+                traceNew = traceNewType // detects if new instance was created from the wrapped factory
                 return wrapped($0)
             }
             globalTraceResolutions.append("")
@@ -131,7 +143,7 @@ public struct FactoryRegistration<P,T>: Sendable {
         if manager.trace {
             let indent = String(repeating: "    ", count: globalGraphResolutionDepth)
             let address = Int(bitPattern: ObjectIdentifier(instance as AnyObject))
-            let resolution = "\(traceNew ?? "C"):\(address) \(type(of: instance as Any))"
+            let resolution = "\(traceSource ?? "C"):\(address) \(type(of: instance as Any))"
             if globalTraceResolutions.count > traceLevel {
                 globalTraceResolutions[traceLevel] = "\(globalGraphResolutionDepth): \(indent)\(container).\(debug.key) = \(resolution)"
             }

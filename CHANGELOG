@@ -1,5 +1,9 @@
 # Factory Changelog
 
+## 2.5.0
+
+* Updated trace log to differentiate between new instances from Factory (F), register (R), and onContexts (O) - Issue #267
+
 ## 2.4.4
 
 * Fix warning when annotating context factories with @MainActor - Issue #256
