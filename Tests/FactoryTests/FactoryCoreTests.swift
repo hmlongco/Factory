@@ -166,6 +166,16 @@ final class FactoryCoreTests: XCTestCase {
         XCTAssertNotEqual(service3.id, service4.id)
     }
 
+    func testFactoryOnceOnTest() {
+        let service1 = CustomContainer.shared.onceOnTest()
+        XCTAssertEqual(service1.value, 1)
+        CustomContainer.shared.onceOnTest.onTest {
+            MockServiceN(2)
+        }
+        let service2 = CustomContainer.shared.onceOnTest()
+        XCTAssertEqual(service2.value, 2)
+    }
+
     @MainActor
     func testCircularDependencyFailure() {
         let message = "FACTORY: Circular dependency chain - FactoryTests.RecursiveA > FactoryTests.RecursiveB > FactoryTests.RecursiveC > FactoryTests.RecursiveA"

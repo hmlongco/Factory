@@ -206,13 +206,22 @@ final class CustomContainer: SharedContainer, AutoRegistering {
             self.count += 1
         }
     }
-    var once: Factory<MyService> {
+    var once: Factory<MyServiceType> {
         self {
             MyService()
         }
         .scope(.singleton)
         .decorator { _ in
             self.count += 1
+        }
+        .once()
+    }
+    var onceOnTest: Factory<MyServiceType> {
+        self {
+            MyService()
+        }
+        .onTest {
+            MockServiceN(1)
         }
         .once()
     }
