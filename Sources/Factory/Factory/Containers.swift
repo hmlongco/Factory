@@ -75,7 +75,7 @@ public final class Container: SharedContainer {
     /// Define the default shared container.
     @TaskLocal public static var shared = Container()
     /// Define the container's manager.
-    nonisolated(unsafe) public private(set) var manager: ContainerManager = ContainerManager()
+    public let manager: ContainerManager = ContainerManager()
     /// Public initializer
     public init() {}
 }
