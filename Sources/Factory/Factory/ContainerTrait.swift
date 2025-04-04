@@ -7,6 +7,8 @@
 
 import Testing
 
+//TODO: docs
+/// Needs documentation
 struct ContainerTrait: TestTrait, SuiteTrait, TestScoping {
     let value: Container
 
