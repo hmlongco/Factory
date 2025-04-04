@@ -64,10 +64,10 @@ extension Container {
 final class SomeUseCase {
     func execute() -> String {
         @Injected(\Container.example) var example: ExampleProtocol
+
         return example.foo
     }
 }
-
 
 
 
@@ -75,9 +75,13 @@ public final class Container: SharedContainer {
     /// Define the default shared container.
     @TaskLocal public static var shared = Container()
     /// Define the container's manager.
-    public let manager: ContainerManager = ContainerManager()
+    nonisolated(unsafe) public private(set) var manager: ContainerManager = ContainerManager()
     /// Public initializer
     public init() {}
+
+    internal func setManager(to manager: ContainerManager) {
+        self.manager = manager
+    }
 }
 
 // MARK: - SharedContainer
