@@ -2,7 +2,7 @@
 import Testing
 
 @Suite
-struct ParallelTests {
+struct ParallelTests { //TODO: maybe add baz as well to make it more concurrent
     @Test(.container)
     func foo() {
         let sut = SomeUseCase()
