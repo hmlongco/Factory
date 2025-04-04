@@ -14,32 +14,24 @@ struct PlayingWithTaskLocal {
     func foo() {
         let sut = SomeUseCase()
 
-//        let containerCopy = Container()
-
         Container.shared.example.register {
             Example1()
         }
 
-        Container.$shared.withValue(Container.shared) {
-            let result = sut.execute()
-            #expect(result == "foo")
-        }
+        let result = sut.execute()
+        #expect(result == "foo")
     }
 
     @Test(.container(Container()))
     func bar() {
         let sut = SomeUseCase()
 
-//        let containerCopy = Container()
-
         Container.shared.example.register {
             Example2()
         }
 
-        Container.$shared.withValue(Container.shared) {
-            let result = sut.execute()
-            #expect(result == "bar")
-        }
+        let result = sut.execute()
+        #expect(result == "bar")
     }
 }
 
