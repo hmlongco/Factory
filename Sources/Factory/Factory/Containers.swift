@@ -78,10 +78,6 @@ public final class Container: SharedContainer {
     nonisolated(unsafe) public private(set) var manager: ContainerManager = ContainerManager()
     /// Public initializer
     public init() {}
-
-    internal func setManager(to manager: ContainerManager) {
-        self.manager = manager
-    }
 }
 
 // MARK: - SharedContainer
