@@ -10,7 +10,7 @@ import Testing
 
 @Suite
 struct PlayingWithTaskLocal {
-    @Test(.container(Container()))
+    @Test(.container)
     func foo() {
         let sut = SomeUseCase()
 
@@ -22,7 +22,7 @@ struct PlayingWithTaskLocal {
         #expect(result == "foo")
     }
 
-    @Test(.container(Container()))
+    @Test(.container)
     func bar() {
         let sut = SomeUseCase()
 
@@ -50,7 +50,7 @@ struct DependencyTrait: TestTrait, TestScoping {
 }
 
 extension Trait where Self == DependencyTrait {
-    static func container(_ container: Container) -> Self {
-        Self(value: container)
+    static var container: Self {
+        Self(value: Container())
     }
 }
