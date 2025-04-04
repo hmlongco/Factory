@@ -41,9 +41,39 @@ import Foundation
 ///  Registrations and scope caches will persist as long as the associated container remains in scope.
 ///
 ///  See <doc:Containers> for more information.
+///
+
+protocol ExampleProtocol {
+    var foo: String { get set }
+}
+
+struct Example1: ExampleProtocol {
+    var foo = "foo"
+}
+
+struct Example2: ExampleProtocol {
+    var foo = "bar"
+}
+
+extension Container {
+    var example: Factory<ExampleProtocol> {
+        self { Example1() }
+    }
+}
+
+final class SomeUseCase {
+    func execute() -> String {
+        @Injected(\Container.example) var example: ExampleProtocol
+        return example.foo
+    }
+}
+
+
+
+
 public final class Container: SharedContainer {
     /// Define the default shared container.
-    public static let shared = Container()
+    @TaskLocal public static var shared = Container()
     /// Define the container's manager.
     public let manager: ContainerManager = ContainerManager()
     /// Public initializer
