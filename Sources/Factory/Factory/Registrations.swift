@@ -145,7 +145,7 @@ public struct FactoryRegistration<P,T>: Sendable {
             let address = Int(bitPattern: ObjectIdentifier(instance as AnyObject))
 //            let resolution = "\(traceSource ?? "C"):\(address) \(type(of: instance as Any))"
             if globalTraceResolutions.count > traceLevel {
-                globalTraceResolutions[traceLevel] = "\(globalGraphResolutionDepth): \(indent)\(container).\(debug.key) = resolution commented out"
+                globalTraceResolutions[traceLevel] = "\(globalGraphResolutionDepth): \(indent)\(container).\(debug.key) = resolution commented out because traceSource wasn't found by the compiler"
             }
             if globalGraphResolutionDepth == 0 {
                 globalTraceResolutions.forEach { globalLogger($0) }
