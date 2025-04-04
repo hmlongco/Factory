@@ -10,35 +10,55 @@ import Testing
 
 @Suite
 struct PlayingWithTaskLocal {
-    @Test
+    @Test(.container(Container()))
     func foo() {
         let sut = SomeUseCase()
 
-        let containerCopy = Container()
+//        let containerCopy = Container()
 
-        containerCopy.example.register {
+        Container.shared.example.register {
             Example1()
         }
 
-        Container.$shared.withValue(containerCopy) {
+        Container.$shared.withValue(Container.shared) {
             let result = sut.execute()
             #expect(result == "foo")
         }
     }
 
-    @Test
+    @Test(.container(Container()))
     func bar() {
         let sut = SomeUseCase()
 
-        let containerCopy = Container()
+//        let containerCopy = Container()
 
-        containerCopy.example.register {
+        Container.shared.example.register {
             Example2()
         }
 
-        Container.$shared.withValue(containerCopy) {
+        Container.$shared.withValue(Container.shared) {
             let result = sut.execute()
             #expect(result == "bar")
         }
+    }
+}
+
+struct DependencyTrait: TestTrait, TestScoping {
+    let value: Container
+
+    func provideScope(
+        for test: Test,
+        testCase: Test.Case?,
+        performing function: () async throws -> Void
+    ) async throws {
+        try await Container.$shared.withValue(value) {
+            try await function()
+        }
+    }
+}
+
+extension Trait where Self == DependencyTrait {
+    static func container(_ container: Container) -> Self {
+        Self(value: container)
     }
 }
