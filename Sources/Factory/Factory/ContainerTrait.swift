@@ -7,8 +7,9 @@
 
 import Testing
 
-//TODO: docs
-/// Needs documentation
+/// ``ContainerTrait`` is a test trait that provides a scoped container for dependency injection in tests.
+/// It allows you to isolate the default ``Container`` to a test case, thus allowing you to run Swift Testing tests in parallel.
+/// It is also possible to leverage this behavior in `XCTestCase`, by using the `@TaskLocal` provided `withValue` method. See examples in the ``ParallelXCTests`` file.
 struct ContainerTrait: TestTrait, TestScoping {
     let value: Container
 
