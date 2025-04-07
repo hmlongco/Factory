@@ -2,12 +2,12 @@
 import Testing
 
 @Suite
-struct ParallelTests { //TODO: maybe add baz as well to make it more concurrent
+struct ParallelTests {
     @Test(.container)
     func foo() {
         let sut = SomeUseCase()
 
-        Container.shared.fooOrBar.register {
+        Container.shared.fooBarBaz.register {
             Foo()
         }
 
@@ -19,37 +19,53 @@ struct ParallelTests { //TODO: maybe add baz as well to make it more concurrent
     func bar() {
         let sut = SomeUseCase()
 
-        Container.shared.fooOrBar.register {
+        Container.shared.fooBarBaz.register {
             Bar()
         }
 
         let result = sut.execute()
         #expect(result == "bar")
     }
+
+    @Test(.container)
+    func baz() {
+        let sut = SomeUseCase()
+
+        Container.shared.fooBarBaz.register {
+            Baz()
+        }
+
+        let result = sut.execute()
+        #expect(result == "baz")
+    }
 }
 
-fileprivate protocol FooOrBarProtocol {
+fileprivate protocol FooBarBazProtocol {
     var value: String { get set }
 }
 
-fileprivate struct Foo: FooOrBarProtocol {
+fileprivate struct Foo: FooBarBazProtocol {
     var value = "foo"
 }
 
-fileprivate struct Bar: FooOrBarProtocol {
+fileprivate struct Bar: FooBarBazProtocol {
     var value = "bar"
 }
 
+fileprivate struct Baz: FooBarBazProtocol {
+    var value = "baz"
+}
+
 fileprivate extension Container {
-    var fooOrBar: Factory<FooOrBarProtocol> {
+    var fooBarBaz: Factory<FooBarBazProtocol> {
         self { Foo() }
     }
 }
 
 fileprivate final class SomeUseCase {
     fileprivate func execute() -> String {
-        @Injected(\.fooOrBar) var fooOrBar: FooOrBarProtocol
+        @Injected(\.fooBarBaz) var fooBarBaz: FooBarBazProtocol
 
-        return fooOrBar.value
+        return fooBarBaz.value
     }
 }
