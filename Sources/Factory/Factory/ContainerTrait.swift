@@ -9,7 +9,7 @@ import Testing
 
 //TODO: docs
 /// Needs documentation
-struct ContainerTrait: TestTrait, SuiteTrait, TestScoping {
+struct ContainerTrait: TestTrait, TestScoping {
     let value: Container
 
     func provideScope(
