@@ -1,8 +1,10 @@
 # Factory Changelog
 
-## 2.5.0
+## 2.4.5
 
 * Updated trace log to differentiate between new instances from Factory (F), register (R), and onContexts (O) - Issue #267
+* Adds InjectObservable property wrapper to better support Observation-based Observables
+* Fixed non-functional file and line parameters in resetAndTriggerFatalError - PR #142
 
 ## 2.4.4
 
@@ -14,7 +16,7 @@
 * Conditional code support to fix isolated(any) issue - Issue #250
 
 ## 2.4.2
-* Adds isolated(any) in order to properly resolve actor-isolated Factory's'
+* Adds isolated(any) in order to properly resolve actor-isolated Factory's
 
 ## 2.4.1
 * Adds DynamicProperty wrapper - PR #220
