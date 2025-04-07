@@ -143,7 +143,7 @@ public struct FactoryRegistration<P,T>: Sendable {
         if manager.trace {
             let indent = String(repeating: "    ", count: globalGraphResolutionDepth)
             let address = Int(bitPattern: ObjectIdentifier(instance as AnyObject))
-            let resolution = "\(traceSource ?? "C"):\(address) \(type(of: instance as Any))"
+            let resolution = "\(traceNew ?? "C"):\(address) \(type(of: instance as Any))"
             if globalTraceResolutions.count > traceLevel {
                 globalTraceResolutions[traceLevel] = "\(globalGraphResolutionDepth): \(indent)\(container).\(debug.key) = \(resolution)"
             }
