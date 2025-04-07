@@ -42,7 +42,6 @@ import Foundation
 ///  If the Container's @TaskLocal macro provided `withValue` function is used, the aforementioned scope of the container will be isolated to that task.
 ///
 ///  See <doc:Containers> for more information.
-///
 public final class Container: SharedContainer {
     /// Define the default shared container.
     @TaskLocal public static var shared = Container()
