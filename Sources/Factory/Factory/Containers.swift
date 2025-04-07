@@ -119,11 +119,11 @@ extension ManagedContainer {
     /// ```
     /// When run in debug mode and the application attempts to resolve an unregistered accountLoader, `promised()` will trigger a fatalError to
     /// inform you of the mistake. But in a released application, `promised()` simply returns nil and your application can continue on.
-    public func promised<T>(key: StaticString = #function) -> Factory<T?>  {
+    public func promised<T>(key: StaticString = #function, file: StaticString = #file, line: UInt = #line) -> Factory<T?>  {
         Factory<T?>(self, key: key) {
             #if DEBUG
             if self.manager.promiseTriggersError {
-                resetAndTriggerFatalError("\(T.self) was not registered", #file, #line)
+                resetAndTriggerFatalError("\(T.self) was not registered", file, line)
             } else {
                 return nil
             }
@@ -140,11 +140,11 @@ extension ManagedContainer {
     /// ```
     /// When run in debug mode and the application attempts to resolve an unregistered accountLoader, `promised()` will trigger a fatalError to
     /// inform you of the mistake. But in a released application, `promised()` simply returns nil and your application can continue on.
-    public func promised<P,T>(key: StaticString = #function) -> ParameterFactory<P,T?>  {
+    public func promised<P,T>(key: StaticString = #function, file: StaticString = #file, line: UInt = #line) -> ParameterFactory<P,T?>  {
         ParameterFactory<P,T?>(self, key: key) { _ in
             #if DEBUG
             if self.manager.promiseTriggersError {
-                resetAndTriggerFatalError("\(T.self) was not registered", #file, #line)
+                resetAndTriggerFatalError("\(T.self) was not registered", file, line)
             } else {
                 return nil
             }
