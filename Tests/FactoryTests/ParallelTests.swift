@@ -39,33 +39,3 @@ struct ParallelTests {
         #expect(result == "baz")
     }
 }
-
-fileprivate protocol FooBarBazProtocol {
-    var value: String { get set }
-}
-
-fileprivate struct Foo: FooBarBazProtocol {
-    var value = "foo"
-}
-
-fileprivate struct Bar: FooBarBazProtocol {
-    var value = "bar"
-}
-
-fileprivate struct Baz: FooBarBazProtocol {
-    var value = "baz"
-}
-
-fileprivate extension Container {
-    var fooBarBaz: Factory<FooBarBazProtocol> {
-        self { Foo() }
-    }
-}
-
-fileprivate final class SomeUseCase {
-    fileprivate func execute() -> String {
-        @Injected(\.fooBarBaz) var fooBarBaz: FooBarBazProtocol
-
-        return fooBarBaz.value
-    }
-}

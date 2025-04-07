@@ -240,3 +240,35 @@ final class CustomContainer: SharedContainer, AutoRegistering {
     }
     let manager = ContainerManager()
 }
+
+// Classes for @TaskLocal and TestTrait tests
+
+protocol FooBarBazProtocol {
+    var value: String { get set }
+}
+
+final class Foo: FooBarBazProtocol {
+    var value = "foo"
+}
+
+final class Bar: FooBarBazProtocol {
+    var value = "bar"
+}
+
+final class Baz: FooBarBazProtocol {
+    var value = "baz"
+}
+
+extension Container {
+    var fooBarBaz: Factory<FooBarBazProtocol> {
+        self { Foo() }
+    }
+}
+
+final class SomeUseCase {
+    func execute() -> String {
+        @Injected(\.fooBarBaz) var fooBarBaz: FooBarBazProtocol
+
+        return fooBarBaz.value
+    }
+}
