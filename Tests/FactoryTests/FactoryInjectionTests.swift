@@ -1,6 +1,8 @@
 import XCTest
 
 #if canImport(SwiftUI)
+import Combine
+import Observation
 import SwiftUI
 #endif
 
@@ -294,6 +296,26 @@ final class FactoryInjectionTests: XCTestCase {
         let projected = i3.projectedValue
         XCTAssertNotNil(projected)
     }
+
+    @available(iOS 17, *)
+    @MainActor
+    func testInjectedObservable() throws {
+        // Test initializer for default container
+        let i1 = InjectedObservable(\.contentObservableViewModel)
+        let cvm1 = i1.wrappedValue
+        XCTAssertEqual(cvm1.text, "Test")
+        // Test initializer for custom container
+        let i2 = InjectedObservable(\CustomContainer.contentObservableViewModel)
+        let cvm2 = i2.wrappedValue
+        XCTAssertEqual(cvm2.text, "Test")
+        // Test initializer for passed parameter
+        let i3 = InjectedObservable(ContentObservableViewModel())
+        let cvm3 = i3.wrappedValue
+        XCTAssertEqual(cvm3.text, "Test")
+        // Test projected value
+        let projected = i3.projectedValue
+        XCTAssertEqual(projected.wrappedValue.test.a, 1)
+    }
     #endif
 
 }
@@ -323,6 +345,40 @@ class ResolvingViewModel: ObservableObject {
 }
 
 extension Container: Resolving {}
+
+@available(iOS 17, *)
+extension Container {
+    var contentObservableViewModel: Factory<ContentObservableViewModel> {
+        self { ContentObservableViewModel() }
+    }
+}
+
+@available(iOS 17, *)
+extension CustomContainer {
+    var contentObservableViewModel: Factory<ContentObservableViewModel> {
+        self { ContentObservableViewModel() }
+    }
+}
+
+@available(iOS 17, *)
+@Observable
+class ContentObservableViewModel {
+    struct Test {
+        var a: Int = 1
+        var b: String = "2"
+    }
+    var text = "Test"
+    var test: Test = .init()
+}
+
+@available(iOS 17, *)
+struct ContentObservableView: View {
+    @InjectedObservable(\.contentObservableViewModel) var viewModel
+    var body: some View {
+        Text(viewModel.text)
+        TextField("Test", text: $viewModel.test.b)
+    }
+}
 
 #endif
 

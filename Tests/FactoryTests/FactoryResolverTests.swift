@@ -51,4 +51,24 @@ fileprivate final class ResolvingContainer: SharedContainer, AutoRegistering, Re
         register { MyService() }
     }
     let manager = ContainerManager()
+
+    func someService() -> MyServiceType {
+        self { MyService() }()
+    }
+
+    var myService: MyServiceType { _myService() }
+    var _myService: Factory<MyServiceType> { self { MyService() } }
+
+    func resolve<T>(_ path: KeyPath<ResolvingContainer, Factory<T>>) -> T {
+        self[keyPath: path]()
+    }
+
+    func register<T>(_ path: KeyPath<ResolvingContainer, Factory<T>>, _ factory: @escaping @Sendable () -> T) {
+        self[keyPath: path].register(factory: factory)
+    }
+    
+    func test() {
+        var service = ResolvingContainer.shared.resolve(\._myService)
+    }
+
 }
