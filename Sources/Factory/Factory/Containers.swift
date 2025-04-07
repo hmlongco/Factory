@@ -39,6 +39,7 @@ import Foundation
 /// }
 /// ```
 ///  Registrations and scope caches will persist as long as the associated container remains in scope.
+///  If the Container's @TaskLocal macro provided `withValue` function is used, the aforementioned scope of the container will be isolated to that task.
 ///
 ///  See <doc:Containers> for more information.
 ///
@@ -70,8 +71,9 @@ public protocol SharedContainer: ManagedContainer {
     /// This container is used by the various @Injected property wrappers to resolve the keyPath to a given Factory. Care should be taken in
     /// mixed environments where you're passing container references AND using the @Injected property wrappers.
     ///
-    /// Note this should be defined as a 'let' variable, not 'var'. Using 'static var' will cause Swift to issue concurrency warnings in the
-    /// future whenever the container is accessed.
+    /// Note this should be defined as a @TaskLocal variable to be able to use its isolation mechanism, which is especially useful for test parallelization.
+    /// If you don't want to use the @TaskLocal isolation mechanism, then you should define a 'let' variable, not 'var'.
+    /// Using 'static var' (without @TaskLocal being attached to it) will cause Swift to issue concurrency warnings in the future whenever the container is accessed.
     static var shared: Self { get }
 }
 
