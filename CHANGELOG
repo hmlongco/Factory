@@ -3,8 +3,9 @@
 ## 2.4.5
 
 * Updated trace log to differentiate between new instances from Factory (F), register (R), and onContexts (O) - Issue #267
-* Adds InjectObservable property wrapper to better support Observation-based Observables
+* Adds InjectObservable property wrapper to better support Observation-based Observables - Per #266
 * Fixed non-functional file and line parameters in resetAndTriggerFatalError - PR #142
+* Fix Documentation Typos - PR #253
 
 ## 2.4.4
 
