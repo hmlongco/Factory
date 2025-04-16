@@ -1,3 +1,5 @@
+#if swift(>=6.1)
+
 @testable import Factory
 import Testing
 
@@ -39,3 +41,4 @@ struct ParallelTests {
         #expect(result == "baz")
     }
 }
+#endif

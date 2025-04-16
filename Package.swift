@@ -6,8 +6,8 @@ import PackageDescription
 let package = Package(
     name: "Factory",
     platforms: [
-        .iOS(.v12),
-        .macOS(.v10_15),
+        .iOS(.v13),
+        .macOS(.v11),
         .tvOS(.v13),
         .watchOS(.v8),
         .visionOS(.v1)

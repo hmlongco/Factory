@@ -1,3 +1,5 @@
+#if swift(>=6.1)
+
 import XCTest
 @testable import Factory
 
@@ -49,3 +51,4 @@ final class ParallelXCTest: XCTestCase {
         wait(for: [fooExpectation, barExpectation, bazExpectation], timeout: 60)
     }
 }
+#endif
