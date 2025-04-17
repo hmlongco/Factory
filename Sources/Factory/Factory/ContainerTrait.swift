@@ -40,10 +40,8 @@ public struct ContainerTrait: TestTrait, TestScoping {
     public func provideScope(for test: Test, testCase: Test.Case?, performing function: () async throws -> Void) async throws {
         try await Container.$shared.withValue(value) {
             if resetSingletonScope {
-                let singletonScope = Scope.Singleton()
-                // Reset the singleton scope for this test
-                singletonScope.reset()
-                try await Scope.$singleton.withValue(singletonScope) {
+                try await Scope.$singleton.withValue(Scope.Singleton()) {
+                    Scope.singleton.reset()
                     try await function()
                 }
             } else {
