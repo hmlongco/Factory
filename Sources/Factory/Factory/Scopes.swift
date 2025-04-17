@@ -157,7 +157,7 @@ extension Scope {
         }
     }
 
-    /// A reference to the default singleton scope manager.
+    /// A reference to the default singleton scope manager. Using its `@TaskLocal` macro provided capabilities should only be used in tests to enable parallel testing.
     @TaskLocal public static var singleton = Singleton()
     /// Defines the singleton scope. The same instance will always be returned by the factory.
     public final class Singleton: Scope, InternalScopeCaching, @unchecked Sendable  {
