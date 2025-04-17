@@ -79,16 +79,31 @@ If you're passing an instance of a container around to your views or view models
 ```swift
 private let service = container.service()
 ```
-Finally, we could have also used an `@Injected` property wrapper and specified a keyPath to the desired dependency.
+Finally, we could have also used an `@Injected` property wrapper and specified a keyPath to the desired dependency. Here's an example with
+ObservableObject:
 
 ```swift
-@Injected(\.service) var service
+class ContentViewModel: ObservableObject {
+    @Injected(\.myService) private var myService
+    ...
+}
 ```
 Unless otherwise specified, the `@Injected` property wrapper looks for dependencies in the standard shared container provided by Factory, so the above is functionally identical to the `Container.shared.service()` example shown earlier. Here's one pointing to your own container.
 
 ```swift
 @Injected(\MyCustomContainer.service) var service: ServiceType
 ```
+
+Finally, here's one last example with a class defined using the new Observable macro from iOS 17.
+```swift
+@Observable class ContentViewModel {
+    @ObservationIgnored
+    @Injected(\.myService) private var myService
+    ...
+}
+```
+Note that `@ObservationIgnored` is required in this case to avoid property wrapper collisions with the backing store provided by `@Observable`.
+
 For more examples see: <doc:Resolutions>.
 
 ## Registering a new Factory closure

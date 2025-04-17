@@ -363,12 +363,18 @@ extension CustomContainer {
 @available(iOS 17, *)
 @Observable
 class ContentObservableViewModel {
+
+    @ObservationIgnored
+    @Injected(\.myServiceType) var viewModel
+
     struct Test {
         var a: Int = 1
         var b: String = "2"
     }
+
     var text = "Test"
     var test: Test = .init()
+    
 }
 
 @available(iOS 17, *)
