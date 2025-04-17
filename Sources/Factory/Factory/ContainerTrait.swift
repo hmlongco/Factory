@@ -36,16 +36,29 @@ import Testing
 /// See examples in the ``ParallelXCTests`` file.
 public struct ContainerTrait: TestTrait, TestScoping {
     let value: Container
+    let resetSingletonScope: Bool
     public func provideScope(for test: Test, testCase: Test.Case?, performing function: () async throws -> Void) async throws {
         try await Container.$shared.withValue(value) {
-            try await function()
+            if resetSingletonScope {
+                let singletonScope = Scope.Singleton()
+                // Reset the singleton scope for this test
+                singletonScope.reset()
+                try await Scope.$singleton.withValue(singletonScope) {
+                    try await function()
+                }
+            } else {
+                try await function()
+            }
         }
     }
 }
 
 public extension Trait where Self == ContainerTrait {
-    static var container: Self {
-        Self(value: Container())
+    static func container(resetSingletonScope: Bool = true) -> Self {
+        Self(
+            value: Container(),
+            resetSingletonScope: resetSingletonScope
+        )
     }
 }
 #endif

@@ -158,7 +158,7 @@ extension Scope {
     }
 
     /// A reference to the default singleton scope manager.
-    public static let singleton = Singleton()
+    @TaskLocal public static var singleton = Singleton()
     /// Defines the singleton scope. The same instance will always be returned by the factory.
     public final class Singleton: Scope, InternalScopeCaching, @unchecked Sendable  {
         public override init() {

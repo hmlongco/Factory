@@ -5,7 +5,7 @@ import Testing
 
 @Suite
 struct ParallelTests {
-    @Test(.container)
+    @Test(.container())
     func foo() {
         let sut = SomeUseCase()
 
@@ -17,7 +17,7 @@ struct ParallelTests {
         #expect(result == "foo")
     }
 
-    @Test(.container)
+    @Test(.container())
     func bar() {
         let sut = SomeUseCase()
 
@@ -29,7 +29,7 @@ struct ParallelTests {
         #expect(result == "bar")
     }
 
-    @Test(.container)
+    @Test(.container())
     func baz() {
         let sut = SomeUseCase()
 

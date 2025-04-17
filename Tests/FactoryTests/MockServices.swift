@@ -261,7 +261,7 @@ final class Baz: FooBarBazProtocol {
 
 extension Container {
     var fooBarBaz: Factory<FooBarBazProtocol> {
-        self { Foo() }
+        self { Foo() }.singleton
     }
 }
 
