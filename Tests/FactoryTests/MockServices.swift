@@ -261,6 +261,9 @@ final class Baz: FooBarBazProtocol {
 
 extension Container {
     var fooBarBaz: Factory<FooBarBazProtocol> {
+        self { Foo() }
+    }
+    var fooBarBazSingleton: Factory<FooBarBazProtocol> {
         self { Foo() }.singleton
     }
 }
@@ -270,5 +273,11 @@ final class SomeUseCase {
         @Injected(\.fooBarBaz) var fooBarBaz: FooBarBazProtocol
 
         return fooBarBaz.value
+    }
+
+    func executeSingleton() -> String {
+        @Injected(\.fooBarBazSingleton) var fooBarBazSingleton: FooBarBazProtocol
+
+        return fooBarBazSingleton.value
     }
 }

@@ -5,7 +5,7 @@ import Testing
 
 @Suite
 struct ParallelTests {
-    @Test(.container())
+    @Test(.container(resetSingletonScope: false))
     func foo() {
         let sut = SomeUseCase()
 
@@ -17,7 +17,7 @@ struct ParallelTests {
         #expect(result == "foo")
     }
 
-    @Test(.container())
+    @Test(.container(resetSingletonScope: false))
     func bar() {
         let sut = SomeUseCase()
 
@@ -29,7 +29,7 @@ struct ParallelTests {
         #expect(result == "bar")
     }
 
-    @Test(.container())
+    @Test(.container(resetSingletonScope: false))
     func baz() {
         let sut = SomeUseCase()
 
@@ -38,6 +38,42 @@ struct ParallelTests {
         }
 
         let result = sut.execute()
+        #expect(result == "baz")
+    }
+
+    @Test(.container())
+    func fooSingleton() {
+        let sut = SomeUseCase()
+
+        Container.shared.fooBarBazSingleton.register {
+            Foo()
+        }
+
+        let result = sut.executeSingleton()
+        #expect(result == "foo")
+    }
+
+    @Test(.container())
+    func barSingleton() {
+        let sut = SomeUseCase()
+
+        Container.shared.fooBarBazSingleton.register {
+            Bar()
+        }
+
+        let result = sut.executeSingleton()
+        #expect(result == "bar")
+    }
+
+    @Test(.container())
+    func bazSingleton() {
+        let sut = SomeUseCase()
+
+        Container.shared.fooBarBazSingleton.register {
+            Baz()
+        }
+
+        let result = sut.executeSingleton()
         #expect(result == "baz")
     }
 }
