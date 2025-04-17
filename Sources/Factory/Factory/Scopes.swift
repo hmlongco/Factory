@@ -158,7 +158,12 @@ extension Scope {
     }
 
     /// A reference to the default singleton scope manager. Using its `@TaskLocal` macro provided capabilities should only be used in tests to enable parallel testing.
+#if swift(>=6.1)
     @TaskLocal public static var singleton = Singleton()
+#else
+    public static let singleton = Singleton()
+#endif
+
     /// Defines the singleton scope. The same instance will always be returned by the factory.
     public final class Singleton: Scope, InternalScopeCaching, @unchecked Sendable  {
         public override init() {
