@@ -40,5 +40,14 @@ struct ParallelTests {
         let result = sut.execute()
         #expect(result == "baz")
     }
+
+    @Test(.container {
+        $0.fooBarBaz.register { Baz() }
+    })
+    func testRegistration() {
+        let sut = SomeUseCase()
+        let result = sut.execute()
+        #expect(result == "baz")
+    }
 }
 #endif

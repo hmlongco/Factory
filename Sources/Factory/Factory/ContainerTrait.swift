@@ -44,8 +44,22 @@ public struct ContainerTrait: TestTrait, TestScoping {
 }
 
 public extension Trait where Self == ContainerTrait {
+    /// Provides a new isolated instance of the `Container.shared` for the test.
     static var container: Self {
         Self(value: Container())
+    }
+
+    /// Use the closure to register any dependencies for the test
+    ///
+    /// ```swift
+    /// @Test(.container {
+    ///    $0.myDependency.onTest { 1 }
+    /// })
+    /// ```
+    static func container(_ modify: (Container) -> Void) -> Self {
+        let container = Container()
+        modify(container)
+        return Self(value: container)
     }
 }
 #endif
