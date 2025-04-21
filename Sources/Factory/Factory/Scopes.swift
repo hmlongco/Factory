@@ -158,10 +158,19 @@ extension Scope {
     }
 
     /// A reference to the default singleton scope manager.
+    #if swift(>=6.1)
+    @TaskLocal public static var singleton = Singleton()
+    #else
     public static let singleton = Singleton()
+    #endif
     /// Defines the singleton scope. The same instance will always be returned by the factory.
     public final class Singleton: Scope, InternalScopeCaching, @unchecked Sendable  {
         public override init() {
+            self.cache = Cache()
+            super.init()
+        }
+        internal init(from: Singleton) {
+            self.cache = from.cache.clone()
             super.init()
         }
         internal override func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, factory: () -> T) -> T {
@@ -169,12 +178,16 @@ extension Scope {
             return super.resolve(using: self.cache, key: key, ttl: ttl, factory: factory)
         }
         /// Private shared cache
-        internal var cache = Cache()
+        internal var cache: Cache
         /// Reset
         public func reset() {
             defer { globalRecursiveLock.unlock()  }
             globalRecursiveLock.lock()
             cache.reset()
+        }
+        /// For testing
+        internal func clone() -> Singleton {
+            .init(from: self)
         }
     }
 
@@ -225,6 +238,12 @@ extension Scope {
         var cache: CacheMap
         internal init(minimumCapacity: Int = 1024) {
             self.cache = .init(minimumCapacity: minimumCapacity)
+        }
+        internal init(copy: CacheMap) {
+            self.cache = copy
+        }
+        internal func clone() -> Cache {
+            .init(copy: cache)
         }
         #if DEBUG
         internal var isEmpty: Bool {

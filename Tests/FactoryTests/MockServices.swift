@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Testing
 @testable import Factory
 
 // Swift 6
@@ -189,7 +190,7 @@ extension Container {
 // Custom Container
 
 final class CustomContainer: SharedContainer, AutoRegistering {
-    static let shared = CustomContainer()
+    @TaskLocal static var shared = CustomContainer()
     nonisolated(unsafe) static var count = 0
     nonisolated(unsafe) var count = 0
     var test: Factory<MyServiceType> {
@@ -241,21 +242,37 @@ final class CustomContainer: SharedContainer, AutoRegistering {
     let manager = ContainerManager()
 }
 
+#if swift(>=6.1)
+/// TaskLocal testing requirements for custom container
+extension CustomContainer: TaskLocalContainer {
+    static var taskLocal: TaskLocal<CustomContainer> { $shared }
+}
+
+/// TaskLocal testing requirements for custom container
+extension Trait where Self == ContainerTrait<CustomContainer> {
+    static var customContainer: Self { ContainerTrait(container: CustomContainer()) }
+}
+#endif
+
 // Classes for @TaskLocal and TestTrait tests
 
 protocol FooBarBazProtocol {
+    var id: UUID { get }
     var value: String { get set }
 }
 
 final class Foo: FooBarBazProtocol {
+    let id: UUID = UUID()
     var value = "foo"
 }
 
 final class Bar: FooBarBazProtocol {
+    let id: UUID = UUID()
     var value = "bar"
 }
 
 final class Baz: FooBarBazProtocol {
+    let id: UUID = UUID()
     var value = "baz"
 }
 
@@ -263,12 +280,16 @@ extension Container {
     var fooBarBaz: Factory<FooBarBazProtocol> {
         self { Foo() }
     }
+    var fooBarBazCached: Factory<FooBarBazProtocol> {
+        self { Foo() }.cached
+    }
+    var fooBarBazSingleton: Factory<FooBarBazProtocol> {
+        self { Foo() }.singleton
+    }
 }
 
-final class SomeUseCase {
-    func execute() -> String {
-        @Injected(\.fooBarBaz) var fooBarBaz: FooBarBazProtocol
-
-        return fooBarBaz.value
-    }
+final class TaskLocalUseCase {
+    @Injected(\.fooBarBaz) var fooBarBaz: FooBarBazProtocol
+    @Injected(\.fooBarBazCached) var fooBarBazCached: FooBarBazProtocol
+    @Injected(\.fooBarBazSingleton) var fooBarBazSingleton: FooBarBazProtocol
 }

@@ -78,6 +78,7 @@ public protocol SharedContainer: ManagedContainer {
     /// If you don't want to use the @TaskLocal isolation mechanism, then you should define a 'let' variable, not 'var'.
     /// Using 'static var' (without @TaskLocal being attached to it) will cause Swift to issue concurrency warnings in the future whenever the container is accessed.
     static var shared: Self { get }
+
 }
 
 // MARK: - ManagedContainer

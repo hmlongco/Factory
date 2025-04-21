@@ -9,42 +9,30 @@ final class ParallelXCTest: XCTestCase {
         let fooExpectation = expectation(description: "foo")
 
         Container.$shared.withValue(container) {
-            let sut = SomeUseCase()
+            Container.shared.fooBarBaz.register { Foo() }
 
-            Container.shared.fooBarBaz.register {
-                Foo()
-            }
-
-            let result = sut.execute()
-            XCTAssertEqual(result, "foo")
+            let sut = TaskLocalUseCase()
+            XCTAssertEqual(sut.fooBarBaz.value, "foo")
             fooExpectation.fulfill()
         }
 
         let barExpectation = expectation(description: "bar")
 
         Container.$shared.withValue(container) {
-            let sut = SomeUseCase()
+            Container.shared.fooBarBaz.register { Bar() }
 
-            Container.shared.fooBarBaz.register {
-                Bar()
-            }
-
-            let result = sut.execute()
-            XCTAssertEqual(result, "bar")
+            let sut = TaskLocalUseCase()
+            XCTAssertEqual(sut.fooBarBaz.value, "bar")
             barExpectation.fulfill()
         }
 
         let bazExpectation = expectation(description: "baz")
 
         Container.$shared.withValue(container) {
-            let sut = SomeUseCase()
+            Container.shared.fooBarBaz.register { Baz() }
 
-            Container.shared.fooBarBaz.register {
-                Baz()
-            }
-
-            let result = sut.execute()
-            XCTAssertEqual(result, "baz")
+            let sut = TaskLocalUseCase()
+            XCTAssertEqual(sut.fooBarBaz.value, "baz")
             bazExpectation.fulfill()
         }
 
