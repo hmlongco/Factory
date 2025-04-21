@@ -28,40 +28,34 @@
 
 import Testing
 
-/// The ``TaskLocalSharedContainer`` protocol allows us to see ``SharedContainer`` to a test case, thus allowing you to run Swift
-/// Testing tests in parallel.
-public protocol TaskLocalContainer: SharedContainer {
-    static var taskLocal: TaskLocal<Self> { get }
-}
-
-public typealias ContainerTraitSetup<C: SharedContainer> = @Sendable (C) -> Void
-
-/// ``ContainerTrait`` is a test trait that provides a scoped container for dependency injection in tests.
-/// It allows you to isolate a ``SharedContainer`` to a test case, thus allowing you to run Swift Testing tests in parallel.
+/// ``ContainerTrait`` is a generic test trait that provides a scoped container for dependency injection in tests.
 ///
-/// If you use a custom container, you have to create your own trait variable that conforms to the `TestTrait` protocol.
+/// It allows you to isolate a ``SharedContainer`` to a test case allowing you to run Swift Testing tests in parallel.
+///
+/// If you use a custom container, you have to create your own trait and container variable extensions.
 ///
 /// That said, it's also possible to leverage this behavior in `XCTestCase`, by using the `@TaskLocal` provided `withValue` method.
 /// See examples in the ``ParallelXCTests`` file.
-public struct ContainerTrait<C: TaskLocalContainer>: TestTrait, TestScoping {
+public struct ContainerTrait<C: SharedContainer>: TestTrait, TestScoping {
+    let shared: TaskLocal<C>
     let container: C
     public func provideScope(for test: Test, testCase: Test.Case?, performing function: () async throws -> Void) async throws {
         try await Scope.$singleton.withValue(Scope.singleton.clone()) {
-            try await C.taskLocal.withValue(container) {
+            try await shared.withValue(container) {
                 try await function()
             }
         }
     }
 }
 
-/// Defaults for known container
-extension Container: TaskLocalContainer {
-    public static var taskLocal: TaskLocal<Container> { $shared }
+/// Provides test trait for default container
+extension Container {
+    public static var taskLocalTestTrait: ContainerTrait<Container> { .init(shared: $shared, container: .init()) }
 }
 
-/// Test defaults for known container
-public extension Trait where Self == ContainerTrait<Container> {
-    static var container: Self { ContainerTrait(container: Container()) }
+/// Convenience extension provides test trait for autocomplete
+extension Trait where Self == ContainerTrait<Container>{
+    static var container: ContainerTrait<Container> { Container.taskLocalTestTrait }
 }
 
 #endif

@@ -5,7 +5,8 @@ import Testing
 
 @Suite
 struct ParallelTests {
-    @Test(.container)
+    // Illustrates using Container test trait directly
+    @Test(Container.taskLocalTestTrait)
     func foo() {
         let sut1 = TaskLocalUseCase()
         #expect(sut1.fooBarBaz.value == "foo")
@@ -26,8 +27,9 @@ struct ParallelTests {
         let sut3 = TaskLocalUseCase()
         #expect(sut3.fooBarBazSingleton.value == "bar")
         #expect(sut1.fooBarBazSingleton.id != sut3.fooBarBazSingleton.id)
-}
+    }
 
+    // Illustrates using autocomplete test trait
     @Test(.container)
     func bar() {
         Container.shared.fooBarBaz.register { Bar() }
@@ -55,6 +57,7 @@ struct ParallelTests {
         #expect(sut1.fooBarBazSingleton.id != sut3.fooBarBazSingleton.id)
     }
 
+    // Illustrates using autocomplete test trait
     @Test(.container)
     func baz() {
         Container.shared.fooBarBaz.register { Baz() }

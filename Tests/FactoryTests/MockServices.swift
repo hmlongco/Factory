@@ -243,14 +243,14 @@ final class CustomContainer: SharedContainer, AutoRegistering {
 }
 
 #if swift(>=6.1)
-/// TaskLocal testing requirements for custom container
-extension CustomContainer: TaskLocalContainer {
-    static var taskLocal: TaskLocal<CustomContainer> { $shared }
+/// Provides test trait for custom container
+extension CustomContainer {
+    public static var taskLocalTestTrait: ContainerTrait<CustomContainer> { .init(shared: $shared, container: .init()) }
 }
 
-/// TaskLocal testing requirements for custom container
+/// Provides test trait for custom container's autocomplete
 extension Trait where Self == ContainerTrait<CustomContainer> {
-    static var customContainer: Self { ContainerTrait(container: CustomContainer()) }
+    static var customContainer: Self { CustomContainer.taskLocalTestTrait }
 }
 #endif
 
