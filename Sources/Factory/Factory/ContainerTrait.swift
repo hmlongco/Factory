@@ -48,14 +48,28 @@ public struct ContainerTrait<C: SharedContainer>: TestTrait, TestScoping {
     }
 }
 
-/// Provides test trait for default container
 extension Container {
+    /// Provides test trait for default container
     public static var taskLocalTestTrait: ContainerTrait<Container> { .init(shared: $shared, container: .init()) }
+
+    /// Provides test trait for default container, with modifications
+    public static func taskLocalTestTrait(_ modify: @Sendable (Container) -> Void) -> ContainerTrait<Container> {
+        let container = Container()
+        modify(container)
+        return .init(shared: $shared, container: container)
+    }
 }
 
-/// Convenience extension provides test trait for autocomplete
 extension Trait where Self == ContainerTrait<Container>{
+    /// Convenience extension provides test trait for autocomplete
     static var container: ContainerTrait<Container> { Container.taskLocalTestTrait }
+
+    /// Convenience extension provides test trait with modifications for autocomplete
+    static func container(_ modify: @Sendable (Container) -> Void) -> Self {
+        let container = Container()
+        modify(container)
+        return Self(shared: Container.$shared, container: container)
+    }
 }
 
 #endif
