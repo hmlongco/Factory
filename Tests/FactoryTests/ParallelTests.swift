@@ -61,10 +61,11 @@ struct ParallelTests {
     // Illustrates using simple autocomplete test trait
     @Test(.container)
     func baz() {
-        let c = Container.shared
-        c.fooBarBaz.register { Baz() }
-        c.fooBarBazCached.register { Baz() }
-        c.fooBarBazSingleton.register { Baz() }
+        Container.shared.with {
+            $0.fooBarBaz.register { Baz() }
+            $0.fooBarBazCached.register { Baz() }
+            $0.fooBarBazSingleton.register { Baz() }
+        }
 
         let sut1 = TaskLocalUseCase()
         #expect(sut1.fooBarBaz.value == "baz")
