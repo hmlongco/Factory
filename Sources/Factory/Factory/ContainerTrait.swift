@@ -42,6 +42,8 @@ public struct ContainerTrait<C: SharedContainer>: TestTrait, TestScoping {
     let shared: TaskLocal<C>
     let container: @Sendable () -> C
 
+    var transform: (@Sendable (C) -> Void)? = nil
+
     public init(shared: TaskLocal<C>, container: @autoclosure @escaping @Sendable () -> C) {
         self.shared = shared
         self.container = container
@@ -50,9 +52,16 @@ public struct ContainerTrait<C: SharedContainer>: TestTrait, TestScoping {
     public func provideScope(for test: Test, testCase: Test.Case?, performing function: () async throws -> Void) async throws {
         try await Scope.$singleton.withValue(Scope.singleton.clone()) {
             try await shared.withValue(container()) {
+                transform?(C.shared)
                 try await function()
             }
         }
+    }
+
+    public func callAsFunction(transform: @escaping @Sendable (C) -> Void) -> Self {
+        var copy = self
+        copy.transform = transform
+        return copy
     }
 
 }

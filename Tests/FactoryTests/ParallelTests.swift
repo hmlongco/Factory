@@ -58,15 +58,13 @@ struct ParallelTests {
         #expect(sut1.fooBarBazSingleton.id != sut3.fooBarBazSingleton.id)
     }
 
-    // Illustrates using simple autocomplete test trait
-    @Test(.container)
+    // Illustrates using simple autocomplete test trait with support closure
+    @Test(.container {
+        $0.fooBarBaz.register { Baz() }
+        $0.fooBarBazCached.register { Baz() }
+        $0.fooBarBazSingleton.register { Baz() }
+    })
     func baz() {
-        Container.shared.with {
-            $0.fooBarBaz.register { Baz() }
-            $0.fooBarBazCached.register { Baz() }
-            $0.fooBarBazSingleton.register { Baz() }
-        }
-
         let sut1 = TaskLocalUseCase()
         #expect(sut1.fooBarBaz.value == "baz")
         #expect(sut1.fooBarBazCached.value == "baz")
