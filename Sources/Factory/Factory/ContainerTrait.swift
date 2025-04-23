@@ -42,7 +42,7 @@ public struct ContainerTrait<C: SharedContainer>: TestTrait, TestScoping {
     let shared: TaskLocal<C>
     let container: @Sendable () -> C
 
-    init(shared: TaskLocal<C>, container: @autoclosure @escaping @Sendable () -> C) {
+    public init(shared: TaskLocal<C>, container: @autoclosure @escaping @Sendable () -> C) {
         self.shared = shared
         self.container = container
     }
