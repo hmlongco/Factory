@@ -39,9 +39,11 @@ import Testing
 public struct ContainerTrait<C: SharedContainer>: TestTrait, TestScoping {
     let shared: TaskLocal<C>
     let container: C
+    var modify: (@Sendable (C) -> Void)? = nil
     public func provideScope(for test: Test, testCase: Test.Case?, performing function: () async throws -> Void) async throws {
         try await Scope.$singleton.withValue(Scope.singleton.clone()) {
             try await shared.withValue(container) {
+                modify?(shared.wrappedValue)
                 try await function()
             }
         }
@@ -53,11 +55,7 @@ extension Container {
     public static var taskLocalTestTrait: ContainerTrait<Container> { .init(shared: $shared, container: .init()) }
 
     /// Provides test trait for default container, with modifications
-    public static func taskLocalTestTrait(_ modify: @Sendable (Container) -> Void) -> ContainerTrait<Container> {
-        let container = Container()
-        modify(container)
-        return .init(shared: $shared, container: container)
-    }
+    public static func taskLocalTestTrait(_ modify: @escaping @Sendable (Container) -> Void) -> ContainerTrait<Container> { .init(shared: $shared, container: .init(), modify: modify) }
 }
 
 extension Trait where Self == ContainerTrait<Container>{
@@ -65,11 +63,7 @@ extension Trait where Self == ContainerTrait<Container>{
     static var container: ContainerTrait<Container> { Container.taskLocalTestTrait }
 
     /// Convenience extension provides test trait with modifications for autocomplete
-    static func container(_ modify: @Sendable (Container) -> Void) -> Self {
-        let container = Container()
-        modify(container)
-        return Self(shared: Container.$shared, container: container)
-    }
+    static func container(_ modify: @escaping @Sendable (Container) -> Void) -> Self { Container.taskLocalTestTrait(modify) }
 }
 
 #endif
