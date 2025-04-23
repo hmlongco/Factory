@@ -5,7 +5,7 @@ import Testing
 
 @Suite
 struct ParallelTests {
-    // Illustrates using Container test trait directly with no need for trait autocomplete extensions
+    // Illustrates using Container test trait directly with no need for trait autocomplete extension
     @Test(Container.testTrait)
     func foo() {
         let sut1 = TaskLocalUseCase()
@@ -29,7 +29,7 @@ struct ParallelTests {
         #expect(sut1.fooBarBazSingleton.id != sut3.fooBarBazSingleton.id)
     }
 
-    // Illustrates using simple autocomplete test trait
+    // Illustrates using simple autocomplete test trait value
     @Test(.container)
     func bar() {
         let c = Container.shared
@@ -58,7 +58,7 @@ struct ParallelTests {
         #expect(sut1.fooBarBazSingleton.id != sut3.fooBarBazSingleton.id)
     }
 
-    // Illustrates using simple autocomplete test trait with support closure
+    // Illustrates using autocomplete test trait with support closure
     @Test(.container {
         $0.fooBarBaz.register { Baz() }
         $0.fooBarBazCached.register { Baz() }

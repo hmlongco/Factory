@@ -39,10 +39,12 @@ import Testing
 /// See examples in the ``ParallelXCTests`` file.
 public struct ContainerTrait<C: SharedContainer>: TestTrait, TestScoping {
 
+    public typealias Transform = @Sendable (C) -> Void
+
     let shared: TaskLocal<C>
     let container: @Sendable () -> C
 
-    var transform: (@Sendable (C) -> Void)? = nil
+    var transform: Transform? = nil
 
     public init(shared: TaskLocal<C>, container: @autoclosure @escaping @Sendable () -> C) {
         self.shared = shared
@@ -58,7 +60,7 @@ public struct ContainerTrait<C: SharedContainer>: TestTrait, TestScoping {
         }
     }
 
-    public func callAsFunction(transform: @escaping @Sendable (C) -> Void) -> Self {
+    public func callAsFunction(transform: @escaping Transform) -> Self {
         var copy = self
         copy.transform = transform
         return copy
