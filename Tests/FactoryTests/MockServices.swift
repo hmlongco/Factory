@@ -276,6 +276,29 @@ final class Baz: FooBarBazProtocol {
     var value = "baz"
 }
 
+// Classes for isolated @TaskLocal and TestTrait tests
+
+@MainActor
+protocol IsolatedFooBarBazProtocol: Sendable {
+    var id: UUID { get }
+    var value: String { get set }
+}
+
+final class IsolatedFoo: IsolatedFooBarBazProtocol {
+    let id: UUID = UUID()
+    var value = "foo"
+}
+
+final class IsolatedBar: IsolatedFooBarBazProtocol {
+    let id: UUID = UUID()
+    var value = "bar"
+}
+
+final class IsolatedBaz: IsolatedFooBarBazProtocol {
+    let id: UUID = UUID()
+    var value = "baz"
+}
+
 extension Container {
     var fooBarBaz: Factory<FooBarBazProtocol> {
         self { Foo() }
@@ -286,10 +309,29 @@ extension Container {
     var fooBarBazSingleton: Factory<FooBarBazProtocol> {
         self { Foo() }.singleton
     }
+    @MainActor
+    var isolatedFooBarBaz: Factory<IsolatedFooBarBazProtocol> {
+        self { IsolatedFoo() }
+    }
+    @MainActor
+    var isolatedFooBarBazCached: Factory<IsolatedFooBarBazProtocol> {
+        self { IsolatedFoo() }.cached
+    }
+    @MainActor
+    var isolatedFooBarBazSingleton: Factory<IsolatedFooBarBazProtocol> {
+        self { IsolatedFoo() }.singleton
+    }
 }
 
 final class TaskLocalUseCase {
     @Injected(\.fooBarBaz) var fooBarBaz: FooBarBazProtocol
     @Injected(\.fooBarBazCached) var fooBarBazCached: FooBarBazProtocol
     @Injected(\.fooBarBazSingleton) var fooBarBazSingleton: FooBarBazProtocol
+}
+
+@MainActor
+final class IsolatedTaskLocalUseCase: Sendable {
+    @Injected(\.isolatedFooBarBaz) var isolatedFooBarBaz: IsolatedFooBarBazProtocol
+    @Injected(\.isolatedFooBarBazCached) var isolatedFooBarBazCached: IsolatedFooBarBazProtocol
+    @Injected(\.isolatedFooBarBazSingleton) var isolatedFooBarBazSingleton: IsolatedFooBarBazProtocol
 }

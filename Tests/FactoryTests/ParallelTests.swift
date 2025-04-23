@@ -84,5 +84,34 @@ struct ParallelTests {
         #expect(sut3.fooBarBazSingleton.value == "foo")
         #expect(sut1.fooBarBazSingleton.id != sut3.fooBarBazSingleton.id)
     }
+
+    // Illustrates using autocomplete test trait with modifications on isolated registrations
+    @MainActor
+    @Test(await .isolatedContainer {
+        $0.isolatedFooBarBaz.register { IsolatedBaz() }
+        $0.isolatedFooBarBazCached.register { IsolatedBaz() }
+        $0.isolatedFooBarBazSingleton.register { IsolatedBaz() }
+    })
+    func isolatedBaz() async {
+        let sut1 = IsolatedTaskLocalUseCase()
+        #expect(sut1.isolatedFooBarBaz.value == "baz")
+        #expect(sut1.isolatedFooBarBazCached.value == "baz")
+        #expect(sut1.isolatedFooBarBazSingleton.value == "baz")
+
+        let sut2 = IsolatedTaskLocalUseCase()
+        #expect(sut2.isolatedFooBarBaz.value == "baz")
+        #expect(sut2.isolatedFooBarBazCached.value == "baz")
+        #expect(sut2.isolatedFooBarBazSingleton.value == "baz")
+
+        #expect(sut1.isolatedFooBarBaz.id != sut2.isolatedFooBarBaz.id)
+        #expect(sut1.isolatedFooBarBazCached.id == sut2.isolatedFooBarBazCached.id)
+        #expect(sut1.isolatedFooBarBazSingleton.id == sut2.isolatedFooBarBazSingleton.id)
+
+        Container.shared.isolatedFooBarBazSingleton.register { IsolatedFoo() }
+
+        let sut3 = IsolatedTaskLocalUseCase()
+        #expect(sut3.isolatedFooBarBazSingleton.value == "foo")
+        #expect(sut1.isolatedFooBarBazSingleton.id != sut3.isolatedFooBarBazSingleton.id)
+    }
 }
 #endif

@@ -70,6 +70,15 @@ extension Trait where Self == ContainerTrait<Container>{
         modify(container)
         return Self(shared: Container.$shared, container: container)
     }
+
+    @MainActor
+    static func isolatedContainer(
+        _ modify: @MainActor (Container) async -> Void
+    ) async -> Self {
+        let container = Container()
+        await modify(container)
+        return Self(shared: Container.$shared, container: container)
+    }
 }
 
 #endif
