@@ -58,7 +58,7 @@ extension Container {
     public static func taskLocalTestTrait(_ modify: @escaping @Sendable (Container) -> Void) -> ContainerTrait<Container> { .init(shared: $shared, container: Container.self, modify: modify) }
 }
 
-extension Trait where Self == ContainerTrait<Container>{
+public extension Trait where Self == ContainerTrait<Container>{
     /// Convenience extension provides test trait for autocomplete
     static var container: ContainerTrait<Container> { Container.taskLocalTestTrait }
 
