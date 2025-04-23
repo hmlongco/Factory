@@ -48,7 +48,6 @@ public struct ContainerTrait<C: SharedContainer>: TestTrait, TestScoping {
     }
 
     public func provideScope(for test: Test, testCase: Test.Case?, performing function: () async throws -> Void) async throws {
-        print(shared)
         try await Scope.$singleton.withValue(Scope.singleton.clone()) {
             try await shared.withValue(container()) {
                 try await function()
