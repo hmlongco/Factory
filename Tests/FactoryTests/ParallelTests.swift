@@ -5,8 +5,8 @@ import Testing
 
 @Suite
 struct ParallelTests {
-    // Illustrates using Container test trait directly
-    @Test(Container.taskLocalTestTrait)
+    // Illustrates using Container test trait directly with no need for trait autocomplete extensions
+    @Test(Container.testTrait)
     func foo() {
         let sut1 = TaskLocalUseCase()
         #expect(sut1.fooBarBaz.value == "foo")
@@ -29,12 +29,13 @@ struct ParallelTests {
         #expect(sut1.fooBarBazSingleton.id != sut3.fooBarBazSingleton.id)
     }
 
-    // Illustrates using autocomplete test trait
+    // Illustrates using simple autocomplete test trait
     @Test(.container)
     func bar() {
-        Container.shared.fooBarBaz.register { Bar() }
-        Container.shared.fooBarBazCached.register { Bar() }
-        Container.shared.fooBarBazSingleton.register { Bar() }
+        let c = Container.shared
+        c.fooBarBaz.register { Bar() }
+        c.fooBarBazCached.register { Bar() }
+        c.fooBarBazSingleton.register { Bar() }
 
         let sut1 = TaskLocalUseCase()
         #expect(sut1.fooBarBaz.value == "bar")
@@ -50,19 +51,20 @@ struct ParallelTests {
         #expect(sut1.fooBarBazCached.id == sut2.fooBarBazCached.id)
         #expect(sut1.fooBarBazSingleton.id == sut2.fooBarBazSingleton.id)
 
-        Container.shared.fooBarBazSingleton.register { Foo() }
+        c.fooBarBazSingleton.register { Foo() }
 
         let sut3 = TaskLocalUseCase()
         #expect(sut3.fooBarBazSingleton.value == "foo")
         #expect(sut1.fooBarBazSingleton.id != sut3.fooBarBazSingleton.id)
     }
 
-    // Illustrates using autocomplete test trait
+    // Illustrates using simple autocomplete test trait
     @Test(.container)
     func baz() {
-        Container.shared.fooBarBaz.register { Baz() }
-        Container.shared.fooBarBazCached.register { Baz() }
-        Container.shared.fooBarBazSingleton.register { Baz() }
+        let c = Container.shared
+        c.fooBarBaz.register { Baz() }
+        c.fooBarBazCached.register { Baz() }
+        c.fooBarBazSingleton.register { Baz() }
 
         let sut1 = TaskLocalUseCase()
         #expect(sut1.fooBarBaz.value == "baz")

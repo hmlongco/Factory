@@ -24,6 +24,7 @@
 // THE SOFTWARE.
 //
 
+#if DEBUG
 #if swift(>=6.1)
 
 import Testing
@@ -37,25 +38,39 @@ import Testing
 /// That said, it's also possible to leverage this behavior in `XCTestCase`, by using the `@TaskLocal` provided `withValue` method.
 /// See examples in the ``ParallelXCTests`` file.
 public struct ContainerTrait<C: SharedContainer>: TestTrait, TestScoping {
+
     let shared: TaskLocal<C>
-    let container: C
+    let container: @Sendable () -> C
+
+    init(shared: TaskLocal<C>, container: @autoclosure @escaping @Sendable () -> C) {
+        self.shared = shared
+        self.container = container
+    }
+
     public func provideScope(for test: Test, testCase: Test.Case?, performing function: () async throws -> Void) async throws {
+        print(shared)
         try await Scope.$singleton.withValue(Scope.singleton.clone()) {
-            try await shared.withValue(container) {
+            try await shared.withValue(container()) {
                 try await function()
             }
         }
     }
+
 }
 
 /// Provides test trait for default container
 extension Container {
-    public static var taskLocalTestTrait: ContainerTrait<Container> { .init(shared: $shared, container: .init()) }
+    public static var testTrait: ContainerTrait<Container> {
+        .init(shared: $shared, container: .init())
+    }
 }
 
 /// Convenience extension provides test trait for autocomplete
-extension Trait where Self == ContainerTrait<Container>{
-    static var container: ContainerTrait<Container> { Container.taskLocalTestTrait }
+extension Trait where Self == ContainerTrait<Container> {
+    public static var container: ContainerTrait<Container> {
+        Container.testTrait
+    }
 }
 
+#endif
 #endif
