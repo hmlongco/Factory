@@ -79,6 +79,10 @@ public protocol SharedContainer: ManagedContainer {
     /// Using 'static var' (without @TaskLocal being attached to it) will cause Swift to issue concurrency warnings in the future whenever the container is accessed.
     static var shared: Self { get }
 
+    /// Needed to enable parallel testing via the `ContainerTrait`. `ContainerTrait` uses a generic parameter that is constrained to `SharedContainer`.
+    /// Thus it can be used with custom containers and the default `Container` as well.
+    /// To enable parallel testing `ContainerTrait` has to be able to access the initializer of the given container to make sure that every `@TaskLocal` isolated scenario has its own `SharedContainer` instance.
+    init()
 }
 
 // MARK: - ManagedContainer

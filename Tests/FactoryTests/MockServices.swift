@@ -245,7 +245,7 @@ final class CustomContainer: SharedContainer, AutoRegistering {
 #if swift(>=6.1)
 /// Provides test trait for custom container
 extension CustomContainer {
-    public static var taskLocalTestTrait: ContainerTrait<CustomContainer> { .init(shared: $shared, container: .init()) }
+    public static var taskLocalTestTrait: ContainerTrait<CustomContainer> { .init(shared: $shared, container: CustomContainer.self) }
 }
 
 /// Provides test trait for custom container's autocomplete

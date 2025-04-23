@@ -38,11 +38,11 @@ import Testing
 /// See examples in the ``ParallelXCTests`` file.
 public struct ContainerTrait<C: SharedContainer>: TestTrait, TestScoping {
     let shared: TaskLocal<C>
-    let container: C
+    let container: C.Type
     var modify: (@Sendable (C) -> Void)? = nil
     public func provideScope(for test: Test, testCase: Test.Case?, performing function: () async throws -> Void) async throws {
         try await Scope.$singleton.withValue(Scope.singleton.clone()) {
-            try await shared.withValue(container) {
+            try await shared.withValue(container.init()) {
                 modify?(shared.wrappedValue)
                 try await function()
             }
@@ -52,10 +52,10 @@ public struct ContainerTrait<C: SharedContainer>: TestTrait, TestScoping {
 
 extension Container {
     /// Provides test trait for default container
-    public static var taskLocalTestTrait: ContainerTrait<Container> { .init(shared: $shared, container: .init()) }
+    public static var taskLocalTestTrait: ContainerTrait<Container> { .init(shared: $shared, container: Container.self) }
 
     /// Provides test trait for default container, with modifications
-    public static func taskLocalTestTrait(_ modify: @escaping @Sendable (Container) -> Void) -> ContainerTrait<Container> { .init(shared: $shared, container: .init(), modify: modify) }
+    public static func taskLocalTestTrait(_ modify: @escaping @Sendable (Container) -> Void) -> ContainerTrait<Container> { .init(shared: $shared, container: Container.self, modify: modify) }
 }
 
 extension Trait where Self == ContainerTrait<Container>{
