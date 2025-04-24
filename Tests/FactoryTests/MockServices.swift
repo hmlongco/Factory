@@ -243,19 +243,10 @@ final class CustomContainer: SharedContainer, AutoRegistering {
 }
 
 #if swift(>=6.1)
-typealias TraitContainer = CustomContainer
-
-/// Provides test trait for default container
-extension TraitContainer {
-    static var testTrait: ContainerTrait<TraitContainer> {
-        .init(shared: $shared, container: .init())
-    }
-}
-
-/// Convenience extension provides test trait for autocomplete
-extension Trait where Self == ContainerTrait<TraitContainer> {
-    static var customContainer: ContainerTrait<TraitContainer> {
-        TraitContainer.testTrait
+/// Extension provides test trait for CustomContainer
+extension Trait where Self == ContainerTrait<CustomContainer> {
+    static var customContainer: ContainerTrait<CustomContainer> {
+        .init(shared: CustomContainer.$shared, container: .init())
     }
 }
 #endif

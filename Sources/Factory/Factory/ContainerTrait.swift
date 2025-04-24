@@ -69,16 +69,9 @@ public struct ContainerTrait<C: SharedContainer>: TestTrait, TestScoping {
 }
 
 /// Provides test trait for default container
-extension Container {
-    public static var testTrait: ContainerTrait<Container> {
-        .init(shared: $shared, container: .init())
-    }
-}
-
-/// Convenience extension provides test trait for autocomplete
 extension Trait where Self == ContainerTrait<Container> {
     public static var container: ContainerTrait<Container> {
-        Container.testTrait
+        .init(shared: Container.$shared, container: .init())
     }
 }
 
