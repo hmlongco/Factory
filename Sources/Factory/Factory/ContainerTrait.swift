@@ -41,10 +41,13 @@ public struct ContainerTrait<C: SharedContainer>: TestTrait, SuiteTrait, TestSco
 
     public typealias Transform = @Sendable (C) -> Void
 
-    let shared: TaskLocal<C>
-    let container: @Sendable () -> C
+    private let shared: TaskLocal<C>
+    private let container: @Sendable () -> C
 
-    var transform: Transform? = nil
+    private var transform: Transform? = nil
+
+    // If SuiteTrait then provideScope is called to provide a new container
+    // for each test in the suite.
     public let isRecursive: Bool = true
 
     public init(shared: TaskLocal<C>, container: @autoclosure @escaping @Sendable () -> C) {
