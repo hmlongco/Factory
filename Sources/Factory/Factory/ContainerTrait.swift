@@ -37,7 +37,7 @@ import Testing
 ///
 /// That said, it's also possible to leverage this behavior in `XCTestCase`, by using the `@TaskLocal` provided `withValue` method.
 /// See examples in the ``ParallelXCTests`` file.
-public struct ContainerTrait<C: SharedContainer>: TestTrait, TestScoping {
+public struct ContainerTrait<C: SharedContainer>: TestTrait, SuiteTrait, TestScoping {
 
     public typealias Transform = @Sendable (C) -> Void
 
@@ -45,6 +45,7 @@ public struct ContainerTrait<C: SharedContainer>: TestTrait, TestScoping {
     let container: @Sendable () -> C
 
     var transform: Transform? = nil
+    public let isRecursive: Bool = true
 
     public init(shared: TaskLocal<C>, container: @autoclosure @escaping @Sendable () -> C) {
         self.shared = shared
