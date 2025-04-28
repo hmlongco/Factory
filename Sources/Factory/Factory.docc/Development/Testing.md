@@ -13,7 +13,7 @@ Container.shared.accountLoading.register { MockNoAccounts() }
 ```
 But Factory has other enhancements designed to make unit testing and user interface testing simpler and easier. 
 
-Some, like <doc:Contexts> you may have already seen and used. Others, like pushing/popping container state, resetting, and so on, are discussed below.
+Some, like <doc:Contexts> you may have already seen and used. Others, like pushing/popping container state, resetting, scoping with test traits and so on, are discussed below.
 
 Before we look at them, it's important to first understand Xcode's test process and environment, and consider what that means when writing your own unit tests using Factory.
 
@@ -219,7 +219,38 @@ That being the case, neither the push/pull mechanism or the container rebuilding
 
 Singletons are, after all, expected to be singletons.
 
-So what to do about it? Well, if needed we can reset *every* cached singleton with just a single method call. Just call reset on that particular scope.
+So what to do about it? Well, there are two approaches. Scoping and resetting.
+
+### Scoping Singletons
+
+Factory delivers the global singleton scope with the `@TaskLocal` macro being attached to it. With this simple trick we can scope our tests to run in their own isolated task context.
+
+```swift
+Scope.$singleton.withValue(Scope.singleton.clone()) {
+    // We're inside the context of the current Task. Meaning that we can re-register our singletons here without affecting other tests that use the same singletons with different states.
+    Container.shared.someSingletonFactory.register { MyNewMock() }
+}
+```
+
+Doing this in every unit test might lead to a lot of repetition and a pattern in your XCTestCases. To make it simpler you can override the `invokeTest()` function as below:
+
+```swift
+override func invokeTest() {
+    Scope.$singleton.withValue(Scope.singleton.clone()) {
+        Container.shared.someSingletonFactory.register { MyNewMock() } // You might not add it here. See reasoning below.
+        super.invokeTest()
+    }
+}
+```
+
+But remember that by doing the above you will scope **every** unit test function inside the given XCTestCase to their own scope where `MyNewMock` is registered. 
+If you need different types being registered in your different unit tests, then you might want to just call `super.invokeTest()` inside the `withValue`'s trailing closure and setup your registrations one-by-one in your unit tests.
+
+*Jump to the end for information on using Factory for singleton testing with Swift Testing in Xcode 16.*
+
+### Resetting Singletons
+
+While it is suggested to use the above detailed `@TaskLocal` approach, if needed we can reset *every* cached singleton with just a single method call. Just call reset on that particular scope.
 
 ```swift
 Scope.singleton.reset()
@@ -300,9 +331,11 @@ Obviously, one can add as many different test cases and registrations as needed.
 
 ## Xcode 16 and Swift Testing
 
-So can we use Factory with Swift Testing in Xcode 16? 
+The challenge that Swift Testing brought to our lives is that it defaults to parallel test runs. While this can speed up test runs significantly it's not that straightforward. How should we eanble our dependencies to act differently for different test cases?
 
-As usual, the answer to that is complicated, but it basically boils down to what you're testing and whether or not those tests can be run in parallel.
+Luckily there is an answer: [Test Scoping Traits](https://developer.apple.com/documentation/testing/trait), with which we can make our tests local to their task.
+
+### Scoping
 
 Consider the following.
 
@@ -323,27 +356,46 @@ struct AppTests {
   }
 }
 ```
+
 Examine the code and you'll see that the two tests both register different values for `someService` on the same shared container. 
 
 Which means that these tests could suffer from race conditions should they be run in parallel.
 
 Which in turn would result in tests failing randomly. And that's bad.
 
-### Serialized Testing
+Factory is leveraging the power of Test Scoping Traits and @TaskLocals in the form of `ContainerTrait` to resolve this problem.
 
-The rules are relatively straightforward.
+#### Test Trait
 
-* If you're accessing a shared container **or** if you're using one of the @injected property wrappers
-* And if you're altering common dependencies
-
-Then those tests need to be serialized using `@Suite(.serialized)`. 
-
-Here's an example.
+By using it inside your `@Test` macro, you can make sure that your unit test runs in their own isolated contexts.
 
 ```swift
 import Testing
 
-@Suite(.serialized) struct AppTests {
+struct AppTests {
+  @Test(.container, arguments: Parameters.allCases) func testA(parameter: Parameters) {
+    Container.shared.someService.register { MockService(parameter: parameter) }
+    let service = Container.shared.someService()
+    #expect(service.parameter == parameter)
+  }
+
+  @Test(.container) func testB() async throws {
+    Container.shared.someService.register { ErrorService() }
+    let service = Container.shared.someService()
+    #expect(service.error == "Oops")
+  }
+}
+```
+
+#### Suite Trait
+
+You can go one step further (or higher if you will) by adding it to your `@Suite` macro as below.
+
+```swift
+import Testing
+
+@Suite(.container)
+struct AppTests {
   @Test(arguments: Parameters.allCases) func testA(parameter: Parameters) {
     Container.shared.someService.register { MockService(parameter: parameter) }
     let service = Container.shared.someService()
@@ -358,9 +410,142 @@ import Testing
 }
 ```
 
-Now testA will complete before testB is started, and both will obtain the expected services from the shared container. 
+One thing to remember with the suite-based approach is that its [isRecursive](https://developer.apple.com/documentation/testing/suitetrait/isrecursive) property is always `true`, which means that all of your child suites and test functions inherit the trait. 
 
-### Swift Testing and Container Injection
+See:
+
+```swift
+import Testing
+
+@Suite(.container) // container trait is defined here in the parent suite
+struct AppTests {
+  @Test(arguments: Parameters.allCases) func testA(parameter: Parameters) {
+    Container.shared.someService.register { MockService(parameter: parameter) }
+    let service = Container.shared.someService()
+    #expect(service.parameter == parameter)
+  }
+
+  @Suite // gets .container trait from parent suite implicitly
+  struct AppChildTests {
+    @Test func testB() async throws { // gets .container trait from parent suite implicitly
+        Container.shared.someService.register { ErrorService() }
+        let service = Container.shared.someService()
+        #expect(service.error == "Oops")
+    }
+  }
+}
+```
+
+### Custom Containers
+
+If you work with your own custom container, you can still use the Factory provided `ContainerTrait` since its generic parameter is constrained to the `SharedContainer` protocol. You have to do just two things:
+
+1. Attach the `@TaskLocal` macro the `shared` instance of your custom container.
+2. Add the below code to your project:
+
+```swift
+extension Trait where Self == ContainerTrait<CustomContainer> {
+    static var customContainer: ContainerTrait<CustomContainer> {
+        .init(shared: CustomContainer.$shared, container: .init())
+    }
+}
+```
+
+See <doc:Containers>
+
+### Transforming Sugar
+
+Seeing the previous examples you might have noticed that unit tests which involve some Factory maintained dependency tend to start with some re-registration.
+
+Factory provides a way to put these registrations right next to the `ContainerTrait` with a trailing closure, so your dependency registrations are in a more prominent place.
+
+```swift
+struct AppTests {
+  @Test(
+    .container {
+      $0.someService.register { ErrorService() }
+      $0.someOtherService.register { OtherErrorService() }
+    }
+  ) 
+  func testB() {
+    let service = Container.shared.someService()
+    let otherService = Container.shared.someOtherService()
+    #expect(service.error == "Oops")
+    #expect(otherService.error == "OtherOops")
+  }
+}
+```
+
+#### Limitations With The Transforming Sugar
+
+The transforming sugar has one limitation with isolated registrations in Swift 6. Consider the following:
+
+```swift
+extension Container {
+    @MainActor
+    var isolatedDependency: Factory<IsolatedProtocol> {
+        self { IsolatedImplementation() }
+    }
+}
+
+struct SomeSuite {
+  @Test(.container {
+      $0.isolatedDependency.register { IsolatedImplementation() } // Main actor-isolated property 'isolatedDependency' can not be referenced from a Sendable closure
+
+  })
+  func foo() {...}
+}
+```
+
+As our registration is isolated to the MainActor our transforming closure cannot access it without risking data race.
+
+There are multiple approaches to consider as the solution for this problem:
+1. If you can, you should move the global actor isolation to your protocol (`IsolatedProtocol`) or type (`IsolatedImplementation`) declaration site.
+2. You could create your own `ContainerTrait` which accepts a transforming closure that is isolated to the MainActor.
+
+### Don't Be Too DRY
+
+You might want to move your dependencies to your test suite level for a DRY-er code as below:
+
+```swift
+struct Flaky: Sendable {
+    let container = Container()
+    let foo = Foo()
+
+    @Test
+    func example() async throws {
+        Container.$shared.withValue(self.container) { // Problem 1#
+            Container.shared.fooBarBaz.register { self.foo } // Problem 2#
+            // some #expect here about fooBarBaz
+        }
+    }
+}
+```
+
+Do **NOT** do that as it leads to flaky tests. Inside the trailing closure of the `withValue` function you should not refer to any objects which are external to the task local's context. That's just how `@TaskLocal` works.
+
+If you really want to go to that direaction, then what you can do is to change your external property to a function:
+
+```swift
+func foo() -> Foo { Foo() }
+```
+
+However the suggested way for test scoping is as below:
+
+```swift
+struct Stable {
+    @Test(.container {
+        $0.fooBarBaz.register { Foo() }
+    })
+    func example() async throws {
+        // some #expect here about fooBarBaz
+    }
+}
+```
+
+### Container Injection
+
+There is another way to achieve parallel testing without using `ContainerTrait`. 
 
 If you inject a specific container instance into your view models or services, then you can build and inject a separate container for each set of tests so that parallel testing works.
 
@@ -390,9 +575,3 @@ class ContentViewModel {
 ```
 
 Here, every instance of ContentViewModel gets its own dedicated container and as such parallel testing should work as expected.
-
-### Swift Testing and Global Shared and Static Values
-
-This issue isn't specific to Factor or Resolver, and in fact impacts other scenarios like using a [URLProtocol](https://www.swiftwithvincent.com/blog/how-to-mock-any-network-call-with-urlprotocol) on URLSession.shared, or testing any code that depends on a global or statically shared variable.
-
-Setting up a URLProtocol result in testA and another in testB could cause race conditions when tests aren't seeing the results that they're expecting.
