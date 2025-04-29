@@ -27,6 +27,7 @@
 #if DEBUG
 #if swift(>=6.1)
 
+import Factory
 import Testing
 
 /// ``ContainerTrait`` is a generic test trait that provides a scoped container for dependency injection in tests.
