@@ -1,6 +1,7 @@
 #if swift(>=5.5)
 
 @testable import Factory
+import FactoryTesting
 import Testing
 
 @Suite

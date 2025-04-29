@@ -156,7 +156,7 @@ It can even help you see what's *inside* that dependency tree. See <doc:Debuggin
 
 ## Rebuilding The Container
 
-In your unit test setUp function you can also just reset the container and start over from scratch. No teardown needed.
+In your unit test setUp function you can also just reset the container caches and start over from scratch. No teardown needed.
 
 ```swift
 final class FactoryCoreTests: XCTestCase {
@@ -219,38 +219,11 @@ That being the case, neither the push/pull mechanism or the container rebuilding
 
 Singletons are, after all, expected to be singletons.
 
-So what to do about it? Well, there are two approaches. Scoping and resetting.
-
-### Scoping Singletons
-
-Factory delivers the global singleton scope with the `@TaskLocal` macro being attached to it. With this simple trick we can scope our tests to run in their own isolated task context.
-
-```swift
-Scope.$singleton.withValue(Scope.singleton.clone()) {
-    // We're inside the context of the current Task. Meaning that we can re-register our singletons here without affecting other tests that use the same singletons with different states.
-    Container.shared.someSingletonFactory.register { MyNewMock() }
-}
-```
-
-Doing this in every unit test might lead to a lot of repetition and a pattern in your XCTestCases. To make it simpler you can override the `invokeTest()` function as below:
-
-```swift
-override func invokeTest() {
-    Scope.$singleton.withValue(Scope.singleton.clone()) {
-        Container.shared.someSingletonFactory.register { MyNewMock() } // You might not add it here. See reasoning below.
-        super.invokeTest()
-    }
-}
-```
-
-But remember that by doing the above you will scope **every** unit test function inside the given XCTestCase to their own scope where `MyNewMock` is registered. 
-If you need different types being registered in your different unit tests, then you might want to just call `super.invokeTest()` inside the `withValue`'s trailing closure and setup your registrations one-by-one in your unit tests.
-
-*Jump to the end for information on using Factory for singleton testing with Swift Testing in Xcode 16.*
+So what to do about it? 
 
 ### Resetting Singletons
 
-While it is suggested to use the above detailed `@TaskLocal` approach, if needed we can reset *every* cached singleton with just a single method call. Just call reset on that particular scope.
+If needed we can reset *every* cached singleton with just a single method call. Just call reset on that particular scope.
 
 ```swift
 Scope.singleton.reset()
@@ -269,75 +242,37 @@ On that last point. Doing a registration change on a factory usually clears it's
 
 This also applies to singletons *unless you're inside of a autoRegister block.* AutoRegistration can happen on every container creation, and automatically clearing a registered singleton each and every time that occurs kind of defeats the idea of multiple containers on one hand and singletons on the other.
 
-So all that said, we can deal with them. But as a general rule, singletons can complicate your life, your code, and your tests, and as such they should be avoided and only be used when there's an overriding need for there to be one and only one instance of an object.
+So all that said, we can deal with them. But as a general rule, singletons can complicate your life, your code, and your tests, and as such they should be avoided and only be used when there's an overriding need for there to be one and only one instance of an object across multiple containers.
 
 Got that, Highlander?
 
-## Xcode UITesting
+### Complexity Management
 
-UITesting can be more challenging, in that we're now to dealing with an active, running application. We have our existing tools, of course, but the issue is often complicated by the fact that we may want to change the application's behavior *before* it gets to RunLoop.main and starts idling.
+If all of the pushing and popping and resetting sounds complex, that's because it is.
 
-How?
+Keep in mind that we're usually dealing with a single shared container, often accessed directly using `Container.shared`, or indirectly using property wrappers like `@Injected` that call `Container.shared` under the hood.
 
-One solution is passed parameters.
+Every test is accessing that container and its values.
 
-The test case is fairly straightforward.
+Which means we have to manage our global state carefully so each test is beginning from a known starting point.
 
-```swift
-import XCTest
-
-final class FactoryDemoUITests: XCTestCase {
-    func testExample() throws {
-        let app = XCUIApplication()
-        app.launchArguments.append("mock1") // passed parameter
-        app.launch()
-
-        let welcome = app.staticTexts["Mock Number 1! for Michael"]
-        XCTAssert(welcome.exists)
-    }
-}   
-```
-And then in our application we use Factory's auto registration feature to check the launch arguments to see what registrations we might want to change.
-```swift
-import Foundation
-import Factory
-
-extension Container: AutoRegistering {
-    public func autoRegister() {
-        #if DEBUG
-        if ProcessInfo().arguments.contains("mock1") {
-            myServiceType.register { MockServiceN(1) }
-        }
-        #endif
-    }
-}
-```
-Or you can simplify things with an `arg` context that accomplishes the same thing.
-```swift
-import Foundation
-import Factory
-
-extension Container: AutoRegistering {
-    public func autoRegister() {
-        #if DEBUG
-        myServiceType.onArg("mock1") { MockServiceN(1) }
-        #endif
-    }
-}
-```
-There are many contexts for testing, previews, and even UITesting. See <doc:Contexts> for more.
-
-Obviously, one can add as many different test cases and registrations as needed.
+But there's a better way.
 
 ## Xcode 16 and Swift Testing
 
-The challenge that Swift Testing brought to our lives is that it defaults to parallel test runs. While this can speed up test runs significantly it's not that straightforward. How should we eanble our dependencies to act differently for different test cases?
+The challenge that Swift Testing brought to our lives is that it defaults to parallel test runs. While this can speed up test runs significantly it's not that straightforward. 
 
-Luckily there is an answer: [Test Scoping Traits](https://developer.apple.com/documentation/testing/trait), with which we can make our tests local to their task.
+Especially when we keep in mind our original problem of having a consistent, known starting point.
 
-### Scoping
+Given what we've seen thus far, the problem seems almost impossible. How do we keep tests running in parallel from stepping all over each other?
 
-Consider the following.
+Luckily there is an answer: [Test Scoping Traits](https://developer.apple.com/documentation/testing/trait)
+
+With test traits we can make each of our tests local, each isolated to their own task, and allow each to begin from a known starting point.
+
+### Bad Tests
+
+Consider the following somewhat problematic code. We have two tests, and under Swift Testing those tests are going to run in parallel.
 
 ```swift
 import Testing
@@ -357,20 +292,21 @@ struct AppTests {
 }
 ```
 
-Examine the code and you'll see that the two tests both register different values for `someService` on the same shared container. 
+In the code you'll see that the two tests both register different values for `someService` on the same shared container. 
 
 Which means that these tests could suffer from race conditions should they be run in parallel.
 
-Which in turn would result in tests failing randomly. And that's bad.
+Which in turn could result in our tests failing randomly. And that's bad.
 
-Factory is leveraging the power of Test Scoping Traits and @TaskLocals in the form of `ContainerTrait` to resolve this problem.
+#### Container Traits
 
-#### Test Trait
+The latest addition to Factory leverages the power of `@TaskLocal` and Test Scoping Traits to resolve this problem.
 
-By using it inside your `@Test` macro, you can make sure that your unit test runs in their own isolated contexts.
+By using our `.container` trait inside our `@Test` macro, we can make sure that each of our unit tests runs in their own isolated context, and each has their own container.
 
 ```swift
 import Testing
+import FactoryTesting
 
 struct AppTests {
   @Test(.container, arguments: Parameters.allCases) func testA(parameter: Parameters) {
@@ -386,22 +322,43 @@ struct AppTests {
   }
 }
 ```
+Not only does each test get its own freshly initialized container, but `Container.shared` is different for each test as well!
+
+TaskLocal solves our problem of code that accesses `Container.shared` directly, as well as code that does so *indirectly* using our injection property wrappers.
+
+Brilliant!
+
+*While we're here, I'd like to thank Ákos Grabecz for spearheading the development of this solution.*
+
+#### FactoryTesting
+
+Before we move on, you might notice the import of the `FactoryTesting` module which contains support for container traits. (You may need to add this requirement to your test project.)
+```
+.testTarget(name: "MyAppTests", dependencies: [
+  "MyApp", 
+  "Factory", 
+  "FactoryTesting"
+])
+```
 
 #### Suite Trait
 
-You can go one step further (or higher if you will) by adding it to your `@Suite` macro as below.
+You can go one step further (or higher if you will) by adding the trait to your `@Suite` macro as below.
 
 ```swift
 import Testing
+import FactoryTesting
 
 @Suite(.container)
 struct AppTests {
+  // test inherits .container trait from parent suite  
   @Test(arguments: Parameters.allCases) func testA(parameter: Parameters) {
     Container.shared.someService.register { MockService(parameter: parameter) }
     let service = Container.shared.someService()
     #expect(service.parameter == parameter)
   }
-
+  
+  // test inherits .container trait from parent suite
   @Test func testB() async throws {
     Container.shared.someService.register { ErrorService() }
     let service = Container.shared.someService()
@@ -412,22 +369,24 @@ struct AppTests {
 
 One thing to remember with the suite-based approach is that its [isRecursive](https://developer.apple.com/documentation/testing/suitetrait/isrecursive) property is always `true`, which means that all of your child suites and test functions inherit the trait. 
 
-See:
-
 ```swift
 import Testing
+import FactoryTesting
 
-@Suite(.container) // container trait is defined here in the parent suite
+// defines .container trait in parent suite
+@Suite(.container)
 struct AppTests {
+  // test gets .container trait from parent suite
   @Test(arguments: Parameters.allCases) func testA(parameter: Parameters) {
     Container.shared.someService.register { MockService(parameter: parameter) }
     let service = Container.shared.someService()
     #expect(service.parameter == parameter)
   }
 
-  @Suite // gets .container trait from parent suite implicitly
+  @Suite
   struct AppChildTests {
-    @Test func testB() async throws { // gets .container trait from parent suite implicitly
+    // test still gets .container trait from outermost suite 
+    @Test func testB() async throws { 
         Container.shared.someService.register { ErrorService() }
         let service = Container.shared.someService()
         #expect(service.error == "Oops")
@@ -438,11 +397,18 @@ struct AppTests {
 
 ### Custom Containers
 
-If you work with your own custom container, you can still use the Factory provided `ContainerTrait` since its generic parameter is constrained to the `SharedContainer` protocol. You have to do just two things:
+If you work with your own custom containers you can still use the Factory provided `ContainerTrait` since its generic parameter is constrained to the `SharedContainer` protocol. 
 
-1. Attach the `@TaskLocal` macro the `shared` instance of your custom container.
-2. Add the below code to your project:
+You have to do just two things:
 
+1. Attach the `@TaskLocal` macro to the `shared` instance of your own custom container.
+```swift
+public final class CustomContainer: SharedContainer {
+  @TaskLocal public static var shared = CustomContainer()
+  public let manager = ContainerManager()
+}
+```
+2. Add the following code to your test project to define your own custom trait:
 ```swift
 extension Trait where Self == ContainerTrait<CustomContainer> {
     static var customContainer: ContainerTrait<CustomContainer> {
@@ -500,6 +466,7 @@ struct SomeSuite {
 As our registration is isolated to the MainActor our transforming closure cannot access it without risking data race.
 
 There are multiple approaches to consider as the solution for this problem:
+
 1. If you can, you should move the global actor isolation to your protocol (`IsolatedProtocol`) or type (`IsolatedImplementation`) declaration site.
 2. You could create your own `ContainerTrait` which accepts a transforming closure that is isolated to the MainActor.
 
@@ -524,7 +491,7 @@ struct Flaky: Sendable {
 
 Do **NOT** do that as it leads to flaky tests. Inside the trailing closure of the `withValue` function you should not refer to any objects which are external to the task local's context. That's just how `@TaskLocal` works.
 
-If you really want to go to that direaction, then what you can do is to change your external property to a function:
+If you really want to go to that direction, then what you can do is to change your external property to a function:
 
 ```swift
 func foo() -> Foo { Foo() }
@@ -575,3 +542,63 @@ class ContentViewModel {
 ```
 
 Here, every instance of ContentViewModel gets its own dedicated container and as such parallel testing should work as expected.
+
+Note, however, if any dependencies use singletons then you need to go back to using traits as the standard implementation wraps both the shared container and the singleton cache.
+
+Did I mention before that singletons can be problematic?
+
+## Xcode UITesting
+
+UITesting can be more challenging, in that we're now to dealing with an active, running application. We have our existing tools, of course, but the issue is often complicated by the fact that we may want to change the application's behavior *before* it gets to RunLoop.main and starts idling.
+
+How?
+
+One solution is passed parameters.
+
+The test case is fairly straightforward.
+
+```swift
+import XCTest
+
+final class FactoryDemoUITests: XCTestCase {
+    func testExample() throws {
+        let app = XCUIApplication()
+        app.launchArguments.append("mock1") // passed parameter
+        app.launch()
+
+        let welcome = app.staticTexts["Mock Number 1! for Michael"]
+        XCTAssert(welcome.exists)
+    }
+}   
+```
+And then in our application we use Factory's auto registration feature to check the launch arguments to see what registrations we might want to change.
+```swift
+import Foundation
+import Factory
+
+extension Container: AutoRegistering {
+    public func autoRegister() {
+        #if DEBUG
+        if ProcessInfo().arguments.contains("mock1") {
+            myServiceType.register { MockServiceN(1) }
+        }
+        #endif
+    }
+}
+```
+Or you can simplify things with an `arg` context that accomplishes the same thing.
+```swift
+import Foundation
+import Factory
+
+extension Container: AutoRegistering {
+    public func autoRegister() {
+        #if DEBUG
+        myServiceType.onArg("mock1") { MockServiceN(1) }
+        #endif
+    }
+}
+```
+There are many contexts for testing, previews, and even UITesting. See <doc:Contexts> for more.
+
+Obviously, one can add as many different test cases and registrations as needed.
