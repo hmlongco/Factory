@@ -5,7 +5,7 @@
 
 A new approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
-## Factory 2.4.5
+## Factory 2.4.6
 
 Factory is strongly influenced by SwiftUI, and in my opinion is highly suited for use in that environment. Factory is...
 
@@ -18,6 +18,7 @@ Factory is strongly influenced by SwiftUI, and in my opinion is highly suited fo
 - **Documented**: Factory has extensive DocC documentation and examples covering its classes, methods, and use cases.
 - **Lightweight**: With all of that Factory is slim and trim, under 1,000 lines of executable code.
 - **Tested**: Unit tests with 100% code coverage helps ensure correct operation of registrations, resolutions, and scopes.
+- **Testable**: Factory ensures your application's views and services are easily previewable and testable. 
 - **Free**: Factory is free and open source under the MIT License.
 
 Sound too good to be true? Let's take a look.
@@ -308,7 +309,7 @@ pod "Factory"
 ```
 Or download the source files and add the Factory folder to your project.
 
-Note that the current version of Factory (2.4.3) require Swift 5.10 minimum and that the minimum version of iOS currently supported with this release is iOS 13.
+Note that the current version of Factory requires Swift 5.10 minimum and that the minimum version of iOS currently supported with this release is iOS 13.
 
 ## Factory 2.0 Migration
 
@@ -348,6 +349,10 @@ Factory is designed, implemented, documented, and maintained by [Michael Long](h
 * BlueSky: [@hmlongco](https://bsky.app/profile/hmlongco.bsky.social)
 
 Michael was also one of Google's [Open Source Peer Reward](https://opensource.googleblog.com/2021/09/announcing-latest-open-source-peer-bonus-winners.html) winners in 2021 for his work on Resolver.
+
+## Contributors
+
+Special thanks to Ákos Grabecz (agrabz) and Mahmood Tahir (tahirmt) for their recent contributions that ensure Factory works hand-in-hand with Swift Testing. 
 
 ## Additional Resources
 
