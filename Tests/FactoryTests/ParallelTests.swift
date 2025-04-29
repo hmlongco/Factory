@@ -179,6 +179,6 @@ struct ParallelTests {
             #expect(sut1.fooBarBazSingleton.id != sut3.fooBarBazSingleton.id)
         }
     }
-    
+
 }
 #endif

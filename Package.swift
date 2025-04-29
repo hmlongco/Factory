@@ -32,12 +32,12 @@ let package = Package(
             resources: [.copy("PrivacyInfo.xcprivacy")]
         ),
         .target(
-            name: "FactoryTestSupport",
+            name: "FactoryTesting",
             dependencies: ["Factory"]
         ),
         .testTarget(
             name: "FactoryTests",
-            dependencies: ["Factory", "FactoryTestSupport"]
+            dependencies: ["Factory", "FactoryTesting"]
         )
     ],
     swiftLanguageVersions: [
