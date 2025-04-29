@@ -273,15 +273,74 @@ final class Baz: FooBarBazProtocol {
     var value = "baz"
 }
 
+protocol IsolatedProtocol: Sendable {
+    var id: UUID { get }
+    var value: String { get set }
+}
+
+struct IsolatedFoo: IsolatedProtocol {
+    let id: UUID = UUID()
+    var value = "foo"
+}
+
+struct IsolatedBar: IsolatedProtocol {
+    let id: UUID = UUID()
+    var value = "bar"
+}
+
+struct IsolatedBaz: IsolatedProtocol {
+    let id: UUID = UUID()
+    var value = "baz"
+}
+
+@Observable
+final class ObservableFooBarBaz: Sendable {
+    let id: UUID = UUID()
+    let value: String
+
+    init(value: String = "foo") {
+        self.value = value
+    }
+}
+
+@globalActor
+actor MyActor {
+    static let shared = MyActor()
+}
+
 extension Container {
-    var fooBarBaz: Factory<FooBarBazProtocol> {
+    nonisolated var fooBarBaz: Factory<FooBarBazProtocol> {
         self { Foo() }
     }
-    var fooBarBazCached: Factory<FooBarBazProtocol> {
+    nonisolated var fooBarBazCached: Factory<FooBarBazProtocol> {
         self { Foo() }.cached
     }
-    var fooBarBazSingleton: Factory<FooBarBazProtocol> {
+    nonisolated var fooBarBazSingleton: Factory<FooBarBazProtocol> {
         self { Foo() }.singleton
+    }
+    @MainActor
+    var isolatedToMainActor: Factory<ObservableFooBarBaz> {
+        self { ObservableFooBarBaz() }
+    }
+    @MainActor
+    var isolatedToMainActorCached: Factory<ObservableFooBarBaz> {
+        self { ObservableFooBarBaz() }.cached
+    }
+    @MainActor
+    var isolatedToMainActorSingleton: Factory<ObservableFooBarBaz> {
+        self { ObservableFooBarBaz() }.singleton
+    }
+    @MyActor
+    var isolatedToCustomGlobalActor: Factory<IsolatedProtocol> {
+        self { IsolatedFoo() }
+    }
+    @MyActor
+    var isolatedToCustomGlobalActorCached: Factory<IsolatedProtocol> {
+        self { IsolatedFoo() }.cached
+    }
+    @MyActor
+    var isolatedToCustomGlobalActorSingleton: Factory<IsolatedProtocol> {
+        self { IsolatedFoo() }.singleton
     }
 }
 
@@ -289,4 +348,27 @@ final class TaskLocalUseCase {
     @Injected(\.fooBarBaz) var fooBarBaz: FooBarBazProtocol
     @Injected(\.fooBarBazCached) var fooBarBazCached: FooBarBazProtocol
     @Injected(\.fooBarBazSingleton) var fooBarBazSingleton: FooBarBazProtocol
+}
+
+@MainActor
+final class IsolatedTaskLocalUseCase {
+    @Injected(\.fooBarBaz) var fooBarBaz: FooBarBazProtocol
+    @Injected(\.fooBarBazCached) var fooBarBazCached: FooBarBazProtocol
+    @Injected(\.fooBarBazSingleton) var fooBarBazSingleton: FooBarBazProtocol
+
+    @InjectedObservable(\.isolatedToMainActor) var isolatedToMainActor: ObservableFooBarBaz
+    @InjectedObservable(\.isolatedToMainActorCached) var isolatedToMainActorCached: ObservableFooBarBaz
+    @InjectedObservable(\.isolatedToMainActorSingleton) var isolatedToMainActorSingleton: ObservableFooBarBaz
+
+    var isolatedToCustomGlobalActor: IsolatedProtocol
+    var isolatedToCustomGlobalActorCached: IsolatedProtocol
+    var isolatedToCustomGlobalActorSingleton: IsolatedProtocol
+
+    // Swift doesn't allow default values for properties that are isolated to a different global actor than self.
+    // See: https://github.com/swiftlang/swift-evolution/blob/main/proposals/0411-isolated-default-values.md
+    init() async {
+        self.isolatedToCustomGlobalActor = await Container.shared.isolatedToCustomGlobalActor.resolve()
+        self.isolatedToCustomGlobalActorCached = await Container.shared.isolatedToCustomGlobalActorCached.resolve()
+        self.isolatedToCustomGlobalActorSingleton = await Container.shared.isolatedToCustomGlobalActorSingleton.resolve()
+    }
 }

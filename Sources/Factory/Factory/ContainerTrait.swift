@@ -39,7 +39,7 @@ import Testing
 /// See examples in the ``ParallelXCTests`` file.
 public struct ContainerTrait<C: SharedContainer>: TestTrait, SuiteTrait, TestScoping {
 
-    public typealias Transform = @Sendable (C) -> Void
+    public typealias Transform = @Sendable (C) async -> Void
 
     private let shared: TaskLocal<C>
     private let container: @Sendable () -> C
@@ -58,7 +58,7 @@ public struct ContainerTrait<C: SharedContainer>: TestTrait, SuiteTrait, TestSco
     public func provideScope(for test: Test, testCase: Test.Case?, performing function: () async throws -> Void) async throws {
         try await Scope.$singleton.withValue(Scope.singleton.clone()) {
             try await shared.withValue(container()) {
-                transform?(C.shared)
+                await transform?(C.shared)
                 try await function()
             }
         }
