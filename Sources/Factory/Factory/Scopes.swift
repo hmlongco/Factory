@@ -186,7 +186,7 @@ extension Scope {
             cache.reset()
         }
         /// For testing
-        internal func clone() -> Singleton {
+        package func clone() -> Singleton {
             .init(from: self)
         }
     }
