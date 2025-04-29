@@ -1,4 +1,4 @@
-#if swift(>=6.1)
+#if swift(>=5.5)
 
 @testable import Factory
 import Testing
