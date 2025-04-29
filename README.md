@@ -193,27 +193,21 @@ final class FactoryCoreTests: XCTestCase {
 ```
 Again, Factory makes it easy to reach into a chain of dependencies and make specific changes to the system as needed. This makes testing loading states, empty states, and error conditions simple.
 
-Factory also works with Xcode 16's new Swift Testing framework.
+Factory also works with Xcode 16's new Swift Testing framework, and with the help of test traits it is also possible to run tests in parallel.
 
 ```swift
-import Testing
-
-@Suite(.serialized) struct AppTests {
-  @Test(arguments: Parameters.allCases) func testA(parameter: Parameters) {
-    // This function will be invoked serially, once per parameter, because the
-    // containing suite has the .serialized trait.
-    Container.shared.someService.register { MockService(parameter: parameter) }
+struct AppTests {
+  @Test(
+    .container {
+      $0.someService.register { ErrorService() }
+      $0.someOtherService.register { OtherErrorService() }
+    }
+  ) 
+  func testB() {
     let service = Container.shared.someService()
-    #expect(service.parameter == parameter)
-  }
-
-
-  @Test func testB() async throws {
-    // This function will not run while testA(parameter:) is running. One test
-    // must end before the other will start.
-    Container.shared.someService.register { ErrorService() }
-    let service = Container.shared.someService()
+    let otherService = Container.shared.someOtherService()
     #expect(service.error == "Oops")
+    #expect(otherService.error == "OtherOops")
   }
 }
 ```
