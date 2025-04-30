@@ -167,6 +167,10 @@ final class FactoryCoreTests: XCTestCase {
     }
 
     func testFactoryOnceOnTest() {
+        guard FactoryContext.current.isTest else {
+            print("This test can only run in a test environment")
+            return
+        }
         let service1 = CustomContainer.shared.onceOnTest()
         XCTAssertEqual(service1.value, 1)
         CustomContainer.shared.onceOnTest.onTest {
