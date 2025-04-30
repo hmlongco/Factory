@@ -204,21 +204,21 @@ Here's the same set of tests updated for the new framework. The `.container` tra
 @Suite(.container)
 struct FactoryTests {
 
-    @Test func testLoaded() throws {
+    @Test func testLoaded() async {
         Container.shared.accountProvider.register { MockProvider(accounts: .sampleAccounts) }
         let model = Container.shared.someViewModel()
         model.load()
         #expect(model.isLoaded)
     }
 
-    @Test func testEmpty() throws {
+    @Test func testEmpty() async {
         Container.shared.accountProvider.register { MockProvider(accounts: []) }
         let model = Container.shared.someViewModel()
         model.load()
         #expect(model.isEmpty)
     }
 
-    @Test func testErrors() throws {
+    @Test func testErrors() async {
         Container.shared.accountProvider.register { MockProvider(error: .notFoundError) }
         let model = Container.shared.someViewModel()
         model.load()
