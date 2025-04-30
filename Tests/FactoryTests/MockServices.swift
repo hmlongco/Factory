@@ -7,7 +7,9 @@
 
 import Foundation
 import Testing
+
 @testable import Factory
+import FactoryTesting
 
 // Swift 6
 extension Container: AutoRegistering {

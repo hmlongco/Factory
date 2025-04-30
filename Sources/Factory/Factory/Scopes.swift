@@ -158,7 +158,7 @@ extension Scope {
     }
 
     /// A reference to the default singleton scope manager.
-    #if swift(>=6.1)
+    #if swift(>=5.5)
     @TaskLocal public static var singleton = Singleton()
     #else
     public static let singleton = Singleton()
@@ -186,7 +186,7 @@ extension Scope {
             cache.reset()
         }
         /// For testing
-        internal func clone() -> Singleton {
+        package func clone() -> Singleton {
             .init(from: self)
         }
     }

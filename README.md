@@ -5,7 +5,7 @@
 
 A new approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
-## Factory 2.4.5
+## Factory 2.4.6
 
 Factory is strongly influenced by SwiftUI, and in my opinion is highly suited for use in that environment. Factory is...
 
@@ -18,6 +18,7 @@ Factory is strongly influenced by SwiftUI, and in my opinion is highly suited fo
 - **Documented**: Factory has extensive DocC documentation and examples covering its classes, methods, and use cases.
 - **Lightweight**: With all of that Factory is slim and trim, under 1,000 lines of executable code.
 - **Tested**: Unit tests with 100% code coverage helps ensure correct operation of registrations, resolutions, and scopes.
+- **Testable**: Factory ensures your application's views and services are easily previewable and testable. 
 - **Free**: Factory is free and open source under the MIT License.
 
 Sound too good to be true? Let's take a look.
@@ -193,27 +194,21 @@ final class FactoryCoreTests: XCTestCase {
 ```
 Again, Factory makes it easy to reach into a chain of dependencies and make specific changes to the system as needed. This makes testing loading states, empty states, and error conditions simple.
 
-Factory also works with Xcode 16's new Swift Testing framework.
+Factory also works with Xcode 16's new Swift Testing framework, and with the help of test traits it is also possible to run tests in parallel.
 
 ```swift
-import Testing
-
-@Suite(.serialized) struct AppTests {
-  @Test(arguments: Parameters.allCases) func testA(parameter: Parameters) {
-    // This function will be invoked serially, once per parameter, because the
-    // containing suite has the .serialized trait.
-    Container.shared.someService.register { MockService(parameter: parameter) }
+struct AppTests {
+  @Test(
+    .container {
+      $0.someService.register { ErrorService() }
+      $0.someOtherService.register { OtherErrorService() }
+    }
+  ) 
+  func testB() {
     let service = Container.shared.someService()
-    #expect(service.parameter == parameter)
-  }
-
-
-  @Test func testB() async throws {
-    // This function will not run while testA(parameter:) is running. One test
-    // must end before the other will start.
-    Container.shared.someService.register { ErrorService() }
-    let service = Container.shared.someService()
+    let otherService = Container.shared.someOtherService()
     #expect(service.error == "Oops")
+    #expect(otherService.error == "OtherOops")
   }
 }
 ```
@@ -314,7 +309,7 @@ pod "Factory"
 ```
 Or download the source files and add the Factory folder to your project.
 
-Note that the current version of Factory (2.4.3) require Swift 5.10 minimum and that the minimum version of iOS currently supported with this release is iOS 13.
+Note that the current version of Factory requires Swift 5.10 minimum and that the minimum version of iOS currently supported with this release is iOS 13.
 
 ## Factory 2.0 Migration
 
@@ -354,6 +349,10 @@ Factory is designed, implemented, documented, and maintained by [Michael Long](h
 * BlueSky: [@hmlongco](https://bsky.app/profile/hmlongco.bsky.social)
 
 Michael was also one of Google's [Open Source Peer Reward](https://opensource.googleblog.com/2021/09/announcing-latest-open-source-peer-bonus-winners.html) winners in 2021 for his work on Resolver.
+
+## Contributors
+
+Special thanks to Ákos Grabecz (agrabz) and Mahmood Tahir (tahirmt) for their recent contributions that ensure Factory works hand-in-hand with Swift Testing. 
 
 ## Additional Resources
 

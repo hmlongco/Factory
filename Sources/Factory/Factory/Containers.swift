@@ -44,7 +44,7 @@ import Foundation
 ///  See <doc:Containers> for more information.
 public final class Container: SharedContainer {
     /// Define the default shared container.
-    #if swift(>=6.1)
+    #if swift(>=5.5)
     @TaskLocal public static var shared = Container()
     #else
     public static let shared = Container()

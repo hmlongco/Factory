@@ -46,6 +46,8 @@ public final class Container: SharedContainer {
 ```
 You've seen it used and extended in all of the examples we've seen thus far, and most projects can simply extend it and go.
 
+The real implementation of the default ``Container`` will have the `@TaskLocal macro` attaced to the `shared` static property if you're using Factory with Swift 5.5 or higher. See more in <doc:Testing>
+
 ## Container.shared
 
 As the default Container definition shows, each container class defined has a statically allocated `shared` instance associated with it.
@@ -99,7 +101,7 @@ Defining your own container class is simple. Just use the following as a templat
 
 ```swift
 public final class MyContainer: SharedContainer {
-     public static let shared = MyContainer()
+     @TaskLocal public static var shared = MyContainer()
      public let manager = ContainerManager()
 }
 
@@ -111,7 +113,13 @@ extension MyContainer {
 ```
 As mentioned, a container must derive from ``SharedContainer``, have its own ``ContainerManager``, and implement a static `shared` instance. It also must be marked `final`.
 
-> Note: Remember to define the "shared" container as a `let`, not `var`. Defining it as a `static var` will cause Swift to issue concurrency warnings in the future whenever that variable is accessed.
+> Note: Remember to define the "shared" container as a @TaskLocal variable to be able to use its isolation mechanism, which is especially useful for test parallelization.
+>
+> If you don't want to use the @TaskLocal isolation mechanism, then you should define a 'let' variable, not 'var'.
+>
+> Using 'static var' (without @TaskLocal being attached to it) will cause Swift to issue concurrency warnings in the future whenever the container is accessed.
+>
+> See <doc:Testing>
 
 ## Referencing Other Containers
 
