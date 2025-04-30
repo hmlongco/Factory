@@ -176,6 +176,12 @@ extension ManagedContainer {
         transform(self)
         return self
     }
+    /// Defines an async with function to allow container transformation on assignment.
+    @discardableResult
+    public func with(_ transform: @Sendable (Self) async -> Void) async -> Self {
+        await transform(self)
+        return self
+    }
 }
 
 // MARK: - ContainerManager
