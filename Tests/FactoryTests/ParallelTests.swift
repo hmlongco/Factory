@@ -12,7 +12,7 @@ struct ParallelTests {
         // Illustrates using container test trait
         @Test(.container)
         func foo() {
-            commonParallelTests("foo")
+            commonTests("foo")
         }
 
         // Illustrates using container test trait
@@ -23,7 +23,7 @@ struct ParallelTests {
             c.fooBarBazCached.register { Bar() }
             c.fooBarBazSingleton.register { Bar() }
 
-            commonParallelTests("bar")
+            commonTests("bar")
         }
 
         // Illustrates using container test trait with support closure
@@ -33,43 +33,88 @@ struct ParallelTests {
             $0.fooBarBazSingleton.register { Baz() }
         })
         func baz() {
-            commonParallelTests("baz")
+            commonTests("baz")
         }
+
+        func commonTests(_ value: String) {
+            let sut1 = TaskLocalUseCase()
+            #expect(sut1.fooBarBaz.value == value)
+            #expect(sut1.fooBarBazCached.value == value)
+            #expect(sut1.fooBarBazSingleton.value == value)
+
+            let sut2 = TaskLocalUseCase()
+            #expect(sut2.fooBarBaz.value == value)
+            #expect(sut2.fooBarBazCached.value == value)
+            #expect(sut2.fooBarBazSingleton.value == value)
+
+            #expect(sut1.fooBarBaz.id != sut2.fooBarBaz.id)
+            #expect(sut1.fooBarBazCached.id == sut2.fooBarBazCached.id)
+            #expect(sut1.fooBarBazSingleton.id == sut2.fooBarBazSingleton.id)
+
+            Container.shared.fooBarBazSingleton.register { Foo() }
+
+            let sut3 = TaskLocalUseCase()
+            #expect(sut3.fooBarBazSingleton.value == "foo")
+            #expect(sut1.fooBarBazSingleton.id != sut3.fooBarBazSingleton.id)
+        }
+
     }
 
-    @Suite(.container)
+    @Suite(.container {
+        $0.fooBarBaz.register { Foo() }
+        $0.fooBarBazCached.register { Foo() }
+        $0.fooBarBazSingleton.register { Foo() }
+    })
     struct ParallelSuiteTests {
         @Test
         func foo() {
-            Container.shared.with {
-                $0.fooBarBaz.register { Foo() }
-                $0.fooBarBazCached.register { Foo() }
-                $0.fooBarBazSingleton.register { Foo() }
-            }
-
-            commonParallelTests("foo")
+            commonSuiteTests("foo")
         }
 
         @Test
         func bar() {
+            // will reregister services
             Container.shared.with {
                 $0.fooBarBaz.register { Bar() }
                 $0.fooBarBazCached.register { Bar() }
                 $0.fooBarBazSingleton.register { Bar() }
             }
 
-            commonParallelTests("bar")
+            commonSuiteTests("bar")
         }
 
         @Test
         func baz() {
+            // will reregister services
             Container.shared.with {
                 $0.fooBarBaz.register { Baz() }
                 $0.fooBarBazCached.register { Baz() }
                 $0.fooBarBazSingleton.register { Baz() }
             }
 
-            commonParallelTests("baz")
+            commonSuiteTests("baz")
+        }
+
+        func commonSuiteTests(_ value: String) {
+            let sut1 = TaskLocalUseCase()
+            #expect(sut1.fooBarBaz.value == value)
+            #expect(sut1.fooBarBazCached.value == value)
+            #expect(sut1.fooBarBazSingleton.value == value)
+
+            let sut2 = TaskLocalUseCase()
+            #expect(sut2.fooBarBaz.value == value)
+            #expect(sut2.fooBarBazCached.value == value)
+            #expect(sut2.fooBarBazSingleton.value == value)
+
+            #expect(sut1.fooBarBaz.id != sut2.fooBarBaz.id)
+            #expect(sut1.fooBarBazCached.id == sut2.fooBarBazCached.id)
+            #expect(sut1.fooBarBazSingleton.id == sut2.fooBarBazSingleton.id)
+
+            Container.shared.fooBarBazSingleton.register { Foo() }
+
+            let sut3 = TaskLocalUseCase()
+            #expect(sut3.fooBarBazSingleton.value == "foo")
+            #expect(sut1.fooBarBazSingleton.id != sut3.fooBarBazSingleton.id)
         }
 
     }
@@ -135,84 +180,61 @@ struct ParallelTests {
             }
             await isolatedAsyncTests("baz")
         }
+
+        @available(iOS 17.0, *)
+        func isolatedAsyncTests(_ value: String) async {
+            let sut1 = await IsolatedTaskLocalUseCase()
+            #expect(sut1.fooBarBaz.value == value)
+            #expect(sut1.fooBarBazCached.value == value)
+            #expect(sut1.fooBarBazSingleton.value == value)
+
+            #expect(sut1.isolatedToMainActor.value == value)
+            #expect(sut1.isolatedToMainActorCached.value == value)
+            #expect(sut1.isolatedToMainActorSingleton.value == value)
+
+            #expect(sut1.isolatedToCustomGlobalActor.value == value)
+            #expect(sut1.isolatedToCustomGlobalActorCached.value == value)
+            #expect(sut1.isolatedToCustomGlobalActorSingleton.value == value)
+
+            let sut2 = await IsolatedTaskLocalUseCase()
+            #expect(sut2.fooBarBaz.value == value)
+            #expect(sut2.fooBarBazCached.value == value)
+            #expect(sut2.fooBarBazSingleton.value == value)
+
+            #expect(sut2.isolatedToMainActor.value == value)
+            #expect(sut2.isolatedToMainActorCached.value == value)
+            #expect(sut2.isolatedToMainActorSingleton.value == value)
+
+            #expect(sut2.isolatedToCustomGlobalActor.value == value)
+            #expect(sut2.isolatedToCustomGlobalActorCached.value == value)
+            #expect(sut2.isolatedToCustomGlobalActorSingleton.value == value)
+
+            #expect(sut1.fooBarBaz.id != sut2.fooBarBaz.id)
+            #expect(sut1.fooBarBazCached.id == sut2.fooBarBazCached.id)
+            #expect(sut1.fooBarBazSingleton.id == sut2.fooBarBazSingleton.id)
+
+            #expect(sut1.isolatedToMainActor.id != sut2.isolatedToMainActor.id)
+            #expect(sut1.isolatedToMainActorCached.id == sut2.isolatedToMainActorCached.id)
+            #expect(sut1.isolatedToMainActorSingleton.id == sut2.isolatedToMainActorSingleton.id)
+
+            #expect(sut1.isolatedToCustomGlobalActor.id != sut2.isolatedToCustomGlobalActor.id)
+            #expect(sut1.isolatedToCustomGlobalActorCached.id == sut2.isolatedToCustomGlobalActorCached.id)
+            #expect(sut1.isolatedToCustomGlobalActorSingleton.id == sut2.isolatedToCustomGlobalActorSingleton.id)
+
+            Container.shared.fooBarBazSingleton.register { Foo() }
+            Container.shared.isolatedToMainActorSingleton.register { ObservableFooBarBaz(value: "foo") }
+            await Container.shared.isolatedToCustomGlobalActorSingleton.register { IsolatedFoo() }
+
+            let sut3 = await IsolatedTaskLocalUseCase()
+            #expect(sut3.fooBarBazSingleton.value == "foo")
+            #expect(sut3.isolatedToMainActorSingleton.value == "foo")
+            #expect(sut3.isolatedToCustomGlobalActorSingleton.value == "foo")
+
+            #expect(sut1.fooBarBazSingleton.id != sut3.fooBarBazSingleton.id)
+            #expect(sut1.isolatedToMainActorSingleton.id != sut3.isolatedToMainActorSingleton.id)
+            #expect(sut1.isolatedToCustomGlobalActorSingleton.id != sut3.isolatedToCustomGlobalActorSingleton.id)
+        }
     }
-}
-
-func commonParallelTests(_ value: String) {
-    let sut1 = TaskLocalUseCase()
-    #expect(sut1.fooBarBaz.value == value)
-    #expect(sut1.fooBarBazCached.value == value)
-    #expect(sut1.fooBarBazSingleton.value == value)
-
-    let sut2 = TaskLocalUseCase()
-    #expect(sut2.fooBarBaz.value == value)
-    #expect(sut2.fooBarBazCached.value == value)
-    #expect(sut2.fooBarBazSingleton.value == value)
-
-    #expect(sut1.fooBarBaz.id != sut2.fooBarBaz.id)
-    #expect(sut1.fooBarBazCached.id == sut2.fooBarBazCached.id)
-    #expect(sut1.fooBarBazSingleton.id == sut2.fooBarBazSingleton.id)
-
-    Container.shared.fooBarBazSingleton.register { Foo() }
-
-    let sut3 = TaskLocalUseCase()
-    #expect(sut3.fooBarBazSingleton.value == "foo")
-    #expect(sut1.fooBarBazSingleton.id != sut3.fooBarBazSingleton.id)
-}
-
-@available(iOS 17.0, *)
-@MainActor
-func isolatedAsyncTests(_ value: String) async {
-    let sut1 = await IsolatedTaskLocalUseCase()
-    #expect(sut1.fooBarBaz.value == value)
-    #expect(sut1.fooBarBazCached.value == value)
-    #expect(sut1.fooBarBazSingleton.value == value)
-
-    #expect(sut1.isolatedToMainActor.value == value)
-    #expect(sut1.isolatedToMainActorCached.value == value)
-    #expect(sut1.isolatedToMainActorSingleton.value == value)
-
-    #expect(sut1.isolatedToCustomGlobalActor.value == value)
-    #expect(sut1.isolatedToCustomGlobalActorCached.value == value)
-    #expect(sut1.isolatedToCustomGlobalActorSingleton.value == value)
-
-    let sut2 = await IsolatedTaskLocalUseCase()
-    #expect(sut2.fooBarBaz.value == value)
-    #expect(sut2.fooBarBazCached.value == value)
-    #expect(sut2.fooBarBazSingleton.value == value)
-
-    #expect(sut2.isolatedToMainActor.value == value)
-    #expect(sut2.isolatedToMainActorCached.value == value)
-    #expect(sut2.isolatedToMainActorSingleton.value == value)
-
-    #expect(sut2.isolatedToCustomGlobalActor.value == value)
-    #expect(sut2.isolatedToCustomGlobalActorCached.value == value)
-    #expect(sut2.isolatedToCustomGlobalActorSingleton.value == value)
-
-    #expect(sut1.fooBarBaz.id != sut2.fooBarBaz.id)
-    #expect(sut1.fooBarBazCached.id == sut2.fooBarBazCached.id)
-    #expect(sut1.fooBarBazSingleton.id == sut2.fooBarBazSingleton.id)
-
-    #expect(sut1.isolatedToMainActor.id != sut2.isolatedToMainActor.id)
-    #expect(sut1.isolatedToMainActorCached.id == sut2.isolatedToMainActorCached.id)
-    #expect(sut1.isolatedToMainActorSingleton.id == sut2.isolatedToMainActorSingleton.id)
-
-    #expect(sut1.isolatedToCustomGlobalActor.id != sut2.isolatedToCustomGlobalActor.id)
-    #expect(sut1.isolatedToCustomGlobalActorCached.id == sut2.isolatedToCustomGlobalActorCached.id)
-    #expect(sut1.isolatedToCustomGlobalActorSingleton.id == sut2.isolatedToCustomGlobalActorSingleton.id)
-
-    Container.shared.fooBarBazSingleton.register { Foo() }
-    Container.shared.isolatedToMainActorSingleton.register { ObservableFooBarBaz(value: "foo") }
-    await Container.shared.isolatedToCustomGlobalActorSingleton.register { IsolatedFoo() }
-
-    let sut3 = await IsolatedTaskLocalUseCase()
-    #expect(sut3.fooBarBazSingleton.value == "foo")
-    #expect(sut3.isolatedToMainActorSingleton.value == "foo")
-    #expect(sut3.isolatedToCustomGlobalActorSingleton.value == "foo")
-
-    #expect(sut1.fooBarBazSingleton.id != sut3.fooBarBazSingleton.id)
-    #expect(sut1.isolatedToMainActorSingleton.id != sut3.isolatedToMainActorSingleton.id)
-    #expect(sut1.isolatedToCustomGlobalActorSingleton.id != sut3.isolatedToCustomGlobalActorSingleton.id)
 }
 
 #endif
