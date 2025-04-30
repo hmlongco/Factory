@@ -124,15 +124,14 @@ struct ParallelTests {
     struct ParallelIsolatedTests {
 
         // Illustrates using the container test trait with different isolations
-        @available(iOS 17.0, *)
         @Test(.container {
             $0.fooBarBaz.register { Foo() }
             $0.fooBarBazCached.register { Foo() }
             $0.fooBarBazSingleton.register { Foo() }
 
-            await $0.isolatedToMainActor.register { ObservableFooBarBaz(value: "foo") }
-            await $0.isolatedToMainActorCached.register { ObservableFooBarBaz(value: "foo") }
-            await $0.isolatedToMainActorSingleton.register { ObservableFooBarBaz(value: "foo") }
+            await $0.isolatedToMainActor.register { @MainActor in MainActorFooBarBaz(value: "foo") }
+            await $0.isolatedToMainActorCached.register { @MainActor in MainActorFooBarBaz(value: "foo") }
+            await $0.isolatedToMainActorSingleton.register { @MainActor in MainActorFooBarBaz(value: "foo") }
 
             await $0.isolatedToCustomGlobalActor.register { IsolatedFoo() }
             await $0.isolatedToCustomGlobalActorCached.register { IsolatedFoo() }
@@ -143,15 +142,14 @@ struct ParallelTests {
         }
 
         // Illustrates using the container test trait with different isolations
-        @available(iOS 17.0, *)
         @Test(.container {
             $0.fooBarBaz.register { Bar() }
             $0.fooBarBazCached.register { Bar() }
             $0.fooBarBazSingleton.register { Bar() }
 
-            await $0.isolatedToMainActor.register { ObservableFooBarBaz(value: "bar") }
-            await $0.isolatedToMainActorCached.register { ObservableFooBarBaz(value: "bar") }
-            await $0.isolatedToMainActorSingleton.register { ObservableFooBarBaz(value: "bar") }
+            await $0.isolatedToMainActor.register { @MainActor in MainActorFooBarBaz(value: "bar") }
+            await $0.isolatedToMainActorCached.register { @MainActor in MainActorFooBarBaz(value: "bar") }
+            await $0.isolatedToMainActorSingleton.register { @MainActor in MainActorFooBarBaz(value: "bar") }
 
             await $0.isolatedToCustomGlobalActor.register { IsolatedBar() }
             await $0.isolatedToCustomGlobalActorCached.register { IsolatedBar() }
@@ -162,7 +160,7 @@ struct ParallelTests {
         }
 
         // Illustrates using the container with function with different isolations
-        @available(iOS 17.0, *)
+        @MainActor
         @Test(.container)
         func isolatedBaz() async {
             await Container.shared.with {
@@ -170,9 +168,9 @@ struct ParallelTests {
                 $0.fooBarBazCached.register { Baz() }
                 $0.fooBarBazSingleton.register { Baz() }
 
-                await $0.isolatedToMainActor.register { ObservableFooBarBaz(value: "baz") }
-                await $0.isolatedToMainActorCached.register { ObservableFooBarBaz(value: "baz") }
-                await $0.isolatedToMainActorSingleton.register { ObservableFooBarBaz(value: "baz") }
+                await $0.isolatedToMainActor.register { @MainActor in MainActorFooBarBaz(value: "baz") }
+                await $0.isolatedToMainActorCached.register { @MainActor in MainActorFooBarBaz(value: "baz") }
+                await $0.isolatedToMainActorSingleton.register { @MainActor in MainActorFooBarBaz(value: "baz") }
 
                 await $0.isolatedToCustomGlobalActor.register { IsolatedBaz() }
                 await $0.isolatedToCustomGlobalActorCached.register { IsolatedBaz() }
@@ -181,7 +179,6 @@ struct ParallelTests {
             await isolatedAsyncTests("baz")
         }
 
-        @available(iOS 17.0, *)
         func isolatedAsyncTests(_ value: String) async {
             let sut1 = await IsolatedTaskLocalUseCase()
             #expect(sut1.fooBarBaz.value == value)
@@ -222,7 +219,7 @@ struct ParallelTests {
             #expect(sut1.isolatedToCustomGlobalActorSingleton.id == sut2.isolatedToCustomGlobalActorSingleton.id)
 
             Container.shared.fooBarBazSingleton.register { Foo() }
-            Container.shared.isolatedToMainActorSingleton.register { ObservableFooBarBaz(value: "foo") }
+            Container.shared.isolatedToMainActorSingleton.register { @MainActor in  MainActorFooBarBaz(value: "foo") }
             await Container.shared.isolatedToCustomGlobalActorSingleton.register { IsolatedFoo() }
 
             let sut3 = await IsolatedTaskLocalUseCase()

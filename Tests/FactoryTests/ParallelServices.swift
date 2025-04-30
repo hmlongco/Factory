@@ -8,12 +8,6 @@
 import Foundation
 import Testing
 
-#if canImport(SwiftUI)
-import Combine
-import Observation
-import SwiftUI
-#endif
-
 @testable import Factory
 import FactoryTesting
 
@@ -68,9 +62,8 @@ struct IsolatedBaz: IsolatedProtocol {
     var value = "baz"
 }
 
-@available(iOS 17.0, *)
-@Observable
-final class ObservableFooBarBaz: Sendable {
+@MainActor
+final class MainActorFooBarBaz: Sendable {
     let id: UUID = UUID()
     let value: String
 
@@ -95,22 +88,17 @@ extension Container {
         self { Foo() }.singleton
     }
 
-    @available(iOS 17.0, *)
     @MainActor
-    var isolatedToMainActor: Factory<ObservableFooBarBaz> {
-        self { ObservableFooBarBaz() }
+    var isolatedToMainActor: Factory<MainActorFooBarBaz> {
+        self { @MainActor in MainActorFooBarBaz() }
     }
-
-    @available(iOS 17.0, *)
     @MainActor
-    var isolatedToMainActorCached: Factory<ObservableFooBarBaz> {
-        self { ObservableFooBarBaz() }.cached
+    var isolatedToMainActorCached: Factory<MainActorFooBarBaz> {
+        self { @MainActor in MainActorFooBarBaz() }.cached
     }
-
-    @available(iOS 17.0, *)
     @MainActor
-    var isolatedToMainActorSingleton: Factory<ObservableFooBarBaz> {
-        self { ObservableFooBarBaz() }.singleton
+    var isolatedToMainActorSingleton: Factory<MainActorFooBarBaz> {
+        self { @MainActor in MainActorFooBarBaz() }.singleton
     }
 
     @MyActor
@@ -133,16 +121,15 @@ final class TaskLocalUseCase {
     @Injected(\.fooBarBazSingleton) var fooBarBazSingleton: FooBarBazProtocol
 }
 
-@available(iOS 17.0, *)
 @MainActor
 final class IsolatedTaskLocalUseCase {
     @Injected(\.fooBarBaz) var fooBarBaz: FooBarBazProtocol
     @Injected(\.fooBarBazCached) var fooBarBazCached: FooBarBazProtocol
     @Injected(\.fooBarBazSingleton) var fooBarBazSingleton: FooBarBazProtocol
 
-    @Injected(\.isolatedToMainActor) var isolatedToMainActor: ObservableFooBarBaz
-    @Injected(\.isolatedToMainActorCached) var isolatedToMainActorCached: ObservableFooBarBaz
-    @Injected(\.isolatedToMainActorSingleton) var isolatedToMainActorSingleton: ObservableFooBarBaz
+    @Injected(\.isolatedToMainActor) var isolatedToMainActor: MainActorFooBarBaz
+    @Injected(\.isolatedToMainActorCached) var isolatedToMainActorCached: MainActorFooBarBaz
+    @Injected(\.isolatedToMainActorSingleton) var isolatedToMainActorSingleton: MainActorFooBarBaz
 
     var isolatedToCustomGlobalActor: IsolatedProtocol
     var isolatedToCustomGlobalActorCached: IsolatedProtocol
