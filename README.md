@@ -157,7 +157,7 @@ Now when our preview is displayed `ContentView` creates a `ContentViewModel` whi
 
 This is a powerful concept that lets us reach deep into a chain of dependencies and alter the behavior of a system as needed.
 
-## Unit Tests
+## Testing
 
 The same concept can be used when writing unit tests. Consider the following.
 
