@@ -187,29 +187,42 @@ final class FactoryCoreTests: XCTestCase {
         Container.shared.accountProvider.register { MockProvider(error: .notFoundError) }
         let model = Container.shared.someViewModel()
         model.load()
-        XCTAssertTrue(model.errorMessage = "Some Error")
+        XCTAssertTrue(model.errorMessage == "Some Error")
     }
     
 }
 ```
 Again, Factory makes it easy to reach into a chain of dependencies and make specific changes to the system as needed. This makes testing loading states, empty states, and error conditions simple.
 
-Factory also works with Xcode 16's new Swift Testing framework, and with the help of test traits it is also possible to run tests in parallel.
+Factory also works with Xcode 16's new Swift Testing framework, and with the help of test traits it's now also possible to run tests in parallel!
+
+Here's the same set of tests, updated for the new framework. The `.container` trait provides a new, fresh instance of the main shared container to each one of the tests.
 
 ```swift
-struct AppTests {
-  @Test(
-    .container {
-      $0.someService.register { ErrorService() }
-      $0.someOtherService.register { OtherErrorService() }
+@Suite(.container)
+struct FactoryTests {
+
+    @Test func testLoaded() throws {
+        Container.shared.accountProvider.register { MockProvider(accounts: .sampleAccounts) }
+        let model = Container.shared.someViewModel()
+        model.load()
+        #expect(model.isLoaded)
     }
-  ) 
-  func testB() {
-    let service = Container.shared.someService()
-    let otherService = Container.shared.someOtherService()
-    #expect(service.error == "Oops")
-    #expect(otherService.error == "OtherOops")
-  }
+
+    @Test func testEmpty() throws {
+        Container.shared.accountProvider.register { MockProvider(accounts: []) }
+        let model = Container.shared.someViewModel()
+        model.load()
+        #expect(model.isEmpty)
+    }
+
+    @Test func testErrors() throws {
+        Container.shared.accountProvider.register { MockProvider(error: .notFoundError) }
+        let model = Container.shared.someViewModel()
+        model.load()
+        #expect(model.errorMessage == "Some Error")
+    }
+    
 }
 ```
 
