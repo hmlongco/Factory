@@ -167,8 +167,9 @@ final class FactoryCoreTests: XCTestCase {
     }
 
     func testFactoryOnceOnTest() {
+        print("Test testFactoryOnceOnTest running in \(ProcessInfo.processInfo.processName)")
         guard FactoryContext.current.isTest else {
-            print("This test can only run in a test environment")
+            print("This test can only run in a known test environment")
             return
         }
         let service1 = CustomContainer.shared.onceOnTest()
