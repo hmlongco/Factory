@@ -157,7 +157,7 @@ Now when our preview is displayed `ContentView` creates a `ContentViewModel` whi
 
 This is a powerful concept that lets us reach deep into a chain of dependencies and alter the behavior of a system as needed.
 
-## Testing
+## Unit Tests
 
 The same concept can be used when writing unit tests. Consider the following.
 
@@ -194,7 +194,9 @@ final class FactoryCoreTests: XCTestCase {
 ```
 Again, Factory makes it easy to reach into a chain of dependencies and make specific changes to the system as needed. This makes testing loading states, empty states, and error conditions simple.
 
-Factory also works with Xcode 16's new Swift Testing framework, and with the help of test traits it's now also possible to run tests in parallel!
+## Xcode 16 Testing
+
+Factory also works with Xcode 16's new Testing framework, and with the help of test traits it's now also possible to run tests in parallel!
 
 Here's the same set of tests, updated for the new framework. The `.container` trait provides a new, fresh instance of the main shared container to each one of the tests.
 
