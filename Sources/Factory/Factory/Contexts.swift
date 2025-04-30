@@ -52,7 +52,8 @@ public struct FactoryContext {
     /// Proxy check for application running in preview mode.
     public var isPreview: Bool = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
     /// Proxy check for application running in test mode.
-    public var isTest: Bool = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+    public var isTest: Bool = (ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil)
+        || (ProcessInfo.processInfo.processName.contains("xctest"))
     /// Proxy check for application running in simulator.
     public var isSimulator: Bool = ProcessInfo.processInfo.environment["SIMULATOR_UDID"] != nil
     #if DEBUG
