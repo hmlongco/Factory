@@ -8,6 +8,12 @@
 import Foundation
 import Testing
 
+#if canImport(SwiftUI)
+import Combine
+import Observation
+import SwiftUI
+#endif
+
 @testable import Factory
 import FactoryTesting
 
