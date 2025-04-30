@@ -313,7 +313,8 @@ final class FactoryInjectionTests: XCTestCase {
         let cvm3 = i3.wrappedValue
         XCTAssertEqual(cvm3.text, "Test")
         // Test projected value
-        let projected = i3.projectedValue
+        let projected: Binding<ContentObservableViewModel> = i3.projectedValue
+        projected.wrappedValue = projected.wrappedValue // coverage only, will nop
         XCTAssertEqual(projected.wrappedValue.test.a, 1)
     }
     #endif
