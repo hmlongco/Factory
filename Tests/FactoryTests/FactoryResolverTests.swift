@@ -68,7 +68,7 @@ fileprivate final class ResolvingContainer: SharedContainer, AutoRegistering, Re
     }
     
     func test() {
-        var service = ResolvingContainer.shared.resolve(\._myService)
+        _ = ResolvingContainer.shared.resolve(\._myService)
     }
 
 }
