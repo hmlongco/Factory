@@ -1,5 +1,9 @@
 # Factory Changelog
 
+## 2.4.8
+
+* Fix context issue where GitHub onTest cases were failing - Issue #288
+
 ## 2.4.7
 
 * Add support for different isolations in ContainerTrait - PR #287
