@@ -50,20 +50,20 @@ import SwiftUI
 /// the referenced dependencies will be acquired when the parent class is created.
 @propertyWrapper public struct Injected<T> {
 
-    private var reference: BoxedFactoryReference
+    private var thunk: () -> Factory<T>
     private var dependency: T
 
     /// Initializes the property wrapper. The dependency is resolved on initialization.
     /// - Parameter keyPath: KeyPath to a Factory on the default Container.
     public init(_ keyPath: KeyPath<Container, Factory<T>>) {
-        self.reference = FactoryReference<Container, T>(keypath: keyPath)
+        self.thunk = { Container.shared[keyPath: keyPath] }
         self.dependency = Container.shared[keyPath: keyPath]()
     }
 
     /// Initializes the property wrapper. The dependency is resolved on initialization.
     /// - Parameter keyPath: KeyPath to a Factory on the specified Container.
     public init<C:SharedContainer>(_ keyPath: KeyPath<C, Factory<T>>) {
-        self.reference = FactoryReference<C, T>(keypath: keyPath)
+        self.thunk = { C.shared[keyPath: keyPath] }
         self.dependency = C.shared[keyPath: keyPath]()
     }
 
@@ -76,20 +76,23 @@ import SwiftUI
     /// Unwraps the property wrapper granting access to the resolve/reset function.
     public var projectedValue: Injected<T> {
         get { return self }
-        mutating set { self = newValue }
+        set { self = newValue }
     }
 
     /// Grants access to the internal Factory.
     public var factory: Factory<T> {
-        reference.factory()
+        thunk()
     }
 
     /// Allows the user to force a Factory resolution at their discretion.
     public mutating func resolve(reset options: FactoryResetOptions = .none) {
+        let factory = thunk()
         factory.reset(options)
         dependency = factory.resolve()
     }
 }
+
+extension Injected: @unchecked Sendable where T: Sendable {}
 
 /// Convenience property wrapper takes a factory and resolves an instance of the desired type the first time the wrapped value is requested.
 ///
@@ -107,21 +110,21 @@ import SwiftUI
 ///
 /// > Note: Lazy injection is resolved the first time the dependency is referenced by the code, and **not** on initialization.
 @propertyWrapper public struct LazyInjected<T> {
-    
-    private var reference: BoxedFactoryReference
+
+    private var thunk: () -> Factory<T>
     private var dependency: T!
     private var initialize = true
     
     /// Initializes the property wrapper. The dependency isn't resolved until the wrapped value is accessed for the first time.
     /// - Parameter keyPath: KeyPath to a Factory on the default Container.
     public init(_ keyPath: KeyPath<Container, Factory<T>>) {
-        self.reference = FactoryReference<Container, T>(keypath: keyPath)
+        self.thunk = { Container.shared[keyPath: keyPath] }
     }
     
     /// Initializes the property wrapper. The dependency isn't resolved until the wrapped value is accessed for the first time.
     /// - Parameter keyPath: KeyPath to a Factory on the specified Container.
     public init<C:SharedContainer>(_ keyPath: KeyPath<C, Factory<T>>) {
-        self.reference = FactoryReference<C, T>(keypath: keyPath)
+        self.thunk = { C.shared[keyPath: keyPath] }
     }
     
     /// Manages the wrapped dependency, which is resolved when this value is accessed for the first time.
@@ -147,11 +150,12 @@ import SwiftUI
     
     /// Grants access to the internal Factory.
     public var factory: Factory<T> {
-        reference.factory()
+        thunk()
     }
     
     /// Allows the user to force a Factory resolution at their discretion.
     public mutating func resolve(reset options: FactoryResetOptions = .none) {
+        let factory = thunk()
         factory.reset(options)
         dependency = factory()
         initialize = false
@@ -170,6 +174,8 @@ import SwiftUI
     }
 
 }
+
+extension LazyInjected: @unchecked Sendable where T: Sendable {}
 
 /// Convenience property wrapper takes a factory and resolves a weak instance of the desired type the first time the wrapped value is requested.
 ///
@@ -191,21 +197,21 @@ import SwiftUI
 ///
 /// > Note: Lazy injection is resolved the first time the dependency is referenced by the code, **not** on initialization.
 @propertyWrapper public struct WeakLazyInjected<T> {
-    
-    private var reference: BoxedFactoryReference
+
+    private var thunk: () -> Factory<T>
     private weak var dependency: AnyObject?
     private var initialize = true
     
     /// Initializes the property wrapper. The dependency isn't resolved until the wrapped value is accessed for the first time.
     /// - Parameter keyPath: KeyPath to a Factory on the default Container.
     public init(_ keyPath: KeyPath<Container, Factory<T>>) {
-        self.reference = FactoryReference<Container, T>(keypath: keyPath)
+        self.thunk = { Container.shared[keyPath: keyPath] }
     }
     
     /// Initializes the property wrapper. The dependency isn't resolved until the wrapped value is accessed for the first time.
     /// - Parameter keyPath: KeyPath to a Factory on the specified Container.
     public init<C:SharedContainer>(_ keyPath: KeyPath<C, Factory<T>>) {
-        self.reference = FactoryReference<C, T>(keypath: keyPath)
+        self.thunk = { C.shared[keyPath: keyPath] }
     }
     
     /// Manages the wrapped dependency, which is resolved when this value is accessed for the first time.
@@ -231,11 +237,12 @@ import SwiftUI
     
     /// Grants access to the internal Factory.
     public var factory: Factory<T> {
-        reference.factory()
+        thunk()
     }
     
     /// Allows the user to force a Factory resolution at their discretion.
     public mutating func resolve(reset options: FactoryResetOptions = .none) {
+        let factory = thunk()
         factory.reset(options)
         dependency = factory() as AnyObject
         initialize = false
@@ -254,6 +261,8 @@ import SwiftUI
     }
 
 }
+
+extension WeakLazyInjected: @unchecked Sendable where T: Sendable {}
 
 /// Convenience property wrapper takes a factory and resolves an instance of the desired type.
 ///
@@ -286,31 +295,32 @@ import SwiftUI
 /// ```
 @propertyWrapper public struct DynamicInjected<T> {
 
-    private let reference: BoxedFactoryReference
+    private let thunk: () -> Factory<T>
 
     /// Initializes the property wrapper. The dependency is resolved on access.
     /// - Parameter keyPath: KeyPath to a Factory on the default Container.
     public init(_ keyPath: KeyPath<Container, Factory<T>>) {
-        self.reference = FactoryReference<Container, T>(keypath: keyPath)
+        self.thunk = { Container.shared[keyPath: keyPath] }
     }
 
     /// Initializes the property wrapper. The dependency is resolved on access.
     /// - Parameter keyPath: KeyPath to a Factory on the specified Container.
     public init<C: SharedContainer>(_ keyPath: KeyPath<C, Factory<T>>) {
-        self.reference = FactoryReference<C, T>(keypath: keyPath)
+        self.thunk = { C.shared[keyPath: keyPath] }
     }
 
     /// Manages the wrapped dependency.
     public var wrappedValue: T {
-        get { return reference.factory().resolve() }
+        get { return thunk().resolve() }
     }
 
     /// Unwraps the property wrapper granting access to the resolve/reset function.
     public var projectedValue: Factory<T> {
-        get { return reference.factory() }
+        get { return thunk() }
     }
 }
 
+extension DynamicInjected: @unchecked Sendable where T: Sendable {}
 
 /// Basic property wrapper for optional injected types
 @propertyWrapper public struct InjectedType<T> {
@@ -389,6 +399,9 @@ extension InjectedObject {
     }
 }
 
+@available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
+extension InjectedObject: @unchecked Sendable where T: Sendable {}
+
 /// A property wrapper that injects an Observable dependency into a SwiftUI view.
 ///
 /// `InjectedObservable` is designed to automatically resolve and inject Observable dependencies
@@ -442,6 +455,9 @@ extension InjectedObservable {
 }
 
 @available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
+extension InjectedObservable: @unchecked Sendable where T: Sendable {}
+
+@available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
 private final class ThunkedValue<T: Observation.Observable> {
 
     private var object: T!
@@ -461,20 +477,3 @@ private final class ThunkedValue<T: Observation.Observable> {
 
 }
 #endif
-
-/// Boxed wrapper to provide a Factory when asked
-internal protocol BoxedFactoryReference {
-    func factory<T>() -> Factory<T>
-}
-
-/// Helps resolve a reference to an injected factory's shared container without actually storing a Factory along
-/// with its hard, reference-counted pointer to that container.
-internal struct FactoryReference<C: SharedContainer, R>: BoxedFactoryReference {
-    /// The stored factory keypath on the container
-    let keypath: KeyPath<C, Factory<R>>
-    /// Resolves the current shared container on the given type and returns the Factory referenced by the keyPath.
-    /// Note that types matched going in, so it's safe to explicitly cast it coming back out.
-    func factory<T>() -> Factory<T> {
-        C.shared[keyPath: keypath] as! Factory<T>
-    }
-}

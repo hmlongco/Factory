@@ -349,24 +349,27 @@ extension Container: Resolving {}
 
 @available(iOS 17, *)
 extension Container {
+    @MainActor
     var contentObservableViewModel: Factory<ContentObservableViewModel> {
-        self { ContentObservableViewModel() }
+        self { @MainActor in ContentObservableViewModel() }
     }
 }
 
 @available(iOS 17, *)
 extension CustomContainer {
+    @MainActor
     var contentObservableViewModel: Factory<ContentObservableViewModel> {
-        self { ContentObservableViewModel() }
+        self { @MainActor in ContentObservableViewModel() }
     }
 }
 
 @available(iOS 17, *)
+@MainActor
 @Observable
 class ContentObservableViewModel {
 
-    @ObservationIgnored
-    @Injected(\.myServiceType) var viewModel
+    @ObservationIgnored @Injected(\.myServiceType) var viewModel
+    @ObservationIgnored @Injected(\.sendableClass) var sendableClass: SendableClass
 
     struct Test {
         var a: Int = 1
@@ -387,5 +390,22 @@ struct ContentObservableView: View {
     }
 }
 
+// Following per @Injected Unable to Satisfy Sendable Conformance #248
+
+final class SendableClass: Sendable {}
+
+extension Container {
+    var sendableClass: Factory<SendableClass> {
+        self { .init() }
+    }
+}
+
+struct SendableStruct: Sendable {
+    @Injected(\.sendableClass) private var sendableClass: SendableClass
+    private let sameSendableClass: SendableClass
+    init() {
+        self.sameSendableClass = Container.shared.sendableClass()
+    }
+}
 #endif
 
