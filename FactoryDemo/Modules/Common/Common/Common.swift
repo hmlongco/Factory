@@ -17,6 +17,10 @@ extension Container {
 }
 
 extension Container {
+    public var fatalType: Factory<CommonType> { self { fatalError() }.singleton }
+}
+
+extension Container {
     public var promisedType: Factory<CommonType?> { self { nil } }
 }
 

@@ -14,6 +14,7 @@ class ContentViewModel: ObservableObject {
 
     @Injected(\.myServiceType) private var service
     @Injected(\.networkType) private var network
+    @Injected(\.fatalType) private var fatal
 
     private let simpleService = Container.shared.simpleService()
 
@@ -42,6 +43,9 @@ class ContentViewModel: ObservableObject {
 
         let p1 = Container.shared.promisedType()
         p1?.test()
+
+        let f1 = Container.shared.fatalType()
+        f1.test()
 
         let n1 = Container.shared.networkType()
         n1.test()

@@ -42,7 +42,7 @@ extension Container: AutoRegistering {
         // Demonstrates resolving a type
         register { SimpleService() }
 
-       #if DEBUG
+        #if DEBUG
         // Demonstrate preview registration override
 //        myServiceType.onPreview {
 //            MockServiceN(66)

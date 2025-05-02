@@ -25,7 +25,9 @@ final class FactoryDemoTests: XCTestCase {
         XCTAssertNotNil(test1)
         let test2 = Container.shared.promisedType()
         XCTAssertNotNil(test2)
-        
+        let test3 = Container.shared.fatalType()
+        XCTAssertNotNil(test3)
+
         for _ in 0..<100 {
             let name = "tests2Example3"
             Container.shared.contextService.register { ContextService(name: name) }
