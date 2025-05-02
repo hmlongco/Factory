@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import os
 
 internal struct FactoryKey: Hashable {
 
@@ -13,7 +14,7 @@ internal struct FactoryKey: Hashable {
     let key: StaticString
 
     internal init(type: Any.Type, key: StaticString) {
-        self.type = ObjectIdentifier(type)
+        self.type = globalIdentifier(for: type)
         self.key = key
     }
 
@@ -38,3 +39,29 @@ internal struct FactoryKey: Hashable {
     }
 
 }
+
+// Quickly returns a unique type identifier for a given type name ("MyApp.MyType")
+//
+// This code denormalizes the same name to the same ObjectIdentifier, basically translating every matching name seen to the first object
+// identifier seen for a given name.
+//
+// The previous solution used an id based solely on ObjectIdentifier(type), which could have a different type id for the same type name across
+// separately compiled modules.
+private func globalIdentifier(for type: Any.Type) -> ObjectIdentifier {
+    defer { globalTypeTableLock.unlock() }
+    globalTypeTableLock.lock()
+    let requestedTypeID = ObjectIdentifier(type)
+    if let knownID = globalKnownTypeTable[requestedTypeID] {
+        return knownID
+    }
+    let id = globalTypeTranslationTable[String(reflecting: type), default: requestedTypeID]
+    globalKnownTypeTable[requestedTypeID] = id
+    return id
+}
+
+// quickly denormalizes the requested type identifier to a known type identifier
+nonisolated(unsafe) private var globalKnownTypeTable: [ObjectIdentifier : ObjectIdentifier] = [:]
+// translates a type string name to a ObjectIdentifier
+nonisolated(unsafe) private var globalTypeTranslationTable: [String : ObjectIdentifier] = [:]
+// lock for all of the above
+nonisolated(unsafe) private let globalTypeTableLock = SpinLock()
