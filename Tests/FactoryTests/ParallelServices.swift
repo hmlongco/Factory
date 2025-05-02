@@ -115,6 +115,12 @@ extension Container {
     }
 }
 
+extension CustomContainer {
+    var myServiceType: Factory<MyServiceType> {
+        self { MyService() }
+    }
+}
+
 final class TaskLocalUseCase {
     @Injected(\.fooBarBaz) var fooBarBaz: FooBarBazProtocol
     @Injected(\.fooBarBazCached) var fooBarBazCached: FooBarBazProtocol
