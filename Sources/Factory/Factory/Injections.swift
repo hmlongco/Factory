@@ -340,6 +340,8 @@ extension DynamicInjected: @unchecked Sendable where T: Sendable {}
     }
 }
 
+extension InjectedType: @unchecked Sendable where T: Sendable {}
+
 #if canImport(SwiftUI)
 /// Immediate injection property wrapper for SwiftUI ObservableObjects.
 ///

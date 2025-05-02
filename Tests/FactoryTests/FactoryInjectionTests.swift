@@ -339,6 +339,12 @@ extension CustomContainer {
     }
 }
 
+extension CustomContainer {
+    var myServiceType: Factory<MyServiceType> {
+        self { MyService() }
+    }
+}
+
 @available(iOS 14, *)
 class ResolvingViewModel: ObservableObject {
     @InjectedType var service1: MyService?

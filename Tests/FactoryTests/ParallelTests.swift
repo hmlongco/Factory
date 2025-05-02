@@ -15,6 +15,28 @@ struct ParallelTests {
             commonTests("foo")
         }
 
+        // Illustrates using customContainer test trait
+        @Test(.customContainer)
+        func custom() {
+            let sut1 = CustomContainer.shared.myServiceType()
+            #expect(sut1.text() == "MyService")
+            CustomContainer.shared.myServiceType.register { MockService() }
+            let sut2 = CustomContainer.shared.myServiceType()
+            #expect(sut2.text() == "MockService")
+        }
+
+        // Illustrates using container and customContainer test trait
+        @Test(.container, .customContainer)
+        func containerPlusCustom() {
+            commonTests("foo")
+            // custom
+            let sut1 = CustomContainer.shared.myServiceType()
+            #expect(sut1.text() == "MyService")
+            CustomContainer.shared.myServiceType.register { MockService() }
+            let sut2 = CustomContainer.shared.myServiceType()
+            #expect(sut2.text() == "MockService")
+        }
+
         // Illustrates using container test trait
         @Test(.container)
         func bar() {
