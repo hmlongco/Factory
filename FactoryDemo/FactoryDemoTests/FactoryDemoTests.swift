@@ -7,13 +7,14 @@
 
 import XCTest
 import Factory
+import Common
 
 @testable import FactoryDemo
 
 final class FactoryDemoTests: XCTestCase {
 
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+        Container.shared.fatalType.register { TestFatalCommonType() }
     }
 
     override func tearDownWithError() throws {
@@ -36,4 +37,11 @@ final class FactoryDemoTests: XCTestCase {
         }
     }
 
+}
+
+public class TestFatalCommonType: CommonType {
+    public init() {}
+    public func test() {
+        print("TestFatalCommonType Test")
+    }
 }

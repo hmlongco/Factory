@@ -8,8 +8,9 @@
 import Foundation
 import Factory
 import Common
+import Networking
 
-extension Container: AutoRegistering {
+extension Container: @retroactive AutoRegistering {
 
     var autoRegisteredService: Factory<MyServiceType?> {
         self { nil }
@@ -30,6 +31,9 @@ extension Container: AutoRegistering {
 
         // Demonstrate letting external module initialize
         networkSetup()
+
+        // Registering a CommonType from a class in Networking
+        fatalType.register { FatalCommonType() }
 
         // Demonstrate registration overrides for uitest application passed arguments
         myServiceType.onArg("mock1") {
@@ -56,7 +60,7 @@ extension Container: AutoRegistering {
 
 }
 
-extension Container: Resolving {}
+extension Container: @retroactive Resolving {}
 
 private class PromisedCommonType: CommonType {
     public init() {}

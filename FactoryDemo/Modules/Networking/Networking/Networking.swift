@@ -22,9 +22,6 @@ extension Container {
         networkType.register {
             CommonNetworkType()
         }
-        fatalType.register {
-            FatalCommonType()
-        }
     }
 }
 
@@ -37,18 +34,18 @@ private class CommonNetworkType: NetworkType {
     }
 }
 
-private class FatalCommonType: CommonType {
-    public init() {}
-    public func test() {
-        print("FatalCommonType Test")
-    }
-}
-
 private class Network: NetworkType {
     @Injected(\.commonType) private var commonType
     public init() {}
     public func test() {
         commonType.test()
         print("Network Test")
+    }
+}
+
+public class FatalCommonType: CommonType {
+    public init() {}
+    public func test() {
+        print("FatalCommonType Test")
     }
 }
