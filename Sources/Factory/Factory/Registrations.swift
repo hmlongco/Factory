@@ -34,7 +34,7 @@ public struct FactoryRegistration<P,T>: Sendable {
     /// A strong reference to the container supporting this Factory.
     internal let container: ManagedContainer
     /// Typed factory with scope and factory.
-    internal let factory: @Sendable (P) -> T
+    internal let factory: ParameterFactoryType<P, T>
 
     #if DEBUG
     /// Internal debug
@@ -45,19 +45,12 @@ public struct FactoryRegistration<P,T>: Sendable {
     internal var once: Bool = false
 
     /// Initializer for registration sets passed values and default scope from container manager.
-    internal init(key: StaticString, container: ManagedContainer, factory: @escaping @Sendable (P) -> T) {
+    internal init(key: StaticString, container: ManagedContainer, factory: @escaping ParameterFactoryType<P,T>) {
         self.key = FactoryKey(type: T.self, key: key)
         self.container = container
         self.factory = factory
         #if DEBUG
-        globalDebugLock.lock()
-        if let debug = globalDebugInformationMap[self.key] {
-            self.debug = debug
-        } else {
-            self.debug = .init(type: String(reflecting: T.self), key: key)
-            globalDebugInformationMap[self.key] = self.debug
-        }
-        globalDebugLock.unlock()
+        self.debug = .init(type: self.key.typeName, key: key)
         #endif
     }
 
@@ -240,7 +233,7 @@ public struct FactoryRegistration<P,T>: Sendable {
         globalRecursiveLock.lock()
         container.unsafeCheckAutoRegistration()
         let manager = container.manager
-        var options = manager.options[key] ?? FactoryOptions()
+        var options = manager.options[key, default: FactoryOptions()]
         if options.once == once {
             mutate(&options)
             manager.options[key] = options

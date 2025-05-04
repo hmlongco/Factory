@@ -162,7 +162,7 @@ extension ManagedContainer {
     }
     /// Defines a decorator for the container. This decorator will see every dependency resolved by this container.
     public func decorator(_ decorator: ((Any) -> ())?) {
-        globalDebugLock.withLock {
+        globalVariableLock.withLock {
             manager.decorator = decorator
         }
     }
@@ -203,33 +203,33 @@ public final class ContainerManager: @unchecked Sendable {
 
     /// Default scope
     public var defaultScope: Scope? {
-        get { globalDebugLock.withLock { _defaultScope } }
-        set { globalDebugLock.withLock { _defaultScope = newValue } }
+        get { globalVariableLock.withLock { _defaultScope } }
+        set { globalVariableLock.withLock { _defaultScope = newValue } }
     }
 
     #if DEBUG
     /// Public variable exposing dependency chain test maximum
     public var dependencyChainTestMax: Int {
-        get { globalDebugLock.withLock { _dependencyChainTestMax } }
-        set { globalDebugLock.withLock { _dependencyChainTestMax = newValue } }
+        get { globalVariableLock.withLock { _dependencyChainTestMax } }
+        set { globalVariableLock.withLock { _dependencyChainTestMax = newValue } }
     }
 
     /// Public variable promise behavior
     public var promiseTriggersError: Bool {
-        get { globalDebugLock.withLock { _promiseTriggersError } }
-        set { globalDebugLock.withLock { _promiseTriggersError = newValue } }
+        get { globalVariableLock.withLock { _promiseTriggersError } }
+        set { globalVariableLock.withLock { _promiseTriggersError = newValue } }
     }
 
     /// Public var enabling factory resolution trace statements in debug mode for ALL containers.
     public var trace: Bool {
-        get { globalDebugLock.withLock { globalTraceFlag } }
-        set { globalDebugLock.withLock { globalTraceFlag = newValue } }
+        get { globalVariableLock.withLock { globalTraceFlag } }
+        set { globalVariableLock.withLock { globalTraceFlag = newValue } }
     }
 
     /// Public access to logging facility in debug mode for ALL containers.
     public var logger: (String) -> Void {
-        get { globalDebugLock.withLock { globalLogger } }
-        set { globalDebugLock.withLock { globalLogger = newValue } }
+        get { globalVariableLock.withLock { globalLogger } }
+        set { globalVariableLock.withLock { globalLogger = newValue } }
     }
 
     internal func isEmpty(_ options: FactoryResetOptions) -> Bool {
@@ -371,7 +371,7 @@ public protocol AutoRegistering {
 }
 
 extension ManagedContainer {
-    /// Performs autoRegistration check
+    /// Performs autoRegistration check. Function is unsafe as it assume we're already behind the globalRecursiveLock.
     internal func unsafeCheckAutoRegistration() {
         if manager.autoRegistrationCheckNeeded {
             manager.autoRegistrationCheckNeeded = false

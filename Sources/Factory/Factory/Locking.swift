@@ -61,8 +61,8 @@ internal final class RecursiveLock: NSLocking {
 
 }
 
-/// Master spin lock
-nonisolated(unsafe) internal let globalDebugLock = SpinLock()
+/// Master variable spin lock
+nonisolated(unsafe) internal let globalVariableLock = SpinLock()
 
 #if os(macOS) || os(iOS) || os(watchOS)
 /// Custom spin lock

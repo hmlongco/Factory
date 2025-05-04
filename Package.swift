@@ -29,7 +29,12 @@ let package = Package(
         .target(
             name: "Factory",
             dependencies: [],
-            resources: [.copy("PrivacyInfo.xcprivacy")]
+            resources: [.copy("PrivacyInfo.xcprivacy")],
+            swiftSettings: [
+                // Enable Swift's strict concurrency checker
+                .unsafeFlags(["-Xfrontend", "-strict-concurrency=complete"], .when(configuration: .debug)),
+                .unsafeFlags(["-enable-library-evolution"], .when(configuration: .release))
+            ]
         ),
         .target(
             name: "FactoryTesting",
@@ -37,10 +42,14 @@ let package = Package(
         ),
         .testTarget(
             name: "FactoryTests",
-            dependencies: ["Factory", "FactoryTesting"]
+            dependencies: ["Factory", "FactoryTesting"],
+            swiftSettings: [
+                // Enable Swift's strict concurrency checker
+                .unsafeFlags(["-Xfrontend", "-strict-concurrency=complete"], .when(configuration: .debug))
+            ]
         )
     ],
     swiftLanguageVersions: [
-        .v5, .version("6")
+        .version("6"), .v5
     ]
 )

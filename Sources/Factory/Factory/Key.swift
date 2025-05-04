@@ -18,6 +18,14 @@ internal struct FactoryKey: Hashable {
         self.key = key
     }
 
+    #if DEBUG
+    internal var typeName: String {
+        globalVariableLock.withLock {
+            globalIdentifierToNameTable[self.type]! // must exist
+        }
+    }
+    #endif
+
     internal func hash(into hasher: inout Hasher) {
         hasher.combine(self.type)
         if key.hasPointerRepresentation {
@@ -40,28 +48,40 @@ internal struct FactoryKey: Hashable {
 
 }
 
-// Quickly returns a unique type identifier for a given type name ("MyApp.MyType")
+// Quickly returns a unique type identifier for a given type name ("MyApp.MyType").
 //
-// This code denormalizes the same name to the same ObjectIdentifier, basically translating every matching name seen to the first object
-// identifier seen for a given name.
+// This code normalizes the same name to the same ObjectIdentifier, basically translating every name seen to the first object
+// identifier seen for that name.
 //
 // The previous solution used an id based solely on ObjectIdentifier(type), which could have a different type id for the same type name across
 // separately compiled modules.
+//
+// Obtaining and using the class name string directly on every call results in code that's 2-3x slower.
 private func globalIdentifier(for type: Any.Type) -> ObjectIdentifier {
-    defer { globalTypeTableLock.unlock() }
-    globalTypeTableLock.lock()
+    defer { globalVariableLock.unlock() }
+    globalVariableLock.lock()
     let requestedTypeID = ObjectIdentifier(type)
-    if let knownID = globalKnownTypeTable[requestedTypeID] {
+    // if known return it
+    if let knownID = globalKnownIdentifierTable[requestedTypeID] {
         return knownID
     }
-    let id = globalTypeTranslationTable[String(reflecting: type), default: requestedTypeID]
-    globalKnownTypeTable[requestedTypeID] = id
+    // this is what we're bypassing. extremely slow runtime function.
+    let name = String(reflecting: type)
+    // magic happens here, if name is already known then get original key for it
+    let id = globalNameToIdentifierTable[name, default: requestedTypeID]
+    // and save it so we don't have to do this again
+    globalKnownIdentifierTable[requestedTypeID] = id
+    #if DEBUG
+    globalIdentifierToNameTable[id] = name
+    #endif
     return id
 }
 
 // quickly denormalizes the requested type identifier to a known type identifier
-nonisolated(unsafe) private var globalKnownTypeTable: [ObjectIdentifier : ObjectIdentifier] = [:]
+nonisolated(unsafe) private var globalKnownIdentifierTable: [ObjectIdentifier : ObjectIdentifier] = [:]
+
 // translates a type string name to a ObjectIdentifier
-nonisolated(unsafe) private var globalTypeTranslationTable: [String : ObjectIdentifier] = [:]
-// lock for all of the above
-nonisolated(unsafe) private let globalTypeTableLock = SpinLock()
+nonisolated(unsafe) private var globalNameToIdentifierTable: [String : ObjectIdentifier] = [:]
+
+// reverse map, gets back string representation from id
+nonisolated(unsafe) private var globalIdentifierToNameTable: [ObjectIdentifier : String] = [:]

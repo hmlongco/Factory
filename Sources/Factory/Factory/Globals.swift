@@ -41,7 +41,6 @@ nonisolated(unsafe) internal var globalDependencyChainMessages: [String] = []
 nonisolated(unsafe) internal var globalTraceFlag: Bool = false
 nonisolated(unsafe) internal var globalTraceResolutions: [String] = []
 nonisolated(unsafe) internal var globalLogger: (String) -> Void = { print($0) }
-nonisolated(unsafe) internal var globalDebugInformationMap: [FactoryKey:FactoryDebugInformation] = [:]
 
 /// Triggers fatalError after resetting enough stuff so unit tests can continue
 internal func resetAndTriggerFatalError(_ message: String, _ file: StaticString, _ line: UInt) -> Never {

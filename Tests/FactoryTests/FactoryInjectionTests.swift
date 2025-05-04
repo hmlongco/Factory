@@ -124,6 +124,14 @@ final class FactoryInjectionTests: XCTestCase {
         XCTAssertEqual(services.service.text(), "MyService")
         XCTAssertEqual(services.mock.text(), "MockService")
         XCTAssertEqual(services.test.text(), "MockService32")
+        services.$service.resolve()
+        XCTAssertEqual(services.service.text(), "MyService")
+    }
+
+    func testBasicInjectionWithCustomContainer() throws {
+        @Injected(\CustomContainer.test) var test
+        XCTAssertNotNil($test.factory)
+        $test.resolve()
     }
 
     func testLazyInjection() throws {
@@ -133,6 +141,8 @@ final class FactoryInjectionTests: XCTestCase {
         XCTAssertEqual(services.mock.text(), "MockService")
         XCTAssertEqual(services.test.text(), "MockService32")
         XCTAssertNotNil(services.$service.resolvedOrNil())
+        XCTAssertNotNil(services.$service.factory)
+        services.$service.resolve()
     }
     
     func testDynamicInjection() throws {
@@ -165,6 +175,8 @@ final class FactoryInjectionTests: XCTestCase {
         XCTAssertNotNil(child.$testService.resolvedOrNil())
         parent = nil
         XCTAssertNil(child.test())
+        XCTAssertNotNil(child.$service.factory)
+        child.$service.resolve()
     }
 
     func testWeakLazyInjectionProtocol() throws {
