@@ -18,6 +18,10 @@ let package = Package(
             name: "Factory",
             targets: ["Factory"]
         ),
+        .library(
+            name: "FactoryTesting",
+            targets: ["FactoryTesting"]
+        ),
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
