@@ -46,7 +46,7 @@ public final class Container: SharedContainer {
 ```
 You've seen it used and extended in all of the examples we've seen thus far, and most projects can simply extend it and go.
 
-The real implementation of the default ``Container`` will have the `@TaskLocal macro` attaced to the `shared` static property if you're using Factory with Swift 5.5 or higher. See more in <doc:Testing>
+The real implementation of the default ``Container`` will have the `@TaskLocal macro` attached to the `shared` static property if you're using Factory with Swift 5.5 or higher. See more in <doc:Testing>
 
 ## Container.shared
 
