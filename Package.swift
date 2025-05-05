@@ -35,9 +35,8 @@ let package = Package(
             dependencies: [],
             resources: [.copy("PrivacyInfo.xcprivacy")],
             swiftSettings: [
-                // Enable Swift's strict concurrency checker
-                .unsafeFlags(["-Xfrontend", "-strict-concurrency=complete"], .when(configuration: .debug)),
-                .unsafeFlags(["-enable-library-evolution"], .when(configuration: .release))
+//                .unsafeFlags(["-Xfrontend", "-strict-concurrency=complete"], .when(configuration: .debug)),
+//                .unsafeFlags(["-enable-library-evolution"], .when(configuration: .release))
             ]
         ),
         .target(
@@ -46,11 +45,7 @@ let package = Package(
         ),
         .testTarget(
             name: "FactoryTests",
-            dependencies: ["Factory", "FactoryTesting"],
-            swiftSettings: [
-                // Enable Swift's strict concurrency checker
-                .unsafeFlags(["-Xfrontend", "-strict-concurrency=complete"], .when(configuration: .debug))
-            ]
+            dependencies: ["Factory", "FactoryTesting"]
         )
     ],
     swiftLanguageVersions: [
