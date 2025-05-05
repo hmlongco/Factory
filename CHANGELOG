@@ -23,7 +23,7 @@
 
 * Introduce FactoryTesting to fix build errors - PR #285
 * Add @TaskLocal to Container.shared, create ContainerTrait - PR #272
-* Add inline registration sugar to ContainerTrait nd fix parallelization - Per #283
+* Add inline registration sugar to ContainerTrait and fix parallelization - Per #283
 * Add support to enable SuiteTrait - PR #284
 * Add trait with registration - Per #280
 
