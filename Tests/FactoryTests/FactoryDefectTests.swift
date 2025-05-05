@@ -133,8 +133,8 @@ final class FactoryDefectTests: XCTestCase {
         XCTAssertFalse(Container.shared.manager.isEmpty(.scope))
     }
 
-    // Registration on a new container could be overriden by auto registration
     func testRegistrationOverridenByAutoRegistration() throws {
+    // Registration on a new container could be overridden by auto registration
         let container1 = AutoRegisteringContainer()
         let service1 = container1.test()
         XCTAssertEqual(service1.value, 32)
