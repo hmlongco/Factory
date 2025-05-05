@@ -177,7 +177,7 @@ Promised also cleans up Factory registrations, a nice win that eliminates the ra
 
 ## Separating Dependencies
 
-There could well be some cases where ModuleP wants to be truely independent and simply *can't* depend on Factory.
+There could well be some cases where ModuleP wants to be truly independent and simply *can't* depend on Factory.
 
 In those cases, we're going to need a level of indirection.
 

@@ -224,10 +224,10 @@ final class FactoryContextTests: XCTestCase {
         // reset container registrations and contexts
         Container.shared.manager.reset(options: .registration)
         let service1 = Container.shared.externalContextService()
-        // will see preivew
+        // will see preview
         XCTAssertEqual(service1.name, "ARG")
         let service2 = Container.shared.internalContextService()
-        // will see preivew
+        // will see preview
         XCTAssertEqual(service2.name, "ARG")
     }
 

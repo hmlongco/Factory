@@ -311,7 +311,7 @@ See [Debugging](https://hmlongco.github.io/Factory/documentation/factory/debuggi
 
 ## Documentation
 
-A single README file barely scratches the surface. Fortunately, Factory is throughly documented. 
+A single README file barely scratches the surface. Fortunately, Factory is thoroughly documented. 
 
 Current DocC documentation can be found in the project as well as online on [GitHub Pages](https://hmlongco.github.io/Factory/documentation/factory).
 

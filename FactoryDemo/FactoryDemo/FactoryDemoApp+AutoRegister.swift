@@ -23,7 +23,7 @@ extension Container: @retroactive AutoRegistering {
         // Enable tracing if needed
         // manager.trace.toggle()
 
-        // Demonstrate registring optional type at runtime
+        // Demonstrate registering optional type at runtime
         autoRegisteredService.register { MyService() }
 
         // Demonstrate providing type external to module
