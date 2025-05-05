@@ -41,7 +41,7 @@ final class FactoryFunctionalTests: XCTestCase {
     }
 
 
-    func testOpenFuctionality() throws {
+    func testOpenFunctionality() throws {
         let openedURL: OSAllocatedUnfairLock<URL?> = .init(initialState: nil)
         Container.shared.openURL.register {
             { url in
@@ -54,7 +54,7 @@ final class FactoryFunctionalTests: XCTestCase {
         XCTAssert(openedURL.withLock { $0 } != nil)
     }
 
-    func testMockFuctionality() throws {
+    func testMockFunctionality() throws {
         let mock = OpenURLFunctionMock()
         let viewModel = MyViewModel()
         viewModel.open(site: "https://google.com")
