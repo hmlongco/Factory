@@ -48,7 +48,7 @@ Factory provides quite a few modifiers for your use, but they basically break do
 * Registrations: Updating or changing the dependency to be provided.
 * Contexts: Defines Factory overrides that should occur when the app is running is a specific context.
 * Decorators: Defines code to be run whenever a dependency is resolved.
-* Resets: Reseting a Factory's registrations or scope cache.
+* Resets: Resetting a Factory's registrations or scope cache.
 
 Plus a few more, but that covers most of them.
 
