@@ -35,7 +35,6 @@ let package = Package(
             dependencies: [],
             resources: [.copy("PrivacyInfo.xcprivacy")],
             swiftSettings: [
-//                .unsafeFlags(["-Xfrontend", "-strict-concurrency=complete"], .when(configuration: .debug)),
 //                .unsafeFlags(["-enable-library-evolution"], .when(configuration: .release))
             ]
         ),
@@ -52,3 +51,12 @@ let package = Package(
         .version("6"), .v5
     ]
 )
+
+#if compiler(>=6)
+for target in package.targets where target.type != .system {
+    target.swiftSettings = target.swiftSettings ?? []
+    target.swiftSettings?.append(contentsOf: [
+        .enableExperimentalFeature("StrictConcurrency"),
+    ])
+}
+#endif
