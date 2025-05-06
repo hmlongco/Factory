@@ -18,10 +18,15 @@ let package = Package(
             name: "Factory",
             targets: ["Factory"]
         ),
+        .library(
+            name: "FactoryTesting",
+            targets: ["FactoryTesting"]
+        ),
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.1.0"),
+        .package(url: "https://github.com/swiftlang/swift-testing", from: "6.1.0")
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -31,24 +36,20 @@ let package = Package(
             dependencies: [],
             resources: [.copy("PrivacyInfo.xcprivacy")],
             swiftSettings: [
-                // Enable Swift's strict concurrency checker
-                .unsafeFlags(["-Xfrontend", "-strict-concurrency=complete"], .when(configuration: .debug))
+//                .unsafeFlags(["-Xfrontend", "-strict-concurrency=complete"], .when(configuration: .debug)),
+//                .unsafeFlags(["-enable-library-evolution"], .when(configuration: .release))
             ]
         ),
         .target(
             name: "FactoryTesting",
-            dependencies: ["Factory"]
+            dependencies: ["Factory", .product(name: "Testing", package: "swift-testing")]
         ),
         .testTarget(
             name: "FactoryTests",
-            dependencies: ["Factory", "FactoryTesting"],
-            swiftSettings: [
-                // Enable Swift's strict concurrency checker
-                .unsafeFlags(["-Xfrontend", "-strict-concurrency=complete"], .when(configuration: .debug))
-            ]
+            dependencies: ["Factory", "FactoryTesting", .product(name: "Testing", package: "swift-testing")]
         )
     ],
     swiftLanguageVersions: [
-        .version("6")//, .v5
+        .version("6"), .v5
     ]
 )
