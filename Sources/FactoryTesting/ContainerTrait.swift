@@ -25,7 +25,7 @@
 //
 
 #if DEBUG
-#if swift(>=5.5)
+#if swift(>=6.1)
 
 import Factory
 import Testing
