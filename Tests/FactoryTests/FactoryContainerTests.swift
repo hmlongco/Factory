@@ -1,6 +1,9 @@
 import XCTest
 @testable import Factory
 
+#if canImport(SwiftUI)
+import SwiftUI
+#endif
 
 final class FactoryContainerTests: XCTestCase {
 
@@ -55,6 +58,32 @@ final class FactoryContainerTests: XCTestCase {
         let service3 = Container.shared.myServiceType()
         XCTAssertTrue(service3.text() == "MyService")
     }
+
+    func testWithFunction() throws {
+        let service1 = Container.shared.myServiceType()
+        XCTAssertTrue(service1.text() == "MyService")
+
+        Container.shared.with {
+            $0.myServiceType.register(factory: { MockService() })
+        }
+
+        let service2 = Container.shared.myServiceType()
+        XCTAssertTrue(service2.text() == "MockService")
+    }
+
+    #if canImport(SwiftUI)
+    func testPreviewFunction() throws {
+        let service1 = Container.shared.myServiceType()
+        XCTAssertTrue(service1.text() == "MyService")
+
+        let _ = Container.preview {
+            $0.myServiceType.register(factory: { MockService() })
+        }
+
+        let service2 = Container.shared.myServiceType()
+        XCTAssertTrue(service2.text() == "MockService")
+    }
+    #endif
 
     func testConvenienceFunctions() throws {
         XCTAssertNotNil(Container.shared.cachedCoverage())

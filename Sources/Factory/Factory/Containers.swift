@@ -26,6 +26,10 @@
 
 import Foundation
 
+#if canImport(SwiftUI)
+import SwiftUI
+#endif
+
 // MARK: - Container
 
 /// This is the default Container provided for your convenience by Factory.
@@ -80,6 +84,34 @@ public protocol SharedContainer: ManagedContainer {
     static var shared: Self { get }
 
 }
+
+#if canImport(SwiftUI)
+/// Defines the default factory helpers for shared containers
+extension SharedContainer {
+    /// Defines a preview convenience function to allow easy shared container transformation in SwiftUI Previews.
+    /// ```swift
+    /// #Preview {
+    ///     Container.preview {
+    ///         $0.requestUsers.register { MockAsyncRequest { User.mockUsers } }
+    ///     }
+    ///     MainView()
+    /// }
+    /// ```
+    /// Without it you'd need something like...
+    /// ```swift
+    /// #Preview {
+    ///     let _ = Container.shared.with {
+    ///         $0.requestUsers.register { MockAsyncRequest { User.mockUsers } }
+    ///     }
+    ///     MainView()
+    /// }
+    /// ```
+    public static func preview(_ transform: (Self) -> Void) -> EmptyView {
+        transform(shared)
+        return EmptyView()
+    }
+}
+#endif
 
 // MARK: - ManagedContainer
 

@@ -57,23 +57,23 @@ internal struct FactoryKey: Hashable {
 //
 // Obtaining and using the class name string directly on every call results in code that's 2-3x slower.
 private func globalIdentifier(for type: Any.Type) -> ObjectIdentifier {
-    defer { globalVariableLock.unlock() }
-    globalVariableLock.lock()
-    let requestedTypeID = ObjectIdentifier(type)
-    // if known return it
-    if let knownID = globalKnownIdentifierTable[requestedTypeID] {
-        return knownID
+    globalVariableLock.withLock {
+        let requestedTypeID = ObjectIdentifier(type)
+        // if known return it
+        if let knownID = globalKnownIdentifierTable[requestedTypeID] {
+            return knownID
+        }
+        // this is what we're bypassing. extremely slow runtime function.
+        let name = String(reflecting: type)
+        // magic happens here, if name is already known then get original key for it
+        let id = globalNameToIdentifierTable[name, default: requestedTypeID]
+        // and save it so we don't have to do this again
+        globalKnownIdentifierTable[requestedTypeID] = id
+        #if DEBUG
+        globalIdentifierToNameTable[id] = name
+        #endif
+        return id
     }
-    // this is what we're bypassing. extremely slow runtime function.
-    let name = String(reflecting: type)
-    // magic happens here, if name is already known then get original key for it
-    let id = globalNameToIdentifierTable[name, default: requestedTypeID]
-    // and save it so we don't have to do this again
-    globalKnownIdentifierTable[requestedTypeID] = id
-    #if DEBUG
-    globalIdentifierToNameTable[id] = name
-    #endif
-    return id
 }
 
 // quickly denormalizes the requested type identifier to a known type identifier
