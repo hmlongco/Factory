@@ -6,7 +6,7 @@ import Observation
 import SwiftUI
 #endif
 
-@testable import Factory
+@testable import FactoryKit
 
 class Services1 {
     @Injected(\.myServiceType) var service

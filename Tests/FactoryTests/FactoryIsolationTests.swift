@@ -1,6 +1,6 @@
 import XCTest
 
-@testable import Factory
+@testable import FactoryKit
 
 private struct SomeSendableType: Sendable {}
 

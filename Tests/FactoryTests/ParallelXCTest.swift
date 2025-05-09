@@ -1,7 +1,7 @@
 #if swift(>=6.1)
 
 import XCTest
-@testable import Factory
+@testable import FactoryKit
 
 final class ParallelXCTest: XCTestCase {
     func testFooBarBaz() {

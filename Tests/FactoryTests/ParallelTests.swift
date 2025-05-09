@@ -1,6 +1,6 @@
 #if swift(>=6.1)
 
-@testable import Factory
+@testable import FactoryKit
 import FactoryTesting
 import Testing
 

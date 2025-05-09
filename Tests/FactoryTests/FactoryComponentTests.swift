@@ -1,5 +1,5 @@
 import XCTest
-@testable import Factory
+@testable import FactoryKit
 
 let key1String = StaticString(stringLiteral: "s1")
 let key1StringDup = StaticString(stringLiteral: "s1")

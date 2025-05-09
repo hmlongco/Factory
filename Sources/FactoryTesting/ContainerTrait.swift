@@ -27,10 +27,10 @@
 #if DEBUG
 #if swift(>=6.1)
 
-#if canImport(Factory)
-import Factory
-#elseif canImport(FactoryKit)
+#if canImport(FactoryKit)
 import FactoryKit
+#elseif canImport(Factory)
+import Factory
 #endif
 
 import Testing

@@ -15,12 +15,12 @@ let package = Package(
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.
         .library(
-            name: "Factory",
-            targets: ["Factory"]
-        ),
-        .library(
             name: "FactoryKit",
             targets: ["FactoryKit"]
+        ),
+        .library(
+            name: "Factory",
+            targets: ["Factory"]
         ),
         .library(
             name: "FactoryTesting",
@@ -46,15 +46,15 @@ let package = Package(
             name: "FactoryKit",
             dependencies: [],
             path: "Sources/FactoryKit",
-            resources: [.copy("../Factory/PrivacyInfo.xcprivacy")]
+            resources: [.copy("PrivacyInfo.xcprivacy")]
         ),
         .target(
             name: "FactoryTesting",
-            dependencies: ["Factory"]
+            dependencies: ["FactoryKit"]
         ),
         .testTarget(
             name: "FactoryTests",
-            dependencies: ["Factory", "FactoryTesting"]
+            dependencies: ["FactoryKit", "FactoryTesting"]
         )
     ],
     swiftLanguageVersions: [

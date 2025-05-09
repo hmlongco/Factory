@@ -7,7 +7,7 @@
 
 import Foundation
 import XCTest
-@testable import Factory
+@testable import FactoryKit
 
 extension XCTestCase {
 
