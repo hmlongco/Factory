@@ -1,13 +1,13 @@
 Pod::Spec.new do |s|
   s.name         = "Factory"
-  s.version      = "2.4.5"
+  s.version      = "2.4.12"
   s.summary      = "A Modern Dependency Injection / Service Locator framework for Swift on iOS."
   s.homepage     = "https://github.com/hmlongco/Factory"
   s.license      = "MIT"
   s.author       = "Michael Long"
   s.source       = { :git => "https://github.com/hmlongco/Factory.git", :tag => "#{s.version}" }
-  s.source_files  = "Sources/**/*.swift"
-  s.resource_bundles = { "Factory" => "Sources/**/*.xcprivacy" }
+  s.source_files  = "Sources/Factory/**/*.swift"
+  s.resource_bundles = { "Factory" => "Sources/Factory/**/*.xcprivacy" }
   s.swift_version = '5.9'
 
   s.ios.deployment_target = "12.0"

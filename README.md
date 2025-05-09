@@ -5,7 +5,7 @@
 
 A new approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
-## Factory 2.4.11
+## Factory 2.5.0
 
 Factory is strongly influenced by SwiftUI, and in my opinion is highly suited for use in that environment. Factory is...
 
@@ -317,28 +317,36 @@ Current DocC documentation can be found in the project as well as online on [Git
 
 ## Installation
 
-Factory supports CocoaPods and the Swift Package Manager.
+Factory supports the Swift Package Manager and has legacy support for CocoaPods.
+
+Factory's primary import library is named `FactoryKit`. This is done in order to avoid SPM import conflicts between the library itself and the `Factory` object defined within the library.
+
+Just add the Factory package to your project, select the `FactoryKit` library when asked, and then import `FactoryKit` in your Swift files where needed.
+
+```swift
+import FactoryKit
 ```
-pod "Factory"
-```
-Or download the source files and add the Factory folder to your project.
+While the original `Factory` library import still exists, it will be deprecated in the future. 
+
+If you're using Swift Testing you'll probably also want to also import the `FactoryTesting` library and add it to your test target.
 
 Note that the current version of Factory requires Swift 5.10 minimum and that the minimum version of iOS currently supported with this release is iOS 13.
 
-## Factory 2.0 Migration
+## FactoryKit Migration
 
-If you started with Factory 1.x a [migration document is available here](https://hmlongco.github.io/Factory/documentation/factory/migration).
+Factory 2.5.x works with SPM, Xcode 16 under Strict Concurrency guidelines, and with Swift Testing.
 
-* Factory 2.0 adds true Factory containers for container-based dependency resolution
-* Factory 2.0 adds container-based scopes
-* Factory 2.0 adds decorators to containers and factories
-* Factory 2.0 adds debug trace support
-* Factory 2.0 adds keyPath-based property wrappers
-* Factory 2.0 adds a new InjectedObject property wrapper for SwiftUI Views
+If you're a current Factory user it's recommended that you switch from importing `Factory` to `FactoryKit`. This avoids SPM naming import conflicts between the library and the primary `Factory` object.
 
-## Factory 2.4 Migration
+To do so, open your project in Xcode and...
 
-Factory 2.4 works with Xcode 16 under Strict Concurrency guidelines.
+1. Select `File > Packages > Update to Latest Package Versions`
+2. Select `File > Packages > Reset Package Caches`
+3. Go to your application target, remove the `Factory` library, and add the `FactoryKit` library
+4. Go a global search and replace, renaming `import Factory` to `import FactoryKit`
+5. Clean and build your project.
+
+You may need to do the same for any other targets or modules that imported Factory.
 
 ## Discussion Forum
 

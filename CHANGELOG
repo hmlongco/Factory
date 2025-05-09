@@ -1,5 +1,9 @@
 # Factory Changelog
 
+## 2.5.0
+
+* Migration of import library name from Factory to FactoryKit (See README)
+
 ## 2.4.12
 
 * Add preview convenience function to SharedContainer for SwiftUI Previews
