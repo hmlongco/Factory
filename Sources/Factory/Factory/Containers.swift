@@ -106,7 +106,8 @@ extension SharedContainer {
     ///     MainView()
     /// }
     /// ```
-    public static func preview(_ transform: (Self) -> Void) -> EmptyView {
+    @discardableResult
+    public static func mock(_ transform: (Self) -> Void) -> EmptyView {
         transform(shared)
         return EmptyView()
     }

@@ -6,7 +6,7 @@
 
 ## 2.4.12
 
-* Add preview convenience function to SharedContainer for SwiftUI Previews
+* Add mock convenience function to SharedContainer for SwiftUI Previews
 * New mechanism to enable StrictConcurrency in targets
 
 ## 2.4.11
