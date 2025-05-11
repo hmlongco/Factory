@@ -246,6 +246,18 @@ Scope.singleton.reset()
 ```
 > Important: Resetting a container or scope has no effect whatsoever on anything that's already been resolved by Factory. It only ensures that the *next* time a Factory on that container is asked to resolve a dependency that dependency will be a new instance.
 
+## ParameterFactory Scopes
+
+By default, ParameterFactory scopes will cache the first requested value and then return that value, even if other values are passed on future requests.
+
+The behavior can be changed with the `.scopeOnParameters` modifier.
+```swift
+var parameterService: ParameterFactory<Int, ParameterService> {
+     self { ParameterService(value: $0) }.scopeOnParameters.cached
+}
+```
+The passed parameter must be Hashable for this modifier to appear and for the per-parameter caching functionality to occur.
+
 ## Topics
 
 ### Scope Class Definitions

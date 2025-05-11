@@ -224,7 +224,7 @@ extension Scope {
             cache[key]?.timestamp = timestamp
         }
         @inlinable @inline(__always) func removeValue(forKey key: FactoryKey) {
-            cache.removeValue(forKey: key)
+            cache = cache.filter { $0.key.normalized() != key }
         }
         internal func reset(scopeID: UUID) {
             cache = cache.filter { $1.scopeID != scopeID }

@@ -73,6 +73,7 @@ public struct FactoryRegistration<P,T>: Sendable {
         let manager = container.manager
         let options = manager.options[key]
 
+        var key = key
         var current: (P) -> T
 
         #if DEBUG
@@ -111,6 +112,11 @@ public struct FactoryRegistration<P,T>: Sendable {
             globalTraceResolutions.append("")
         }
         #endif
+
+        // support parameterized scope caching
+        if options?.scopeOnParameters == true, let hashable = parameters as? Hashable {
+            key.parameterize(hashable.hashValue)
+        }
 
         globalGraphResolutionDepth += 1
         let instance: T
@@ -310,6 +316,8 @@ public enum FactoryResetOptions {
 internal struct FactoryOptions {
     /// Managed scope for this factory instance
     var scope: Scope?
+    /// Scope cache value also based on ParameterFactory parameter
+    var scopeOnParameters: Bool = false
     /// Time to live option for scopes
     var ttl: TimeInterval?
     /// Contexts

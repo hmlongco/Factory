@@ -11,6 +11,7 @@ internal struct FactoryKey: Hashable {
 
     let type: ObjectIdentifier
     let key: StaticString
+
     var parameter: Int
 
     internal init(type: Any.Type, key: StaticString) {
@@ -49,6 +50,16 @@ internal struct FactoryKey: Hashable {
         } else {
             return lhs.key.unicodeScalar.value == rhs.key.unicodeScalar.value
         }
+    }
+
+    internal mutating func parameterize(_ value: Int) {
+        self.parameter = value
+    }
+
+    internal func normalized() -> Self {
+        var copy = self
+        copy.parameter = 0
+        return copy
     }
 
 }

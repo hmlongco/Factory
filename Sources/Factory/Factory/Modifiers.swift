@@ -253,3 +253,24 @@ extension FactoryModifying {
     }
     
 }
+
+// ParameterFactory Functionality
+
+extension FactoryModifying where P: Hashable {
+
+    /// Scope cache value also based on ParameterFactory parameter.
+    ///```swift
+    /// var scopedOnParameterService: ParameterFactory<Int, ParameterService> {
+    ///     self { ParameterService(value: $0) }.scopeOnParameters.cached
+    /// }
+    /// ```
+    /// Parameter must be Hashable.
+    public var scopeOnParameters: Self {
+        registration.options { options in
+            options.scopeOnParameters = true
+        }
+        return self
+    }
+
+}
+
