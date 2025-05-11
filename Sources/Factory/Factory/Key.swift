@@ -11,10 +11,12 @@ internal struct FactoryKey: Hashable {
 
     let type: ObjectIdentifier
     let key: StaticString
+    var parameter: Int
 
     internal init(type: Any.Type, key: StaticString) {
         self.type = globalIdentifier(for: type)
         self.key = key
+        self.parameter = 0
     }
 
     #if DEBUG
@@ -32,10 +34,14 @@ internal struct FactoryKey: Hashable {
         } else {
             hasher.combine(key.unicodeScalar.value)
         }
+        hasher.combine(self.parameter)
     }
 
     internal static func == (lhs: Self, rhs: Self) -> Bool {
-        guard lhs.type == rhs.type && lhs.key.hasPointerRepresentation == rhs.key.hasPointerRepresentation else {
+        guard lhs.type == rhs.type
+                && lhs.key.hasPointerRepresentation == rhs.key.hasPointerRepresentation
+                && lhs.parameter == rhs.parameter
+        else {
             return false
         }
         if lhs.key.hasPointerRepresentation {
