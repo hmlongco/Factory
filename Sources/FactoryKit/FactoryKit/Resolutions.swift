@@ -1,1 +1,1 @@
-/Users/michael/Dropbox/Projects/iOS/OSS/Factory/Factory/Sources/Factory/Factory/Resolutions.swift
+../../Factory/Factory/Resolutions.swift
