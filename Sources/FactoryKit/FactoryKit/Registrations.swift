@@ -1,1 +1,1 @@
-/Users/michael/Dropbox/Projects/iOS/OSS/Factory/Factory/Sources/Factory/Factory/Registrations.swift
+../../Factory/Factory/Registrations.swift
