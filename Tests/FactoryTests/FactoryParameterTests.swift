@@ -1,7 +1,8 @@
 import XCTest
+import FactoryTesting
 @testable import Factory
 
-final class FactoryParameterTests: XCTestCase {
+final class FactoryParameterTests: XCContainerTestCase {
 
     override func setUp() {
         super.setUp()

@@ -1,6 +1,7 @@
 #if canImport(os)
 
 import XCTest
+import FactoryTesting
 import os
 @testable import Factory
 
@@ -33,7 +34,7 @@ final class OpenURLFunctionMock: Sendable {
 }
 
 @available(iOS 16.0, *)
-final class FactoryFunctionalTests: XCTestCase {
+final class FactoryFunctionalTests: XCContainerTestCase {
 
     override func setUp() {
         super.setUp()

@@ -1,11 +1,12 @@
 import XCTest
+import FactoryTesting
 @testable import Factory
 
 #if canImport(SwiftUI)
 import SwiftUI
 #endif
 
-final class FactoryContainerTests: XCTestCase {
+final class FactoryContainerTests: XCContainerTestCase {
 
     override func setUp() {
         super.setUp()

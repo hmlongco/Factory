@@ -1,7 +1,8 @@
 import XCTest
+import FactoryTesting
 @testable import Factory
 
-final class FactoryMultithreadingTests: XCTestCase, @unchecked Sendable {
+final class FactoryMultithreadingTests: XCContainerTestCase, @unchecked Sendable {
 
     let qa = DispatchQueue(label: "A", qos: .userInteractive, attributes: .concurrent)
     let qb = DispatchQueue(label: "B", qos: .userInitiated, attributes: .concurrent)

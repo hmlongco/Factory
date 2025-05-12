@@ -6,6 +6,7 @@ import Observation
 import SwiftUI
 #endif
 
+import FactoryTesting
 @testable import Factory
 
 class Services1 {
@@ -112,7 +113,7 @@ extension Container {
     }
 }
 
-final class FactoryInjectionTests: XCTestCase {
+final class FactoryInjectionTests: XCContainerTestCase {
 
     override func setUp() {
         super.setUp()

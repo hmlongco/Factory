@@ -1,7 +1,8 @@
 import XCTest
+import FactoryTesting
 @testable import Factory
 
-final class FactoryResolverTests: XCTestCase {
+final class FactoryResolverTests: XCContainerTestCase {
 
     fileprivate var container: ResolvingContainer!
 

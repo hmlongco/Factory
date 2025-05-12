@@ -1,5 +1,5 @@
 import XCTest
-
+import FactoryTesting
 @testable import Factory
 
 private struct SomeSendableType: Sendable {}
@@ -53,7 +53,7 @@ extension Container {
     }
 }
 
-final class FactoryIsolationTests: XCTestCase {
+final class FactoryIsolationTests: XCContainerTestCase {
 
     override func setUp() {
         super.setUp()
