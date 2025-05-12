@@ -52,8 +52,13 @@ internal struct FactoryKey: Hashable {
         }
     }
 
-    internal mutating func parameterize(_ value: Int) {
-        self.parameter = value
+    internal func parameterized(_ value: Any) -> Self {
+        guard let hashable = value as? any Hashable else {
+            return self
+        }
+        var copy = self
+        copy.parameter = hashable.hashValue
+        return copy
     }
 
     internal func normalized() -> Self {
