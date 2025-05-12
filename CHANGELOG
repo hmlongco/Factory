@@ -5,6 +5,10 @@
 * Migration of import library name from Factory to FactoryKit (See README)
 * Supports ParameterFactory service caching based on parameters (scopeOnParameters)
 
+## 2.4.13 // LAST COCOAPODS VERSION
+
+* Supports ParameterFactory service caching based on parameters (scopeOnParameters)
+
 ## 2.4.12
 
 * Add mock convenience function to SharedContainer for SwiftUI Previews
