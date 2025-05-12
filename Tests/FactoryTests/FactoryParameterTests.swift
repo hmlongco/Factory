@@ -27,6 +27,8 @@ final class FactoryParameterTests: XCTestCase {
     func testScopedParameterServiceResolutions() throws {
         let service1 = Container.shared.scopedParameterService(6)
         XCTAssertTrue(service1.value == 6)
+        let service2 = Container.shared.scopedParameterService(7)
+        XCTAssertTrue(service2.value == 6) // original
     }
 
     func testScopedParameterServiceReset() throws {
