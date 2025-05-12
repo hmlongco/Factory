@@ -1,8 +1,7 @@
 # Factory Changelog
 
-## 2.5.0
+## 2.4.13
 
-* Migration of import library name from Factory to FactoryKit (See README)
 * Supports ParameterFactory service caching based on parameters (scopeOnParameters)
 
 ## 2.4.12
