@@ -258,13 +258,16 @@ extension FactoryModifying {
 
 extension FactoryModifying where P: Hashable {
 
-    /// Scope cache value also based on ParameterFactory parameter.
-    ///```swift
-    /// var scopedOnParameterService: ParameterFactory<Int, ParameterService> {
+    /// By default, ParameterFactory scopes will cache the first requested value and then return that value, even if other values are
+    /// passed on future requests.
+    ///
+    /// The behavior can be changed with the `.scopeOnParameters` modifier.
+    /// ```swift
+    /// var parameterService: ParameterFactory<Int, ParameterService> {
     ///     self { ParameterService(value: $0) }.scopeOnParameters.cached
     /// }
     /// ```
-    /// Parameter must be Hashable.
+    /// The passed parameter must be Hashable for this modifier to appear and for the per-parameter caching functionality to occur.
     public var scopeOnParameters: Self {
         registration.options { options in
             options.scopeOnParameters = true

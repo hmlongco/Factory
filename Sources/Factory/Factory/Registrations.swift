@@ -73,7 +73,6 @@ public struct FactoryRegistration<P,T>: Sendable {
         let manager = container.manager
         let options = manager.options[key]
 
-        var scopedKey = key
         var current: (P) -> T
 
         #if DEBUG
@@ -113,15 +112,11 @@ public struct FactoryRegistration<P,T>: Sendable {
         }
         #endif
 
-        // support parameterized scope caching
-        if options?.scopeOnParameters == true, let hashable = parameters as? any Hashable {
-            scopedKey.parameterize(hashable.hashValue)
-        }
-
         globalGraphResolutionDepth += 1
         let instance: T
         if let scope = options?.scope ?? manager.defaultScope {
-            instance = scope.resolve(using: manager.cache, key: scopedKey, ttl: options?.ttl, factory: { current(parameters) }) }
+            let parameterizedKey = options?.scopeOnParameters == true ? key.parameterized(parameters) : key
+            instance = scope.resolve(using: manager.cache, key: parameterizedKey, ttl: options?.ttl, factory: { current(parameters) }) }
         else {
             instance = current(parameters)
         }
