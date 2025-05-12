@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
   s.resource_bundles = { "Factory" => "Sources/**/*.xcprivacy" }
   s.swift_version = '5.9'
 
-  s.ios.deployment_target = "12.0"
+  s.ios.deployment_target = "13.0"
   s.ios.framework  = 'UIKit'
 
   s.tvos.deployment_target = "13.0"
@@ -19,6 +19,6 @@ Pod::Spec.new do |s|
   s.watchos.deployment_target = "8.2"
   s.watchos.framework  = 'SwiftUI'
 
-  s.osx.deployment_target = "10.14"
+  s.osx.deployment_target = "10.15"
   s.osx.framework  = 'AppKit'
 end
