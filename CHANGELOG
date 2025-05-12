@@ -1,8 +1,13 @@
 # Factory Changelog
 
+## 2.5.0
+
+* Migration of import library name from Factory to FactoryKit (See README)
+* Supports ParameterFactory service caching based on parameters (scopeOnParameters)
+
 ## 2.4.12
 
-* Add preview convenience function to SharedContainer for SwiftUI Previews
+* Add mock convenience function to SharedContainer for SwiftUI Previews
 * New mechanism to enable StrictConcurrency in targets
 
 ## 2.4.11

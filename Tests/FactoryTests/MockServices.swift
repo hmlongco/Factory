@@ -145,6 +145,9 @@ extension Container {
     var scopedParameterService: ParameterFactory<Int, ParameterService> {
         self { ParameterService(value: $0) }.cached
     }
+    var scopedOnParameterService: ParameterFactory<Int, ParameterService> {
+        self { ParameterService(value: $0) }.scopeOnParameters.cached
+    }
 }
 
 // Custom scope
