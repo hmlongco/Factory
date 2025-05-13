@@ -37,12 +37,13 @@ import Testing
 
 /// ``ContainerTrait`` is a generic test trait that provides a scoped container for dependency injection in tests.
 ///
-/// It allows you to isolate a ``SharedContainer`` to a test case allowing you to run Swift Testing tests in parallel.
+/// It allows you to isolate a `SharedContainer` to a test case allowing you to run Swift Testing tests in parallel.
 ///
 /// If you use a custom container, you have to create your own trait and container variable extensions.
 ///
-/// That said, it's also possible to leverage this behavior in `XCTestCase`, by using the `@TaskLocal` provided `withValue` method.
-/// See examples in the ``ParallelXCTests`` file.
+/// That said, it's also possible to leverage this behavior in `XCTestCase`  by using the `@TaskLocal` provided `withValue` method.
+///
+/// See the `Testing` documentation and examples in the `ParallelTests` and `ParallelXCTests` files.
 public struct ContainerTrait<C: SharedContainer>: TestTrait, SuiteTrait, TestScoping {
 
     public typealias Transform = @Sendable (C) async -> Void

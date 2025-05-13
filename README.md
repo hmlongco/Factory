@@ -3,7 +3,7 @@
 
 ![](https://github.com/hmlongco/Factory/blob/main/Logo.png?raw=true)
 
-A new approach to Container-Based Dependency Injection for Swift and SwiftUI.
+A modern approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
 ## Factory 2.5.0
 
@@ -201,7 +201,7 @@ Factory also works with Xcode 16's new Testing framework, and with the help of t
 Here's the same set of tests updated for the new framework. The `.container` trait provides a new, fresh instance of the main shared container to each one of the tests.
 
 ```swift
-@Suite(.container)
+@Suite(.container) // added container trait
 struct FactoryTests {
 
     @Test func testLoaded() async {

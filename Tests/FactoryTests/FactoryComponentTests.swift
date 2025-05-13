@@ -94,6 +94,20 @@ final class FactoryComponentTests: XCTestCase {
         h2.hash(into: &hasher)
     }
 
+    func testParameterizedFactoryKey() {
+        let f1 = FactoryKey(type: Int.self, key: key1String)
+        let f2 = FactoryKey(type: Int.self, key: key1String)
+        XCTAssertEqual(f1, f2)
+        let f1f = f1.parameterized("foo")
+        XCTAssertNotEqual(f1f, f2)
+        let f2f = f2.parameterized("foo")
+        XCTAssertEqual(f1f, f2f)
+        let f1b = f2.parameterized("bar")
+        XCTAssertNotEqual(f1b, f2f)
+        let f1v = f1.parameterized(())
+        XCTAssertEqual(f1v.parameter, 0)
+    }
+
 }
 
 struct MyStaticScalar: ExpressibleByUnicodeScalarLiteral {

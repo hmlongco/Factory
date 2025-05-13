@@ -1,6 +1,6 @@
 swift package \
     --allow-writing-to-directory ./docs \
-    generate-documentation --target Factory \
+    generate-documentation --target FactoryKit \
     --disable-indexing \
     --transform-for-static-hosting \
     --hosting-base-path Factory \
