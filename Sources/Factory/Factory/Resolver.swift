@@ -49,12 +49,12 @@ extension Resolving {
     /// Also returns Factory for further specialization for scopes, decorators, etc.
     @discardableResult
     public func register<T>(_ type: T.Type = T.self, factory: @escaping @Sendable () -> T) -> Factory<T> {
-        defer { globalRecursiveLock.unlock() }
-        globalRecursiveLock.lock()
-        // Perform autoRegistration check
-        unsafeCheckAutoRegistration()
-        // Add register to persist in container, and return factory so user can specialize if desired
-        return Factory(self, key: globalResolverKey, factory).register(factory: factory)
+        globalRecursiveLock.withLock {
+            // Perform autoRegistration check
+            unsafeCheckAutoRegistration()
+            // Add register to persist in container, and return factory so user can specialize if desired
+            return Factory(self, key: globalResolverKey, factory).register(factory: factory)
+        }
     }
 
     /// Returns a registered factory for this type from this container. Use this function to set options and previews after the initial
@@ -62,17 +62,17 @@ extension Resolving {
     ///
     /// Note that nothing will be applied if initial registration is not found.
     public func factory<T>(_ type: T.Type = T.self) -> Factory<T>? {
-        defer { globalRecursiveLock.unlock() }
-        globalRecursiveLock.lock()
-        // Perform autoRegistration check
-        unsafeCheckAutoRegistration()
-        // if we have a registration for this type, then build registration and factory for it
-        let key = FactoryKey(type: T.self, key: globalResolverKey)
-        if let factory = manager.registrations[key] as? TypedFactory<Void,T> {
-            return Factory(FactoryRegistration<Void,T>(key: globalResolverKey, container: self, factory: factory.factory))
+        globalRecursiveLock.withLock {
+            // Perform autoRegistration check
+            unsafeCheckAutoRegistration()
+            // if we have a registration for this type, then build registration and factory for it
+            let key = FactoryKey(type: T.self, key: globalResolverKey)
+            if let factory = manager.registrations[key] as? TypedFactory<Void,T> {
+                return Factory(FactoryRegistration<Void,T>(key: globalResolverKey, container: self, factory: factory.factory))
+            }
+            // otherwise return nil
+            return nil
         }
-        // otherwise return nil
-        return nil
     }
 
     /// Resolves a type from this container.

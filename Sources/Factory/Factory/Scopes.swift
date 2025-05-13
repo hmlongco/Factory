@@ -181,9 +181,9 @@ extension Scope {
         internal var cache: Cache
         /// Reset
         public func reset() {
-            defer { globalRecursiveLock.unlock()  }
-            globalRecursiveLock.lock()
-            cache.reset()
+            globalRecursiveLock.withLock {
+                cache.reset()
+            }
         }
         /// For testing
         package func clone() -> Singleton {
@@ -194,16 +194,7 @@ extension Scope {
     /// A reference to the default unique scope.
     ///
     /// If no scope cache is specified then Factory is running in unique mode.
-    public static let unique = Unique()
-    /// Defines the unique scope. A new instance of a given type will be returned on every resolution cycle.
-    public final class Unique: Scope, @unchecked Sendable  {
-        public override init() {
-            super.init()
-        }
-        internal override func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, factory: () -> T) -> T {
-            factory()
-        }
-    }
+    public static let unique: Scope? = nil
 
 }
 

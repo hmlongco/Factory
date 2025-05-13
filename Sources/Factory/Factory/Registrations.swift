@@ -164,15 +164,15 @@ public struct FactoryRegistration<P,T>: Sendable {
     ///   - id: ID of associated Factory.
     ///   - factory: Factory closure called to create a new instance of the service when needed.
     internal func register(_ factory: @escaping @Sendable (P) -> T) {
-        globalRecursiveLock.withLock {
-            container.unsafeCheckAutoRegistration()
-            if unsafeCanUpdateOptions() {
-                let manager = container.manager
-                manager.registrations[key] = TypedFactory(factory: factory)
-                if manager.autoRegistering == false, let scope = manager.options[key]?.scope {
-                    let cache = (scope as? InternalScopeCaching)?.cache ?? manager.cache
-                    cache.removeValue(forKey: key)
-                }
+        defer { globalRecursiveLock.unlock()  }
+        globalRecursiveLock.lock()
+        container.unsafeCheckAutoRegistration()
+        if unsafeCanUpdateOptions() {
+            let manager = container.manager
+            manager.registrations[key] = TypedFactory(factory: factory)
+            if manager.autoRegistering == false, let scope = manager.options[key]?.scope {
+                let cache = (scope as? InternalScopeCaching)?.cache ?? manager.cache
+                cache.removeValue(forKey: key)
             }
         }
     }
@@ -180,18 +180,18 @@ public struct FactoryRegistration<P,T>: Sendable {
     /// Registers a new factory scope.
     /// - Parameter: - scope: New scope
     internal func scope(_ scope: Scope?) {
-        globalRecursiveLock.withLock {
-            container.unsafeCheckAutoRegistration()
-            let manager = container.manager
-            if var options = manager.options[key] {
-                if once == options.once && scope !== options.scope {
-                    options.scope = scope
-                    manager.options[key] = options
-                    manager.cache.removeValue(forKey: key)
-                }
-            } else {
-                manager.options[key] = FactoryOptions(scope: scope)
+        defer { globalRecursiveLock.unlock()  }
+        globalRecursiveLock.lock()
+        container.unsafeCheckAutoRegistration()
+        let manager = container.manager
+        if var options = manager.options[key] {
+            if once == options.once && scope !== options.scope {
+                options.scope = scope
+                manager.options[key] = options
+                manager.cache.removeValue(forKey: key)
             }
+        } else {
+            manager.options[key] = FactoryOptions(scope: scope)
         }
     }
 
@@ -230,14 +230,14 @@ public struct FactoryRegistration<P,T>: Sendable {
 
     /// Support function for options mutation.
     internal func options(mutate: (_ options: inout FactoryOptions) -> Void) {
-        globalRecursiveLock.withLock {
-            container.unsafeCheckAutoRegistration()
-            let manager = container.manager
-            var options = manager.options[key, default: FactoryOptions()]
-            if options.once == once {
-                mutate(&options)
-                manager.options[key] = options
-            }
+        defer { globalRecursiveLock.unlock()  }
+        globalRecursiveLock.lock()
+        container.unsafeCheckAutoRegistration()
+        let manager = container.manager
+        var options = manager.options[key, default: FactoryOptions()]
+        if options.once == once {
+            mutate(&options)
+            manager.options[key] = options
         }
     }
 
@@ -247,27 +247,27 @@ public struct FactoryRegistration<P,T>: Sendable {
     ///   - options: Reset option: .all, .registration, .scope, .none
     ///   - id: ID of item to remove from the appropriate cache.
     internal func reset(options: FactoryResetOptions) {
-        globalRecursiveLock.withLock {
-            let manager = container.manager
-            switch options {
-            case .all:
-                let cache = (manager.options[key]?.scope as? InternalScopeCaching)?.cache ?? manager.cache
-                cache.removeValue(forKey: key)
-                manager.registrations.removeValue(forKey: key)
-                manager.options.removeValue(forKey: key)
-            case .context:
-                self.options {
-                    $0.argumentContexts = nil
-                    $0.contexts = nil
-                }
-            case .none:
-                break
-            case .registration:
-                manager.registrations.removeValue(forKey: key)
-            case .scope:
-                let cache = (manager.options[key]?.scope as? InternalScopeCaching)?.cache ?? manager.cache
-                cache.removeValue(forKey: key)
+        defer { globalRecursiveLock.unlock()  }
+        globalRecursiveLock.lock()
+        let manager = container.manager
+        switch options {
+        case .all:
+            let cache = (manager.options[key]?.scope as? InternalScopeCaching)?.cache ?? manager.cache
+            cache.removeValue(forKey: key)
+            manager.registrations.removeValue(forKey: key)
+            manager.options.removeValue(forKey: key)
+        case .context:
+            self.options {
+                $0.argumentContexts = nil
+                $0.contexts = nil
             }
+        case .none:
+            break
+        case .registration:
+            manager.registrations.removeValue(forKey: key)
+        case .scope:
+            let cache = (manager.options[key]?.scope as? InternalScopeCaching)?.cache ?? manager.cache
+            cache.removeValue(forKey: key)
         }
     }
 

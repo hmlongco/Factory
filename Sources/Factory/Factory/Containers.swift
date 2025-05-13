@@ -266,19 +266,19 @@ public final class ContainerManager: @unchecked Sendable {
     }
 
     internal func isEmpty(_ options: FactoryResetOptions) -> Bool {
-        defer { globalRecursiveLock.unlock() }
-        globalRecursiveLock.lock()
-        switch options {
-        case .all:
-            return registrations.isEmpty && cache.isEmpty && self.options.isEmpty
-        case .context:
-            return self.options.allSatisfy { $1.argumentContexts == nil && $1.contexts == nil }
-        case .none:
-            return true
-        case .registration:
-            return registrations.isEmpty
-        case .scope:
-            return cache.isEmpty
+        globalRecursiveLock.withLock {
+            switch options {
+            case .all:
+                return registrations.isEmpty && cache.isEmpty && self.options.isEmpty
+            case .context:
+                return self.options.allSatisfy { $1.argumentContexts == nil && $1.contexts == nil }
+            case .none:
+                return true
+            case .registration:
+                return registrations.isEmpty
+            case .scope:
+                return cache.isEmpty
+            }
         }
     }
     #endif
@@ -316,62 +316,62 @@ extension ContainerManager {
 
     /// Resets the Container to its original state, removing all registrations and clearing all scope caches.
     public func reset(options: FactoryResetOptions = .all) {
-        defer { globalRecursiveLock.unlock()  }
-        globalRecursiveLock.lock()
-        switch options {
-        case .all:
-            self.registrations.removeAll(keepingCapacity: true)
-            self.options.removeAll(keepingCapacity: true)
-            self.cache.reset()
-            self.autoRegistrationCheckNeeded = true
-        case .context:
-            for (key, option) in self.options {
-                var mutable = option
-                mutable.argumentContexts = nil
-                mutable.contexts = nil
-                self.options[key] = mutable
+        globalRecursiveLock.withLock {
+            switch options {
+            case .all:
+                self.registrations.removeAll(keepingCapacity: true)
+                self.options.removeAll(keepingCapacity: true)
+                self.cache.reset()
+                self.autoRegistrationCheckNeeded = true
+            case .context:
+                for (key, option) in self.options {
+                    var mutable = option
+                    mutable.argumentContexts = nil
+                    mutable.contexts = nil
+                    self.options[key] = mutable
+                }
+            case .none:
+                break
+            case .registration:
+                self.registrations.removeAll(keepingCapacity: true)
+                self.autoRegistrationCheckNeeded = true
+            case .scope:
+                self.cache.reset()
             }
-        case .none:
-            break
-        case .registration:
-            self.registrations.removeAll(keepingCapacity: true)
-            self.autoRegistrationCheckNeeded = true
-        case .scope:
-            self.cache.reset()
         }
     }
 
     /// Clears any cached values associated with a specific scope, leaving the other scope caches intact.
     public func reset(scope: Scope) {
-        defer { globalRecursiveLock.unlock()  }
-        globalRecursiveLock.lock()
-        switch scope {
-        case is Scope.Singleton:
-            #if DEBUG
-            logger("FACTORY: Singleton scope not managed by container")
-            #endif
-            break
-        default:
-            cache.reset(scopeID: scope.scopeID)
+        globalRecursiveLock.withLock {
+            switch scope {
+            case is Scope.Singleton:
+                #if DEBUG
+                logger("FACTORY: Singleton scope not managed by container")
+                #endif
+                break
+            default:
+                cache.reset(scopeID: scope.scopeID)
+            }
         }
     }
 
     /// Test function pushes the current registration and cache states
     public func push() {
-        defer { globalRecursiveLock.unlock()  }
-        globalRecursiveLock.lock()
-        stack.append((registrations, options, cache.cache, autoRegistrationCheckNeeded))
+        globalRecursiveLock.withLock {
+            stack.append((registrations, options, cache.cache, autoRegistrationCheckNeeded))
+        }
     }
 
     /// Test function pops and restores a previously pushed registration and cache state
     public func pop() {
-        defer { globalRecursiveLock.unlock()  }
-        globalRecursiveLock.lock()
-        if let state = stack.popLast() {
-            registrations = state.0
-            options = state.1
-            cache.cache = state.2
-            autoRegistrationCheckNeeded = state.3
+        globalRecursiveLock.withLock {
+            if let state = stack.popLast() {
+                registrations = state.0
+                options = state.1
+                cache.cache = state.2
+                autoRegistrationCheckNeeded = state.3
+            }
         }
     }
 
