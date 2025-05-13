@@ -164,6 +164,8 @@ Everyone gets a new, unique instance.
 
 Unique.
 
+*Internally `Scope.unique` is `nil` and as such the static value basically clears the scope setting for the given factory. There is no `Unique()` scope class.
+
 ## Default Scope
 
 Factory's can have their scopes defined in two different ways:
