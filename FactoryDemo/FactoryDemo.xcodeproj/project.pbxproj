@@ -25,7 +25,6 @@
 		4C51169829E1B3E900B4ADD4 /* Tags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C51169729E1B3E900B4ADD4 /* Tags.swift */; };
 		4C6B3BC42DD4D48100DB94FF /* FactoryKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4C6B3BC32DD4D48100DB94FF /* FactoryKit */; };
 		4C6B3BC62DD4D48100DB94FF /* FactoryTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 4C6B3BC52DD4D48100DB94FF /* FactoryTesting */; };
-		4C6B3BCC2DD4D49F00DB94FF /* FactoryKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4C6B3BCB2DD4D49F00DB94FF /* FactoryKit */; };
 		4C947C332988A13800815704 /* ContainerDemoViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C947C322988A13800815704 /* ContainerDemoViewModel.swift */; };
 		4C947C342988A1A100815704 /* ContainerDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C6914432988A05D0083A78F /* ContainerDemoView.swift */; };
 		4C977B3B29A2AD3A0072FC17 /* SimpleContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C977B3A29A2AD3A0072FC17 /* SimpleContainer.swift */; };
@@ -147,7 +146,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4C6B3BCC2DD4D49F00DB94FF /* FactoryKit in Frameworks */,
 				4C6B3BC62DD4D48100DB94FF /* FactoryTesting in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -322,7 +320,6 @@
 			name = FactoryDemoTests;
 			packageProductDependencies = (
 				4C6B3BC52DD4D48100DB94FF /* FactoryTesting */,
-				4C6B3BCB2DD4D49F00DB94FF /* FactoryKit */,
 			);
 			productName = FactoryDemoTests;
 			productReference = 4CA5899629DE482D00FA7845 /* FactoryDemoTests.xctest */;
@@ -862,10 +859,6 @@
 		4C6B3BC52DD4D48100DB94FF /* FactoryTesting */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = FactoryTesting;
-		};
-		4C6B3BCB2DD4D49F00DB94FF /* FactoryKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = FactoryKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
