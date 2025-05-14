@@ -118,6 +118,7 @@
 		4C51167729DF03C900B4ADD4 /* FactoryDemoTestsServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FactoryDemoTestsServices.swift; sourceTree = "<group>"; };
 		4C51169729E1B3E900B4ADD4 /* Tags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tags.swift; sourceTree = "<group>"; };
 		4C6914432988A05D0083A78F /* ContainerDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerDemoView.swift; sourceTree = "<group>"; };
+		4C6B3BD42DD4DE6500DB94FF /* xcarchive.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = xcarchive.txt; sourceTree = "<group>"; };
 		4C947C322988A13800815704 /* ContainerDemoViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContainerDemoViewModel.swift; sourceTree = "<group>"; };
 		4C977B3A29A2AD3A0072FC17 /* SimpleContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleContainer.swift; sourceTree = "<group>"; };
 		4C977B3C29A3DAC70072FC17 /* TestNonExtendableContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestNonExtendableContainer.swift; sourceTree = "<group>"; };
@@ -227,6 +228,7 @@
 		4CCC83EA2868CF2100B474F7 /* Modules */ = {
 			isa = PBXGroup;
 			children = (
+				4C6B3BD42DD4DE6500DB94FF /* xcarchive.txt */,
 				4CCC840D2868CF5B00B474F7 /* Common.xcodeproj */,
 				4CCC84382868CF8900B474F7 /* Networking.xcodeproj */,
 			);

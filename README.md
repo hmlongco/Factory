@@ -61,7 +61,7 @@ And that's the core mechanism. In order to use the property wrapper you *must* d
 
 By the way, if you're concerned about building Factory's on the fly, don't be. Like SwiftUI Views, Factory structs and modifiers are lightweight and transitory value types. They're created inside computed variables **only** when they're needed and then immediately discarded once their purpose has been served.
 
-For more examples of Factory definitions that define scopes, use constructor injection, and do parameter passing, see the [Registrations](https://hmlongco.github.io/Factory/documentation/factory/registrations) page.
+For more examples of Factory definitions that define scopes, use constructor injection, and do parameter passing, see the [Registrations](https://hmlongco.github.io/Factory/documentation/factorykit/registrations) page.
 
 ## Resolving Factories
 
@@ -112,7 +112,7 @@ struct FactoryDemoApp: App {
 ```
 Factory is flexible, and it doesn't tie you down to a specific dependency injection pattern or technique.
 
-See [Resolutions](https://hmlongco.github.io/Factory/documentation/factory/resolutions) for more examples.
+See [Resolutions](https://hmlongco.github.io/Factory/documentation/factorykit/resolutions) for more examples.
 
 ## Mocking
 
@@ -261,7 +261,7 @@ If no scope is specified the default scope is unique. A new instance of the serv
 
 Other common scopes are `cached` and `shared`. Cached items are persisted until the cache is reset, while shared items exist just as long as someone holds a strong reference to them. When the last reference goes away, the weakly held shared reference also goes away.
 
-Factory has other scope types, plus the ability to add more of your own. See [Scopes](https://hmlongco.github.io/Factory/documentation/factory/scopes) for additional examples.
+Factory has other scope types, plus the ability to add more of your own. See [Scopes](https://hmlongco.github.io/Factory/documentation/factorykit/scopes) for additional examples.
 
 Scopes and scope management are powerful tools to have in your dependency injection arsenal.
 
@@ -307,13 +307,13 @@ Factory can also help you debug your code. When running in DEBUG mode Factory al
 ```
 This can make it a lot easier to see the entire dependency tree for a given object or service.
 
-See [Debugging](https://hmlongco.github.io/Factory/documentation/factory/debugging) for more on this and other features.
+See [Debugging](https://hmlongco.github.io/Factory/documentation/factorykit/debugging) for more on this and other features.
 
 ## Documentation
 
 A single README file barely scratches the surface. Fortunately, Factory is thoroughly documented. 
 
-Current DocC documentation can be found in the project as well as online on [GitHub Pages](https://hmlongco.github.io/Factory/documentation/factory).
+Current DocC documentation can be found in the project as well as online on [GitHub Pages](https://hmlongco.github.io/Factory/documentation/factorykit).
 
 ## Installation
 
@@ -378,7 +378,7 @@ Special thanks to Ákos Grabecz (agrabz) and Mahmood Tahir (tahirmt) for their r
 
 ## Additional Resources
 
-* [Factory Documentation](https://hmlongco.github.io/Factory/documentation/factory)
+* [Factory Documentation](https://hmlongco.github.io/Factory/documentation/factorykit)
 * [Factory 1.0 and Functional Dependency Injection](https://betterprogramming.pub/factory-and-functional-dependency-injection-2d0a38042d05)
 * [Factory 1.0: Multiple Module Registration](https://betterprogramming.pub/factory-multiple-module-registration-f9d19721a31d?sk=a03d78484d8c351762306ff00a8be67c)
 * [Resolver: A Swift Dependency Injection System](https://github.com/hmlongco/Resolver)
