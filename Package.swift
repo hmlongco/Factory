@@ -37,6 +37,7 @@ let package = Package(
         .target(
             name: "Factory",
             dependencies: [],
+            path: "Sources/Factory",
             resources: [.copy("PrivacyInfo.xcprivacy")],
             swiftSettings: [
 //                .unsafeFlags(["-enable-library-evolution"], .when(configuration: .release))
@@ -50,11 +51,12 @@ let package = Package(
         ),
         .target(
             name: "FactoryTesting",
-            dependencies: ["FactoryKit"]
+            dependencies: ["FactoryKit"],
+            path: "Sources/FactoryTesting"
         ),
         .testTarget(
             name: "FactoryTests",
-            dependencies: ["FactoryKit", "FactoryTesting"]
+            dependencies: ["FactoryTesting"]
         )
     ],
     swiftLanguageVersions: [
