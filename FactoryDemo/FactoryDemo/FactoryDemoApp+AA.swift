@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import Factory
+import FactoryKit
 
 protocol AAService {
     var name: String { get }

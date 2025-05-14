@@ -7,10 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4C6B3BD22DD4D4D800DB94FF /* FactoryKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4C6B3BD12DD4D4D800DB94FF /* FactoryKit */; };
 		4CCC84292868CF8900B474F7 /* Networking.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4CCC84202868CF8800B474F7 /* Networking.framework */; };
 		4CCC842E2868CF8900B474F7 /* NetworkingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CCC842D2868CF8900B474F7 /* NetworkingTests.swift */; };
 		4CCC842F2868CF8900B474F7 /* Networking.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CCC84232868CF8800B474F7 /* Networking.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		4CCC844B2868CFDF00B474F7 /* Factory in Frameworks */ = {isa = PBXBuildFile; productRef = 4CCC844A2868CFDF00B474F7 /* Factory */; };
 		4CCC844D2868CFE500B474F7 /* Common.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4CCC844C2868CFE500B474F7 /* Common.framework */; };
 		4CCC844E2868CFE500B474F7 /* Common.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 4CCC844C2868CFE500B474F7 /* Common.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		4CCC84562868D03300B474F7 /* Networking.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CCC84552868D03300B474F7 /* Networking.swift */; };
@@ -54,7 +54,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4CCC844B2868CFDF00B474F7 /* Factory in Frameworks */,
+				4C6B3BD22DD4D4D800DB94FF /* FactoryKit in Frameworks */,
 				4CCC844D2868CFE500B474F7 /* Common.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -144,7 +144,7 @@
 			);
 			name = Networking;
 			packageProductDependencies = (
-				4CCC844A2868CFDF00B474F7 /* Factory */,
+				4C6B3BD12DD4D4D800DB94FF /* FactoryKit */,
 			);
 			productName = Networking;
 			productReference = 4CCC84202868CF8800B474F7 /* Networking.framework */;
@@ -501,9 +501,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		4CCC844A2868CFDF00B474F7 /* Factory */ = {
+		4C6B3BD12DD4D4D800DB94FF /* FactoryKit */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = Factory;
+			productName = FactoryKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
