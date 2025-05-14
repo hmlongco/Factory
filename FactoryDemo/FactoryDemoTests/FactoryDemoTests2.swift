@@ -6,7 +6,7 @@
 //
 
 import XCTest
-import Factory
+import FactoryKit
 
 @testable import FactoryDemo
 
