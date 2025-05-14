@@ -269,4 +269,3 @@ The passed parameter must be Hashable for this modifier to appear and for the pe
 - ``Scope/Graph-swift.class``
 - ``Scope/Shared-swift.class``
 - ``Scope/Singleton-swift.class``
-- ``Scope/Unique-swift.class``
