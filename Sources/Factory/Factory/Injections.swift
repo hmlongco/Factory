@@ -130,8 +130,6 @@ extension Injected: @unchecked Sendable where T: Sendable {}
     /// Manages the wrapped dependency, which is resolved when this value is accessed for the first time.
     public var wrappedValue: T {
         mutating get {
-            defer { globalRecursiveLock.unlock()  }
-            globalRecursiveLock.lock()
             if initialize {
                 resolve()
             }
@@ -217,8 +215,6 @@ extension LazyInjected: @unchecked Sendable where T: Sendable {}
     /// Manages the wrapped dependency, which is resolved when this value is accessed for the first time.
     public var wrappedValue: T? {
         mutating get {
-            defer { globalRecursiveLock.unlock()  }
-            globalRecursiveLock.lock()
             if initialize {
                 resolve()
             }

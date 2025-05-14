@@ -1,5 +1,5 @@
 import XCTest
-@testable import Factory
+@testable import FactoryKit
 
 final class FactoryMultithreadingTests: XCTestCase, @unchecked Sendable {
 

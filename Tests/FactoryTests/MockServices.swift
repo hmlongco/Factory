@@ -8,7 +8,7 @@
 import Foundation
 import Testing
 
-@testable import Factory
+@testable import FactoryKit
 import FactoryTesting
 
 // Swift 6

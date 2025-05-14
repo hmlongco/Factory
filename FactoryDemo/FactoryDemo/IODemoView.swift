@@ -5,7 +5,7 @@
 //  Created by Michael Long on 5/27/23.
 //
 
-import Factory
+import FactoryKit
 import SwiftUI
 
 protocol IODemoViewing: ObservableObject {

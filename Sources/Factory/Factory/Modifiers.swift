@@ -51,8 +51,9 @@ extension FactoryModifying {
     ///         .scope(.session)
     /// }
     /// ```
+    /// Primarily used to assign custom scopes.
     @discardableResult
-    public func scope(_ scope: Scope) -> Self {
+    public func scope(_ scope: Scope?) -> Self {
         registration.scope(scope)
         return self
     }

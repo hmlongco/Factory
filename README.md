@@ -3,9 +3,9 @@
 
 ![](https://github.com/hmlongco/Factory/blob/main/Logo.png?raw=true)
 
-A new approach to Container-Based Dependency Injection for Swift and SwiftUI.
+A modern approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
-## Factory 2.4.13
+## Factory 2.5.0
 
 Factory is strongly influenced by SwiftUI, and in my opinion is highly suited for use in that environment. Factory is...
 
@@ -61,7 +61,7 @@ And that's the core mechanism. In order to use the property wrapper you *must* d
 
 By the way, if you're concerned about building Factory's on the fly, don't be. Like SwiftUI Views, Factory structs and modifiers are lightweight and transitory value types. They're created inside computed variables **only** when they're needed and then immediately discarded once their purpose has been served.
 
-For more examples of Factory definitions that define scopes, use constructor injection, and do parameter passing, see the [Registrations](https://hmlongco.github.io/Factory/documentation/factory/registrations) page.
+For more examples of Factory definitions that define scopes, use constructor injection, and do parameter passing, see the [Registrations](https://hmlongco.github.io/Factory/documentation/factorykit/registrations) page.
 
 ## Resolving Factories
 
@@ -112,7 +112,7 @@ struct FactoryDemoApp: App {
 ```
 Factory is flexible, and it doesn't tie you down to a specific dependency injection pattern or technique.
 
-See [Resolutions](https://hmlongco.github.io/Factory/documentation/factory/resolutions) for more examples.
+See [Resolutions](https://hmlongco.github.io/Factory/documentation/factorykit/resolutions) for more examples.
 
 ## Mocking
 
@@ -201,7 +201,7 @@ Factory also works with Xcode 16's new Testing framework, and with the help of t
 Here's the same set of tests updated for the new framework. The `.container` trait provides a new, fresh instance of the main shared container to each one of the tests.
 
 ```swift
-@Suite(.container)
+@Suite(.container) // added container trait
 struct FactoryTests {
 
     @Test func testLoaded() async {
@@ -261,7 +261,7 @@ If no scope is specified the default scope is unique. A new instance of the serv
 
 Other common scopes are `cached` and `shared`. Cached items are persisted until the cache is reset, while shared items exist just as long as someone holds a strong reference to them. When the last reference goes away, the weakly held shared reference also goes away.
 
-Factory has other scope types, plus the ability to add more of your own. See [Scopes](https://hmlongco.github.io/Factory/documentation/factory/scopes) for additional examples.
+Factory has other scope types, plus the ability to add more of your own. See [Scopes](https://hmlongco.github.io/Factory/documentation/factorykit/scopes) for additional examples.
 
 Scopes and scope management are powerful tools to have in your dependency injection arsenal.
 
@@ -307,38 +307,46 @@ Factory can also help you debug your code. When running in DEBUG mode Factory al
 ```
 This can make it a lot easier to see the entire dependency tree for a given object or service.
 
-See [Debugging](https://hmlongco.github.io/Factory/documentation/factory/debugging) for more on this and other features.
+See [Debugging](https://hmlongco.github.io/Factory/documentation/factorykit/debugging) for more on this and other features.
 
 ## Documentation
 
 A single README file barely scratches the surface. Fortunately, Factory is thoroughly documented. 
 
-Current DocC documentation can be found in the project as well as online on [GitHub Pages](https://hmlongco.github.io/Factory/documentation/factory).
+Current DocC documentation can be found in the project as well as online on [GitHub Pages](https://hmlongco.github.io/Factory/documentation/factorykit).
 
 ## Installation
 
-Factory supports CocoaPods and the Swift Package Manager.
+Factory supports the Swift Package Manager and has legacy support for CocoaPods.
+
+Factory's primary import library is named `FactoryKit`. This is done in order to avoid SPM import conflicts between the library itself and the `Factory` object defined within the library.
+
+Just add the Factory package to your project, select the `FactoryKit` library when asked, and then import `FactoryKit` in your Swift files where needed.
+
+```swift
+import FactoryKit
 ```
-pod "Factory"
-```
-Or download the source files and add the Factory folder to your project.
+While the original `Factory` library import still exists, it will be deprecated in the future. 
+
+If you're using Swift Testing you'll probably also want to also import the `FactoryTesting` library and add it to your test target.
 
 Note that the current version of Factory requires Swift 5.10 minimum and that the minimum version of iOS currently supported with this release is iOS 13.
 
-## Factory 2.0 Migration
+## FactoryKit Migration
 
-If you started with Factory 1.x a [migration document is available here](https://hmlongco.github.io/Factory/documentation/factory/migration).
+Factory 2.5.0 works with SPM, Xcode 16 under Strict Concurrency guidelines, and with Swift Testing.
 
-* Factory 2.0 adds true Factory containers for container-based dependency resolution
-* Factory 2.0 adds container-based scopes
-* Factory 2.0 adds decorators to containers and factories
-* Factory 2.0 adds debug trace support
-* Factory 2.0 adds keyPath-based property wrappers
-* Factory 2.0 adds a new InjectedObject property wrapper for SwiftUI Views
+If you're a current Factory user it's recommended that you switch from importing `Factory` to `FactoryKit`. This avoids SPM naming conflicts between the import library name and the primary `Factory` object.
 
-## Factory 2.4 Migration
+To do so, open your project in Xcode and...
 
-Factory 2.4 works with Xcode 16 under Strict Concurrency guidelines.
+1. Select `File > Packages > Update to Latest Package Versions`
+2. Select `File > Packages > Reset Package Caches`
+3. Go to your application target, remove the `Factory` library, and add the `FactoryKit` library
+4. Go a global search and replace, renaming `import Factory` to `import FactoryKit`
+5. Clean and build your project.
+
+You may need to do the same for any other targets or modules that imported Factory.
 
 ## Discussion Forum
 
@@ -370,7 +378,7 @@ Special thanks to Ákos Grabecz (agrabz) and Mahmood Tahir (tahirmt) for their r
 
 ## Additional Resources
 
-* [Factory Documentation](https://hmlongco.github.io/Factory/documentation/factory)
+* [Factory Documentation](https://hmlongco.github.io/Factory/documentation/factorykit)
 * [Factory 1.0 and Functional Dependency Injection](https://betterprogramming.pub/factory-and-functional-dependency-injection-2d0a38042d05)
 * [Factory 1.0: Multiple Module Registration](https://betterprogramming.pub/factory-multiple-module-registration-f9d19721a31d?sk=a03d78484d8c351762306ff00a8be67c)
 * [Resolver: A Swift Dependency Injection System](https://github.com/hmlongco/Resolver)

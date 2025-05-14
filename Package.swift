@@ -15,6 +15,10 @@ let package = Package(
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.
         .library(
+            name: "FactoryKit",
+            targets: ["FactoryKit"]
+        ),
+        .library(
             name: "Factory",
             targets: ["Factory"]
         ),
@@ -33,18 +37,26 @@ let package = Package(
         .target(
             name: "Factory",
             dependencies: [],
+            path: "Sources/Factory",
             resources: [.copy("PrivacyInfo.xcprivacy")],
             swiftSettings: [
 //                .unsafeFlags(["-enable-library-evolution"], .when(configuration: .release))
             ]
         ),
         .target(
+            name: "FactoryKit",
+            dependencies: [],
+            path: "Sources/FactoryKit",
+            resources: [.copy("PrivacyInfo.xcprivacy")]
+        ),
+        .target(
             name: "FactoryTesting",
-            dependencies: ["Factory"]
+            dependencies: ["FactoryKit"],
+            path: "Sources/FactoryTesting"
         ),
         .testTarget(
             name: "FactoryTests",
-            dependencies: ["Factory", "FactoryTesting"]
+            dependencies: ["FactoryTesting"]
         )
     ],
     swiftLanguageVersions: [

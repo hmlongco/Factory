@@ -1,5 +1,5 @@
 import XCTest
-@testable import Factory
+@testable import FactoryKit
 
 #if canImport(SwiftUI)
 import SwiftUI
@@ -76,7 +76,7 @@ final class FactoryContainerTests: XCTestCase {
         let service1 = Container.shared.myServiceType()
         XCTAssertTrue(service1.text() == "MyService")
 
-        let _ = Container.preview {
+        Container.mock {
             $0.myServiceType.register(factory: { MockService() })
         }
 

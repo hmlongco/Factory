@@ -1,6 +1,12 @@
 # Factory Changelog
 
-## 2.4.13
+## 2.5.0
+
+* Migration of import library name from Factory to FactoryKit (See README)
+* Supports ParameterFactory service caching based on parameters (scopeOnParameters)
+* FactoryKit library change corrects XCFramework build problems - Issue #252
+
+## 2.4.13 // LAST COCOAPODS VERSION
 
 * Supports ParameterFactory service caching based on parameters (scopeOnParameters)
 
