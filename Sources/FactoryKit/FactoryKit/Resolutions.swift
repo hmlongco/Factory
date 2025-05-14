@@ -1,1 +1,0 @@
-../../Factory/Factory/Resolutions.swift
