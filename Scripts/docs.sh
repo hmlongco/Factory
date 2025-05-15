@@ -1,4 +1,5 @@
 swift package \
+    --package-path ../Factory \
     --allow-writing-to-directory ./docs \
     generate-documentation --target FactoryKit \
     --disable-indexing \
