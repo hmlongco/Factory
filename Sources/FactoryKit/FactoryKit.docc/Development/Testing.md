@@ -268,7 +268,7 @@ Given what we've seen thus far, the problem seems almost impossible. How do we k
 
 Luckily there is an answer: [Test Scoping Traits](https://developer.apple.com/documentation/testing/trait)
 
-With test traits we can make each of our tests local, each isolated to their own task, and allow each to begin from a known starting point.
+With Xcode 16.3's test traits we can make each of our tests local, each isolated to their own task, and allow each to begin from a known starting point.
 
 #### Bad Tests
 

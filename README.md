@@ -196,7 +196,7 @@ Again, Factory makes it easy to reach into a chain of dependencies and make spec
 
 ## Xcode 16 Testing
 
-Factory also works with Xcode 16's new Testing framework, and with the help of test traits it's now also possible to run tests in parallel!
+Factory works with Apple's new Testing framework, and with Xcode 16.3's new test trait support it's now also possible to run tests in parallel!
 
 Here's the same set of tests updated for the new framework. The `.container` trait provides a new, fresh instance of the main shared container to each one of the tests.
 
