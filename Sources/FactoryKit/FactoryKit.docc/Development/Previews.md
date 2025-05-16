@@ -6,25 +6,22 @@ Mocking dependencies for SwiftUI Previews.
 
 Factory can make SwiftUI Previews easier when we're using View Models and those view models depend on internal dependencies. Let's take a look.
 
-## SwiftUI Integrations
-
-Factory can be used in SwiftUI to assign a dependency to a `StateObject` or `ObservedObject`.
-
-```swift
-struct ContentView: View {
-    @StateObject private var viewModel = Container.shared.contentViewModel()
-    var body: some View {
-        ...
-    }
-}
-```
-Keep in mind that if you assign to an `ObservedObject` your Factory is responsible for managing the object's lifecycle (see the section on Scopes).
-
 ## SwiftUI Previews
 
 Here's an example of updating a view model's service dependency in order to setup a particular state for  preview.
 
 ```swift
+// the view model
+class ContentViewModel: ObservableObject {
+    @Injected(\.myService) private var service
+    ...
+    func load() async {
+        let results = await service.load()
+        ...
+    }
+}
+
+// the view
 struct ContentView: View {
     @StateObject var viewModel = ContentViewModel()
     var body: some View {
@@ -32,6 +29,7 @@ struct ContentView: View {
     }
 }
 
+// the preview
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         let _ = Container.shared.myService.register { MockServiceN(4) }

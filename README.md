@@ -317,6 +317,39 @@ This can make it a lot easier to see the entire dependency tree for a given obje
 
 See [Debugging](https://hmlongco.github.io/Factory/documentation/factorykit/debugging) for more on this and other features.
 
+## Observation / Swift Concurrency
+
+Factory also works with Observation, `@MainActor` and actor isolation in Swift concurrency. Just annotate the Factory as needed.
+
+```swift
+// the view model
+@MainActor
+@Observable
+class ContentViewModel {
+    @ObservationIgnored @Injected(\.myService) private var service
+    ...
+}
+
+// the factory
+extension Container {
+    @MainActor
+    var contentViewModel: Factory<ContentViewModel> {
+        self { @MainActor in ContentViewModel() }
+    }
+}
+
+// the view
+struct ContentView: View {
+    @InjectedObservable(\.contentViewModel) var viewModel
+    var body: some View {
+        ...
+    }
+}
+```
+`InjectedObservable` was another new addition added to Factory 2.4.
+
+See [SwiftUI](https://hmlongco.github.io/Factory/documentation/factorykit/swiftui) for more discussion.
+
 ## Documentation
 
 A single README file barely scratches the surface. Fortunately, Factory is thoroughly documented. 
