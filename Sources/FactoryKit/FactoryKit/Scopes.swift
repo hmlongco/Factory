@@ -186,7 +186,7 @@ extension Scope {
             }
         }
         /// For testing
-        package func clone() -> Singleton {
+        public func clone() -> Singleton {
             .init(from: self)
         }
     }

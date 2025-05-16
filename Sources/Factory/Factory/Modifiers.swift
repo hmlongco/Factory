@@ -3,7 +3,7 @@
 //
 // GitHub Repo and Documentation: https://github.com/hmlongco/Factory
 //
-// Copyright © 2022 Michael Long. All rights reserved.
+// Copyright © 2022-2025 Michael Long. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,10 @@
 //
 
 import Foundation
+
+#if canImport(SwiftUI)
+import SwiftUI
+#endif
 
 /// Public protocol with functionality common to all Factory's. Used to add scope and decorator modifiers to Factory.
 public protocol FactoryModifying {
@@ -278,3 +282,52 @@ extension FactoryModifying where P: Hashable {
 
 }
 
+// Defines the preview factory helpers
+#if canImport(SwiftUI)
+extension Factory {
+    /// Defines a convenience function that allows easy mocking in SwiftUI Previews.
+    /// ```swift
+    /// #Preview {
+    ///     Container.shared.requestUsers.preview { MockAsyncRequest { User.mockUsers } }
+    ///     MainView()
+    /// }
+    /// ```
+    /// Without it you'd need...
+    /// ```swift
+    /// #Preview {
+    ///     let _ = Container.shared.requestUsers.register { MockAsyncRequest { User.mockUsers } }
+    ///     MainView()
+    /// }
+    /// ```
+    /// Not a lot, but every little bit helps.
+    @discardableResult
+    public func preview(factory: @escaping VoidFactoryType<T>) -> EmptyView {
+        registration.register(factory)
+        return EmptyView()
+    }
+}
+
+extension ParameterFactory {
+    /// Defines a convenience function that allows easy mocking in SwiftUI Previews.
+    /// ```swift
+    /// #Preview {
+    ///     Container.shared.requestUsers.preview { MockAsyncRequest { User.dummy($0) } }
+    ///     MainView()
+    /// }
+    /// ```
+    /// Without it you'd need...
+    /// ```swift
+    /// #Preview {
+    ///     let _ = Container.shared.requestUsers.register { MockAsyncRequest { User.dummy($0) } }
+    ///     MainView()
+    /// }
+    /// ```
+    /// Not a lot, but every little bit helps.
+    @discardableResult
+    public func preview(factory: @escaping ParameterFactoryType<P,T>) -> EmptyView {
+        registration.register(factory)
+        return EmptyView()
+    }
+}
+
+#endif

@@ -3,7 +3,7 @@
 //
 // GitHub Repo and Documentation: https://github.com/hmlongco/Factory
 //
-// Copyright © 2022 Michael Long. All rights reserved.
+// Copyright © 2022-2025 Michael Long. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
