@@ -4,7 +4,7 @@ Defining a Factory, resolving it, and changing the default behavior.
 
 ## Overview
 
-A ``Factory/Factory`` manages the dependency injection process for a specific object or service and produces an object of the desired type when required. 
+A ``Factory`` manages the dependency injection process for a specific object or service and produces an object of the desired type when required. 
 
 
 ## Defining a Factory
