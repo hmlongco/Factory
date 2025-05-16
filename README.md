@@ -5,7 +5,7 @@
 
 A modern approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
-## Factory 2.5.0
+## Factory 2.5.1
 
 Factory is strongly influenced by SwiftUI, and in my opinion is highly suited for use in that environment. Factory is...
 
@@ -202,7 +202,7 @@ Again, Factory makes it easy to reach into a chain of dependencies and make spec
 
 ## Xcode 16 Testing
 
-Factory works with Apple's new Testing framework, and with Xcode 16.3's new test trait support it's now also possible to run tests in parallel!
+Factory also works with Apple's new Testing framework, and with Xcode 16.3's new test trait support it's now also possible to run tests in parallel!
 
 Here's the same set of tests updated for the new framework. The `.container` trait provides a new, fresh instance of the main shared container to each one of the tests.
 
@@ -233,7 +233,7 @@ struct FactoryTests {
     
 }
 ```
-See the [Testing](https://hmlongco.github.io/Factory/documentation/factorykit/testing) documentation for more examples.
+See [Testing](https://hmlongco.github.io/Factory/documentation/factorykit/testing) for more.
 
 But we're not done yet. 
 
