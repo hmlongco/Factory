@@ -1,6 +1,10 @@
 import XCTest
 @testable import FactoryKit
 
+#if canImport(SwiftUI)
+import SwiftUI
+#endif
+
 final class FactoryCoreTests: XCTestCase {
 
     override func setUp() {
@@ -239,5 +243,17 @@ final class FactoryCoreTests: XCTestCase {
             XCTAssert(logged[4].contains("commonProvider"))
         }
     }
+
+#if canImport(SwiftUI)
+    func testPreviewFunction() throws {
+        let service1 = Container.shared.myServiceType()
+        XCTAssertTrue(service1.text() == "MyService")
+
+        Container.shared.myServiceType.preview { MockService() }
+
+        let service2 = Container.shared.myServiceType()
+        XCTAssertTrue(service2.text() == "MockService")
+    }
+#endif
 
 }

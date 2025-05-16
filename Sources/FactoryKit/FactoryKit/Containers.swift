@@ -88,10 +88,10 @@ public protocol SharedContainer: ManagedContainer {
 #if canImport(SwiftUI)
 /// Defines the default factory helpers for shared containers
 extension SharedContainer {
-    /// Defines a preview convenience function to allow easy shared container transformation in SwiftUI Previews.
+    /// Defines a preview convenience function to allow easy container transformations in SwiftUI Previews.
     /// ```swift
     /// #Preview {
-    ///     Container.preview {
+    ///     Container.shared.preview {
     ///         $0.requestUsers.register { MockAsyncRequest { User.mockUsers } }
     ///     }
     ///     MainView()
@@ -107,7 +107,22 @@ extension SharedContainer {
     /// }
     /// ```
     @discardableResult
-    public static func mock(_ transform: (Self) -> Void) -> EmptyView {
+    public func preview(_ transform: (Self) -> Void) -> EmptyView {
+        transform(self)
+        return EmptyView()
+    }
+
+    /// Defines a preview convenience function to allow easy shared container transformations in SwiftUI Previews.
+    /// ```swift
+    /// #Preview {
+    ///     Container.preview {
+    ///         $0.requestUsers.register { MockAsyncRequest { User.mockUsers } }
+    ///     }
+    ///     MainView()
+    /// }
+    /// ```
+    @discardableResult
+    public static func preview(_ transform: (Self) -> Void) -> EmptyView {
         transform(shared)
         return EmptyView()
     }

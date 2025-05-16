@@ -1,5 +1,9 @@
 # Factory Changelog
 
+## 2.5.1
+
+* Update preview helpers for Containers and Factory's
+
 ## 2.5.0
 
 * Migration of import library name from Factory to FactoryKit (See README)

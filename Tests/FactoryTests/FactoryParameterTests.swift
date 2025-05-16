@@ -1,6 +1,10 @@
 import XCTest
 @testable import FactoryKit
 
+#if canImport(SwiftUI)
+import SwiftUI
+#endif
+
 final class FactoryParameterTests: XCTestCase {
 
     override func setUp() {
@@ -57,5 +61,18 @@ final class FactoryParameterTests: XCTestCase {
         Container.shared.scopedParameterService.reset()
         XCTAssertTrue(Container.shared.manager.isEmpty(.scope))
     }
+
+#if canImport(SwiftUI)
+    func testPreviewFunction() throws {
+        let service1 = Container.shared.parameterService(5)
+        XCTAssertTrue(service1.value == 5)
+        XCTAssertTrue(service1.text() == "ParameterService5")
+        Container.shared.parameterService.preview { n in
+            ParameterService(value: n)
+        }
+        let service2 = Container.shared.parameterService(6)
+        XCTAssertTrue(service2.text() == "ParameterService6")
+    }
+#endif
 
 }

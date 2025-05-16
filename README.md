@@ -143,19 +143,25 @@ Our ContentView uses our view model, which is assigned to a StateObject. Great. 
 It's easy. Just replace `MyService` with a mock that also conforms to `MyServiceType`.
 
 ```swift
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        let _ = Container.shared.myService.register { MockService2() }
-        ContentView()
-    }
+#Preview {
+    let _ = Container.shared.myService.register { MockService2() }
+    ContentView()
 }
 ```
-
 Note the line in our preview code where we’re gone back to our container and registered a new closure on our factory. This function overrides the default factory closure.
 
 Now when our preview is displayed `ContentView` creates a `ContentViewModel` which in turn has a dependency on `myService` using the `Injected` property wrapper. And when the wrapper asks the factory for an instance of `MyServiceType` it now gets a `MockService2` instead of the `MyService` type originally defined.
 
 This is a powerful concept that lets us reach deep into a chain of dependencies and alter the behavior of a system as needed.
+
+Note that Factory 2.5.1 made it even cleaner.
+```swift
+#Preview {
+    Container.shared.myService.preview { MockService2() }
+    ContentView()
+}
+```
+See the [Previews](https://hmlongco.github.io/Factory/documentation/factorykit/previews) documentation for more.
 
 ## Testing
 
@@ -227,6 +233,8 @@ struct FactoryTests {
     
 }
 ```
+See the [Testing](https://hmlongco.github.io/Factory/documentation/factorykit/testing) documentation for more examples.
+
 But we're not done yet. 
 
 Factory has quite a few more tricks up its sleeve...
