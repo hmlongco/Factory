@@ -317,12 +317,12 @@ This can make it a lot easier to see the entire dependency tree for a given obje
 
 See [Debugging](https://hmlongco.github.io/Factory/documentation/factorykit/debugging) for more on this and other features.
 
-## Observation / Swift Concurrency
+## Observation / @MainActor
 
 Factory also works with Observation, `@MainActor` and actor isolation in Swift concurrency. Just annotate the Factory as needed.
 
 ```swift
-// the view model
+// Observable view model
 @MainActor
 @Observable
 class ContentViewModel {
@@ -330,7 +330,7 @@ class ContentViewModel {
     ...
 }
 
-// the factory
+// Factory isolated to @MainActor
 extension Container {
     @MainActor
     var contentViewModel: Factory<ContentViewModel> {
@@ -338,7 +338,7 @@ extension Container {
     }
 }
 
-// the view
+// View with injected view model
 struct ContentView: View {
     @InjectedObservable(\.contentViewModel) var viewModel
     var body: some View {
