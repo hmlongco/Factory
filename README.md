@@ -322,7 +322,7 @@ See [Debugging](https://hmlongco.github.io/Factory/documentation/factorykit/debu
 Factory also works with Observation, `@MainActor` and actor isolation in Swift concurrency. Just annotate the Factory as needed.
 
 ```swift
-// Observable view model
+// Observable view model isolated to @MainActor
 @MainActor
 @Observable
 class ContentViewModel {
