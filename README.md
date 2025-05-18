@@ -5,9 +5,9 @@
 
 A modern approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
-## Version 2.5.1
+## Factory Version 2.5.1
 
-Factory is strongly influenced by SwiftUI, and in my opinion is highly suited for use in that environment. Factory is...
+Factory is strongly influenced by SwiftUI, and in my opinion is highly suited for that environment. Factory is...
 
 - **Adaptable**: Factory doesn't tie you down to a single dependency injection strategy or technique.
 - **Powerful**: Factory supports containers, scopes, passed parameters, contexts, decorators, unit tests, SwiftUI Previews, and much, much more.
