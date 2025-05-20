@@ -7,10 +7,10 @@ Pod::Spec.new do |s|
   s.author       = "Michael Long"
   s.source       = { :git => "https://github.com/hmlongco/Factory.git", :tag => "#{s.version}" }
   s.source_files  = "Sources/FactoryKit/**/*.swift"
-  s.resource_bundles = { "Factory" => "Sources/FactoryKit/FactoryKit/PrivacyInfo.xcprivacy" }
+  s.resource_bundles = { "Factory" => "Sources/FactoryKit/**/*.xcprivacy" }
   s.swift_version = '5.9'
 
-  s.ios.deployment_target = "12.0"
+  s.ios.deployment_target = "13.0"
   s.ios.framework  = 'UIKit'
 
   s.tvos.deployment_target = "13.0"
@@ -19,7 +19,7 @@ Pod::Spec.new do |s|
   s.watchos.deployment_target = "8.2"
   s.watchos.framework  = 'SwiftUI'
 
-  s.osx.deployment_target = "10.14"
+  s.osx.deployment_target = "10.15"
   s.osx.framework  = 'AppKit'
 
   s.visionos.deployment_target = "1.0" if s.respond_to?(:visionos)
