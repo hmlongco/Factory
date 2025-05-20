@@ -1,5 +1,9 @@
 # Factory Changelog
 
+## 2.5.2
+
+* CocoaPods update for Factory, no FactoryTesting support
+
 ## 2.5.1
 
 * Update preview helpers for both Containers and Factory's
@@ -11,7 +15,7 @@
 * Supports ParameterFactory service caching based on parameters (scopeOnParameters)
 * FactoryKit library change corrects XCFramework build problems - Issue #252
 
-## 2.4.13 // LAST COCOAPODS VERSION
+## 2.4.13
 
 * Supports ParameterFactory service caching based on parameters (scopeOnParameters)
 

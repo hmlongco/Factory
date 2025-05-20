@@ -1,13 +1,13 @@
 Pod::Spec.new do |s|
   s.name         = "Factory"
-  s.version      = "2.4.12"
+  s.version      = "2.5.2"
   s.summary      = "A Modern Dependency Injection / Service Locator framework for Swift on iOS."
   s.homepage     = "https://github.com/hmlongco/Factory"
   s.license      = "MIT"
   s.author       = "Michael Long"
   s.source       = { :git => "https://github.com/hmlongco/Factory.git", :tag => "#{s.version}" }
-  s.source_files  = "Sources/Factory/**/*.swift"
-  s.resource_bundles = { "Factory" => "Sources/Factory/**/*.xcprivacy" }
+  s.source_files  = "Sources/FactoryKit/**/*.swift"
+  s.resource_bundles = { "Factory" => "Sources/FactoryKit/FactoryKit/PrivacyInfo.xcprivacy" }
   s.swift_version = '5.9'
 
   s.ios.deployment_target = "12.0"
@@ -21,4 +21,7 @@ Pod::Spec.new do |s|
 
   s.osx.deployment_target = "10.14"
   s.osx.framework  = 'AppKit'
+
+  s.visionos.deployment_target = "1.0" if s.respond_to?(:visionos)
+  s.visionos.framework = 'SwiftUI' if s.respond_to?(:visionos)
 end
