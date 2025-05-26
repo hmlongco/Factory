@@ -7,9 +7,6 @@ final class FactoryContextTests: XCContainerTestCase {
     override func setUp() {
         super.setUp()
 
-        // start over
-        Container.shared.reset()
-
         // externally defined contexts
         Container.shared.externalContextService
             .register { ContextService(name: "REGISTERED") }

@@ -55,11 +55,6 @@ extension Container {
 
 final class FactoryIsolationTests: XCContainerTestCase {
 
-    override func setUp() {
-        super.setUp()
-        Container.shared.reset()
-    }
-
     // test resolution of sendable type
     @MainActor
     func testInjectSendableDependency() {
