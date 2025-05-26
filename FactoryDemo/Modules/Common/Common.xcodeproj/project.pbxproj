@@ -7,10 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4C6B3BD02DD4D4CD00DB94FF /* FactoryKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4C6B3BCF2DD4D4CD00DB94FF /* FactoryKit */; };
 		4CCC83FE2868CF5B00B474F7 /* Common.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4CCC83F52868CF5B00B474F7 /* Common.framework */; };
 		4CCC84032868CF5B00B474F7 /* CommonTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CCC84022868CF5B00B474F7 /* CommonTests.swift */; };
 		4CCC84042868CF5B00B474F7 /* Common.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CCC83F82868CF5B00B474F7 /* Common.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		4CCC84482868CFD300B474F7 /* Factory in Frameworks */ = {isa = PBXBuildFile; productRef = 4CCC84472868CFD300B474F7 /* Factory */; };
 		4CCC84542868D01D00B474F7 /* Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CCC84532868D01D00B474F7 /* Common.swift */; };
 /* End PBXBuildFile section */
 
@@ -37,7 +37,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4CCC84482868CFD300B474F7 /* Factory in Frameworks */,
+				4C6B3BD02DD4D4CD00DB94FF /* FactoryKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -124,7 +124,7 @@
 			);
 			name = Common;
 			packageProductDependencies = (
-				4CCC84472868CFD300B474F7 /* Factory */,
+				4C6B3BCF2DD4D4CD00DB94FF /* FactoryKit */,
 			);
 			productName = Common;
 			productReference = 4CCC83F52868CF5B00B474F7 /* Common.framework */;
@@ -481,9 +481,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		4CCC84472868CFD300B474F7 /* Factory */ = {
+		4C6B3BCF2DD4D4CD00DB94FF /* FactoryKit */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = Factory;
+			productName = FactoryKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

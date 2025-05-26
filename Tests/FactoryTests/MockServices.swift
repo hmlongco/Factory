@@ -8,7 +8,7 @@
 import Foundation
 import Testing
 
-@testable import Factory
+@testable import FactoryKit
 import FactoryTesting
 
 // Swift 6
@@ -144,6 +144,9 @@ extension Container {
     }
     var scopedParameterService: ParameterFactory<Int, ParameterService> {
         self { ParameterService(value: $0) }.cached
+    }
+    var scopedOnParameterService: ParameterFactory<Int, ParameterService> {
+        self { ParameterService(value: $0) }.scopeOnParameters.cached
     }
 }
 

@@ -1,8 +1,8 @@
 #if swift(>=5.5)
 
 import XCTest
-@testable import Factory
 import FactoryTesting
+@testable import FactoryKit
 
 final class ParallelXCTest: XCTestCase {
     //TODO: maybe delete because these examples do not contain the singleton resetting logic...

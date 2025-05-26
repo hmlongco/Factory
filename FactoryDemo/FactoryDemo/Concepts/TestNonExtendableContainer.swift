@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import Factory
+import FactoryKit
 
 final class ServiceContainer: SharedContainer {
     // CONFORMANCE

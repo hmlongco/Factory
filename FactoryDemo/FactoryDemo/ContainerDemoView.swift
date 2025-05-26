@@ -1,6 +1,6 @@
 
 import SwiftUI
-import Factory
+import FactoryKit
 
 struct ContainerDemoView: View {
 

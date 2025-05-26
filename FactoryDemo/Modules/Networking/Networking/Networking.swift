@@ -7,7 +7,7 @@
 
 import Foundation
 import Common
-import Factory
+import FactoryKit
 
 public protocol NetworkType {
     func test()

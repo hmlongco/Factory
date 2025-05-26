@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import Factory
+import FactoryKit
 
 // something with an asynchronous initializer
 struct AsyncInit {

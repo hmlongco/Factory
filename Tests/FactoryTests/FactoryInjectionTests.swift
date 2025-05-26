@@ -7,7 +7,7 @@ import SwiftUI
 #endif
 
 import FactoryTesting
-@testable import Factory
+@testable import FactoryKit
 
 class Services1 {
     @Injected(\.myServiceType) var service

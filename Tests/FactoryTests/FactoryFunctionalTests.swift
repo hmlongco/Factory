@@ -3,7 +3,7 @@
 import XCTest
 import FactoryTesting
 import os
-@testable import Factory
+@testable import FactoryKit
 
 typealias OpenURLFunction = (_ url: URL) -> Bool
 

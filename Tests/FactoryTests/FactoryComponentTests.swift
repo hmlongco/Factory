@@ -1,6 +1,6 @@
 import XCTest
 import FactoryTesting
-@testable import Factory
+@testable import FactoryKit
 
 let key1String = StaticString(stringLiteral: "s1")
 let key1StringDup = StaticString(stringLiteral: "s1")
@@ -88,6 +88,20 @@ final class FactoryComponentTests: XCContainerTestCase {
         h1.hash(into: &hasher)
         let h2 = FactoryKey(type: Int.self, key: key3Unicode)
         h2.hash(into: &hasher)
+    }
+
+    func testParameterizedFactoryKey() {
+        let f1 = FactoryKey(type: Int.self, key: key1String)
+        let f2 = FactoryKey(type: Int.self, key: key1String)
+        XCTAssertEqual(f1, f2)
+        let f1f = f1.parameterized("foo")
+        XCTAssertNotEqual(f1f, f2)
+        let f2f = f2.parameterized("foo")
+        XCTAssertEqual(f1f, f2f)
+        let f1b = f2.parameterized("bar")
+        XCTAssertNotEqual(f1b, f2f)
+        let f1v = f1.parameterized(())
+        XCTAssertEqual(f1v.parameter, 0)
     }
 
 }

@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import Factory
+import FactoryKit
 
 protocol AAService {
     var name: String { get }
@@ -30,9 +30,15 @@ final class AAContainer: SharedContainer {
     }
 }
 
-final class AAViewModel {
-    var name: String {
-        AAContainer.shared.service().name
+extension AAContainer: AutoRegistering {
+    func autoRegister() {
+        //
     }
+}
 
+final class AAViewModel {
+    @Injected(\AAContainer.service) var service
+    var name: String {
+        service.name
+    }
 }
