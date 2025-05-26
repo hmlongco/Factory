@@ -398,6 +398,13 @@ final class FactoryScopeTests: XCTestCase {
         let service3 = Container.shared.singletonService()
         XCTAssertTrue(service2.id != service3.id)
     }
+    
+    func testUniqueResolutionOnCachedContainer() throws {
+        let service1 = CachedContainer.shared.uniqueService()
+        let service2 = CachedContainer.shared.uniqueService()
+        XCTAssertTrue(service1 !== service2)
+        XCTAssertTrue(service1.id != service2.id)
+    }
 
 }
 
@@ -429,3 +436,14 @@ fileprivate final class SecondSingletonContainer: SharedContainer, AutoRegisteri
     let manager = ContainerManager()
 }
 
+
+fileprivate final class CachedContainer: SharedContainer, AutoRegistering {
+    static let shared: CachedContainer = CachedContainer()
+    let manager: ContainerManager = ContainerManager()
+    func autoRegister() {
+        manager.defaultScope = .cached
+    }
+    var uniqueService: Factory<MyService> {
+        self { MyService() }.unique
+    }
+}
