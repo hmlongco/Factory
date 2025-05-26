@@ -35,13 +35,6 @@ final class OpenURLFunctionMock: Sendable {
 
 @available(iOS 16.0, *)
 final class FactoryFunctionalTests: XCContainerTestCase {
-
-    override func setUp() {
-        super.setUp()
-        Container.shared.reset()
-    }
-
-
     func testOpenFunctionality() throws {
         let openedURL: OSAllocatedUnfairLock<URL?> = .init(initialState: nil)
         Container.shared.openURL.register {

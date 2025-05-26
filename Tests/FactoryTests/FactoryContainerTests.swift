@@ -10,7 +10,6 @@ final class FactoryContainerTests: XCContainerTestCase {
 
     override func setUp() {
         super.setUp()
-        Container.shared.reset()
         CustomContainer.shared.reset()
     }
 

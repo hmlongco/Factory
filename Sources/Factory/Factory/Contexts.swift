@@ -44,7 +44,7 @@ public enum FactoryContextType: Equatable {
     case device
 }
 
-public struct FactoryContext {
+public struct FactoryContext: Sendable {
     /// Proxy for application arguments.
     public var arguments: [String] = ProcessInfo.processInfo.arguments
     /// Runtime arguments
@@ -75,17 +75,76 @@ public struct FactoryContext {
 
 extension FactoryContext {
     /// Global current context.
+    #if swift(>=5.5)
+    @TaskLocal nonisolated(unsafe) public static var current = FactoryContext()
+    #else
     nonisolated(unsafe) public static var current = FactoryContext()
+    #endif
 }
 
 extension FactoryContext {
     /// Add argument to global context.
+    #if swift(>=5.5)
+    public static func setArg(
+        _ arg: String,
+        forKey key: String,
+        for operation: () throws -> Void
+    ) rethrows {
+        var factoryContextCopy = FactoryContext.current
+        factoryContextCopy.runtimeArguments[key] = arg
+
+        try FactoryContext.$current.withValue(factoryContextCopy) {
+            try operation()
+        }
+    }
+
+    /// Add argument to global context asynchronously.
+    public static func setArg(
+        _ arg: String,
+        forKey key: String,
+        for operation: () async throws -> Void
+    ) async rethrows {
+        var factoryContextCopy = FactoryContext.current
+        factoryContextCopy.runtimeArguments[key] = arg
+
+        try await FactoryContext.$current.withValue(factoryContextCopy) {
+            try await operation()
+        }
+    }
+    #else
     public static func setArg(_ arg: String, forKey key: String) {
         FactoryContext.current.runtimeArguments[key] = arg
     }
+    #endif
+
+
     /// Add argument to global context.
+    #if swift(>=5.5)
+    public static func removeArg(forKey key: String, for operation: () throws -> Void) rethrows {
+        var factoryContextCopy = FactoryContext.current
+        factoryContextCopy.runtimeArguments.removeValue(forKey: key)
+
+        try FactoryContext.$current.withValue(factoryContextCopy) {
+            try operation()
+        }
+    }
+
+    /// Add argument to global context asynchronously.
+    public static func removeArg(
+        forKey key: String,
+        for operation: () async throws -> Void
+    ) async rethrows {
+        var factoryContextCopy = FactoryContext.current
+        factoryContextCopy.runtimeArguments.removeValue(forKey: key)
+
+        try await FactoryContext.$current.withValue(factoryContextCopy) {
+            try await operation()
+        }
+    }
+    #else
     public static func removeArg(forKey key: String) {
         FactoryContext.current.runtimeArguments.removeValue(forKey: key)
     }
+    #endif
 }
 
