@@ -359,29 +359,6 @@ final class FactoryScopeTests: XCContainerTestCase {
         XCTAssertTrue(service3?.id == service4?.id) // should be cached
     }
 
-    func testSingletonSameContainerType() throws {
-        let container1 = FirstSingletonContainer()
-        //container1.manager.trace.toggle()
-        let service1 = container1.myServiceType()
-        let service2 = container1.myServiceType()
-        XCTAssertTrue(service1.id == service2.id)
-        let container2 = FirstSingletonContainer()
-        let service3 = container2.myServiceType()
-        let service4 = container2.myServiceType()
-        XCTAssertTrue(service3.id == service4.id)
-        XCTAssertTrue(service1.id == service3.id)
-    }
-
-    func testSingletonAcrossContainerTypes() throws {
-        let container1 = FirstSingletonContainer()
-        container1.manager.trace.toggle()
-        let service1 = container1.sharedContainerService()
-        let container2 = SecondSingletonContainer()
-        let service2 = container2.sharedContainerService()
-        XCTAssertTrue(service1.id == service2.id)
-        container1.manager.trace.toggle()
-    }
-
     @available(iOS 13, *)
     func testSingletonScopeTimeToLive() async throws {
         Container.shared.singletonService.timeToLive(0.01)
@@ -394,7 +371,33 @@ final class FactoryScopeTests: XCContainerTestCase {
         let service3 = Container.shared.singletonService()
         XCTAssertTrue(service2.id != service3.id)
     }
+}
 
+final class FactoryScopeTestsFirstSingleton: XCFirstSingletonContainerTestCase {
+    func testSingletonSameContainerType() throws {
+        let container1 = FirstSingletonContainer()
+        //container1.manager.trace.toggle()
+        let service1 = container1.myServiceType()
+        let service2 = container1.myServiceType()
+        XCTAssertTrue(service1.id == service2.id)
+        let container2 = FirstSingletonContainer()
+        let service3 = container2.myServiceType()
+        let service4 = container2.myServiceType()
+        XCTAssertTrue(service3.id == service4.id)
+        XCTAssertTrue(service1.id == service3.id)
+    }
+}
+
+final class FactoryScopeTestsFirstAndSecondSingleton: XCFirstAndSecondSingletonContainerTestCase {
+    func testSingletonAcrossContainerTypes() throws {
+        let container1 = FirstSingletonContainer()
+        container1.manager.trace.toggle()
+        let service1 = container1.sharedContainerService()
+        let container2 = SecondSingletonContainer()
+        let service2 = container2.sharedContainerService()
+        XCTAssertTrue(service1.id == service2.id)
+        container1.manager.trace.toggle()
+    }
 }
 
 extension SharedContainer {
@@ -403,25 +406,66 @@ extension SharedContainer {
     }
 }
 
-fileprivate final class FirstSingletonContainer: SharedContainer, AutoRegistering {
-    static let shared = FirstSingletonContainer()
-    func autoRegister() {
+package final class FirstSingletonContainer: SharedContainer, AutoRegistering {
+    #if swift(>=5.5)
+    @TaskLocal package static var shared = FirstSingletonContainer()
+    #else
+    package static let shared = FirstSingletonContainer()
+    #endif
+    package func autoRegister() {
         manager.defaultScope = .singleton
     }
     var myServiceType: Factory<MyServiceType> {
         self { MyService() }
     }
-    let manager = ContainerManager()
+    package let manager = ContainerManager()
 }
 
-fileprivate final class SecondSingletonContainer: SharedContainer, AutoRegistering {
-    static let shared = SecondSingletonContainer()
-    func autoRegister() {
+package class XCFirstSingletonContainerTestCase: XCTestCase {
+    package var transform: (@Sendable (FirstSingletonContainer) -> Void)?
+
+    package override func invokeTest() {
+        withContainer(
+            shared: FirstSingletonContainer.$shared,
+            container: FirstSingletonContainer(),
+            operation: super.invokeTest,
+            transform: self.transform
+        )
+    }
+}
+
+package final class SecondSingletonContainer: SharedContainer, AutoRegistering {
+    #if swift(>=5.5)
+    @TaskLocal package static var shared = SecondSingletonContainer()
+    #else
+    package static let shared = SecondSingletonContainer()
+    #endif
+    package func autoRegister() {
         manager.defaultScope = .singleton
     }
     var myServiceType: Factory<MyServiceType> {
         self { MyService() }
     }
-    let manager = ContainerManager()
+    package let manager = ContainerManager()
 }
 
+package class XCFirstAndSecondSingletonContainerTestCase: XCTestCase {
+    package var firstTransform: (@Sendable (FirstSingletonContainer) -> Void)?
+    package var secondTransform: (@Sendable (SecondSingletonContainer) -> Void)?
+
+    package override func invokeTest() {
+        withContainer(
+            shared: SecondSingletonContainer.$shared,
+            container: SecondSingletonContainer(),
+            operation: {
+                withContainer(
+                    shared: FirstSingletonContainer.$shared,
+                    container: FirstSingletonContainer(),
+                    operation: super.invokeTest,
+                    transform: self.firstTransform
+                )
+            },
+            transform: self.secondTransform
+        )
+    }
+}

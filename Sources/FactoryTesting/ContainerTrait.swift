@@ -62,10 +62,10 @@ public struct ContainerTrait<C: SharedContainer>: TestTrait, SuiteTrait, TestSco
     }
 
     public func provideScope(for test: Test, testCase: Test.Case?, performing function: () async throws -> Void) async throws {
-        try await FactoryTestingHelper.withContainer(
+        try await withContainer(
             shared: self.shared,
             container: self.container(),
-            function,
+            operation: function,
             transform: transform
         )
     }

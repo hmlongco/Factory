@@ -194,8 +194,12 @@ extension Container {
 
 // Custom Container
 
-final class CustomContainer: SharedContainer, AutoRegistering {
-    @TaskLocal static var shared = CustomContainer()
+package final class CustomContainer: SharedContainer, AutoRegistering {
+    #if swift(>=5.5)
+    @TaskLocal package static var shared = CustomContainer()
+    #else
+    package static let shared = CustomContainer()
+    #endif
     nonisolated(unsafe) static var count = 0
     nonisolated(unsafe) var count = 0
     var test: Factory<MyServiceType> {
@@ -231,7 +235,7 @@ final class CustomContainer: SharedContainer, AutoRegistering {
         }
         .once()
     }
-    func autoRegister() {
+    package func autoRegister() {
         print("CustomContainer AUTOREGISTERING")
         Self.count = 1
         self.count = 1
@@ -244,5 +248,5 @@ final class CustomContainer: SharedContainer, AutoRegistering {
         }
         #endif
     }
-    let manager = ContainerManager()
+    package let manager = ContainerManager()
 }

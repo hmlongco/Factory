@@ -4,114 +4,217 @@ import XCTest
 import FactoryTesting
 @testable import FactoryKit
 
-final class ParallelXCTest: XCTestCase {
-    //TODO: maybe delete because these examples do not contain the singleton resetting logic...
-    func testFooBarBaz() {
-        let container = Container()
+/// Illustrates using the regular `XCTestCase` with `FactoryTesting.withContainer` to enable parallel XCTests.
+final class ParallelXCTestFoo: XCTestCase {
+    func testFoo() {
         let fooExpectation = expectation(description: "foo")
 
-        Container.$shared.withValue(container) {
-            Container.shared.fooBarBaz.register { Foo() }
+        withContainer(
+            shared: Container.$shared,
+            container: Container()
+        ) {
+            let c = Container.shared
+            c.fooBarBaz.register { Foo() }
+            c.fooBarBazCached.register { Foo() }
+            c.fooBarBazSingleton.register { Foo() }
 
-            let sut = TaskLocalUseCase()
-            XCTAssertEqual(sut.fooBarBaz.value, "foo")
+            commonTests("foo")
             fooExpectation.fulfill()
         }
 
+        wait(for: [fooExpectation], timeout: 60)
+    }
+}
+
+final class ParallelXCTestBar: XCTestCase {
+    func testBar() {
         let barExpectation = expectation(description: "bar")
 
-        Container.$shared.withValue(container) {
-            Container.shared.fooBarBaz.register { Bar() }
+        withContainer(
+            shared: Container.$shared,
+            container: Container()
+        ) {
+            let c = Container.shared
+            c.fooBarBaz.register { Bar() }
+            c.fooBarBazCached.register { Bar() }
+            c.fooBarBazSingleton.register { Bar() }
 
-            let sut = TaskLocalUseCase()
-            XCTAssertEqual(sut.fooBarBaz.value, "bar")
+            commonTests("bar")
             barExpectation.fulfill()
         }
 
+        wait(for: [barExpectation], timeout: 60)
+    }
+}
+
+final class ParallelXCTestBaz: XCTestCase {
+    func testBaz() {
         let bazExpectation = expectation(description: "baz")
 
-        Container.$shared.withValue(container) {
-            Container.shared.fooBarBaz.register { Baz() }
+        withContainer(
+            shared: Container.$shared,
+            container: Container()
+        ) {
+            let c = Container.shared
+            c.fooBarBaz.register { Baz() }
+            c.fooBarBazCached.register { Baz() }
+            c.fooBarBazSingleton.register { Baz() }
 
-            let sut = TaskLocalUseCase()
-            XCTAssertEqual(sut.fooBarBaz.value, "baz")
+            commonTests("baz")
             bazExpectation.fulfill()
         }
 
-        wait(for: [fooExpectation, barExpectation, bazExpectation], timeout: 60)
+        wait(for: [bazExpectation], timeout: 60)
     }
+}
 
-    // Illustrates using the withContainer() helper with a synchronous transform closure
-    func testFooBarBazWithContainer() {
+// Illustrates using the withContainer() helper with a synchronous transform closure
+final class ParallelXCTestFooWithContainerAndTransform: XCTestCase {
+    func testFooWithContainerSyncTransform() {
         let fooExpectation = expectation(description: "foo")
 
-        FactoryTestingHelper.withContainer() {
-            let sut = TaskLocalUseCase()
-            XCTAssertEqual(sut.fooBarBaz.value, "foo")
+        withContainer(
+            shared: Container.$shared,
+            container: Container()
+        ) {
+            commonTests("foo")
             fooExpectation.fulfill()
         } transform: {
             $0.fooBarBaz.register { Foo() }
+            $0.fooBarBazCached.register { Foo() }
+            $0.fooBarBazSingleton.register { Foo() }
         }
 
+        wait(for: [fooExpectation], timeout: 60)
+    }
+}
+
+// Illustrates using the withContainer() helper with a synchronous transform closure
+final class ParallelXCTestBarWithContainerAndTransform: XCTestCase {
+    func testBarWithContainerSyncTransform() {
         let barExpectation = expectation(description: "bar")
 
-        FactoryTestingHelper.withContainer {
-            let sut = TaskLocalUseCase()
-            XCTAssertEqual(sut.fooBarBaz.value, "bar")
+        withContainer(
+            shared: Container.$shared,
+            container: Container()
+        ) {
+            commonTests("bar")
             barExpectation.fulfill()
         } transform: {
             $0.fooBarBaz.register { Bar() }
+            $0.fooBarBazCached.register { Bar() }
+            $0.fooBarBazSingleton.register { Bar() }
         }
 
+        wait(for: [barExpectation], timeout: 60)
+    }
+}
+
+// Illustrates using the withContainer() helper with a synchronous transform closure
+final class ParallelXCTestBazWithContainerAndTransform: XCTestCase {
+    func testBazWithContainerSyncTransform() {
         let bazExpectation = expectation(description: "baz")
 
-        FactoryTestingHelper.withContainer {
-            let sut = TaskLocalUseCase()
-            XCTAssertEqual(sut.fooBarBaz.value, "baz")
+        withContainer(
+            shared: Container.$shared,
+            container: Container()
+        ) {
+            commonTests("baz")
             bazExpectation.fulfill()
         } transform: {
             $0.fooBarBaz.register { Baz() }
+            $0.fooBarBazCached.register { Baz() }
+            $0.fooBarBazSingleton.register { Baz() }
         }
 
-        wait(for: [fooExpectation, barExpectation, bazExpectation], timeout: 60)
+        wait(for: [bazExpectation], timeout: 60)
     }
+}
 
-    // Illustrates using the withContainer() helper with an asynchronous transform closure
-    func testFooBarBazWithContainerAsync() async {
+// Illustrates using the withContainer() helper asynchronously
+final class ParallelXCTestFooWithContainerAndAsyncTransform: XCTestCase {
+    func testFooWithContainerAsync() async {
         let fooExpectation = expectation(description: "foo")
 
-        await FactoryTestingHelper.withContainer() {
-            let sut = await IsolatedTaskLocalUseCase()
-            let value = await sut.isolatedToMainActor.value
-            XCTAssertEqual(value, "foo")
+        await withContainer(
+            shared: Container.$shared,
+            container: Container()
+        ) {
+            Container.shared.fooBarBaz.register { Foo() }
+            Container.shared.fooBarBazCached.register { Foo() }
+            Container.shared.fooBarBazSingleton.register { Foo() }
+
+            await Container.shared.isolatedToMainActor.register { @MainActor in MainActorFooBarBaz(value: "foo") }
+            await Container.shared.isolatedToMainActorCached.register { @MainActor in MainActorFooBarBaz(value: "foo") }
+            await Container.shared.isolatedToMainActorSingleton.register { @MainActor in MainActorFooBarBaz(value: "foo") }
+
+            await Container.shared.isolatedToCustomGlobalActor.register { IsolatedFoo() }
+            await Container.shared.isolatedToCustomGlobalActorCached.register { IsolatedFoo() }
+            await Container.shared.isolatedToCustomGlobalActorSingleton.register { IsolatedFoo() }
+
+            await isolatedAsyncTests("foo")
             fooExpectation.fulfill()
-        } transform: {
-            await $0.isolatedToMainActor.register { @MainActor in MainActorFooBarBaz(value: "foo") }
         }
 
+        await fulfillment(of: [fooExpectation], timeout: 60)
+    }
+}
+
+// Illustrates using the withContainer() helper with an asynchronous transform closure
+final class ParallelXCTestBarWithContainerAndAsyncTransform: XCTestCase {
+    func testBarWithContainerAsyncTransform() async {
         let barExpectation = expectation(description: "bar")
 
-        await FactoryTestingHelper.withContainer {
-            let sut = await IsolatedTaskLocalUseCase()
-            let value = await sut.isolatedToMainActor.value
-            XCTAssertEqual(value, "bar")
+        await withContainer(
+            shared: Container.$shared,
+            container: Container()
+        ) {
+            await isolatedAsyncTests("bar")
             barExpectation.fulfill()
         } transform: {
+            $0.fooBarBaz.register { Bar() }
+            $0.fooBarBazCached.register { Bar() }
+            $0.fooBarBazSingleton.register { Bar() }
+
             await $0.isolatedToMainActor.register { @MainActor in MainActorFooBarBaz(value: "bar") }
+            await $0.isolatedToMainActorCached.register { @MainActor in MainActorFooBarBaz(value: "bar") }
+            await $0.isolatedToMainActorSingleton.register { @MainActor in MainActorFooBarBaz(value: "bar") }
+
+            await $0.isolatedToCustomGlobalActor.register { IsolatedBar() }
+            await $0.isolatedToCustomGlobalActorCached.register { IsolatedBar() }
+            await $0.isolatedToCustomGlobalActorSingleton.register { IsolatedBar() }
         }
 
+        await fulfillment(of: [barExpectation], timeout: 60)
+    }
+}
+
+// Illustrates using the withContainer() helper with an asynchronous transform closure
+final class ParallelXCTestBazWithContainerAndAsyncTransform: XCTestCase {
+    func testBazWithContainerAsyncTransform() async {
         let bazExpectation = expectation(description: "baz")
 
-        await FactoryTestingHelper.withContainer {
-            let sut = await IsolatedTaskLocalUseCase()
-            let value = await sut.isolatedToMainActor.value
-            XCTAssertEqual(value, "baz")
+        await withContainer(
+            shared: Container.$shared,
+            container: Container()
+        ) {
+            await isolatedAsyncTests("baz")
             bazExpectation.fulfill()
         } transform: {
+            $0.fooBarBaz.register { Baz() }
+            $0.fooBarBazCached.register { Baz() }
+            $0.fooBarBazSingleton.register { Baz() }
+
             await $0.isolatedToMainActor.register { @MainActor in MainActorFooBarBaz(value: "baz") }
+            await $0.isolatedToMainActorCached.register { @MainActor in MainActorFooBarBaz(value: "baz") }
+            await $0.isolatedToMainActorSingleton.register { @MainActor in MainActorFooBarBaz(value: "baz") }
+
+            await $0.isolatedToCustomGlobalActor.register { IsolatedBaz() }
+            await $0.isolatedToCustomGlobalActorCached.register { IsolatedBaz() }
+            await $0.isolatedToCustomGlobalActorSingleton.register { IsolatedBaz() }
         }
 
-        await fulfillment(of: [fooExpectation, barExpectation, bazExpectation], timeout: 60)
+        await fulfillment(of: [bazExpectation], timeout: 60)
     }
 }
 
@@ -221,6 +324,53 @@ final class ParallelIsolatedXCTestsBaz: XCContainerTestCase {
         await c.isolatedToCustomGlobalActorSingleton.register { IsolatedBaz() }
 
         await isolatedAsyncTests("baz")
+    }
+}
+
+final class ParallelCustomContainerTest: XCCustomContainerTestCase {
+    func testCustomContainer() {
+        let sut1 = CustomContainer.shared.myServiceType()
+        XCTAssertEqual(sut1.text(), "MyService")
+        CustomContainer.shared.myServiceType.register { MockService() }
+        let sut2 = CustomContainer.shared.myServiceType()
+        XCTAssertEqual(sut2.text(), "MockService")
+    }
+}
+
+/// Illustrates using multiple containers with a custom withContainer variant
+final class ParallelWithContainerAndCustomContainerTest: XCTestCase {
+    func testContainerAndCustomContainer() {
+        withContainerAndCustomContainer {
+            commonTests("baz")
+
+            let sut1 = CustomContainer.shared.myServiceType()
+            XCTAssertEqual(sut1.text(), "MyService")
+            CustomContainer.shared.myServiceType.register { MockService() }
+            let sut2 = CustomContainer.shared.myServiceType()
+            XCTAssertEqual(sut2.text(), "MockService")
+        } containerTransform: {
+            $0.fooBarBaz.register { Baz() }
+            $0.fooBarBazCached.register { Baz() }
+            $0.fooBarBazSingleton.register { Baz() }
+        }
+    }
+}
+
+/// Illustrates using multiple containers with a custom XCContainerAndCustomContainerTestCase
+final class ParallelContainerAndCustomContainerTest: XCContainerAndCustomContainerTestCase {
+    func testContainerAndCustomContainer() {
+        let c = Container.shared
+        c.fooBarBaz.register { Baz() }
+        c.fooBarBazCached.register { Baz() }
+        c.fooBarBazSingleton.register { Baz() }
+
+        commonTests("baz")
+
+        let sut1 = CustomContainer.shared.myServiceType()
+        XCTAssertEqual(sut1.text(), "MyService")
+        CustomContainer.shared.myServiceType.register { MockService() }
+        let sut2 = CustomContainer.shared.myServiceType()
+        XCTAssertEqual(sut2.text(), "MockService")
     }
 }
 

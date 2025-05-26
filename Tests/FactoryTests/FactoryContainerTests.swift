@@ -8,17 +8,6 @@ import SwiftUI
 
 final class FactoryContainerTests: XCContainerTestCase {
 
-    override func setUp() {
-        super.setUp()
-        CustomContainer.shared.reset()
-    }
-
-    func testDecorators() {
-        CustomContainer.count = 0
-        let _ = CustomContainer.shared.decorated()
-        XCTAssertEqual(CustomContainer.shared.count, 2)
-    }
-
     func testPushPop() throws {
         let service1 = Container.shared.myServiceType()
         XCTAssertTrue(service1.text() == "MyService")
@@ -110,6 +99,14 @@ final class FactoryContainerTests: XCContainerTestCase {
         XCTAssertTrue(Container.shared.manager.isEmpty(.context))
     }
 
+}
+
+final class FactoryCustomContainerTests: XCCustomContainerTestCase {
+    func testDecorators() {
+        CustomContainer.count = 0
+        let _ = CustomContainer.shared.decorated()
+        XCTAssertEqual(CustomContainer.shared.count, 2)
+    }
 }
 
 private extension Container {

@@ -2,7 +2,7 @@ import XCTest
 import FactoryTesting
 @testable import FactoryKit
 
-final class FactoryMultithreadingTests: XCContainerTestCase, @unchecked Sendable {
+final class FactoryMultithreadingTests: XCMultiThreadedContainerTestCase, @unchecked Sendable {
 
     let qa = DispatchQueue(label: "A", qos: .userInteractive, attributes: .concurrent)
     let qb = DispatchQueue(label: "B", qos: .userInitiated, attributes: .concurrent)
@@ -111,7 +111,7 @@ func increment() {
     lock.unlock()
 }
 
-fileprivate class A {
+package class A {
     var b: B
     init(b: B) {
         self.b = b
@@ -121,7 +121,7 @@ fileprivate class A {
     }
 }
 
-fileprivate class B {
+package class B {
     var c: C
     init(c: C) {
         self.c = c
@@ -131,7 +131,7 @@ fileprivate class B {
     }
 }
 
-fileprivate class C {
+package class C {
     var d: D
     init(d: D) {
         self.d = d
@@ -141,14 +141,14 @@ fileprivate class C {
     }
 }
 
-fileprivate class D {
+package class D {
     init() {}
     func test() {
         increment()
     }
 }
 
-fileprivate class E {
+package class E {
     @LazyInjected(\MultiThreadedContainer.d) var d: D
     init() {}
     func test() {
@@ -157,12 +157,29 @@ fileprivate class E {
     }
 }
 
-fileprivate final class MultiThreadedContainer: SharedContainer {
-    fileprivate static let shared = MultiThreadedContainer()
+package final class MultiThreadedContainer: SharedContainer {
+    #if swift(>=5.5)
+    @TaskLocal package static var shared = MultiThreadedContainer()
+    #else
+    package static let shared = MultiThreadedContainer()
+    #endif
     fileprivate var a: Factory<A> { self { A(b: self.b()) } }
     fileprivate var b: Factory<B> { self { B(c: self.c()) } }
     fileprivate var c: Factory<C> { self { C(d: self.d()) } }
     fileprivate var d: Factory<D> { self { D() }.cached }
     fileprivate var e: Factory<E> { self { E() } }
-    let manager = ContainerManager()
+    package let manager = ContainerManager()
+}
+
+package class XCMultiThreadedContainerTestCase: XCTestCase {
+    package var transform: (@Sendable (MultiThreadedContainer) -> Void)?
+
+    package override func invokeTest() {
+        withContainer(
+            shared: MultiThreadedContainer.$shared,
+            container: MultiThreadedContainer(),
+            operation: super.invokeTest,
+            transform: self.transform
+        )
+    }
 }

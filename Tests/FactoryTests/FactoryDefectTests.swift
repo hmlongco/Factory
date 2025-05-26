@@ -128,37 +128,6 @@ final class FactoryDefectTests: XCContainerTestCase {
         XCTAssertFalse(Container.shared.manager.isEmpty(.scope))
     }
 
-    // Registration on a new container could be overridden by auto registration
-    func testRegistrationOverriddenByAutoRegistration() throws {
-        let container1 = AutoRegisteringContainer()
-        let service1 = container1.test()
-        XCTAssertEqual(service1.value, 32)
-        let container2 = AutoRegisteringContainer()
-        container2.test.register {
-            MockServiceN(64)
-        }
-        let service2 = container2.test()
-        XCTAssertEqual(service2.value, 64)
-    }
-
-    // AutoRegistration should have no effect on singletons
-    func testAutoRegistrationAndSingletonCache() throws {
-        let container1 = AutoRegisteringContainer()
-        let service1 = container1.singletonTest()
-        // should be auto registration value
-        XCTAssertEqual(service1.value, 32)
-        container1.singletonTest.register {
-            MockServiceN(64)
-        }
-        let service2 = container1.singletonTest()
-        // register should have cleared singleton scope cache so should be new value
-        XCTAssertEqual(service2.value, 64)
-        let container2 = AutoRegisteringContainer()
-        let service3 = container2.singletonTest()
-        // auto registration should have no effect on scope cache
-        XCTAssertEqual(service3.value, 64)
-    }
-
     // #114 #146 setting a context would not clear scope cache as does register
     func testContextClearingScope() throws {
         let service1 = Container.shared.cachedService()
@@ -191,7 +160,39 @@ final class FactoryDefectTests: XCContainerTestCase {
         XCTAssertFalse(service4.id == service5.id)
         XCTAssertFalse(service3.id == service5.id)
     }
+}
 
+final class FactoryAutoRegisteringTests: XCAutoRegisteringContainerTestCase {
+    // Registration on a new container could be overridden by auto registration
+    func testRegistrationOverriddenByAutoRegistration() throws {
+        let container1 = AutoRegisteringContainer()
+        let service1 = container1.test()
+        XCTAssertEqual(service1.value, 32)
+        let container2 = AutoRegisteringContainer()
+        container2.test.register {
+            MockServiceN(64)
+        }
+        let service2 = container2.test()
+        XCTAssertEqual(service2.value, 64)
+    }
+
+    // AutoRegistration should have no effect on singletons
+    func testAutoRegistrationAndSingletonCache() throws {
+        let container1 = AutoRegisteringContainer()
+        let service1 = container1.singletonTest()
+        // should be auto registration value
+        XCTAssertEqual(service1.value, 32)
+        container1.singletonTest.register {
+            MockServiceN(64)
+        }
+        let service2 = container1.singletonTest()
+        // register should have cleared singleton scope cache so should be new value
+        XCTAssertEqual(service2.value, 64)
+        let container2 = AutoRegisteringContainer()
+        let service3 = container2.singletonTest()
+        // auto registration should have no effect on scope cache
+        XCTAssertEqual(service3.value, 64)
+    }
 }
 
 extension Container {
@@ -220,17 +221,35 @@ fileprivate class LockingTestB {
     init() {}
 }
 
-fileprivate final class AutoRegisteringContainer: SharedContainer, AutoRegistering {
-    static let shared = AutoRegisteringContainer()
+package final class AutoRegisteringContainer: SharedContainer, AutoRegistering {
+    #if swift(>=5.5)
+    @TaskLocal package static var shared = AutoRegisteringContainer()
+    #else
+    package static let shared = AutoRegisteringContainer()
+    #endif
     var test: Factory<MyServiceType> {
         self { MockServiceN(16) }
     }
     var singletonTest: Factory<MyServiceType> {
         self { MockServiceN(16) }.singleton
     }
-    func autoRegister() {
+    package func autoRegister() {
         test.register { MockServiceN(32) }
         singletonTest.register { MockServiceN(32) }
     }
-    let manager = ContainerManager()
+    package let manager = ContainerManager()
 }
+
+package class XCAutoRegisteringContainerTestCase: XCTestCase {
+    package var transform: (@Sendable (AutoRegisteringContainer) -> Void)?
+
+    package override func invokeTest() {
+        withContainer(
+            shared: AutoRegisteringContainer.$shared,
+            container: AutoRegisteringContainer(),
+            operation: super.invokeTest,
+            transform: self.transform
+        )
+    }
+}
+
