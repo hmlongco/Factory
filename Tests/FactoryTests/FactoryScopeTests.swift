@@ -4,6 +4,11 @@ import FactoryTesting
 
 final class FactoryScopeTests: XCContainerTestCase {
 
+    override func setUp() {
+        super.setUp()
+        Container.shared.reset()
+    }
+
     func testUniqueScope() throws {
         let service1 = Container.shared.myServiceType()
         let service2 = Container.shared.myServiceType()

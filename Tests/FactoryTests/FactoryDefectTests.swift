@@ -3,6 +3,13 @@ import FactoryTesting
 @testable import Factory
 
 final class FactoryDefectTests: XCContainerTestCase {
+
+    override func setUp() {
+        super.setUp()
+        Container.shared.reset()
+        Scope.singleton.reset()
+    }
+
     // scope would not correctly resolve a factory with an optional type. e.g. Factory<MyType?>(scope: .cached) { nil }
     func testNilScopedService() throws {
         Container.shared.nilCachedService.reset()

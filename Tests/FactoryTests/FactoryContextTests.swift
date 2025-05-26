@@ -7,6 +7,9 @@ final class FactoryContextTests: XCContainerTestCase {
     override func setUp() {
         super.setUp()
 
+        // start over
+        Container.shared.reset()
+
         // externally defined contexts
         Container.shared.externalContextService
             .register { ContextService(name: "REGISTERED") }
@@ -29,6 +32,12 @@ final class FactoryContextTests: XCContainerTestCase {
         // define arg contexts
         Container.shared.argsContextService
             .onArgs(["ARG1","ARG2"]) { ContextService(name: "ARG") }
+    }
+
+    override func tearDown() {
+        super.tearDown()
+        // restore current arg state
+        FactoryContext.current = FactoryContext()
     }
 
   #if os(macOS)

@@ -115,6 +115,11 @@ extension Container {
 
 final class FactoryInjectionTests: XCContainerTestCase {
 
+    override func setUp() {
+        super.setUp()
+        Container.shared.reset()
+    }
+
     func testBasicInjection() throws {
         let services = Services1()
         XCTAssertEqual(services.service.text(), "MyService")

@@ -1,7 +1,6 @@
 import Factory
 
 // This should be a global function but Swift doesn't like global generic functions with default values.
-//TODO: FactoryContext.current to be added
 public enum FactoryTestingHelper<C: SharedContainer> {
     /// Asynchronously provides a new container for each operation.
     public static func withContainer(

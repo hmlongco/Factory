@@ -4,6 +4,11 @@ import FactoryTesting
 
 final class FactoryParameterTests: XCContainerTestCase {
 
+    override func setUp() {
+        super.setUp()
+        Container.shared.reset()
+    }
+
     func testParameterServiceResolutions() throws {
         let service1 = Container.shared.parameterService(5)
         XCTAssertEqual(service1.value, 5)

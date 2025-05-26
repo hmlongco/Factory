@@ -5,6 +5,7 @@ import FactoryTesting
 final class FactoryCoreTests: XCContainerTestCase {
 
     override func setUp() {
+        Container.shared.reset()
         CustomContainer.shared.reset()
         CustomContainer.shared.count = 0
     }

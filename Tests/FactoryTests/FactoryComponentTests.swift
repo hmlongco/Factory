@@ -17,6 +17,11 @@ final class FactoryComponentTests: XCContainerTestCase {
     let key3U = FactoryKey(type: UUID.self, key: key3Unicode)
     let key4U = FactoryKey(type: UUID.self, key: key4Unicode)
 
+    override func setUp() {
+        super.setUp()
+        Container.shared.reset()
+    }
+
     func testScopeCache() {
         let cache = Scope.Cache()
         let scopeID = UUID()
