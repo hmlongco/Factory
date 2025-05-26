@@ -2,7 +2,7 @@ import XCTest
 import FactoryTesting
 @testable import Factory
 
-final class FactoryCoreTests: XCContainerTestCase {
+final class FactoryCoreTests: XCTestCase {
 
     override func setUp() {
         Container.shared.reset()
