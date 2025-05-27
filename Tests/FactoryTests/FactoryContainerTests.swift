@@ -1,23 +1,12 @@
 import XCTest
+import FactoryTesting
 @testable import FactoryKit
 
 #if canImport(SwiftUI)
 import SwiftUI
 #endif
 
-final class FactoryContainerTests: XCTestCase {
-
-    override func setUp() {
-        super.setUp()
-        Container.shared.reset()
-        CustomContainer.shared.reset()
-    }
-
-    func testDecorators() {
-        CustomContainer.count = 0
-        let _ = CustomContainer.shared.decorated()
-        XCTAssertEqual(CustomContainer.shared.count, 2)
-    }
+final class FactoryContainerTests: XCContainerTestCase {
 
     func testPushPop() throws {
         let service1 = Container.shared.myServiceType()
@@ -110,6 +99,14 @@ final class FactoryContainerTests: XCTestCase {
         XCTAssertTrue(Container.shared.manager.isEmpty(.context))
     }
 
+}
+
+final class FactoryCustomContainerTests: XCCustomContainerTestCase {
+    func testDecorators() {
+        CustomContainer.count = 0
+        let _ = CustomContainer.shared.decorated()
+        XCTAssertEqual(CustomContainer.shared.count, 2)
+    }
 }
 
 private extension Container {

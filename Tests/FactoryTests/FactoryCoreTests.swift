@@ -1,15 +1,14 @@
 import XCTest
+import FactoryTesting
 @testable import FactoryKit
 
 #if canImport(SwiftUI)
 import SwiftUI
 #endif
 
-final class FactoryCoreTests: XCTestCase {
+final class FactoryCoreTests: XCContainerAndCustomContainerTestCase {
 
     override func setUp() {
-        Container.shared.reset()
-        CustomContainer.shared.reset()
         CustomContainer.shared.count = 0
     }
 
@@ -193,34 +192,6 @@ final class FactoryCoreTests: XCTestCase {
         }
     }
 
-    @MainActor
-    func testStrictPromise() {
-        // Expect non fatal error when strict and NOT in debug mode
-        Container.shared.manager.promiseTriggersError = false
-        expectNonFatalError {
-            let _ = Container.shared.strictPromisedService()
-        }
-        // Expect fatal error when strict and in debug mode
-        Container.shared.manager.promiseTriggersError = true
-        expectFatalError(expectedMessage: "MyServiceType was not registered") {
-            let _ = Container.shared.strictPromisedService()
-        }
-    }
-
-    @MainActor
-    func testStrictParameterPromise() {
-        // Expect non fatal error when strict and NOT in debug mode
-        Container.shared.manager.promiseTriggersError = false
-        expectNonFatalError {
-            let _ = Container.shared.strictPromisedParameterService(23)
-        }
-        // Expect fatal error when strict and in debug mode
-        Container.shared.manager.promiseTriggersError = true
-        expectFatalError(expectedMessage: "ParameterService was not registered") {
-            let _ = Container.shared.strictPromisedParameterService(23)
-        }
-    }
-
     func testTrace() {
         var logged: [String] = []
         Container.shared.manager.trace.toggle()
@@ -255,5 +226,38 @@ final class FactoryCoreTests: XCTestCase {
         XCTAssertTrue(service2.text() == "MockService")
     }
 #endif
+
+}
+
+// FactoryContext.current is not yet using @TaskLocal therefore we cannot use safely the `XCContainerTestCase` here.
+final class FactoryCoreStrictPromiseTests: XCTestCase {
+
+    @MainActor
+    func testStrictPromise() {
+        // Expect non fatal error when strict and NOT in debug mode
+        Container.shared.manager.promiseTriggersError = false
+        expectNonFatalError {
+            let _ = Container.shared.strictPromisedService()
+        }
+        // Expect fatal error when strict and in debug mode
+        Container.shared.manager.promiseTriggersError = true
+        expectFatalError(expectedMessage: "MyServiceType was not registered") {
+            let _ = Container.shared.strictPromisedService()
+        }
+    }
+
+    @MainActor
+    func testStrictParameterPromise() {
+        // Expect non fatal error when strict and NOT in debug mode
+        Container.shared.manager.promiseTriggersError = false
+        expectNonFatalError {
+            let _ = Container.shared.strictPromisedParameterService(23)
+        }
+        // Expect fatal error when strict and in debug mode
+        Container.shared.manager.promiseTriggersError = true
+        expectFatalError(expectedMessage: "ParameterService was not registered") {
+            let _ = Container.shared.strictPromisedParameterService(23)
+        }
+    }
 
 }

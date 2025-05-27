@@ -7,6 +7,7 @@
 
 import Foundation
 import Testing
+import XCTest
 
 @testable import FactoryKit
 import FactoryTesting
@@ -16,6 +17,60 @@ import FactoryTesting
 extension Trait where Self == ContainerTrait<CustomContainer> {
     static var customContainer: ContainerTrait<CustomContainer> {
         .init(shared: CustomContainer.$shared, container: .init())
+    }
+}
+
+package class XCCustomContainerTestCase: XCTestCase {
+    package var transform: (@Sendable (CustomContainer) -> Void)?
+
+    package override func invokeTest() {
+        withContainer(
+            shared: CustomContainer.$shared,
+            container: CustomContainer(),
+            operation: super.invokeTest,
+            transform: self.transform
+        )
+    }
+}
+
+func withContainerAndCustomContainer(
+    operation: @Sendable () -> Void,
+    containerTransform: (@Sendable (Container) -> Void)? = nil,
+    customContainerTransform: (@Sendable (CustomContainer) -> Void)? = nil
+) {
+    withContainer(
+        shared: CustomContainer.$shared,
+        container: CustomContainer(),
+        operation: {
+            withContainer(
+                shared: Container.$shared,
+                container: Container(),
+                operation: operation,
+                transform: containerTransform
+            )
+        },
+        transform: customContainerTransform
+    )
+}
+
+package class XCContainerAndCustomContainerTestCase: XCTestCase {
+    package var containerTransform: (@Sendable (Container) -> Void)?
+    package var customContainerTransform: (@Sendable (CustomContainer) -> Void)?
+
+    package override func invokeTest() {
+        withContainer(
+            shared: CustomContainer.$shared,
+            container: CustomContainer(),
+            operation: {
+                withContainer(
+                    shared: Container.$shared,
+                    container: Container(),
+                    operation: super.invokeTest,
+                    transform: self.containerTransform
+                )
+            },
+            transform: self.customContainerTransform
+        )
     }
 }
 #endif
