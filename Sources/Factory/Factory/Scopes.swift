@@ -193,7 +193,7 @@ extension Scope {
 
     /// A reference to the default unique scope.
     ///
-    /// If no scope cache is specified then Factory is running in unique mode.    
+    /// If no scope cache is specified then Factory is running in unique mode.
     public static let unique = Unique()
     
     /// Defines the unique scope. A new instance of a given type will be returned on every resolution cycle.
