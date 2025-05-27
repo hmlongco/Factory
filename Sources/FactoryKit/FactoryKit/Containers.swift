@@ -338,6 +338,9 @@ extension ContainerManager {
                 self.options.removeAll(keepingCapacity: true)
                 self.cache.reset()
                 self.autoRegistrationCheckNeeded = true
+                self._defaultScope = nil
+                self._dependencyChainTestMax = 8
+                self._promiseTriggersError = FactoryContext.current.isDebug && !FactoryContext.current.isPreview
             case .context:
                 for (key, option) in self.options {
                     var mutable = option
