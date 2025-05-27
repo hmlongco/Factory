@@ -1,5 +1,9 @@
 # Factory Changelog
 
+## 2.5.3
+
+* Fix unique scope resolution issue on container with non-unique default scope - PR #307
+
 ## 2.5.2
 
 * CocoaPods update for Factory, no FactoryTesting support

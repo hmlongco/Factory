@@ -249,7 +249,7 @@ public final class ContainerManager: @unchecked Sendable {
     /// Public initializer
     public init() {}
 
-    /// Default scope
+    /// Default scope. Setting scope to nil returns the default to `unique`.
     public var defaultScope: Scope? {
         get { globalVariableLock.withLock { _defaultScope } }
         set { globalVariableLock.withLock { _defaultScope = newValue } }
