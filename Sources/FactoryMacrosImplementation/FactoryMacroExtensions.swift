@@ -30,13 +30,18 @@ extension FactoryMacroExtensions {
         let preserved = decl
             .attributes
             .compactMap { (attr) -> String? in
-                let d = attr.description.trimmingCharacters(in: .whitespacesAndNewlines)
-                if d.hasPrefix("@DefineFactory") || d.hasPrefix("@DefineParameterFactory") {
+                switch attr.kind {
+                case .availabilityCondition:
+                    return attr.trimmedDescription
+                case .attribute:
+                    let d = attr.trimmedDescription
+                    if d.hasPrefix("@DefineFactory") || d.hasPrefix("@DefineParameterFactory") {
+                        return nil
+                    } else {
+                        return d
+                    }
+                default:
                     return nil
-                } else if d.hasPrefix("//") {
-                    return nil
-                } else {
-                    return d
                 }
             }
             .joined(separator: "\n")

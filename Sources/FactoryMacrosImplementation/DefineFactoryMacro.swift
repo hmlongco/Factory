@@ -49,7 +49,7 @@ public struct DefineFactoryMacro: AccessorMacro, PeerMacro, FactoryMacroExtensio
         let name = try identifier(from: binding)
         let type = try type(from: binding)
 
-        let attributes = attributes(from: varDecl)
+        // let attributes = attributes(from: varDecl)
         let modifiers = modifiers(from: varDecl)
 
         var closure: String?
@@ -73,7 +73,7 @@ public struct DefineFactoryMacro: AccessorMacro, PeerMacro, FactoryMacroExtensio
         }
 
         let factory = """
-        \(attributes)\(modifiers)var $\(name): Factory<\(type)> {
+        \(modifiers)var $\(name): Factory<\(type)> {
             Factory<\(type)>(self) \(closure)\(scope)
         }
         """

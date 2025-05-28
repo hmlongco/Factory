@@ -48,7 +48,6 @@ extension Container {
     @DefineFactory({ MyService() }, scope: .cached)
     public var macroCachedService: MyServiceType
 
-    // do better?
     @DefineFactory({ nil as MyServiceType? })
     public var macroOptionalService: MyServiceType?
 }
