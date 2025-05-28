@@ -83,12 +83,19 @@ let package = Package(
         ),
         .target(
             name: "FactoryTesting",
-            dependencies: ["FactoryKit"],
+            dependencies: [
+                "FactoryMacros"
+            ],
             path: "Sources/FactoryTesting"
         ),
         .testTarget(
             name: "FactoryTests",
-            dependencies: ["FactoryTesting"]
+            dependencies: [
+                "FactoryTesting"
+            ],
+            swiftSettings: [
+                .enableExperimentalFeature("StrictConcurrency")
+            ]
         )
     ],
     swiftLanguageModes: [

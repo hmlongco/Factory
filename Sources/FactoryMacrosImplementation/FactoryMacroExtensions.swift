@@ -33,8 +33,8 @@ extension FactoryMacroExtensions {
                 let d = attr.description.trimmingCharacters(in: .whitespacesAndNewlines)
                 if d.hasPrefix("@DefineFactory") || d.hasPrefix("@DefineParameterFactory") {
                     return nil
-//                } else if d.hasSuffix("Actor") {
-//                    return d
+                } else if d.hasPrefix("//") {
+                    return nil
                 } else {
                     return d
                 }

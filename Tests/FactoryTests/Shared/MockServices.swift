@@ -26,7 +26,7 @@ protocol ValueProviding: IDProviding {
     var value: Int { get }
 }
 
-protocol MyServiceType {
+public protocol MyServiceType {
     var id: UUID { get }
     var value: Int { get }
     func text() -> String
