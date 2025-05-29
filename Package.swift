@@ -46,9 +46,7 @@ let package = Package(
             dependencies: [],
             path: "Sources/FactoryKit",
             resources: [.copy("PrivacyInfo.xcprivacy")],
-            swiftSettings: [
-                .enableExperimentalFeature("StrictConcurrency")
-            ]
+            swiftSettings: .commonSettings
         ),
         .target(
             name: "FactoryMacros",
@@ -56,9 +54,8 @@ let package = Package(
                 "FactoryKit",
                 "FactoryMacrosImplementation",
             ],
-            swiftSettings: [
-                .enableExperimentalFeature("StrictConcurrency")
-            ]
+            path: "Sources/FactoryMacros",
+            swiftSettings: .commonSettings
         ),
         .macro(
             name: "FactoryMacrosImplementation",
@@ -67,9 +64,8 @@ let package = Package(
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax")
             ],
-            swiftSettings: [
-                .enableExperimentalFeature("StrictConcurrency")
-            ]
+            path: "Sources/FactoryMacrosImplementation",
+            swiftSettings: .commonSettings
         ),
         .executableTarget(
             name: "FactoryMacrosClient",
@@ -77,28 +73,33 @@ let package = Package(
                 "FactoryKit",
                 "FactoryMacros",
             ],
-            swiftSettings: [
-                .enableExperimentalFeature("StrictConcurrency")
-            ]
+            path: "Sources/FactoryMacrosClient",
+            swiftSettings: .commonSettings
         ),
         .target(
             name: "FactoryTesting",
             dependencies: [
-                "FactoryMacros"
+                "FactoryKit"
             ],
-            path: "Sources/FactoryTesting"
+            path: "Sources/FactoryTesting",
+            swiftSettings: .commonSettings
         ),
         .testTarget(
             name: "FactoryTests",
             dependencies: [
+                "FactoryMacros",
                 "FactoryTesting"
             ],
-            swiftSettings: [
-                .enableExperimentalFeature("StrictConcurrency")
-            ]
+            swiftSettings: .commonSettings
         )
     ],
     swiftLanguageModes: [
         .version("6")
     ]
 )
+
+extension [SwiftSetting] {
+    static let commonSettings: [SwiftSetting] = [
+        .enableExperimentalFeature("StrictConcurrency")
+    ]
+}
