@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4C6B3BD22DD4D4D800DB94FF /* FactoryKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4C6B3BD12DD4D4D800DB94FF /* FactoryKit */; };
+		4C9D815B2DE9005300D9BF5A /* FactoryMacros in Frameworks */ = {isa = PBXBuildFile; productRef = 4C9D815A2DE9005300D9BF5A /* FactoryMacros */; };
 		4CCC84292868CF8900B474F7 /* Networking.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4CCC84202868CF8800B474F7 /* Networking.framework */; };
 		4CCC842E2868CF8900B474F7 /* NetworkingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CCC842D2868CF8900B474F7 /* NetworkingTests.swift */; };
 		4CCC842F2868CF8900B474F7 /* Networking.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CCC84232868CF8800B474F7 /* Networking.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -54,7 +54,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4C6B3BD22DD4D4D800DB94FF /* FactoryKit in Frameworks */,
+				4C9D815B2DE9005300D9BF5A /* FactoryMacros in Frameworks */,
 				4CCC844D2868CFE500B474F7 /* Common.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -144,7 +144,7 @@
 			);
 			name = Networking;
 			packageProductDependencies = (
-				4C6B3BD12DD4D4D800DB94FF /* FactoryKit */,
+				4C9D815A2DE9005300D9BF5A /* FactoryMacros */,
 			);
 			productName = Networking;
 			productReference = 4CCC84202868CF8800B474F7 /* Networking.framework */;
@@ -501,9 +501,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		4C6B3BD12DD4D4D800DB94FF /* FactoryKit */ = {
+		4C9D815A2DE9005300D9BF5A /* FactoryMacros */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = FactoryKit;
+			productName = FactoryMacros;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

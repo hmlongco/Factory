@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import FactoryKit
+import FactoryMacros
 
 extension Container {
     var myActor: Factory<SomeActor> { self { SomeActor() } }

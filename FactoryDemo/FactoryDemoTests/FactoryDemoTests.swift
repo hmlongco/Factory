@@ -6,7 +6,7 @@
 //
 
 import XCTest
-import FactoryKit
+import FactoryMacros
 import Common
 
 @testable import FactoryDemo

@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import FactoryKit
+import FactoryMacros
 
 public class SimpleService {
     func text() -> String{

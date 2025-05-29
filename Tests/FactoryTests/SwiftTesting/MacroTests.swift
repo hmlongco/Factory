@@ -39,15 +39,33 @@ struct MacroTests {
         #expect(service2 is MockService)
     }
 
+    @Test func macroMainActorTypeTest() async throws {
+        let service: SomeMainActorType? = Container.shared.macroMainActorType
+        #expect(service != nil)
+    }
+
+    @Test func macroTestActorTypeTest() async throws {
+        let service: TestActorType? = Container.shared.macroTestActorType
+        #expect(service != nil)
+    }
+
 }
 
 extension Container {
     @DefineFactory({ MyService() })
-    public var macroMyService: MyServiceType
+    var macroMyService: MyServiceType
 
     @DefineFactory({ MyService() }, scope: .cached)
     public var macroCachedService: MyServiceType
 
     @DefineFactory({ nil as MyServiceType? })
-    public var macroOptionalService: MyServiceType?
+    var macroOptionalService: MyServiceType?
+
+    // why?
+    @DefineFactory({ @MainActor in SomeMainActorType() })
+    var macroMainActorType: SomeMainActorType
+
+    // why?
+    @DefineFactory({ @TestActor in TestActorType() })
+    var macroTestActorType: TestActorType
 }

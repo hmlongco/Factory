@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import FactoryKit
+import FactoryMacros
 
 @main
 struct FactoryDemoApp: App {

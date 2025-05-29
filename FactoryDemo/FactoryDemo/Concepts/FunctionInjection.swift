@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import FactoryKit
+import FactoryMacros
 
 //typealias OpenURLFunction = (_ url: URL) -> Bool
 //

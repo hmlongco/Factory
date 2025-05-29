@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import FactoryKit
+import FactoryMacros
 
 extension SharedContainer {
     var processor1: Factory<Processor> { self { Processor(name: "processor #1") } }

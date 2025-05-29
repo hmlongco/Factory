@@ -10,23 +10,9 @@ public macro DefineFactory<T>(_ factory: @escaping () -> T, scope: Scope? = nil)
     type: "DefineFactoryMacro"
 )
 
-@attached(accessor, names: arbitrary)
-@attached(peer, names: arbitrary)
-public macro Define<T>(factory: @escaping () -> T, scope: Scope? = nil) = #externalMacro(
-    module: "FactoryMacrosImplementation",
-    type: "DefineFactoryMacro"
-)
-
-@attached(accessor, names: arbitrary)
-@attached(peer, names: arbitrary)
-public macro DefineParameterFactory(scope: Scope? = nil) = #externalMacro(
-    module: "FactoryMacrosImplementation",
-    type: "DefineParameterFactoryMacro"
-)
-
-@attached(accessor, names: arbitrary)
-@attached(peer, names: arbitrary)
-public macro Define<P,T>(parameterFactory: @escaping (P) -> T, scope: Scope? = nil) = #externalMacro(
-    module: "FactoryMacrosImplementation",
-    type: "DefineParameterFactoryMacro"
-)
+//@attached(accessor, names: arbitrary)
+//@attached(peer, names: arbitrary)
+//public macro DefineParameterFactory(scope: Scope? = nil) = #externalMacro(
+//    module: "FactoryMacrosImplementation",
+//    type: "DefineParameterFactoryMacro"
+//)

@@ -5,7 +5,7 @@
 //  Created by Michael Long on 10/28/23.
 //
 
-import FactoryKit
+import FactoryMacros
 #if canImport(Observation)
 import Observation
 #endif

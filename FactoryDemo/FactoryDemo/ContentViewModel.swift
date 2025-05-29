@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import FactoryKit
+import FactoryMacros
 import Common
 import Networking
 
@@ -15,6 +15,8 @@ class ContentViewModel: ObservableObject {
     @Injected(\.myServiceType) private var service
     @Injected(\.networkType) private var network
     @Injected(\.fatalType) private var fatal
+
+    @Injected(\.$macroCommonType) private var macro
 
     private let simpleService = Container.shared.simpleService()
 
@@ -49,6 +51,8 @@ class ContentViewModel: ObservableObject {
 
         let n1 = Container.shared.networkType()
         n1.test()
+
+        macro.test()
 
         let processors = Container.shared.processors()
         processors.forEach { p in
