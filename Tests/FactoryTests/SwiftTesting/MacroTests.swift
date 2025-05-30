@@ -49,6 +49,11 @@ struct MacroTests {
         #expect(service != nil)
     }
 
+//    @Test func macroMirrorTest() async throws {
+//        let service: SomeMainActorType? = Container.shared.potentialMyService
+//        #expect(service != nil)
+//    }
+
 }
 
 extension Container {
@@ -68,4 +73,24 @@ extension Container {
     // why?
     @DefineFactory({ @TestActor in TestActorType() })
     var macroTestActorType: TestActorType
+
+}
+
+//extension Container: AutoRegistering {
+//    func autoRegister() {
+//        $macroMyService.onDebug {
+//            MockService()
+//        }
+//    }
+//}
+
+protocol MirrorServiceTypeProviding {
+    var mirrorMyService: MyServiceType { get }
+}
+
+extension Container: MirrorServiceTypeProviding {
+    @MirrorFactory
+    var _mirrorMyService: Factory<MyServiceType> {
+        self { MyService() }
+    }
 }

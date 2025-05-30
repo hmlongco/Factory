@@ -98,7 +98,19 @@ class ParameterService: MyServiceType {
 }
 
 extension Container {
-    var myServiceType: Factory<MyServiceType> { self { MyService() } }
+    var myServiceType: Factory<MyServiceType> {
+        self { MyService() }
+    }
+}
+
+protocol MyServiceTypeProviding {
+    // the ideal
+    var myServiceType1: MyServiceType { get }
+    // what's exposed
+    var myServiceType2: Factory<MyServiceType> { get }
+}
+
+extension Container {
     var myServiceType2: Factory<MyServiceType> { self { MyService() } }
 
     var mockService: Factory<MockService> { self { MockService() } }

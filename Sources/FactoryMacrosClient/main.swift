@@ -47,7 +47,7 @@ extension Container: MyServiceProviding {
     @DefineFactory({ MainActorService() })
     var mainActorService2: MainActorType
 
-//    @Define(parameterFactory: { (p: Int) in MyParameterService(p) })
+//    @DefineParameterFactory({ p in MyParameterService(p) })
 //    var parameterService1: (Int) -> MyParameterService
 
     func testMacro1() {

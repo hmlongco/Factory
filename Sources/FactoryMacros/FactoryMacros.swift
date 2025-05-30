@@ -10,6 +10,9 @@ public macro DefineFactory<T>(_ factory: @escaping () -> T, scope: Scope? = nil)
     type: "DefineFactoryMacro"
 )
 
+@attached(peer, names: arbitrary)
+public macro MirrorFactory() = #externalMacro(module: "FactoryMacrosImplementation", type: "MirrorFactoryMacro")
+
 //@attached(accessor, names: arbitrary)
 //@attached(peer, names: arbitrary)
 //public macro DefineParameterFactory(scope: Scope? = nil) = #externalMacro(
