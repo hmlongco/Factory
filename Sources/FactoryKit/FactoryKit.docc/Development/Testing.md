@@ -502,6 +502,19 @@ struct SomeSuite {
   }
 ```
 
+#### Installing FactoryTesting
+
+If you're using a SPM project file, just include `FactoryTesting` as a package dependency to your test target.
+```swift
+.testTarget(
+    name: "FactoryTests",
+    dependencies: ["FactoryTesting"]
+)
+```
+If you're using a traditional Xcode project file, add the `FactoryTesting` library to the test target your Xcode project file.
+
+> Warning: FactoryTesting is a Swift Testing trait, and as such that library should be added to the **test target**, and **not** to the main app or other targets.
+
 ## Container Injection
 
 There is another way to achieve parallel testing without using `ContainerTrait`. 
