@@ -371,6 +371,7 @@ final class FactoryScopeTests: XCContainerTestCase {
         let service3 = Container.shared.singletonService()
         XCTAssertTrue(service2.id != service3.id)
     }
+
 }
 
 final class FactoryScopeTestsFirstSingleton: XCFirstSingletonContainerTestCase {
@@ -389,6 +390,7 @@ final class FactoryScopeTestsFirstSingleton: XCFirstSingletonContainerTestCase {
 }
 
 final class FactoryScopeTestsFirstAndSecondSingleton: XCFirstAndSecondSingletonContainerTestCase {
+
     func testSingletonAcrossContainerTypes() throws {
         let container1 = FirstSingletonContainer()
         container1.manager.trace.toggle()
@@ -399,19 +401,10 @@ final class FactoryScopeTestsFirstAndSecondSingleton: XCFirstAndSecondSingletonC
         container1.manager.trace.toggle()
     }
 
-    @available(iOS 13, *)
-    func testSingletonScopeTimeToLive() async throws {
-        Container.shared.singletonService.timeToLive(0.01)
-        let service1 = Container.shared.singletonService()
-        let service2 = Container.shared.singletonService()
-        XCTAssertTrue(service1.id == service2.id)
-        // delay
-        try await Task.sleep(nanoseconds: 10_100_000)
-        // resolution should fail ttl test and return new instance
-        let service3 = Container.shared.singletonService()
-        XCTAssertTrue(service2.id != service3.id)
-    }
-    
+}
+
+final class FactoryScopeTestsCachedContainer: XCCachedContainerTestCase {
+
     func testUniqueResolutionOnCachedContainer() throws {
         let service1 = CachedContainer.shared.uniqueService()
         let service2 = CachedContainer.shared.uniqueService()
@@ -491,13 +484,32 @@ package class XCFirstAndSecondSingletonContainerTestCase: XCTestCase {
     }
 }
 
-fileprivate final class CachedContainer: SharedContainer, AutoRegistering {
-    static let shared: CachedContainer = CachedContainer()
-    let manager: ContainerManager = ContainerManager()
-    func autoRegister() {
+package final class CachedContainer: SharedContainer, AutoRegistering {
+    #if swift(>=5.5)
+    @TaskLocal package static var shared: CachedContainer = CachedContainer()
+    #else
+    package static let shared = CachedContainer()
+    #endif
+
+    package let manager: ContainerManager = ContainerManager()
+    package func autoRegister() {
         manager.defaultScope = .cached
     }
     var uniqueService: Factory<MyService> {
         self { MyService() }.unique
     }
+}
+
+package class XCCachedContainerTestCase: XCTestCase {
+    package var transform: (@Sendable (CachedContainer) -> Void)?
+
+    package override func invokeTest() {
+        withContainer(
+            shared: CachedContainer.$shared,
+            container: CachedContainer(),
+            operation: super.invokeTest,
+            transform: self.transform
+        )
+    }
+
 }
