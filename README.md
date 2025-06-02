@@ -233,6 +233,8 @@ struct FactoryTests {
     
 }
 ```
+To use container traits, just add the FactoryTesting library or dependency to your test target.
+
 See [Testing](https://hmlongco.github.io/Factory/documentation/factorykit/testing) for more.
 
 But we're not done yet. 
@@ -369,7 +371,7 @@ import FactoryKit
 ```
 While the original `Factory` library import still exists, it will be deprecated in the future. 
 
-If you're using Swift Testing you'll probably also want to also import the `FactoryTesting` library and add it to your test target.
+If you're using Swift Testing you'll probably also want to also import the `FactoryTesting` library and add it to your test target. (Do **not** add it to your app target or other targets.)
 
 Note that the current version of Factory requires Swift 5.10 minimum and that the minimum version of iOS currently supported with this release is iOS 13.
 

@@ -398,6 +398,27 @@ final class FactoryScopeTestsFirstAndSecondSingleton: XCFirstAndSecondSingletonC
         XCTAssertTrue(service1.id == service2.id)
         container1.manager.trace.toggle()
     }
+
+    @available(iOS 13, *)
+    func testSingletonScopeTimeToLive() async throws {
+        Container.shared.singletonService.timeToLive(0.01)
+        let service1 = Container.shared.singletonService()
+        let service2 = Container.shared.singletonService()
+        XCTAssertTrue(service1.id == service2.id)
+        // delay
+        try await Task.sleep(nanoseconds: 10_100_000)
+        // resolution should fail ttl test and return new instance
+        let service3 = Container.shared.singletonService()
+        XCTAssertTrue(service2.id != service3.id)
+    }
+    
+    func testUniqueResolutionOnCachedContainer() throws {
+        let service1 = CachedContainer.shared.uniqueService()
+        let service2 = CachedContainer.shared.uniqueService()
+        XCTAssertTrue(service1 !== service2)
+        XCTAssertTrue(service1.id != service2.id)
+    }
+
 }
 
 extension SharedContainer {
@@ -467,5 +488,16 @@ package class XCFirstAndSecondSingletonContainerTestCase: XCTestCase {
             },
             transform: self.secondTransform
         )
+    }
+}
+
+fileprivate final class CachedContainer: SharedContainer, AutoRegistering {
+    static let shared: CachedContainer = CachedContainer()
+    let manager: ContainerManager = ContainerManager()
+    func autoRegister() {
+        manager.defaultScope = .cached
+    }
+    var uniqueService: Factory<MyService> {
+        self { MyService() }.unique
     }
 }

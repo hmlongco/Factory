@@ -249,7 +249,7 @@ public final class ContainerManager: @unchecked Sendable {
     /// Public initializer
     public init() {}
 
-    /// Default scope
+    /// Default scope. Setting scope to nil returns the default to `unique`.
     public var defaultScope: Scope? {
         get { globalVariableLock.withLock { _defaultScope } }
         set { globalVariableLock.withLock { _defaultScope = newValue } }
@@ -338,6 +338,9 @@ extension ContainerManager {
                 self.options.removeAll(keepingCapacity: true)
                 self.cache.reset()
                 self.autoRegistrationCheckNeeded = true
+                self._defaultScope = nil
+                self._dependencyChainTestMax = 8
+                self._promiseTriggersError = FactoryContext.current.isDebug && !FactoryContext.current.isPreview
             case .context:
                 for (key, option) in self.options {
                     var mutable = option
