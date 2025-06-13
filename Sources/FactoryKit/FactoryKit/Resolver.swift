@@ -76,7 +76,7 @@ extension Resolving {
     }
 
     /// Resolves a type from this container.
-    public func resolve<T>(_ type: T.Type = T.self) -> T? {
+    public func resolve<T: Sendable>(_ type: T.Type = T.self) -> T? {
         return factory(type)?.registration.resolve(with: ())
     }
 

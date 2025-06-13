@@ -110,7 +110,7 @@ func increment() {
     lock.unlock()
 }
 
-fileprivate class A {
+fileprivate class A: @unchecked Sendable {
     var b: B
     init(b: B) {
         self.b = b
@@ -120,7 +120,7 @@ fileprivate class A {
     }
 }
 
-fileprivate class B {
+fileprivate class B: @unchecked Sendable {
     var c: C
     init(c: C) {
         self.c = c
@@ -130,7 +130,7 @@ fileprivate class B {
     }
 }
 
-fileprivate class C {
+fileprivate class C: @unchecked Sendable {
     var d: D
     init(d: D) {
         self.d = d
@@ -140,14 +140,14 @@ fileprivate class C {
     }
 }
 
-fileprivate class D {
+fileprivate class D: @unchecked Sendable {
     init() {}
     func test() {
         increment()
     }
 }
 
-fileprivate class E {
+fileprivate class E: @unchecked Sendable {
     @LazyInjected(\MultiThreadedContainer.d) var d: D
     init() {}
     func test() {

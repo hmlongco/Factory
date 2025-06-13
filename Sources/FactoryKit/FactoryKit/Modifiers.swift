@@ -34,10 +34,10 @@ import SwiftUI
 public protocol FactoryModifying {
 
     /// The parameter type of the Factory, if any. Will be `Void` on the standard Factory.
-    associatedtype P
+    associatedtype P: Sendable
 
     /// The return type of the Factory's dependency.
-    associatedtype T
+    associatedtype T: Sendable
 
     /// Internal information that describes this Factory.
     var registration: FactoryRegistration<P,T> { get set }

@@ -8,40 +8,40 @@ import SwiftUI
 
 @testable import FactoryKit
 
-class Services1 {
+class Services1: @unchecked Sendable {
     @Injected(\.myServiceType) var service
     @Injected(\.mockService) var mock
     @Injected(\CustomContainer.test) var test
     init() {}
 }
 
-class Services2 {
+class Services2: @unchecked Sendable {
     @LazyInjected(\.myServiceType) var service
     @LazyInjected(\.mockService) var mock
     @LazyInjected(\CustomContainer.test) var test
     init() {}
 }
 
-class Services3 {
+class Services3: @unchecked Sendable {
     @WeakLazyInjected(\.sharedService) var service
     @WeakLazyInjected(\.mockService) var mock
     @WeakLazyInjected(\CustomContainer.test) var test
     init() {}
 }
 
-class Services4 {
+class Services4: @unchecked Sendable {
     @DynamicInjected(\.myServiceType) var service
     @DynamicInjected(\.mockService) var mock
     @DynamicInjected(\CustomContainer.test) var test
     init() {}
 }
 
-class Services5 {
+class Services5: @unchecked Sendable {
     @Injected(\.optionalService) var service
     init() {}
 }
 
-class ServicesP {
+class ServicesP: @unchecked Sendable {
     @LazyInjected(\.servicesC) var service
     let name = "Parent"
     init() {}
@@ -50,7 +50,7 @@ class ServicesP {
     }
 }
 
-class ServicesC {
+class ServicesC: @unchecked Sendable {
     @WeakLazyInjected(\.servicesP) var service: ServicesP?
     @WeakLazyInjected(\CustomContainer.test) var testService
     init() {}
@@ -69,12 +69,12 @@ extension Container {
     fileprivate var servicesC: Factory<ServicesC> { self { ServicesC() }.shared }
 }
 
-protocol ProtocolP: AnyObject {
+protocol ProtocolP: AnyObject, Sendable {
     var name: String { get }
     func test() -> String?
 }
 
-class ProtocolClassP: ProtocolP {
+class ProtocolClassP: ProtocolP, @unchecked Sendable {
     let child = Container.shared.protocolC()
     let name = "Parent"
     init() {}
@@ -83,13 +83,13 @@ class ProtocolClassP: ProtocolP {
     }
 }
 
-protocol ProtocolC: AnyObject {
+protocol ProtocolC: AnyObject, Sendable {
     var parent: ProtocolP? { get set }
     var name: String { get }
     func test() -> String?
 }
 
-class ProtocolClassC: ProtocolC {
+class ProtocolClassC: ProtocolC, @unchecked Sendable {
     weak var parent: ProtocolP?
     init() {}
     let name = "Child"
@@ -335,7 +335,7 @@ final class FactoryInjectionTests: XCTestCase {
 
 #if canImport(SwiftUI)
 @available(iOS 14, *)
-class ContentViewModel: ObservableObject {
+class ContentViewModel: ObservableObject, @unchecked Sendable {
     @Published var text = "Test"
 }
 @available(iOS 14, *)

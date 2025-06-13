@@ -48,7 +48,7 @@ import SwiftUI
 ///
 /// > Note: The @Injected property wrapper will be resolved on **initialization**. In the above example
 /// the referenced dependencies will be acquired when the parent class is created.
-@propertyWrapper public struct Injected<T> {
+@propertyWrapper public struct Injected<T: Sendable> {
 
     private var thunk: () -> Factory<T>
     private var dependency: T
@@ -109,7 +109,7 @@ extension Injected: @unchecked Sendable where T: Sendable {}
 /// allows you to point an instance of your own custom container type.
 ///
 /// > Note: Lazy injection is resolved the first time the dependency is referenced by the code, and **not** on initialization.
-@propertyWrapper public struct LazyInjected<T> {
+@propertyWrapper public struct LazyInjected<T: Sendable> {
 
     private var thunk: () -> Factory<T>
     private var dependency: T!
@@ -194,7 +194,7 @@ extension LazyInjected: @unchecked Sendable where T: Sendable {}
 /// allows you to point an instance of your own custom container type.
 ///
 /// > Note: Lazy injection is resolved the first time the dependency is referenced by the code, **not** on initialization.
-@propertyWrapper public struct WeakLazyInjected<T> {
+@propertyWrapper public struct WeakLazyInjected<T: Sendable> {
 
     private var thunk: () -> Factory<T>
     private weak var dependency: AnyObject?
@@ -289,7 +289,7 @@ extension WeakLazyInjected: @unchecked Sendable where T: Sendable {}
 ///     }
 /// }
 /// ```
-@propertyWrapper public struct DynamicInjected<T> {
+@propertyWrapper public struct DynamicInjected<T: Sendable> {
 
     private let thunk: () -> Factory<T>
 
@@ -319,7 +319,7 @@ extension WeakLazyInjected: @unchecked Sendable where T: Sendable {}
 extension DynamicInjected: @unchecked Sendable where T: Sendable {}
 
 /// Basic property wrapper for optional injected types
-@propertyWrapper public struct InjectedType<T> {
+@propertyWrapper public struct InjectedType<T: Sendable> {
     private var dependency: T?
     /// Initializes the property wrapper from the default Container. The dependency is resolved on initialization.
     public init() {
@@ -364,7 +364,7 @@ extension InjectedType: @unchecked Sendable where T: Sendable {}
 /// }
 /// ```
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
-@MainActor @frozen @propertyWrapper public struct InjectedObject<T>: DynamicProperty where T: Combine.ObservableObject {
+@MainActor @frozen @propertyWrapper public struct InjectedObject<T>: DynamicProperty where T: Sendable, T: Combine.ObservableObject {
     @StateObject fileprivate var dependency: T
     /// Initializes the property wrapper. The dependency is resolved on initialization.
     /// - Parameter keyPath: KeyPath to a Factory on the default Container.
@@ -412,7 +412,7 @@ extension InjectedObject: @unchecked Sendable where T: Sendable {}
 /// - Note: This property wrapper is available on iOS 17.0, macOS 14.0, tvOS 17.0, and watchOS 10.0.
 /// - Requires: The wrapped type `T` must conform to the `Observable` protocol.
 @available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
-@MainActor @propertyWrapper public struct InjectedObservable<T>: DynamicProperty where T: Observation.Observable {
+@MainActor @propertyWrapper public struct InjectedObservable<T: Sendable>: DynamicProperty where T: Observation.Observable {
     /// The observable dependency managed by this property wrapper.
     @State fileprivate var dependency: ThunkedValue<T>
      /// Initializes the `InjectedObservable` property wrapper, resolving the dependency from the default container.

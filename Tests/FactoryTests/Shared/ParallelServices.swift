@@ -22,29 +22,29 @@ extension Trait where Self == ContainerTrait<CustomContainer> {
 
 // Classes for @TaskLocal and TestTrait tests
 
-protocol FooBarBazProtocol {
+protocol FooBarBazProtocol: Sendable {
     var id: UUID { get }
-    var value: String { get set }
+    var value: String { get }
 }
 
 final class Foo: FooBarBazProtocol {
     let id: UUID = UUID()
-    var value = "foo"
+    let value = "foo"
 }
 
 final class Bar: FooBarBazProtocol {
     let id: UUID = UUID()
-    var value = "bar"
+    let value = "bar"
 }
 
 final class Baz: FooBarBazProtocol {
     let id: UUID = UUID()
-    var value = "baz"
+    let value = "baz"
 }
 
 protocol IsolatedProtocol: Sendable {
     var id: UUID { get }
-    var value: String { get set }
+    var value: String { get }
 }
 
 struct IsolatedFoo: IsolatedProtocol {

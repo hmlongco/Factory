@@ -56,7 +56,11 @@ struct MacroTests {
 
 }
 
-extension Container {
+protocol MacroServiceTypeProviding {
+    var macroMyService: MyServiceType { get }
+}
+
+extension Container: MacroServiceTypeProviding {
     @DefineFactory({ MyService() })
     var macroMyService: MyServiceType
 

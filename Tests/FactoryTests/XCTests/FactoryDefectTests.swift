@@ -216,12 +216,12 @@ extension Container {
 }
 
 // classes for recursive resolution test
-fileprivate class LockingTestA {
+fileprivate class LockingTestA: @unchecked Sendable {
     @Injected(\.lockingTestB) var b: LockingTestB
     init() {}
 }
 
-fileprivate class LockingTestB {
+fileprivate class LockingTestB: @unchecked Sendable {
     init() {}
 }
 

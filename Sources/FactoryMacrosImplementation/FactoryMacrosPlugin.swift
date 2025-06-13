@@ -13,6 +13,7 @@ struct FactoryMacrosPlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
         DefineFactoryMacro.self,
         DefineParameterFactoryMacro.self,
-        MirrorFactoryMacro.self
+        MirrorFactoryMacro.self,
+        DefineCustomContainerMacro.self
     ]
 }

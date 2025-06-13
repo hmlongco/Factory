@@ -30,8 +30,8 @@ import Foundation
 public typealias ParameterFactoryType<P, T> = @Sendable (P) -> T
 public typealias VoidFactoryType<T> = @Sendable () -> T
 #else
-public typealias ParameterFactoryType<P, T> = @Sendable @isolated(any) (P) -> T
-public typealias VoidFactoryType<T> = @Sendable @isolated(any) () -> T
+public typealias ParameterFactoryType<P: Sendable, T: Sendable> = @Sendable @isolated(any) (P) -> T
+public typealias VoidFactoryType<T: Sendable> = @Sendable @isolated(any) () -> T
 #endif
 
 
@@ -72,7 +72,7 @@ public typealias VoidFactoryType<T> = @Sendable @isolated(any) () -> T
 /// been served.
 ///
 /// Other operations exist for Factory. See ``FactoryModifying``.
-public struct Factory<T>: FactoryModifying {
+public struct Factory<T: Sendable>: FactoryModifying {
 
     /// Public initializer creates a Factory capable of managing dependencies of the desired type.
     ///
@@ -196,7 +196,7 @@ extension Factory: Sendable where T: Sendable {}
 /// Finally, if you define a scope keep in mind that the first argument passed will be used to create the dependency
 /// and *that* dependency will be cached. Since the cached object will be returned from now on any arguments passed in
 /// later requests will be ignored until the factory or scope is reset.
-public struct ParameterFactory<P,T>: FactoryModifying {
+public struct ParameterFactory<P: Sendable,T: Sendable>: FactoryModifying {
 
     /// Public initializer creates a factory capable of taking parameters at runtime.
     /// ```swift

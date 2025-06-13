@@ -27,7 +27,7 @@
 import Foundation
 
 /// Shared registration type for Factory and ParameterFactory. Used internally to manage the registration and resolution process.
-public struct FactoryRegistration<P,T>: Sendable {
+public struct FactoryRegistration<P: Sendable,T: Sendable>: Sendable {
 
     /// Key used to manage registrations and cached values.
     internal let key: FactoryKey
@@ -196,7 +196,7 @@ public struct FactoryRegistration<P,T>: Sendable {
     }
 
     /// Registers a new context.
-    internal func context(_ context: FactoryContextType, key: FactoryKey, factory: @escaping @Sendable (P) -> T) {
+    internal func context(_ context: FactoryContextType, key: FactoryKey, factory: @escaping ParameterFactoryType<P, T>) {
         options { options in
             switch context {
             case .arg(let arg):

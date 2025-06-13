@@ -18,7 +18,7 @@ extension Container: AutoRegistering {
     }
 }
 
-protocol IDProviding {
+protocol IDProviding: Sendable {
     var id: UUID { get }
 }
 
@@ -26,13 +26,13 @@ protocol ValueProviding: IDProviding {
     var value: Int { get }
 }
 
-public protocol MyServiceType {
+public protocol MyServiceType: Sendable {
     var id: UUID { get }
     var value: Int { get }
     func text() -> String
 }
 
-class MyService: MyServiceType {
+class MyService: MyServiceType, @unchecked Sendable {
     let id = UUID()
     let value: Int = 0
     func text() -> String {
@@ -42,7 +42,7 @@ class MyService: MyServiceType {
 
 extension MyService: ValueProviding {}
 
-class MockService: MyServiceType {
+class MockService: MyServiceType, @unchecked Sendable {
     let id = UUID()
     let value: Int = 0
     func text() -> String {
@@ -50,7 +50,7 @@ class MockService: MyServiceType {
     }
 }
 
-class MockServiceN: MyServiceType {
+class MockServiceN: MyServiceType, @unchecked Sendable {
     let id = UUID()
     let n: Int
     var value: Int { n }
@@ -71,22 +71,22 @@ struct ValueService: MyServiceType {
 }
 
 // classes for recursive resolution test
-class RecursiveA {
+class RecursiveA: @unchecked Sendable {
     @Injected(\.recursiveB) var b: RecursiveB?
     init() {}
 }
 
-class RecursiveB {
+class RecursiveB: @unchecked Sendable {
     @Injected(\.recursiveC) var c: RecursiveC?
     init() {}
 }
 
-class RecursiveC {
+class RecursiveC: @unchecked Sendable {
     @Injected(\.recursiveA) var a: RecursiveA?
     init() {}
 }
 
-class ParameterService: MyServiceType {
+class ParameterService: MyServiceType, @unchecked Sendable {
     let id = UUID()
     let value: Int
     init(value: Int) {
@@ -178,7 +178,7 @@ extension Container {
 
 // Classes for graph scope tests
 
-class GraphWrapper {
+class GraphWrapper: @unchecked Sendable {
     @Injected(\.graphService) var service1
     @Injected(\.graphService) var service2
     init() {}
@@ -191,7 +191,7 @@ extension Container {
 
 // Classes for implements scope tests
 
-class ProtocolConsumer {
+class ProtocolConsumer: @unchecked Sendable {
     @Injected(\.idProvider) var ids
     @Injected(\.valueProvider) var values
     init() {}

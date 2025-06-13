@@ -1,7 +1,7 @@
 import FactoryMacros
 
-public protocol MyServiceType {}
-public protocol MainActorType {}
+public protocol MyServiceType: Sendable {}
+public protocol MainActorType: Sendable {}
 
 public struct MyService: MyServiceType {}
 public struct MockMyService: MyServiceType {}
@@ -33,6 +33,14 @@ extension Container: MyServiceProviding {
     var currentService: Factory<MyServiceType> {
         Factory(self) { MyService() }
     }
+
+//    @DefineFactory
+//    var desiredService: MyServiceType {
+//        MyService()
+//    }
+
+//    @DefineFactory { MyService() }
+//    public var myService: MyServiceType
 
     @DefineFactory({ MyService() })
     public var myService: MyServiceType
@@ -74,6 +82,11 @@ extension Container: MyServiceProviding {
     }
 
 }
+
+//@DefineCustomContainer
+//public final class MacroContainer: SharedContainer {
+//
+//}
 
 Container.shared.testMacro1()
 Container.shared.testMacro2()

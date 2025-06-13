@@ -9,6 +9,7 @@ import Foundation
 
 enum FactoryMacroError: Error {
     case block
+    case `class`
     case closure
     case identifier
     case invalid
@@ -23,6 +24,8 @@ extension FactoryMacroError: CustomStringConvertible {
         switch self {
         case .block:
             "Must be computed property"
+        case .class:
+            "Macro can only be applied to a class"
         case .closure:
             "Missing factory closure"
         case .identifier:
