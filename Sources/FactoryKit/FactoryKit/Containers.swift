@@ -46,7 +46,7 @@ import SwiftUI
 ///  If the Container's @TaskLocal macro provided `withValue` function is used, the aforementioned scope of the container will be isolated to that task.
 ///
 ///  See <doc:Containers> for more information.
-public final class Container: SharedContainer {
+public final class Container: SharedContainer, @unchecked Sendable {
     /// Define the default shared container.
     #if swift(>=5.5)
     @TaskLocal public static var shared = Container()
@@ -72,7 +72,7 @@ public final class Container: SharedContainer {
 /// The default ``Container`` provided is a SharedContainer. It can be used in both roles as needed.
 ///
 ///  See <doc:Containers> for more information.
-public protocol SharedContainer: ManagedContainer {
+public nonisolated protocol SharedContainer: ManagedContainer {
     /// Defines a single "shared" container for that container type.
     ///
     /// This container is used by the various @Injected property wrappers to resolve the keyPath to a given Factory. Care should be taken in
@@ -144,7 +144,7 @@ extension SharedContainer {
 /// }
 /// ```
 ///  See <doc:Containers> for more information.
-public protocol ManagedContainer: AnyObject, Sendable {
+public nonisolated protocol ManagedContainer: AnyObject, Sendable {
     /// Defines the ContainerManager used to manage registrations, resolutions, and scope caching for that container. Encapsulating the code in
     /// this fashion makes creating and using your own custom containers much simpler.
     var manager: ContainerManager { get }
@@ -226,7 +226,7 @@ extension ManagedContainer {
     }
     /// Defines an async with function to allow container transformation on assignment.
     @discardableResult
-    public func with(_ transform: @Sendable (Self) async -> Void) async -> Self {
+    public func with(_ transform: @Sendable @isolated(any) (Self) async -> Void) async -> Self {
         await transform(self)
         return self
     }
@@ -244,7 +244,7 @@ extension ManagedContainer {
 /// Those functions are designed primarily for testing.
 ///
 /// Class is @unchecked Sendable as all public state is managed via global locking mechanisms
-public final class ContainerManager: @unchecked Sendable {
+public final nonisolated class ContainerManager: @unchecked Sendable {
 
     /// Public initializer
     public init() {}
@@ -312,13 +312,13 @@ public final class ContainerManager: @unchecked Sendable {
     /// Flag indicating auto registration is in process.
     internal var autoRegistering = false
     /// Updated registrations for Factory's.
-    internal lazy var registrations: FactoryMap = .init(minimumCapacity: 256)
+    internal var registrations: FactoryMap = .init(minimumCapacity: 256)
     /// Updated options for Factory's.
-    internal lazy var options: FactoryOptionsMap = .init(minimumCapacity: 256)
+    internal var options: FactoryOptionsMap = .init(minimumCapacity: 256)
     /// Scope cache for Factory's managed by this container.
-    internal lazy var cache: Scope.Cache = Scope.Cache(minimumCapacity: 256)
+    internal var cache: Scope.Cache = Scope.Cache(minimumCapacity: 256)
     /// Push/Pop stack for registrations, options, cache, and so on.
-    internal lazy var stack: [(FactoryMap, FactoryOptionsMap, Scope.Cache.CacheMap, Bool)] = []
+    internal var stack: [(FactoryMap, FactoryOptionsMap, Scope.Cache.CacheMap, Bool)] = []
 
     // Protected public mutable state
     private var _defaultScope: Scope?

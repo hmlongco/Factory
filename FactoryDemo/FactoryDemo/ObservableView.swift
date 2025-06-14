@@ -40,6 +40,7 @@ extension Container {
 @available(iOS 17, *)
 struct ObservableView: View {
     @Injected(\.observableService) var observableService
+    @State var showPreview: Bool = false
     var body: some View {
         HStack {
             Text(observableService.name)

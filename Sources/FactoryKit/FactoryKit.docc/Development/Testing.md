@@ -478,14 +478,14 @@ You might run across one limitation with the transforming sugar if you're access
 extension Container {
   @MainActor
   var mainActorType: Factory<MainActorType> {
-      self { @MainActor in SomeMainActorType() }
+      self { SomeMainActorType() }
   }
 }
 
 struct SomeSuite {
   @Test(.container {
     // ERROR: Call to main actor-isolated initializer 'init()' in a synchronous nonisolated context
-    $0.mainActorType.register { @MainActor in MockActorType() }
+    $0.mainActorType.register { MockActorType() }
   })
   func foo() {
     ...
@@ -495,7 +495,7 @@ The solution is simple since our transforming closure is async. Just use await t
 ```swift
 struct SomeSuite {
   @Test(.container {
-    await $0.mainActorType.register { @MainActor in MockActorType() }
+    await $0.mainActorType.register { MockActorType() }
   })
   func foo() {
     ...

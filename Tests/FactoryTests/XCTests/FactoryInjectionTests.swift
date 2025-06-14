@@ -363,7 +363,7 @@ extension Container: Resolving {}
 extension Container {
     @MainActor
     var contentObservableViewModel: Factory<ContentObservableViewModel> {
-        self { @MainActor in ContentObservableViewModel() }
+        self { ContentObservableViewModel() }
     }
 }
 
@@ -371,7 +371,7 @@ extension Container {
 extension CustomContainer {
     @MainActor
     var contentObservableViewModel: Factory<ContentObservableViewModel> {
-        self { @MainActor in ContentObservableViewModel() }
+        self { ContentObservableViewModel() }
     }
 }
 

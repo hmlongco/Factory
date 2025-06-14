@@ -22,7 +22,10 @@ let package = Package(
         ),
         .library(
             name: "FactoryMacros",
-            targets: ["FactoryMacros"]
+            targets: [
+                "FactoryKit",
+                "FactoryMacros"
+            ]
         ),
         .library(
             name: "FactoryTesting",
@@ -46,7 +49,7 @@ let package = Package(
             dependencies: [],
             path: "Sources/FactoryKit",
             resources: [.copy("PrivacyInfo.xcprivacy")],
-            swiftSettings: .commonSettings
+            swiftSettings: FactorySwiftSetting.common
         ),
         .target(
             name: "FactoryMacros",
@@ -55,7 +58,7 @@ let package = Package(
                 "FactoryMacrosImplementation",
             ],
             path: "Sources/FactoryMacros",
-            swiftSettings: .commonSettings
+            swiftSettings: FactorySwiftSetting.common
         ),
         .macro(
             name: "FactoryMacrosImplementation",
@@ -66,7 +69,7 @@ let package = Package(
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax")
            ],
             path: "Sources/FactoryMacrosImplementation",
-            swiftSettings: .commonSettings
+            swiftSettings: FactorySwiftSetting.common
         ),
         .executableTarget(
             name: "FactoryMacrosClient",
@@ -74,7 +77,7 @@ let package = Package(
                 "FactoryMacros",
             ],
             path: "Sources/FactoryMacrosClient",
-            swiftSettings: .commonSettings
+            swiftSettings: FactorySwiftSetting.common
         ),
         .target(
             name: "FactoryTesting",
@@ -82,7 +85,7 @@ let package = Package(
                 "FactoryKit"
             ],
             path: "Sources/FactoryTesting",
-            swiftSettings: .commonSettings
+            swiftSettings: FactorySwiftSetting.common
         ),
         .testTarget(
             name: "FactoryTests",
@@ -90,7 +93,7 @@ let package = Package(
                 "FactoryMacros",
                 "FactoryTesting"
             ],
-            swiftSettings: .commonSettings
+            swiftSettings: FactorySwiftSetting.common
         )
     ],
     swiftLanguageModes: [
@@ -98,8 +101,8 @@ let package = Package(
     ]
 )
 
-extension [SwiftSetting] {
-    static let commonSettings: [SwiftSetting] = [
-        .enableExperimentalFeature("StrictConcurrency"),
+enum FactorySwiftSetting {
+    static let common: [SwiftSetting] = [
+        .enableExperimentalFeature("StrictConcurrency")
     ]
 }

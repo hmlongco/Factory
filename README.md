@@ -334,7 +334,7 @@ class ContentViewModel {
 extension Container {
     @MainActor
     var contentViewModel: Factory<ContentViewModel> {
-        self { @MainActor in ContentViewModel() }
+        self { ContentViewModel() }
     }
 }
 

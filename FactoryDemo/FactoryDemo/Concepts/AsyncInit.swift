@@ -38,7 +38,7 @@ extension Container {
 
 func testAsyncInit() {
     Task {
-        let a1 = await Container.shared.someAsyncObject().wrapped()
-        let a2 = await Container.shared.taskAsyncObject().value
+        let _ = await Container.shared.someAsyncObject().wrapped()
+        let _ = await Container.shared.taskAsyncObject().value
     }
 }

@@ -146,14 +146,14 @@ struct ParallelTests {
     struct ParallelIsolatedTests {
 
         // Illustrates using the container test trait with different isolations
-        @Test(.container {
+        @Test(.container { @MainActor in
             $0.fooBarBaz.register { Foo() }
             $0.fooBarBazCached.register { Foo() }
             $0.fooBarBazSingleton.register { Foo() }
 
-            await $0.isolatedToMainActor.register { @MainActor in MainActorFooBarBaz(value: "foo") }
-            await $0.isolatedToMainActorCached.register { @MainActor in MainActorFooBarBaz(value: "foo") }
-            await $0.isolatedToMainActorSingleton.register { @MainActor in MainActorFooBarBaz(value: "foo") }
+            $0.isolatedToMainActor.register { MainActorFooBarBaz(value: "foo") }
+            $0.isolatedToMainActorCached.register { MainActorFooBarBaz(value: "foo") }
+            $0.isolatedToMainActorSingleton.register { MainActorFooBarBaz(value: "foo") }
 
             await $0.isolatedToCustomGlobalActor.register { IsolatedFoo() }
             await $0.isolatedToCustomGlobalActorCached.register { IsolatedFoo() }
@@ -164,14 +164,14 @@ struct ParallelTests {
         }
 
         // Illustrates using the container test trait with different isolations
-        @Test(.container {
+        @Test(.container { @MainActor in
             $0.fooBarBaz.register { Bar() }
             $0.fooBarBazCached.register { Bar() }
             $0.fooBarBazSingleton.register { Bar() }
 
-            await $0.isolatedToMainActor.register { @MainActor in MainActorFooBarBaz(value: "bar") }
-            await $0.isolatedToMainActorCached.register { @MainActor in MainActorFooBarBaz(value: "bar") }
-            await $0.isolatedToMainActorSingleton.register { @MainActor in MainActorFooBarBaz(value: "bar") }
+            $0.isolatedToMainActor.register { MainActorFooBarBaz(value: "bar") }
+            $0.isolatedToMainActorCached.register { MainActorFooBarBaz(value: "bar") }
+            $0.isolatedToMainActorSingleton.register { MainActorFooBarBaz(value: "bar") }
 
             await $0.isolatedToCustomGlobalActor.register { IsolatedBar() }
             await $0.isolatedToCustomGlobalActorCached.register { IsolatedBar() }
@@ -185,14 +185,14 @@ struct ParallelTests {
         @MainActor
         @Test(.container)
         func isolatedBaz() async {
-            await Container.shared.with {
+            await Container.shared.with { @MainActor in
                 $0.fooBarBaz.register { Baz() }
                 $0.fooBarBazCached.register { Baz() }
                 $0.fooBarBazSingleton.register { Baz() }
 
-                await $0.isolatedToMainActor.register { @MainActor in MainActorFooBarBaz(value: "baz") }
-                await $0.isolatedToMainActorCached.register { @MainActor in MainActorFooBarBaz(value: "baz") }
-                await $0.isolatedToMainActorSingleton.register { @MainActor in MainActorFooBarBaz(value: "baz") }
+                $0.isolatedToMainActor.register { MainActorFooBarBaz(value: "baz") }
+                $0.isolatedToMainActorCached.register { MainActorFooBarBaz(value: "baz") }
+                $0.isolatedToMainActorSingleton.register { MainActorFooBarBaz(value: "baz") }
 
                 await $0.isolatedToCustomGlobalActor.register { IsolatedBaz() }
                 await $0.isolatedToCustomGlobalActorCached.register { IsolatedBaz() }

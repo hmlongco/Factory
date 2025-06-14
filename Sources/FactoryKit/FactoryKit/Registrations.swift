@@ -27,7 +27,7 @@
 import Foundation
 
 /// Shared registration type for Factory and ParameterFactory. Used internally to manage the registration and resolution process.
-public struct FactoryRegistration<P,T>: Sendable {
+public struct FactoryRegistration<P,T> {
 
     /// Key used to manage registrations and cached values.
     internal let key: FactoryKey
@@ -163,7 +163,7 @@ public struct FactoryRegistration<P,T>: Sendable {
     /// - Parameters:
     ///   - id: ID of associated Factory.
     ///   - factory: Factory closure called to create a new instance of the service when needed.
-    internal func register(_ factory: @escaping @Sendable (P) -> T) {
+    internal func register(_ factory: @escaping (P) -> T) {
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
         container.unsafeCheckAutoRegistration()
@@ -196,7 +196,7 @@ public struct FactoryRegistration<P,T>: Sendable {
     }
 
     /// Registers a new context.
-    internal func context(_ context: FactoryContextType, key: FactoryKey, factory: @escaping @Sendable (P) -> T) {
+    internal func context(_ context: FactoryContextType, key: FactoryKey, factory: @escaping (P) -> T) {
         options { options in
             switch context {
             case .arg(let arg):
@@ -292,6 +292,8 @@ public struct FactoryRegistration<P,T>: Sendable {
 
 }
 
+extension FactoryRegistration: @unchecked Sendable where P: Sendable, T: Sendable {}
+
 // MARK: - Protocols and Types
 
 /// Reset options for Factory's and Container's
@@ -381,5 +383,5 @@ internal struct FactoryDebugInformation {
 internal protocol AnyFactory {}
 
 internal struct TypedFactory<P,T>: AnyFactory {
-    let factory: @Sendable (P) -> T
+    let factory: (P) -> T
 }

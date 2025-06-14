@@ -46,7 +46,7 @@ import Testing
 /// See the `Testing` documentation and examples in the `ParallelTests` and `ParallelXCTests` files.
 public struct ContainerTrait<C: SharedContainer>: TestTrait, SuiteTrait, TestScoping {
 
-    public typealias Transform = @Sendable (C) async -> Void
+    public typealias Transform = @Sendable @isolated(any) (C) async -> Void
 
     private let shared: TaskLocal<C>
     private let container: @Sendable () -> C

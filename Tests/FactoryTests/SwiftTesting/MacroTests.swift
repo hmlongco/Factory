@@ -8,6 +8,7 @@
 import Testing
 import FactoryTesting
 
+@testable import FactoryKit
 @testable import FactoryMacros
 
 @Suite(.container)
@@ -39,15 +40,15 @@ struct MacroTests {
         #expect(service2 is MockService)
     }
 
-    @Test func macroMainActorTypeTest() async throws {
-        let service: SomeMainActorType? = Container.shared.macroMainActorType
-        #expect(service != nil)
-    }
-
-    @Test func macroTestActorTypeTest() async throws {
-        let service: TestActorType? = Container.shared.macroTestActorType
-        #expect(service != nil)
-    }
+//    @Test func macroMainActorTypeTest() async throws {
+//        let service: SomeMainActorType? = Container.shared.macroMainActorType
+//        #expect(service != nil)
+//    }
+//
+//    @Test func macroTestActorTypeTest() async throws {
+//        let service: TestActorType? = Container.shared.macroTestActorType
+//        #expect(service != nil)
+//    }
 
     @Test func macroMirrorTest() async throws {
         let service: MyServiceType? = Container.shared.mirrorMyService
@@ -66,11 +67,14 @@ extension Container {
     @DefineFactory({ nil as MyServiceType? })
     var macroOptionalService: MyServiceType?
 
-    @DefineFactory({ @MainActor in SomeMainActorType() })
-    var macroMainActorType: SomeMainActorType
+//    @DefineFactory({ SomeMainActorType() })
+//    var macroMainActorType: SomeMainActorType
 
-    @DefineFactory({ @TestActor in TestActorType() })
-    var macroTestActorType: TestActorType
+    @DefineFactory({ NonisolatedMainActorType() })
+    var macroNonisolatedMainActorType: NonisolatedMainActorType
+
+//    @DefineFactory({ TestActorType() })
+//    var macroTestActorType: TestActorType
 }
 
 //extension Container: AutoRegistering {

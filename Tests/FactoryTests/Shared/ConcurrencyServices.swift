@@ -25,14 +25,17 @@ final class SomeMainActorType {
 extension Container {
     @MainActor
     var mainActor: Factory<SomeMainActorType> {
-        self { @MainActor in SomeMainActorType() }
+        self { SomeMainActorType() }
     }
 }
 
 // Factory with MainActor-based class and nonisolated initializer
 @MainActor
 final class NonisolatedMainActorType {
-    nonisolated init() {}
+    let a: Int
+    nonisolated init() {
+        a = 1
+    }
     func test() {}
 }
 
@@ -54,6 +57,6 @@ public actor TestActor {
 extension Container {
     @TestActor
     var testActor: Factory<TestActorType> {
-        self { @TestActor in TestActorType() }
+        self { TestActorType() }
     }
 }

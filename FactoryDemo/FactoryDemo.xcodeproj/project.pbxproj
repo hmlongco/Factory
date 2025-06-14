@@ -31,6 +31,7 @@
 		4CA2240028CFC49900944456 /* Actors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CA223FF28CFC49900944456 /* Actors.swift */; };
 		4CA5899929DE482D00FA7845 /* FactoryDemoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CA5899829DE482D00FA7845 /* FactoryDemoTests.swift */; };
 		4CAA10E02C2C7EAC00799300 /* AsyncInit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CAA10DF2C2C7EAC00799300 /* AsyncInit.swift */; };
+		4CB1FA8D2DFCADBF00E8AD65 /* FactoryTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 4CB1FA8C2DFCADBF00E8AD65 /* FactoryTesting */; };
 		4CC679202966749400FFBB6C /* FactoryDemoUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CC6791F2966749400FFBB6C /* FactoryDemoUITests.swift */; };
 		4CEEC349284927EE00C979B3 /* FactoryDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CEEC348284927EE00C979B3 /* FactoryDemoApp.swift */; };
 		4CEEC34B284927EE00C979B3 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CEEC34A284927EE00C979B3 /* ContentView.swift */; };
@@ -145,6 +146,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4CB1FA8D2DFCADBF00E8AD65 /* FactoryTesting in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -317,6 +319,7 @@
 			);
 			name = FactoryDemoTests;
 			packageProductDependencies = (
+				4CB1FA8C2DFCADBF00E8AD65 /* FactoryTesting */,
 			);
 			productName = FactoryDemoTests;
 			productReference = 4CA5899629DE482D00FA7845 /* FactoryDemoTests.xctest */;
@@ -852,6 +855,10 @@
 		4C9D81562DE8FF1600D9BF5A /* FactoryMacros */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = FactoryMacros;
+		};
+		4CB1FA8C2DFCADBF00E8AD65 /* FactoryTesting */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FactoryTesting;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
