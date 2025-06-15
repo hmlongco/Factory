@@ -151,7 +151,7 @@ public struct FactoryRegistration<P,T> {
         if let decorator = options?.decorator as? (T) -> Void {
             decorator(instance)
         }
-        if let decorator = manager.decorator {
+        if let decorator = manager.state.decorator {
             decorator(instance)
         }
 
