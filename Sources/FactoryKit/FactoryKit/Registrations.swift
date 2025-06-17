@@ -27,7 +27,7 @@
 import Foundation
 
 /// Shared registration type for Factory and ParameterFactory. Used internally to manage the registration and resolution process.
-public struct FactoryRegistration<P,T> {
+public nonisolated struct FactoryRegistration<P,T> {
 
     /// Key used to manage registrations and cached values.
     internal let key: FactoryKey
@@ -70,8 +70,8 @@ public struct FactoryRegistration<P,T> {
 
         container.unsafeCheckAutoRegistration()
 
-        let manager = container.manager
-        let options = manager.options[key]
+        let manager: ContainerManager = container.manager
+        let options: FactoryOptions? = manager.options[key]
 
         var current: (P) -> T
 
@@ -99,16 +99,19 @@ public struct FactoryRegistration<P,T> {
         }
 
         #if DEBUG
-        if manager.dependencyChainTestMax > 0 {
-            circularDependencyChainCheck(max: manager.dependencyChainTestMax)
-        }
-        if manager.trace {
-            let wrapped = current
-            current = {
+        if globalTraceFlag {
+            let indent = String(repeating: "    ", count: globalGraphResolutionDepth)
+            globalTraceResolutions.append("\(globalGraphResolutionDepth): \(indent)\(container).\(debug.key)")
+            current = { [wrapped = current] in
                 traceNew = traceNewType // detects if new instance was created from the wrapped factory
                 return wrapped($0)
             }
-            globalTraceResolutions.append("")
+        }
+
+        if globalCircularDependencyTesting, globalCircularDependencySet.insert(key).0 == false {
+            globalTraceResolutions.forEach { globalLogger($0) }
+            let message = "FACTORY: Circular dependency on \(type(of: container)).\(key.key)"
+            resetAndTriggerFatalError(message, #file, #line)
         }
         #endif
 
@@ -124,23 +127,18 @@ public struct FactoryRegistration<P,T> {
 
         if globalGraphResolutionDepth == 0 {
             Scope.graph.cache.reset()
-            #if DEBUG
-            globalDependencyChainMessages = []
-            #endif
-        }
-        
-        #if DEBUG
-        if !globalDependencyChain.isEmpty {
-            globalDependencyChain.removeLast()
         }
 
-        if manager.trace {
-            let indent = String(repeating: "    ", count: globalGraphResolutionDepth)
+        #if DEBUG
+        if globalCircularDependencyTesting {
+            globalCircularDependencySet.remove(key)
+        }
+
+        if globalTraceFlag {
             let address = Int(bitPattern: ObjectIdentifier(instance as AnyObject))
             let resolution = "\(traceNew ?? "C"):\(address) \(type(of: instance as Any))"
-            if globalTraceResolutions.count > traceLevel {
-                globalTraceResolutions[traceLevel] = "\(globalGraphResolutionDepth): \(indent)\(container).\(debug.key) = \(resolution)"
-            }
+            let entry = globalTraceResolutions[traceLevel]
+            globalTraceResolutions[traceLevel] = entry + " = \(resolution)"
             if globalGraphResolutionDepth == 0 {
                 globalTraceResolutions.forEach { globalLogger($0) }
                 globalTraceResolutions = []
@@ -157,6 +155,10 @@ public struct FactoryRegistration<P,T> {
 
         return instance
     }
+
+}
+
+extension FactoryRegistration {
 
     /// Registers a new factory closure capable of producing an object or service of the desired type. This factory overrides the original factory and
     /// the next time this factory is resolved Factory will evaluate the newly registered factory instead.
@@ -234,7 +236,7 @@ public struct FactoryRegistration<P,T> {
         globalRecursiveLock.lock()
         container.unsafeCheckAutoRegistration()
         let manager = container.manager
-        var options = manager.options[key, default: FactoryOptions()]
+        var options = manager.options[key] ?? FactoryOptions()
         if options.once == once {
             mutate(&options)
             manager.options[key] = options
@@ -270,25 +272,6 @@ public struct FactoryRegistration<P,T> {
             cache.removeValue(forKey: key)
         }
     }
-
-    #if DEBUG
-    internal func circularDependencyChainCheck(max: Int) {
-        let typeComponents = debug.type.components(separatedBy: CharacterSet(charactersIn: "<>"))
-        let typeName = typeComponents.count > 1 ? typeComponents[1] : typeComponents[0]
-        let typeIndex = globalDependencyChain.firstIndex(where: { $0 == typeName })
-        globalDependencyChain.append(typeName)
-        if let index = typeIndex {
-            let chain = globalDependencyChain[index...]
-            let message = "FACTORY: Circular dependency chain - \(chain.joined(separator: " > "))"
-            if globalDependencyChainMessages.filter({ $0 == message }).count == max {
-                resetAndTriggerFatalError(message, #file, #line)
-            } else {
-                globalDependencyChain = [typeName]
-                globalDependencyChainMessages.append(message)
-            }
-        }
-    }
-    #endif
 
 }
 

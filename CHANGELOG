@@ -1,5 +1,15 @@
 # Factory Changelog
 
+## 3.0.0
+
+* Redefine factory closures to avoid isolation issues in Swift 6.1 and 6.2
+* Explicitly mark many of Factory's structures as nonisolated for Swift 6.2
+* Refactor circular dependency checking mechanism to improve performance
+* Replaces dependencyChainTestMax value with circularDependencyTesting flag
+* Refactor trace mechanism to better support circular dependency checks
+
+* Testing possible addition of Swift macros
+
 ## 2.5.3
 
 * Fix unique scope resolution issue on container with non-unique default scope - PR #307

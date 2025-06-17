@@ -36,16 +36,15 @@ internal let globalResolverKey: StaticString = "*"
 
 #if DEBUG
 /// Internal variables used for debugging
-nonisolated(unsafe) internal var globalDependencyChain: [String] = []
-nonisolated(unsafe) internal var globalDependencyChainMessages: [String] = []
+nonisolated(unsafe) internal var globalCircularDependencySet: Set<FactoryKey> = []
+nonisolated(unsafe) internal var globalCircularDependencyTesting = true
+nonisolated(unsafe) internal var globalLogger: (String) -> Void = { print($0) }
 nonisolated(unsafe) internal var globalTraceFlag: Bool = false
 nonisolated(unsafe) internal var globalTraceResolutions: [String] = []
-nonisolated(unsafe) internal var globalLogger: (String) -> Void = { print($0) }
 
 /// Triggers fatalError after resetting enough stuff so unit tests can continue
 internal func resetAndTriggerFatalError(_ message: String, _ file: StaticString, _ line: UInt) -> Never {
-    globalDependencyChain = []
-    globalDependencyChainMessages = []
+    globalCircularDependencySet = []
     globalGraphResolutionDepth = 0
     globalRecursiveLock = RecursiveLock()
     globalTraceResolutions = []

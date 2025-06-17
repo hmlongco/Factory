@@ -257,9 +257,9 @@ public final nonisolated class ContainerManager: @unchecked Sendable {
 
     #if DEBUG
     /// Public variable exposing dependency chain test maximum
-    public var dependencyChainTestMax: Int {
-        get { globalVariableLock.withLock { state.dependencyChainTestMax } }
-        set { globalVariableLock.withLock { state.dependencyChainTestMax = newValue } }
+    public var circularDependencyTesting: Bool {
+        get { globalVariableLock.withLock { globalCircularDependencyTesting } }
+        set { globalVariableLock.withLock { globalCircularDependencyTesting = newValue } }
     }
 
     /// Public variable promise behavior
@@ -330,8 +330,6 @@ public final nonisolated class ContainerManager: @unchecked Sendable {
         internal var decorator: ((Any) -> ())?
         // Default scope
         internal var defaultScope: Scope?
-        // Dependency chain max iterations
-        internal var dependencyChainTestMax: Int = 8
         // Default promise triggers error flag
         internal var promiseTriggersError: Bool = FactoryContext.current.isDebug && !FactoryContext.current.isPreview
     }

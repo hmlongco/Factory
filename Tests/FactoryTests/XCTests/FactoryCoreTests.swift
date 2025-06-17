@@ -187,10 +187,12 @@ final class FactoryCoreTests: XCTestCase {
 
     @MainActor
     func testCircularDependencyFailure() {
-        let message = "FACTORY: Circular dependency chain - FactoryTests.RecursiveA > FactoryTests.RecursiveB > FactoryTests.RecursiveC > FactoryTests.RecursiveA"
+        Container.shared.manager.trace = true
+        let message = "FACTORY: Circular dependency on Container.recursiveA"
         expectFatalError(expectedMessage: message) {
             let _ = Container.shared.recursiveA()
         }
+        Container.shared.manager.trace = false
     }
 
     @MainActor

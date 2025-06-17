@@ -34,13 +34,30 @@ Unfortunately, by the time this code is compiled and run it's too late to break 
 All Factory can do in this case is die gracefully and in the process dump the dependency chain that indicates where the problem lies.
 ```
 2022-12-23 14:57:23.512032-0600 FactoryDemo[47546:6946786] Factory/Factory.swift:393: 
-Fatal error: circular dependency chain - CircularA > CircularB > CircularC > CircularA
+FACTORY: Circular dependency on Container.recursiveA
 ```
-With the above information in hand we should be able to find the problem and fix it.
-
+With the above information in hand we could start walking recursiveA's dependency tree to find the problem... but Factory provides an easier way. Just turn on trace prior to creating recursiveA.
+```swift
+Container.shared.manager.trace.toggle()
+let a = Container.shared.recursiveA()
+```
+With the trace log in hand, the cycle becomes obvious.
+```
+0: FactoryKit.Container.circularA<FactoryDemo.CircularA>
+1:     FactoryKit.Container.circularB<FactoryDemo.CircularB>
+2:         FactoryKit.Container.circularC<FactoryDemo.CircularC>
+3:             FactoryKit.Container.circularA<FactoryDemo.CircularA>
+```
+CircularC is attempting to inject an instance of CircularA, and we can see that in the code.
+```swift
+class RecursiveC {
+    @Injected(\.recursiveA) var a: RecursiveA?
+    init() {}
+}
+```
 We could fix things by changing CircularC's injection wrapper to `LazyInjected` or, better yet, `WeakLazyInjected` in order to avoid a retain cycle. 
 
-But a better solution would probably entail finding and breaking out the functionality that `CircularA` and `CircularC` are depending upon into a *third* object they both could include.
+But a better solution would probably entail breaking out some of the functionality from RecursiveA and creating a *third* object that RecursiveA *and* RecursiveC could both include.
 
 Circular dependencies such as this are usually a violation of the Single Responsibility Principle, and should be avoided.
 
@@ -48,11 +65,9 @@ Circular dependencies such as this are usually a violation of the Single Respons
 
 ## Disabling CDC Detection
 
-If needed circular dependency chain detecting can be disabled by setting the detection limit to zero.
+Circular dependency chain detection can be disabled if desired.
 ```swift
-Container.shared.manager.dependencyChainTestMax = 0
+Container.shared.manager.circularDependencyTestingEnabled = false
 ```
-The default value for `dependencyChainTestMax` is 10. That means the detector fires if the same class type appears during a single resolution cycle more than 10 times.
-
-This value can be increased (or decreased) as needed.
+This value is global to all containers.
 
