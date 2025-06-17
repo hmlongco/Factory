@@ -22,10 +22,7 @@ let package = Package(
         ),
         .library(
             name: "FactoryMacros",
-            targets: [
-                "FactoryKit",
-                "FactoryMacros"
-            ]
+            targets: ["FactoryKit", "FactoryMacros"]
         ),
         .library(
             name: "FactoryTesting",
@@ -39,7 +36,7 @@ let package = Package(
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.1.0"),
-        .package(url: "https://github.com/swiftlang/swift-syntax.git", exact: "602.0.0-prerelease-2025-05-29"),
+        .package(url: "https://github.com/swiftlang/swift-syntax.git", exact: "601.0.1"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -47,7 +44,6 @@ let package = Package(
         .target(
             name: "FactoryKit",
             dependencies: [],
-            path: "Sources/FactoryKit",
             resources: [.copy("PrivacyInfo.xcprivacy")],
             swiftSettings: FactorySwiftSetting.common
         ),
@@ -57,7 +53,6 @@ let package = Package(
                 "FactoryKit",
                 "FactoryMacrosImplementation",
             ],
-            path: "Sources/FactoryMacros",
             swiftSettings: FactorySwiftSetting.common
         ),
         .macro(
@@ -67,16 +62,15 @@ let package = Package(
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax")
-           ],
-            path: "Sources/FactoryMacrosImplementation",
+            ],
             swiftSettings: FactorySwiftSetting.common
         ),
         .executableTarget(
             name: "FactoryMacrosClient",
             dependencies: [
+                "FactoryKit",
                 "FactoryMacros",
             ],
-            path: "Sources/FactoryMacrosClient",
             swiftSettings: FactorySwiftSetting.common
         ),
         .target(
@@ -84,7 +78,6 @@ let package = Package(
             dependencies: [
                 "FactoryKit"
             ],
-            path: "Sources/FactoryTesting",
             swiftSettings: FactorySwiftSetting.common
         ),
         .testTarget(

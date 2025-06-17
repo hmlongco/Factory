@@ -7,8 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4C9ACE402E02207B008CF8E6 /* Networking.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4CCC84202868CF8800B474F7 /* Networking.framework */; platformFilter = ios; };
+		4C9ACE412E02207B008CF8E6 /* Networking.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 4CCC84202868CF8800B474F7 /* Networking.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		4C9D815B2DE9005300D9BF5A /* FactoryMacros in Frameworks */ = {isa = PBXBuildFile; productRef = 4C9D815A2DE9005300D9BF5A /* FactoryMacros */; };
-		4CCC84292868CF8900B474F7 /* Networking.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4CCC84202868CF8800B474F7 /* Networking.framework */; };
 		4CCC842E2868CF8900B474F7 /* NetworkingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CCC842D2868CF8900B474F7 /* NetworkingTests.swift */; };
 		4CCC842F2868CF8900B474F7 /* Networking.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CCC84232868CF8800B474F7 /* Networking.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4CCC844D2868CFE500B474F7 /* Common.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4CCC844C2868CFE500B474F7 /* Common.framework */; };
@@ -17,7 +18,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		4CCC842A2868CF8900B474F7 /* PBXContainerItemProxy */ = {
+		4C9ACE422E02207B008CF8E6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4CCC84172868CF8800B474F7 /* Project object */;
 			proxyType = 1;
@@ -27,6 +28,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		4C9ACE442E02207B008CF8E6 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				4C9ACE412E02207B008CF8E6 /* Networking.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4CCC844F2868CFE500B474F7 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -63,7 +75,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4CCC84292868CF8900B474F7 /* Networking.framework in Frameworks */,
+				4C9ACE402E02207B008CF8E6 /* Networking.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -157,11 +169,12 @@
 				4CCC84242868CF8900B474F7 /* Sources */,
 				4CCC84252868CF8900B474F7 /* Frameworks */,
 				4CCC84262868CF8900B474F7 /* Resources */,
+				4C9ACE442E02207B008CF8E6 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				4CCC842B2868CF8900B474F7 /* PBXTargetDependency */,
+				4C9ACE432E02207B008CF8E6 /* PBXTargetDependency */,
 			);
 			name = NetworkingTests;
 			productName = NetworkingTests;
@@ -243,10 +256,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		4CCC842B2868CF8900B474F7 /* PBXTargetDependency */ = {
+		4C9ACE432E02207B008CF8E6 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
+			platformFilter = ios;
 			target = 4CCC841F2868CF8800B474F7 /* Networking */;
-			targetProxy = 4CCC842A2868CF8900B474F7 /* PBXContainerItemProxy */;
+			targetProxy = 4C9ACE422E02207B008CF8E6 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -385,7 +399,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -417,7 +431,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -437,11 +451,11 @@
 		4CCC84362868CF8900B474F7 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 9ZVHDWC4WU;
 				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hmlong.NetworkingTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -454,11 +468,11 @@
 		4CCC84372868CF8900B474F7 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 9ZVHDWC4WU;
 				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hmlong.NetworkingTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
