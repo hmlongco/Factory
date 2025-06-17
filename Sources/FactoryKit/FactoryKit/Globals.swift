@@ -28,9 +28,6 @@ import Foundation
 
 // MARK: - Internal Variables
 
-/// Master graph resolution depth counter
-nonisolated(unsafe) internal var globalGraphResolutionDepth = 0
-
 /// Internal key used for Resolver mode
 internal let globalResolverKey: StaticString = "*"
 
@@ -45,9 +42,9 @@ nonisolated(unsafe) internal var globalTraceResolutions: [String] = []
 /// Triggers fatalError after resetting enough stuff so unit tests can continue
 internal func resetAndTriggerFatalError(_ message: String, _ file: StaticString, _ line: UInt) -> Never {
     globalCircularDependencySet = []
-    globalGraphResolutionDepth = 0
     globalRecursiveLock = RecursiveLock()
     globalTraceResolutions = []
+    Scope.graph.reset()
     triggerFatalError(message, file, line) // GOES BOOM
 }
 

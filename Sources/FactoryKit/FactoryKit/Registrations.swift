@@ -54,12 +54,6 @@ public nonisolated struct FactoryRegistration<P,T> {
         #endif
     }
 
-    /// Support function for one-time only option updates
-    internal func unsafeCanUpdateOptions() -> Bool {
-        let options = container.manager.options[key]
-        return options == nil || options?.once == once
-    }
-
     /// Resolves a Factory, returning an instance of the desired type. All roads lead here.
     ///
     /// - Parameter factory: Factory wanting resolution.
@@ -100,8 +94,8 @@ public nonisolated struct FactoryRegistration<P,T> {
 
         #if DEBUG
         if globalTraceFlag {
-            let indent = String(repeating: "    ", count: globalGraphResolutionDepth)
-            globalTraceResolutions.append("\(globalGraphResolutionDepth): \(indent)\(container).\(debug.key)")
+            let indent = String(repeating: "    ", count: traceLevel)
+            globalTraceResolutions.append("\(traceLevel): \(indent)\(container).\(debug.key)")
             current = { [wrapped = current] in
                 traceNew = traceNewType // detects if new instance was created from the wrapped factory
                 return wrapped($0)
@@ -115,7 +109,8 @@ public nonisolated struct FactoryRegistration<P,T> {
         }
         #endif
 
-        globalGraphResolutionDepth += 1
+        Scope.graph.enter()
+
         let instance: T
         if let scope = options?.scope ?? manager.defaultScope {
             let parameterizedKey = options?.scopeOnParameters == true ? key.parameterized(parameters) : key
@@ -123,11 +118,8 @@ public nonisolated struct FactoryRegistration<P,T> {
         else {
             instance = current(parameters)
         }
-        globalGraphResolutionDepth -= 1
 
-        if globalGraphResolutionDepth == 0 {
-            Scope.graph.cache.reset()
-        }
+        Scope.graph.leave()
 
         #if DEBUG
         if globalCircularDependencyTesting {
@@ -139,7 +131,7 @@ public nonisolated struct FactoryRegistration<P,T> {
             let resolution = "\(traceNew ?? "C"):\(address) \(type(of: instance as Any))"
             let entry = globalTraceResolutions[traceLevel]
             globalTraceResolutions[traceLevel] = entry + " = \(resolution)"
-            if globalGraphResolutionDepth == 0 {
+            if Scope.graph.depth == 0 {
                 globalTraceResolutions.forEach { globalLogger($0) }
                 globalTraceResolutions = []
             }
@@ -230,19 +222,6 @@ extension FactoryRegistration {
         }
     }
 
-    /// Support function for options mutation.
-    internal func options(mutate: (_ options: inout FactoryOptions) -> Void) {
-        defer { globalRecursiveLock.unlock()  }
-        globalRecursiveLock.lock()
-        container.unsafeCheckAutoRegistration()
-        let manager = container.manager
-        var options = manager.options[key] ?? FactoryOptions()
-        if options.once == once {
-            mutate(&options)
-            manager.options[key] = options
-        }
-    }
-
     /// Support function resets the behavior for a specific Factory to its original state, removing any associated registrations and clearing
     /// any cached instances from the specified scope.
     /// - Parameters:
@@ -271,6 +250,25 @@ extension FactoryRegistration {
             let cache = (manager.options[key]?.scope as? InternalScopeCaching)?.cache ?? manager.cache
             cache.removeValue(forKey: key)
         }
+    }
+
+    /// Support function for options mutation.
+    internal func options(mutate: (_ options: inout FactoryOptions) -> Void) {
+        defer { globalRecursiveLock.unlock()  }
+        globalRecursiveLock.lock()
+        container.unsafeCheckAutoRegistration()
+        let manager = container.manager
+        var options = manager.options[key] ?? FactoryOptions()
+        if options.once == once {
+            mutate(&options)
+            manager.options[key] = options
+        }
+    }
+
+    /// Support function for one-time only option updates
+    internal func unsafeCanUpdateOptions() -> Bool {
+        let options = container.manager.options[key]
+        return options == nil || options?.once == once
     }
 
 }

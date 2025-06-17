@@ -114,13 +114,31 @@ extension Scope {
     ///
     /// This scope is managed and cleared by the main resolution function at the end of each resolution cycle.
     public final class Graph: Scope, @unchecked Sendable  {
-        public override init() {
+        internal override init() {
             super.init()
         }
         internal override func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, factory: () -> T) -> T {
             // ignore container's cache in favor of our own
             return super.resolve(using: self.cache, key: key, ttl: ttl, factory: factory)
         }
+        // call to enter a new resolution level
+        internal func enter() {
+            depth += 1
+        }
+        // call to leave the current resolution level
+        internal func leave() {
+            depth -= 1
+            if depth == 0 {
+                cache.reset()
+            }
+        }
+        // reset graph scope
+        internal func reset() {
+            depth = 0
+            cache.reset()
+        }
+        // depth of current resolution level
+        public private(set) var depth: Int = 0
         /// Private shared cache
         internal var cache = Cache()
     }
