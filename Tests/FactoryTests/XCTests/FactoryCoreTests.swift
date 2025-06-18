@@ -230,27 +230,35 @@ final class FactoryCoreTests: XCTestCase {
             print($0)
         }
         Container.shared.manager.trace.toggle()
+        Container.shared.consumer.onDebug {
+            ProtocolConsumer()
+        }
         let _ = Container.shared.consumer()
         XCTAssertNotNil(Container.shared.manager.logger)
         XCTAssertEqual(log.count, 5)
         if log.count == 5 {
-            XCTAssert(log[0].contains("0:"))
+            XCTAssert(log[0].contains("0:")) // level 0
+            XCTAssert(log[0].contains("O:")) // onDebug
             XCTAssert(log[0].contains("consumer"))
-            XCTAssert(log[1].contains("1:"))
+            XCTAssert(log[1].contains("1:")) // level 1
+            XCTAssert(log[1].contains("F:")) // Factory
             XCTAssert(log[1].contains("idProvider"))
-            XCTAssert(log[2].contains("2:"))
+            XCTAssert(log[2].contains("2:")) // level 2
+            XCTAssert(log[2].contains("F:")) // Factory
             XCTAssert(log[2].contains("commonProvider"))
-            XCTAssert(log[3].contains("1:"))
+            XCTAssert(log[3].contains("1:")) // level 1
+            XCTAssert(log[3].contains("F:")) // Factory
             XCTAssert(log[3].contains("valueProvider"))
-            XCTAssert(log[4].contains("2:"))
+            XCTAssert(log[4].contains("2:")) // level 2
+            XCTAssert(log[4].contains("C:")) // graph
             XCTAssert(log[4].contains("commonProvider"))
         }
         let _ = Container.shared.consumer()
-        XCTAssertEqual(log.count, 10)
-        if log.count == 10 {
-            XCTAssert(log[5].contains("0:"))
+        XCTAssertEqual(log.count, 6)
+        if log.count == 6 {
+            XCTAssert(log[5].contains("0:")) // level 0
+            XCTAssert(log[5].contains("C:")) // cached
             XCTAssert(log[5].contains("consumer"))
-            // etc
         }
         Container.shared.manager.trace.toggle()
         Container.shared.manager.logger = {

@@ -129,9 +129,9 @@ public nonisolated struct FactoryRegistration<P,T> {
 
         if globalTraceFlag {
             let address = Int(bitPattern: ObjectIdentifier(instance as AnyObject))
-            let resolution = "\(traceNew ?? "C"):\(address) \(type(of: instance as Any))"
+            let type = type(of: instance as Any)
             let entry = globalTraceResolutions[traceIndex]
-            globalTraceResolutions[traceIndex] = entry + " = \(resolution)"
+            globalTraceResolutions[traceIndex] = "\(entry) = \(traceNew ?? "C"):\(address) \(type)"
             if traceLevel == 0 {
                 globalTraceResolutions.forEach { globalLogger($0) }
                 globalTraceResolutions = []

@@ -198,7 +198,7 @@ class ProtocolConsumer {
 }
 
 extension Container {
-    var consumer: Factory<ProtocolConsumer> { self { ProtocolConsumer() } }
+    var consumer: Factory<ProtocolConsumer> { self { ProtocolConsumer() }.cached }
     var idProvider: Factory<IDProviding> { self { self.commonProvider() } }
     var valueProvider: Factory<ValueProviding> { self { self.commonProvider() } }
     private var commonProvider: Factory<MyService> { self { MyService() }.graph }
