@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		4C9ACE402E02207B008CF8E6 /* Networking.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4CCC84202868CF8800B474F7 /* Networking.framework */; platformFilter = ios; };
 		4C9ACE412E02207B008CF8E6 /* Networking.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 4CCC84202868CF8800B474F7 /* Networking.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		4C9D815B2DE9005300D9BF5A /* FactoryMacros in Frameworks */ = {isa = PBXBuildFile; productRef = 4C9D815A2DE9005300D9BF5A /* FactoryMacros */; };
+		4C9ACE4A2E0285E2008CF8E6 /* FactoryMacros in Frameworks */ = {isa = PBXBuildFile; productRef = 4C9ACE492E0285E2008CF8E6 /* FactoryMacros */; };
 		4CCC842E2868CF8900B474F7 /* NetworkingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CCC842D2868CF8900B474F7 /* NetworkingTests.swift */; };
 		4CCC842F2868CF8900B474F7 /* Networking.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CCC84232868CF8800B474F7 /* Networking.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4CCC844D2868CFE500B474F7 /* Common.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4CCC844C2868CFE500B474F7 /* Common.framework */; };
@@ -66,7 +66,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4C9D815B2DE9005300D9BF5A /* FactoryMacros in Frameworks */,
+				4C9ACE4A2E0285E2008CF8E6 /* FactoryMacros in Frameworks */,
 				4CCC844D2868CFE500B474F7 /* Common.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -156,7 +156,7 @@
 			);
 			name = Networking;
 			packageProductDependencies = (
-				4C9D815A2DE9005300D9BF5A /* FactoryMacros */,
+				4C9ACE492E0285E2008CF8E6 /* FactoryMacros */,
 			);
 			productName = Networking;
 			productReference = 4CCC84202868CF8800B474F7 /* Networking.framework */;
@@ -515,7 +515,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		4C9D815A2DE9005300D9BF5A /* FactoryMacros */ = {
+		4C9ACE492E0285E2008CF8E6 /* FactoryMacros */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = FactoryMacros;
 		};

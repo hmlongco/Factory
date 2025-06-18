@@ -157,3 +157,9 @@ extension Container {
         promised()
     }
 }
+
+
+extension Container {
+    @DefineFactory({ MyService() }, scope: .unique)
+    var myMacroService: MyServiceType
+}

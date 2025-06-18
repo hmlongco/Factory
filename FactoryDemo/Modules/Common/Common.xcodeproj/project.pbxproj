@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4C9D81592DE9004700D9BF5A /* FactoryMacros in Frameworks */ = {isa = PBXBuildFile; productRef = 4C9D81582DE9004700D9BF5A /* FactoryMacros */; };
+		4C9ACE482E028589008CF8E6 /* FactoryMacros in Frameworks */ = {isa = PBXBuildFile; productRef = 4C9ACE472E028589008CF8E6 /* FactoryMacros */; };
 		4CCC83FE2868CF5B00B474F7 /* Common.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4CCC83F52868CF5B00B474F7 /* Common.framework */; };
 		4CCC84032868CF5B00B474F7 /* CommonTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CCC84022868CF5B00B474F7 /* CommonTests.swift */; };
 		4CCC84042868CF5B00B474F7 /* Common.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CCC83F82868CF5B00B474F7 /* Common.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -37,7 +37,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4C9D81592DE9004700D9BF5A /* FactoryMacros in Frameworks */,
+				4C9ACE482E028589008CF8E6 /* FactoryMacros in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -124,7 +124,7 @@
 			);
 			name = Common;
 			packageProductDependencies = (
-				4C9D81582DE9004700D9BF5A /* FactoryMacros */,
+				4C9ACE472E028589008CF8E6 /* FactoryMacros */,
 			);
 			productName = Common;
 			productReference = 4CCC83F52868CF5B00B474F7 /* Common.framework */;
@@ -483,7 +483,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		4C9D81582DE9004700D9BF5A /* FactoryMacros */ = {
+		4C9ACE472E028589008CF8E6 /* FactoryMacros */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = FactoryMacros;
 		};
