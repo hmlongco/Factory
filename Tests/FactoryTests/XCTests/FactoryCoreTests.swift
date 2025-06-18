@@ -224,25 +224,37 @@ final class FactoryCoreTests: XCTestCase {
     }
 
     func testTrace() {
-        var logged: [String] = []
-        Container.shared.manager.trace.toggle()
-        let _ = Container.shared.optionalService()
+        var log: [String] = []
         Container.shared.manager.logger = {
-            logged.append($0)
+            log.append($0)
+            print($0)
+        }
+        Container.shared.manager.trace.toggle()
+        let _ = Container.shared.consumer()
+        XCTAssertNotNil(Container.shared.manager.logger)
+        XCTAssertEqual(log.count, 5)
+        if log.count == 5 {
+            XCTAssert(log[0].contains("0:"))
+            XCTAssert(log[0].contains("consumer"))
+            XCTAssert(log[1].contains("1:"))
+            XCTAssert(log[1].contains("idProvider"))
+            XCTAssert(log[2].contains("2:"))
+            XCTAssert(log[2].contains("commonProvider"))
+            XCTAssert(log[3].contains("1:"))
+            XCTAssert(log[3].contains("valueProvider"))
+            XCTAssert(log[4].contains("2:"))
+            XCTAssert(log[4].contains("commonProvider"))
         }
         let _ = Container.shared.consumer()
+        XCTAssertEqual(log.count, 10)
+        if log.count == 10 {
+            XCTAssert(log[5].contains("0:"))
+            XCTAssert(log[5].contains("consumer"))
+            // etc
+        }
         Container.shared.manager.trace.toggle()
         Container.shared.manager.logger = {
             print($0)
-        }
-        XCTAssertNotNil(Container.shared.manager.logger)
-        XCTAssertEqual(logged.count, 5)
-        if logged.count == 5 {
-            XCTAssert(logged[0].contains("consumer"))
-            XCTAssert(logged[1].contains("idProvider"))
-            XCTAssert(logged[2].contains("commonProvider"))
-            XCTAssert(logged[3].contains("valueProvider"))
-            XCTAssert(logged[4].contains("commonProvider"))
         }
     }
 

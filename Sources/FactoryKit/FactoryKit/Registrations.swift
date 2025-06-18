@@ -70,7 +70,8 @@ public nonisolated struct FactoryRegistration<P,T> {
         var current: (P) -> T
 
         #if DEBUG
-        let traceLevel: Int = globalTraceResolutions.count
+        let traceIndex: Int = globalTraceResolutions.count
+        let traceLevel: Int = Scope.graph.depth
         var traceNew: String?
         var traceNewType: String?
         #endif
@@ -129,9 +130,9 @@ public nonisolated struct FactoryRegistration<P,T> {
         if globalTraceFlag {
             let address = Int(bitPattern: ObjectIdentifier(instance as AnyObject))
             let resolution = "\(traceNew ?? "C"):\(address) \(type(of: instance as Any))"
-            let entry = globalTraceResolutions[traceLevel]
-            globalTraceResolutions[traceLevel] = entry + " = \(resolution)"
-            if Scope.graph.depth == 0 {
+            let entry = globalTraceResolutions[traceIndex]
+            globalTraceResolutions[traceIndex] = entry + " = \(resolution)"
+            if traceLevel == 0 {
                 globalTraceResolutions.forEach { globalLogger($0) }
                 globalTraceResolutions = []
             }
