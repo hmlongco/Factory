@@ -33,7 +33,7 @@ internal struct FactoryKey: Hashable {
     var parameter: Int
 
     internal init(type: Any.Type, key: StaticString) {
-        self.type = globalIdentifier(for: type)
+        self.type = ObjectIdentifier(type) // globalIdentifier(for: type)
         self.key = key
         self.parameter = 0
     }

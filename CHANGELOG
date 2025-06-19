@@ -4,9 +4,10 @@
 
 * Redefine factory closures to avoid isolation issues in Swift 6.1 and 6.2
 * Explicitly mark many of Factory's structures as nonisolated for Swift 6.2
-* Refactor circular dependency checking mechanism to improve performance
+* Refactor circular dependency checking mechanism to dramatically improve performance
 * Replaces dependencyChainTestMax value with circularDependencyTesting flag
-* Refactor trace mechanism to better support circular dependency checks
+* Refactor trace mechanism to better work with circular dependency checks
+* Returns to ObjectIdentifier for keys (multi-module key issues seem to be due to multiple copies of Factory)
 
 * Testing possible addition of Swift macros
 
