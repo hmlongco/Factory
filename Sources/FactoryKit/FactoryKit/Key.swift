@@ -38,14 +38,6 @@ internal struct FactoryKey: Hashable {
         self.parameter = 0
     }
 
-    #if DEBUG
-    internal var typeName: String {
-        globalVariableLock.withLock {
-            globalIdentifierToNameTable[self.type]! // must exist
-        }
-    }
-    #endif
-
     internal func hash(into hasher: inout Hasher) {
         hasher.combine(self.type)
         if key.hasPointerRepresentation {
@@ -109,9 +101,6 @@ private func globalIdentifier(for type: Any.Type) -> ObjectIdentifier {
         let id = globalNameToIdentifierTable[name, default: requestedTypeID]
         // and save it so we don't have to do this again
         globalKnownIdentifierTable[requestedTypeID] = id
-        #if DEBUG
-        globalIdentifierToNameTable[id] = name
-        #endif
         return id
     }
 }
@@ -121,6 +110,3 @@ nonisolated(unsafe) private var globalKnownIdentifierTable: [ObjectIdentifier : 
 
 // translates a type string name to a ObjectIdentifier
 nonisolated(unsafe) private var globalNameToIdentifierTable: [String : ObjectIdentifier] = [:]
-
-// reverse map, gets back string representation from id
-nonisolated(unsafe) private var globalIdentifierToNameTable: [ObjectIdentifier : String] = [:]

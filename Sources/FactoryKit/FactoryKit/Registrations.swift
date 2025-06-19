@@ -36,11 +36,6 @@ public nonisolated struct FactoryRegistration<P,T> {
     /// Typed factory with scope and factory.
     internal let factory: ParameterFactoryType<P, T>
 
-    #if DEBUG
-    /// Internal debug
-    internal let debug: FactoryDebugInformation
-    #endif
-
     /// Mutable once flag
     internal var once: Bool = false
 
@@ -49,9 +44,6 @@ public nonisolated struct FactoryRegistration<P,T> {
         self.key = FactoryKey(type: T.self, key: key)
         self.container = container
         self.factory = factory
-        #if DEBUG
-        self.debug = .init(type: self.key.typeName, key: key)
-        #endif
     }
 
     /// Resolves a Factory, returning an instance of the desired type. All roads lead here.
@@ -96,7 +88,8 @@ public nonisolated struct FactoryRegistration<P,T> {
         #if DEBUG
         if globalTraceFlag {
             let indent = String(repeating: "    ", count: traceLevel)
-            globalTraceResolutions.append("\(traceLevel): \(indent)\(container).\(debug.key)")
+            let entry = "\(traceLevel): \(indent)\(type(of: container)).\(key.key)<\(T.self)>"
+            globalTraceResolutions.append(entry)
             current = { [wrapped = current] in
                 traceNew = traceNewType // detects if new instance was created from the wrapped factory
                 return wrapped($0)
@@ -349,17 +342,6 @@ extension FactoryOptions {
     }
 
 }
-
-#if DEBUG
-internal struct FactoryDebugInformation {
-    let type: String
-    let key: String
-    internal init(type: String, key: StaticString) {
-        self.type = type
-        self.key = "\(key)<\(type)>"
-    }
-}
-#endif
 
 // Internal Factory type
 internal protocol AnyFactory {}
