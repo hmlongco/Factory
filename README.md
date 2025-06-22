@@ -168,46 +168,7 @@ See the [Previews](https://hmlongco.github.io/Factory/documentation/factorykit/p
 The same concept can be used when writing unit tests. Consider the following.
 
 ```swift
-final class FactoryCoreTests: XCTestCase {
-
-    override func setUp() {
-        super.setUp()
-        Container.shared.reset()
-    }
-    
-    func testLoaded() throws {
-        Container.shared.accountProvider.register { MockProvider(accounts: .sampleAccounts) }
-        let model = Container.shared.someViewModel()
-        model.load()
-        XCTAssertTrue(model.isLoaded)
-    }
-
-    func testEmpty() throws {
-        Container.shared.accountProvider.register { MockProvider(accounts: []) }
-        let model = Container.shared.someViewModel()
-        model.load()
-        XCTAssertTrue(model.isEmpty)
-    }
-
-    func testErrors() throws {
-        Container.shared.accountProvider.register { MockProvider(error: .notFoundError) }
-        let model = Container.shared.someViewModel()
-        model.load()
-        XCTAssertTrue(model.errorMessage == "Some Error")
-    }
-    
-}
-```
-Again, Factory makes it easy to reach into a chain of dependencies and make specific changes to the system as needed. This makes testing loading states, empty states, and error conditions simple.
-
-## Xcode 16 Testing
-
-Factory also works with Apple's new Testing framework, and with Xcode 16.3's new test trait support it's now also possible to run tests in parallel!
-
-Here's the same set of tests updated for the new framework. The `.container` trait provides a new, fresh instance of the main shared container to each one of the tests.
-
-```swift
-@Suite(.container) // added container trait
+@Suite(.container) // note container trait
 struct FactoryTests {
 
     @Test func testLoaded() async {
@@ -233,7 +194,36 @@ struct FactoryTests {
     
 }
 ```
-See [Testing](https://hmlongco.github.io/Factory/documentation/factorykit/testing) for more.
+
+Again, Factory makes it easy to reach into a chain of dependencies and make specific changes to the system as needed. This makes testing loading states, empty states, and error conditions simple.
+
+## Xcode 16 Testing
+
+Factory supports Swift Testing and now with Xcode 16.3's test trait support it's possible to run tests in parallel. The `.container` trait shown above provides a new, fresh instance of the main shared container to each one of the tests.
+
+Still using XCTest? Don't worry. Factory works there too.
+
+```swift
+final class FactoryCoreTests: XCTestCase {
+
+    override func setUp() {
+        super.setUp()
+        Container.shared.reset()
+    }
+    
+    func testLoaded() throws {
+        Container.shared.accountProvider.register { MockProvider(accounts: .sampleAccounts) }
+        let model = Container.shared.someViewModel()
+        model.load()
+        XCTAssertTrue(model.isLoaded)
+    }
+    
+    // other tests
+    
+}
+```
+
+See the [Testing Documentation](https://hmlongco.github.io/Factory/documentation/factorykit/testing) for more.
 
 But we're not done yet. 
 
@@ -317,7 +307,7 @@ This can make it a lot easier to see the entire dependency tree for a given obje
 
 See [Debugging](https://hmlongco.github.io/Factory/documentation/factorykit/debugging) for more on this and other features.
 
-## Observation / @MainActor
+## Observation / Actor Isolation
 
 Factory also works with Observation, `@MainActor` and actor isolation in Swift concurrency. Just annotate the Factory as needed.
 
@@ -346,7 +336,7 @@ struct ContentView: View {
     }
 }
 ```
-`InjectedObservable` was another new addition added to Factory 2.4.
+`InjectedObservable` was added to Factory 2.4.
 
 See [SwiftUI](https://hmlongco.github.io/Factory/documentation/factorykit/swiftui) for more discussion.
 
@@ -376,7 +366,7 @@ Note that the current version of Factory requires Swift 5.10 minimum and that th
 
 Factory 3.0.0 works with SPM, Xcode 26 under Strict Concurrency guidelines, and with Swift Testing.
 
-If you're a current Factory user you need to update your code and switch from importing `Factory` to importing `FactoryKit`. This avoids SPM naming conflicts between the import library name and the primary `Factory` object.
+If you're a current Factory user you'll' need to update your code and switch from importing `Factory` to importing `FactoryKit`. This avoids SPM naming conflicts between the import library name and the primary `Factory` object.
 
 To do so, open your project in Xcode and...
 
@@ -390,7 +380,7 @@ You may need to do the same for any other targets or modules that imported Facto
 
 ## Discussion Forum
 
-Discussion and comments on Factory and Factory 2.0 can be found in [Discussions](https://github.com/hmlongco/Factory/discussions). Go there if you have something to say or if you want to stay up to date.
+Discussion and comments on Factory can be found in [Discussions](https://github.com/hmlongco/Factory/discussions). Go there if you have something to say or if you want to stay up to date.
 
 ## License
 
