@@ -18,14 +18,14 @@ extension Container {
 
 // Factory with MainActor-based class and initializer
 @MainActor
-final class SomeMainActorType {
+final class SomeMainActorClass {
     init() {}
 }
 
 extension Container {
     @MainActor
-    var mainActor: Factory<SomeMainActorType> {
-        self { SomeMainActorType() }
+    var mainActor: Factory<SomeMainActorClass> {
+        self { SomeMainActorClass() }
     }
 }
 
@@ -58,5 +58,27 @@ extension Container {
     @TestActor
     var testActor: Factory<TestActorType> {
         self { TestActorType() }
+    }
+}
+
+@MainActor
+protocol MyMainActorType {
+    func load() async -> String
+}
+
+@MainActor
+class MyMainActorService: MyMainActorType {
+    init() {
+        // nothing
+    }
+    func load() async -> String {
+        "Returning result on MainActor"
+    }
+}
+
+extension Container {
+    @MainActor
+    var myMainActorType: Factory<MyMainActorType> {
+        self { MyMainActorService() }
     }
 }
