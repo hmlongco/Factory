@@ -1,7 +1,7 @@
 import FactoryMacros
 
 public protocol MyServiceType {}
-public protocol MainActorType {}
+@MainActor public protocol MainActorType {}
 
 public struct MyService: MyServiceType {}
 public struct MockMyService: MyServiceType {}
