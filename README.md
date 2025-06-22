@@ -165,7 +165,7 @@ See the [Previews](https://hmlongco.github.io/Factory/documentation/factorykit/p
 
 ## Testing
 
-The same concept can be used when writing unit tests. Consider the following.
+The same concept can be used when writing unit tests. Consider the following...
 
 ```swift
 @Suite(.container) // note container trait
@@ -197,9 +197,14 @@ struct FactoryTests {
 
 Again, Factory makes it easy to reach into a chain of dependencies and make specific changes to the system as needed. This makes testing loading states, empty states, and error conditions simple.
 
-## Xcode 16 Testing
 
-Factory supports Swift Testing and now with Xcode 16.3's test trait support it's possible to run tests in parallel. The `.container` trait shown above provides a new, fresh instance of the main shared container to each one of the tests.
+Xcode 16.3's test trait support also makes it possible to run all of our tests in parallel! 
+
+The `.container` trait shown above provides a new, fresh instance of the main shared container to each one of the tests.
+
+See the [Testing Documentation](https://hmlongco.github.io/Factory/documentation/factorykit/testing) for more.
+
+## XCTest
 
 Still using XCTest? Don't worry. Factory works there too.
 
@@ -222,8 +227,6 @@ final class FactoryCoreTests: XCTestCase {
     
 }
 ```
-
-See the [Testing Documentation](https://hmlongco.github.io/Factory/documentation/factorykit/testing) for more.
 
 But we're not done yet. 
 
@@ -281,7 +284,7 @@ Both definitions provide the same exact result. The sugared function is even inl
 
 ## Contexts
 
-One powerful new feature in Factory 2.1 is contexts. Let's say that for logistical reasons whenever your application runs in debug mode you *never* want it to make calls to your application's analytics engine.
+One powerful feature in Factory is contexts. Let's say that for logistical reasons whenever your application runs in debug mode you *never* want it to make calls to your application's analytics engine.
 
 Easy. Just register an override for that particular context.
 
@@ -290,17 +293,19 @@ container.analytics.onDebug {
     StubAnalyticsEngine()
 }
 ```
-There are other contexts for unit testing, for SwiftUI previews, and even when running UITests both in the simulator or when running an app on services like BrowserStack. See the documentation for more.
+There are other contexts for unit testing, for SwiftUI previews, and even when running **UITests** both in the simulator or when running an app on services like BrowserStack.
+
+For a complete list, go to [Contexts](https://hmlongco.github.io/Factory/documentation/factorykit/contexts).
 
 ## Debugging
 
 Factory can also help you debug your code. When running in DEBUG mode Factory allows you to trace the injection process and see every object instantiated or returned from a cache during a given resolution cycle.
 ```
-0: Factory.Container.cycleDemo<CycleDemo> = N:105553131389696
-1:     Factory.Container.aService<AServiceType> = N:105553119821680
-2:         Factory.Container.implementsAB<AServiceType & BServiceType> = N:105553119821680
-3:             Factory.Container.networkService<NetworkService> = N:105553119770688
-1:     Factory.Container.bService<BServiceType> = N:105553119821680
+0: Factory.Container.cycleDemo<CycleDemo> = F:105553131389696
+1:     Factory.Container.aService<AServiceType> = F:105553119821680
+2:         Factory.Container.implementsAB<AServiceType & BServiceType> = F:105553119821680
+3:             Factory.Container.networkService<NetworkService> = F:105553119770688
+1:     Factory.Container.bService<BServiceType> = F:105553119821680
 2:         Factory.Container.implementsAB<AServiceType & BServiceType> = C:105553119821680
 ```
 This can make it a lot easier to see the entire dependency tree for a given object or service.
