@@ -5,7 +5,7 @@
 
 A modern approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
-## Factory Version 2.5.2
+## Factory Version 3.0.0
 
 Factory is strongly influenced by SwiftUI, and in my opinion is highly suited for that environment. Factory is...
 
@@ -367,7 +367,6 @@ Just add the Factory package to your project, select the `FactoryKit` library wh
 ```swift
 import FactoryKit
 ```
-While the original `Factory` library import still exists, it will be deprecated in the future. 
 
 If you're using Swift Testing you'll probably also want to also import the `FactoryTesting` library and add it to your test target.
 
@@ -375,9 +374,9 @@ Note that the current version of Factory requires Swift 5.10 minimum and that th
 
 ## FactoryKit Migration
 
-Factory 2.5.0 works with SPM, Xcode 16 under Strict Concurrency guidelines, and with Swift Testing.
+Factory 3.0.0 works with SPM, Xcode 26 under Strict Concurrency guidelines, and with Swift Testing.
 
-If you're a current Factory user it's recommended that you switch from importing `Factory` to `FactoryKit`. This avoids SPM naming conflicts between the import library name and the primary `Factory` object.
+If you're a current Factory user you need to update your code and switch from importing `Factory` to importing `FactoryKit`. This avoids SPM naming conflicts between the import library name and the primary `Factory` object.
 
 To do so, open your project in Xcode and...
 
