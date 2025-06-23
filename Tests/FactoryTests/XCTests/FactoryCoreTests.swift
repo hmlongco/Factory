@@ -196,6 +196,19 @@ final class FactoryCoreTests: XCTestCase {
     }
 
     @MainActor
+    func testCircularDependencyToggle() {
+        Container.shared.manager.circularDependencyTesting.toggle()
+        var valid: Bool = false
+        let _ = Container.shared.myServiceType.register {
+            valid = globalCircularDependencyTesting == false && globalCircularDependencyKeys.isEmpty
+            return MyService()
+        }
+        let _ = Container.shared.myServiceType()
+        XCTAssert(valid)
+        Container.shared.manager.circularDependencyTesting.toggle()
+    }
+
+    @MainActor
     func testStrictPromise() {
         // Expect non fatal error when strict and NOT in debug mode
         Container.shared.manager.promiseTriggersError = false
