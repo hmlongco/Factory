@@ -67,8 +67,9 @@ extension Container {
     @DefineFactory({ nil as MyServiceType? })
     var macroOptionalService: MyServiceType?
 
-//    @DefineFactory({ SomeMainActorType() })
-//    var macroMainActorType: SomeMainActorType
+//    @MainActor
+//    @DefineFactory({ MyMainActorService() })
+//    var macroMainActorType: MyMainActorType
 
     @DefineFactory({ NonisolatedMainActorType() })
     var macroNonisolatedMainActorType: NonisolatedMainActorType
