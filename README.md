@@ -5,6 +5,8 @@
 
 A modern approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
+Many thanks to Mercedes-Benz, Süddeutsche Zeitung, and everyone else who's [sponsored](https://github.com/sponsors/hmlongco) my open source work!
+
 ## Factory Version 2.5.3
 
 Factory is strongly influenced by SwiftUI, and in my opinion is highly suited for that environment. Factory is...
@@ -400,8 +402,6 @@ Discussion and comments on Factory and Factory 2.0 can be found in [Discussions]
 Factory is available under the MIT license. See the LICENSE file for more info.
 
 ## Sponsor Factory!
-
-Many thanks to Mercedes-Benz, Süddeutsche Zeitung, and everyone else who's sponsored my open source work!
 
 If you want to support my work on Factory and Resolver, consider a [GitHub Sponsorship](https://github.com/sponsors/hmlongco)! Many levels exist for increased support and even for mentorship and company training. 
 
