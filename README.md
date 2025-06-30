@@ -5,8 +5,6 @@
 
 A modern approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
-Many thanks to Mercedes-Benz, Süddeutsche Zeitung, and everyone else who's [sponsored](https://github.com/sponsors/hmlongco) my open source work!
-
 ## Factory Version 2.5.3
 
 Factory is strongly influenced by SwiftUI, and in my opinion is highly suited for that environment. Factory is...
@@ -24,8 +22,12 @@ Factory is strongly influenced by SwiftUI, and in my opinion is highly suited fo
 - **Free**: Factory is free and open source under the MIT License.
 
 Sound too good to be true? Let's take a look.
+
+## Sponsors
+
+But before we do, I want to express my thanks to Mercedes-Benz, Süddeutsche Zeitung, and everyone else who's [sponsored](https://github.com/sponsors/hmlongco) my open source work!
   
- ## A Simple Example
+## A Simple Example
  
 Most container-based dependency injection systems require you to define in some way that a given service type is available for injection and many require some sort of factory or mechanism that will provide a new instance of the service when needed.
  
