@@ -31,7 +31,7 @@ But before we do, I want to express my thanks to Mercedes-Benz, Süddeutsche Zei
 
 ## A Simple Factory
  
-Most container-based dependency injection systems require you to define in some way that a given service type is available for injection and many require some sort of factory or mechanism that will provide a new instance of the service when needed.
+Most container-based dependency injection systems require you to define in some way that a given service type is available for injection, and many require some sort of factory or mechanism that will provide a new instance of the service when needed.
  
  Factory is no exception. Here's a simple dependency registration that returns a service that conforms to `MyServiceType`.
  
@@ -43,20 +43,12 @@ extension Container {
 }
 ```
 
-Unlike Resolver which often requires defining a plethora of nested registration functions, or SwiftUI, where defining a new environment variable requires creating a new EnvironmentKey and adding additional getters and setters, here we simply add a new `Factory` computed variable to the default container. When it's called our Factory is created, its closure is evaluated, and we get an instance of our dependency when we need it. 
+Unlike frameworks that require registering every single type up front, or SwiftUI, where defining a new environment variable requires creating a new EnvironmentKey and adding additional getters and setters, here we simply add a new `Factory` computed variable to the default container. When it's called our Factory is created, its closure is evaluated, and we get an instance of our dependency when we need it. 
 
 Injecting an instance of our service is equally straightforward. Here's just one of the many ways Factory can be used.
 
 ```swift
-// Pre iOS 17 with ObservableObject
 class ContentViewModel: ObservableObject {
-    @Injected(\.myService) private var myService
-    ...
-}
-
-// Post iOS 17 with Observation
-@Observable class ContentViewModel {
-    @ObservationIgnored
     @Injected(\.myService) private var myService
     ...
 }
@@ -69,9 +61,11 @@ By the way, if you're concerned about building Factory's on the fly, don't be. L
 
 For more examples of Factory definitions that define scopes, use constructor injection, and do parameter passing, see the [Registrations](https://hmlongco.github.io/Factory/documentation/factorykit/registrations) page.
 
-## Resolving Factories
+## Other Ways to Resolve Factories
 
 Earlier we demonstrated how to use the ``Injected`` property wrapper. But it's also possible to bypass the property wrapper and talk to the factory yourself.
+
+You can use the shared container:
 
 ```swift
 class ContentViewModel: ObservableObject {
