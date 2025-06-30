@@ -29,7 +29,7 @@ But before we do, I want to express my thanks to Mercedes-Benz, Süddeutsche Zei
 
 ---
 
-## A Simple Example
+## A Simple Factory
  
 Most container-based dependency injection systems require you to define in some way that a given service type is available for injection and many require some sort of factory or mechanism that will provide a new instance of the service when needed.
  
