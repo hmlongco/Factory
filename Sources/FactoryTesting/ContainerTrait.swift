@@ -41,7 +41,7 @@ import Testing
 ///
 /// If you use a custom container, you have to create your own trait and container variable extensions.
 ///
-/// That said, it's also possible to leverage this behavior in `XCTestCase`  by using the `@TaskLocal` provided `withValue` method.
+/// That said, it's also possible to leverage this behavior in XCTesting by inheriting `XCContainerTestCase` instead of `XCTestCase`.
 ///
 /// See the `Testing` documentation and examples in the `ParallelTests` and `ParallelXCTests` files.
 public struct ContainerTrait<C: SharedContainer>: TestTrait, SuiteTrait, TestScoping {
@@ -62,12 +62,12 @@ public struct ContainerTrait<C: SharedContainer>: TestTrait, SuiteTrait, TestSco
     }
 
     public func provideScope(for test: Test, testCase: Test.Case?, performing function: () async throws -> Void) async throws {
-        try await Scope.$singleton.withValue(Scope.singleton.clone()) {
-            try await shared.withValue(container()) {
-                await transform?(C.shared)
-                try await function()
-            }
-        }
+        try await withContainer(
+            shared: self.shared,
+            container: self.container(),
+            operation: function,
+            transform: transform
+        )
     }
 
     public func callAsFunction(transform: @escaping Transform) -> Self {
@@ -75,7 +75,6 @@ public struct ContainerTrait<C: SharedContainer>: TestTrait, SuiteTrait, TestSco
         copy.transform = transform
         return copy
     }
-
 }
 
 /// Provides test trait for default container

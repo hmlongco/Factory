@@ -1,6 +1,7 @@
 #if canImport(os)
 
 import XCTest
+import FactoryTesting
 import os
 @testable import FactoryKit
 
@@ -33,13 +34,7 @@ final class OpenURLFunctionMock: Sendable {
 }
 
 @available(iOS 16.0, *)
-final class FactoryFunctionalTests: XCTestCase {
-
-    override func setUp() {
-        super.setUp()
-        Container.shared.reset()
-    }
-
+final class FactoryFunctionalTests: XCContainerTestCase {
 
     func testOpenFunctionality() throws {
         let openedURL: OSAllocatedUnfairLock<URL?> = .init(initialState: nil)

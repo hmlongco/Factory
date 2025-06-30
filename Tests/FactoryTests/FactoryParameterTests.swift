@@ -1,16 +1,12 @@
 import XCTest
+import FactoryTesting
 @testable import FactoryKit
 
 #if canImport(SwiftUI)
 import SwiftUI
 #endif
 
-final class FactoryParameterTests: XCTestCase {
-
-    override func setUp() {
-        super.setUp()
-        Container.shared.reset()
-    }
+final class FactoryParameterTests: XCContainerTestCase {
 
     func testParameterServiceResolutions() throws {
         let service1 = Container.shared.parameterService(5)

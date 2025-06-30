@@ -1,4 +1,5 @@
 import XCTest
+import FactoryTesting
 @testable import FactoryKit
 
 let key1String = StaticString(stringLiteral: "s1")
@@ -7,7 +8,7 @@ let key2String = StaticString(stringLiteral: "s2")
 let key3Unicode = MyStaticScalar("\u{1F600}").value
 let key4Unicode = MyStaticScalar("\u{1F601}").value
 
-final class FactoryComponentTests: XCTestCase {
+final class FactoryComponentTests: XCContainerTestCase {
 
     let key1 = FactoryKey(type: UUID.self, key: key1String)
     let key1D = FactoryKey(type: UUID.self, key: key1StringDup)
@@ -15,11 +16,6 @@ final class FactoryComponentTests: XCTestCase {
     let key2 = FactoryKey(type: UUID.self, key: key2String)
     let key3U = FactoryKey(type: UUID.self, key: key3Unicode)
     let key4U = FactoryKey(type: UUID.self, key: key4Unicode)
-
-    override func setUp() {
-        super.setUp()
-        Container.shared.reset()
-    }
 
     func testScopeCache() {
         let cache = Scope.Cache()

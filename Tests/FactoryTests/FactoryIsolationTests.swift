@@ -1,5 +1,5 @@
 import XCTest
-
+import FactoryTesting
 @testable import FactoryKit
 
 private struct SomeSendableType: Sendable {}
@@ -53,12 +53,7 @@ extension Container {
     }
 }
 
-final class FactoryIsolationTests: XCTestCase {
-
-    override func setUp() {
-        super.setUp()
-        Container.shared.reset()
-    }
+final class FactoryIsolationTests: XCContainerTestCase {
 
     // test resolution of sendable type
     @MainActor
