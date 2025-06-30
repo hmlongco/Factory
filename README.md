@@ -65,8 +65,6 @@ For more examples of Factory definitions that define scopes, use constructor inj
 
 Earlier we demonstrated how to use the ``Injected`` property wrapper. But it's also possible to bypass the property wrapper and talk to the factory yourself.
 
-You can use the shared container:
-
 ```swift
 class ContentViewModel: ObservableObject {
     private let myService = Container.shared.myService()
