@@ -25,7 +25,7 @@ Sound too good to be true? Let's take a look.
 
 ---
 
-But before we do, I want to express my thanks to Mercedes-Benz, Süddeutsche Zeitung, and everyone else who's [sponsored](https://github.com/sponsors/hmlongco) my open source work!
+But before we do, I want to express my thanks to Mercedes-Benz, Süddeutsche Zeitung, and everyone else who's sponsored my open source work! [You folks help make this possible.](https://github.com/sponsors/hmlongco)
 
 ---
 
