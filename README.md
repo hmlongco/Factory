@@ -61,7 +61,7 @@ By the way, if you're concerned about building Factory's on the fly, don't be. L
 
 For more examples of Factory definitions that define scopes, use constructor injection, and do parameter passing, see the [Registrations](https://hmlongco.github.io/Factory/documentation/factorykit/registrations) page.
 
-## Other Ways to Resolve Factories
+## Other Factory Resolution Methods
 
 Earlier we demonstrated how to use the ``Injected`` property wrapper. But it's also possible to bypass the property wrapper and talk to the factory yourself.
 
