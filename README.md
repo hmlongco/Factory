@@ -355,13 +355,15 @@ Factory supports the Swift Package Manager and has legacy support for CocoaPods.
 
 Factory's primary import library is named `FactoryKit`. This is done in order to avoid SPM import conflicts between the library itself and the `Factory` object defined within the library.
 
-Just add the Factory package to your project, select the `FactoryKit` library when asked, and then import `FactoryKit` in your Swift files where needed.
+Just add the Factory package to your project target, select the `FactoryKit` library when asked, and then import `FactoryKit` in your Swift files where needed.
 
 ```swift
 import FactoryKit
 ```
 
-If you're using Swift Testing you'll probably also want to also import the `FactoryTesting` library and add it to your test target.
+If you're using Swift Testing you'll probably also want to also import the `FactoryTesting` library and add it to your test target. 
+
+Do not, however, import `FactoryKit` into the Test target. That can lead to duplicate factories and indeterminate behavior.
 
 Note that the current version of Factory requires Swift 5.10 minimum and that the minimum version of iOS currently supported with this release is iOS 13.
 

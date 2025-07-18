@@ -350,10 +350,10 @@ To import FactoryTesting you'll need to add that dependency to your project and 
 ```
 .testTarget(name: "MyAppTests", dependencies: [
   "MyApp", 
-  "Factory", 
   "FactoryTesting"
 ])
 ```
+> Warning: Do not import `FactoryKit` into the Test target. That can lead to duplicate factories and indeterminate behavior.
 
 #### Suite Trait
 
