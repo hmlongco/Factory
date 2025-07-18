@@ -373,6 +373,8 @@ While the original `Factory` library import still exists, it will be deprecated 
 
 If you're using Swift Testing you'll probably also want to also import the `FactoryTesting` library and add it to your test target. (Do **not** add it to your app target or other targets.)
 
+Similarly, don't import `FactoryKit` into the Test target. That can lead to duplicate factories and indeterminate behavior.
+
 Note that the current version of Factory requires Swift 5.10 minimum and that the minimum version of iOS currently supported with this release is iOS 13.
 
 ## FactoryKit Migration
