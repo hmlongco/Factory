@@ -76,6 +76,16 @@ class MyMainActorService: MyMainActorType {
     }
 }
 
+@MainActor
+class MockMainActorService: MyMainActorType {
+    init() {
+        // nothing
+    }
+    func load() async -> String {
+        "Returning mock result on MainActor"
+    }
+}
+
 extension Container {
     @MainActor
     var myMainActorType: Factory<MyMainActorType> {

@@ -35,7 +35,7 @@ extension FactoryMacroExtensions {
                     return attr.trimmedDescription
                 case .attribute:
                     let d = attr.trimmedDescription
-                    if d.hasPrefix("@DefineFactory") || d.hasPrefix("@DefineParameterFactory") {
+                    if d.hasPrefix("@MirrorFactory") || d.hasPrefix("@DefineFactory") || d.hasPrefix("@DefineParameterFactory") {
                         return nil
                     } else {
                         return d

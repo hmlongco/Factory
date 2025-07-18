@@ -51,13 +51,48 @@ struct MacroTests {
 //    }
 
     @Test func macroMirrorTest() async throws {
-        let service: MyServiceType? = Container.shared.mirrorMyService
-        #expect(service != nil)
+        let service1: MyServiceType = Container.shared.mirrorMyService
+        #expect(service1 is MyService)
+
+        Container.shared.$mirrorMyService.register {
+            MockService()
+        }
+
+        let service2: MyServiceType = Container.shared.mirrorMyService
+        #expect(service2 is MockService)
+        #expect(service1.id != service2.id)
+
+        let service3: MyServiceType = Container.shared.mirrorMyService
+        #expect(service3 is MockService)
+        #expect(service2.id == service3.id)
+    }
+
+    @MainActor @Test func macroMirrorActorTest() async throws {
+        let service: MyMainActorType = Container.shared.mirrorMyActorService
+        #expect(type(of: service) == MyMainActorService.self)
+        Container.shared.$mirrorMyActorService.register {
+            MockMainActorService()
+        }
+        let service2: MyMainActorType = Container.shared.mirrorMyActorService
+        #expect(type(of: service2) == MockMainActorService.self)
     }
 
 }
 
 extension Container {
+
+    func instance<T>(key: StaticString = #function, _ factory: @escaping () -> T) -> Factory<T> {
+        Factory<T>(self, key: key, factory)
+    }
+
+    public var anotherMyService: MyServiceType {
+        instance { MyService() }.cached()
+    }
+
+}
+
+extension Container {
+
     @DefineFactory({ MyService() })
     var macroMyService: MyServiceType
 
@@ -67,32 +102,38 @@ extension Container {
     @DefineFactory({ nil as MyServiceType? })
     var macroOptionalService: MyServiceType?
 
-//    @MainActor
-//    @DefineFactory({ MyMainActorService() })
-//    var macroMainActorType: MyMainActorType
-
     @DefineFactory({ NonisolatedMainActorType() })
     var macroNonisolatedMainActorType: NonisolatedMainActorType
 
-//    @DefineFactory({ TestActorType() })
-//    var macroTestActorType: TestActorType
-}
+    //    @DefineFactory({ MyMainActorService() })
+    //    var macroMainActorType: MyMainActorType
 
-//extension Container: AutoRegistering {
-//    func autoRegister() {
-//        $macroMyService.onDebug {
-//            MockService()
-//        }
-//    }
-//}
+    //    @DefineFactory({ TestActorType() })
+    //    var macroTestActorType: TestActorType
+
+}
 
 protocol MirrorServiceTypeProviding {
     var mirrorMyService: MyServiceType { get }
+    @MainActor var mirrorMyActorService: MyMainActorType { get }
 }
 
 extension Container: MirrorServiceTypeProviding {
     @MirrorFactory
-    var _mirrorMyService: Factory<MyServiceType> {
-        self { MyService() }
+    public var mirrorMyService: MyServiceType {
+        //        self { MyService() }.cached() // fails
+        //        instance { MyService() }.cached() // fails
+        Factory<MyServiceType>(self) { MyService() }.cached()
+    }
+
+    @MirrorFactory
+    public var mirrorMyService2: MyServiceType {
+        Factory(self) { MyService() as MyServiceType }()
+    }
+
+    @MirrorFactory
+    @MainActor var mirrorMyActorService: MyMainActorType {
+        Factory<MyMainActorType>(self) { MyMainActorService() }.cached()
     }
 }
+

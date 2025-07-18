@@ -10,7 +10,7 @@ import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
-public struct MirrorFactoryMacro: PeerMacro {
+public struct MirrorFactoryMacro: PeerMacro, FactoryMacroExtensions {
     public static func expansion(
         of node: AttributeSyntax,
         providingPeersOf declaration: some DeclSyntaxProtocol,
@@ -22,19 +22,15 @@ public struct MirrorFactoryMacro: PeerMacro {
             throw FactoryMacroError.invalid
         }
 
-        let originalName = try identifier(from: binding)
+        let name = try identifier(from: binding)
+        let type = try type(from: binding)
 
-        // Enforce convention: original should start with underscore _
-        guard originalName.hasPrefix("_") else {
-            throw FactoryMacroError.message("@MirrorFactory expects the original property to be prefixed with '_' (underscore)")
-        }
-
-        let mirrorName = String(originalName.dropFirst()) // remove leading _
-        let returnType = try extractFactoryReturnType(from: binding)
+        let attributes = attributes(from: varDecl)
+        let modifiers = modifiers(from: varDecl)
 
         let mirror = """
-        var \(mirrorName): \(returnType) {
-            \(originalName)()
+        \(attributes)\(modifiers)var $\(name): Factory<\(type)> {
+            Factory<\(type)>(self, key: "\(name)") { [unowned self] in self.\(name) }
         }
         """
 

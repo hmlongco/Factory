@@ -1,13 +1,24 @@
 import FactoryMacros
+import Foundation
 
-public protocol MyServiceType {}
-@MainActor public protocol MainActorType {}
+public protocol MyServiceType {
+    var id: UUID { get }
+}
+@MainActor public protocol MainActorType {
+    var id: UUID { get }
+}
 
-public struct MyService: MyServiceType {}
-public struct MockMyService: MyServiceType {}
+public struct MyService: MyServiceType {
+    public var id: UUID = .init()
+}
+public struct MockMyService: MyServiceType {
+    public var id: UUID = .init()
+}
 public struct OtherService {}
 
-@MainActor public class MainActorService: MainActorType {}
+@MainActor public class MainActorService: MainActorType {
+    public var id: UUID = .init()
+}
 
 public struct MyParameterService {
     let parameter: Int
@@ -29,6 +40,38 @@ extension Scope {
 }
 
 extension Container: MyServiceProviding {
+
+    func unique<T>(key: StaticString = #function, _ factory: @escaping () -> T) -> T {
+        Factory<T>(self, key: key, factory).unique.resolve()
+    }
+
+    func cached<T>(key: StaticString = #function, _ factory: @escaping () -> T) -> T {
+        Factory<T>(self, key: key, factory).cached.resolve()
+    }
+
+    func instance<T>(key: StaticString = #function, _ factory: @escaping () -> T) -> T {
+        Factory<T>(self, key: key, factory).unique.resolve()
+    }
+
+    func scope<T>(_ scope: Scope, key: StaticString = #function, _ factory: @escaping () -> T) -> T {
+        Factory<T>(self, key: key, factory).scope(scope).resolve()
+    }
+
+    @MirrorFactory
+    var uniqueService: MyServiceType {
+        unique { MyService() }
+    }
+
+    @MirrorFactory
+    public var cachedService: MyServiceType {
+        Factory<MyServiceType>(self) { MyService() }()
+    }
+
+//    @MainActor
+//    @MirrorFactory
+//    var mirroredMainActorService: MainActorType {
+//        scope(.cached) { MainActorService() }
+//    }
 
     var currentService: Factory<MyServiceType> {
         Factory(self) { MyService() }
@@ -63,8 +106,10 @@ extension Container: MyServiceProviding {
         Container.shared.$myService.register {
             MockMyService()
         }
+
         let myService2 = Container.shared.myService
         print(type(of: myService2))
+
     }
 
     func testMacro2() {
@@ -73,7 +118,21 @@ extension Container: MyServiceProviding {
 
     }
 
+    func testMacro3() {
+        Container.shared.manager.trace = true
+        let myService3 = Container.shared.cachedService
+        print("\(type(of: myService3)) \(myService3.id)")
+        Container.shared.$cachedService.register {
+            MockMyService()
+        }
+        let myService4 = Container.shared.cachedService
+        print("\(type(of: myService4)) \(myService4.id)")
+        let myService5 = Container.shared.cachedService
+        print("\(type(of: myService5)) \(myService5.id)")
+    }
+
 }
 
 Container.shared.testMacro1()
-Container.shared.testMacro2()
+//Container.shared.testMacro2()
+//Container.shared.testMacro3()

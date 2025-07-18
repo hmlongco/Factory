@@ -74,8 +74,9 @@ public struct DefineFactoryMacro: AccessorMacro, PeerMacro, FactoryMacroExtensio
 
         let factory = """
         \(modifiers)var $\(name): Factory<\(type)> {
-            Factory<\(type)>(self) \(closure)\(scope)
+            Factory<\(type)>(self, _\(name))\(scope)
         }
+        private func _\(name)() -> \(type) \(closure)
         """
 
         return [DeclSyntax(stringLiteral: factory)]
