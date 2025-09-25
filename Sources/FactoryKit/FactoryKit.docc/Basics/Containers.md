@@ -127,7 +127,7 @@ Don't forget that if need be you can reach across containers simply by specifyin
 
 ```swift
 extension PaymentsContainer {
-    let anotherService = Factory<AnotherService> { 
+    var anotherService: Factory<AnotherService> { 
         self { AnotherService(using: Container.shared.optionalService()) }
     }
 }
