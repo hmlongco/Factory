@@ -114,10 +114,15 @@ public struct FactoryRegistration<P,T>: Sendable {
 
         globalGraphResolutionDepth += 1
         let instance: T
+        var wasCached = true
         if let scope = options?.scope ?? manager.defaultScope {
             let parameterizedKey = options?.scopeOnParameters == true ? key.parameterized(parameters) : key
-            instance = scope.resolve(using: manager.cache, key: parameterizedKey, ttl: options?.ttl, factory: { current(parameters) }) }
-        else {
+            instance = scope.resolve(using: manager.cache, key: parameterizedKey, ttl: options?.ttl, factory: {
+                wasCached = false
+                return current(parameters)
+            })
+        } else {
+            wasCached = false
             instance = current(parameters)
         }
         globalGraphResolutionDepth -= 1
@@ -150,6 +155,9 @@ public struct FactoryRegistration<P,T>: Sendable {
 
         if let decorator = options?.decorator as? (T) -> Void {
             decorator(instance)
+        }
+        if let decorator = options?.decorator as? (T, Bool) -> Void {
+            decorator(instance, wasCached)
         }
         if let decorator = manager.decorator {
             decorator(instance)
@@ -223,6 +231,12 @@ public struct FactoryRegistration<P,T>: Sendable {
 
     /// Registers a new decorator.
     internal func decorator(_ decorator: @escaping (T) -> Void) {
+        options { options in
+            options.decorator = decorator
+        }
+    }
+    
+    internal func decorator(_ decorator: @escaping (T, Bool) -> Void) {
         options { options in
             options.decorator = decorator
         }

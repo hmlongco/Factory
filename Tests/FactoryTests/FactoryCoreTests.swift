@@ -152,6 +152,16 @@ final class FactoryCoreTests: XCTestCase {
         let _ = CustomContainer.shared.decorated()
         XCTAssertEqual(CustomContainer.shared.count, 4)
     }
+    
+    func testFactoryWasCachedDecorators() {
+        XCTAssertEqual(CustomContainer.shared.count, 0)
+        let _ = CustomContainer.shared.decoratedWasCached()
+        XCTAssertEqual(CustomContainer.shared.count, 2)
+        let _ = CustomContainer.shared.decoratedWasCached()
+        XCTAssertEqual(CustomContainer.shared.count, 2)
+        let _ = CustomContainer.shared.decoratedWasCached()
+        XCTAssertEqual(CustomContainer.shared.count, 2)
+    }
 
     func testFactoryOnce() {
         XCTAssertEqual(CustomContainer.shared.count, 0)
