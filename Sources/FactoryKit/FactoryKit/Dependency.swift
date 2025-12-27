@@ -26,7 +26,7 @@
 
 import Foundation
 
-/// Global function to resolve a keypath on Container.shared into the requested type
+/// Global function to resolve a keyPath on Container.shared into the requested type
 ///
 /// ```swift
 /// @State var model: ContentViewModel = resolve(\.contentViewModel)
@@ -34,20 +34,20 @@ import Foundation
 ///
 /// ```swift
 /// nonisolated final class NetworkService {
-///     let preferences: Preferences = resolve(\.preferences)
+///     let preferences: Preferences = dependency(\.preferences)
 ///     func load() {}
 /// }
 /// ```
-public func resolve<T>(_ keyPath: KeyPath<Container, Factory<T>>) -> T {
+public func dependency<T>(_ keyPath: KeyPath<Container, Factory<T>>) -> T {
     Container.shared[keyPath: keyPath]()
 }
 
-/// Global function to resolve a keypath on the specified shared container into the requested type
+/// Global function to resolve a keyPath on the specified shared container into the requested type
 ///
 /// ```swift
-/// @State var model: ContentViewModel = resolve(\MyContainer.contentViewModel)
+/// @State var model: ContentViewModel = dependency(\MyContainer.contentViewModel)
 /// ```
-public func resolve<C:SharedContainer, T>(_ keyPath: KeyPath<C, Factory<T>>) -> T {
+public func dependency<C:SharedContainer, T>(_ keyPath: KeyPath<C, Factory<T>>) -> T {
     C.shared[keyPath: keyPath]()
 }
 
@@ -55,12 +55,12 @@ public func resolve<C:SharedContainer, T>(_ keyPath: KeyPath<C, Factory<T>>) -> 
 ///
 /// ```swift
 /// nonisolated final class NetworkService {
-///     let preferences: Preferences = resolve(\.preferences, parameter: Mode.secret)
+///     let preferences: Preferences = dependency(\.preferences, parameter: Mode.secret)
 ///     func load() {}
 /// }
 /// ```
 /// Useful when you want to hide Factory and Factory Shared Containers from the rest of your code base.
-public func resolve<T, P>(_ keyPath: KeyPath<Container, ParameterFactory<P, T>>, parameter: P) -> T {
+public func dependency<T, P>(_ keyPath: KeyPath<Container, ParameterFactory<P, T>>, parameter: P) -> T {
     Container.shared[keyPath: keyPath](parameter)
 }
 
@@ -68,11 +68,23 @@ public func resolve<T, P>(_ keyPath: KeyPath<Container, ParameterFactory<P, T>>,
 ///
 /// ```swift
 /// nonisolated final class NetworkService {
-///     let preferences: Preferences = resolve(\Custom.preferences, parameter: Mode.secret)
+///     let preferences: Preferences = dependency(\Custom.preferences, parameter: Mode.secret)
 ///     func load() {}
 /// }
 /// ```
 /// Useful when you want to hide Factory and Factory Shared Containers from the rest of your code base.
-public func resolve<C: SharedContainer, P, T>(_ keyPath: KeyPath<C, ParameterFactory<P, T>>, parameter: P) -> T {
+public func dependency<C: SharedContainer, P, T>(_ keyPath: KeyPath<C, ParameterFactory<P, T>>, parameter: P) -> T {
     C.shared[keyPath: keyPath](parameter)
+}
+
+// deprecations
+
+@available(*, deprecated, renamed: "dependency", message: "Deprecated. Use `dependency` with a keypath instead.")
+public func resolve<T>(_ keyPath: KeyPath<Container, Factory<T>>) -> T {
+    Container.shared[keyPath: keyPath]()
+}
+
+@available(*, deprecated, renamed: "dependency", message: "Deprecated. Use `dependency` with a keypath instead.")
+public func resolve<C:SharedContainer, T>(_ keyPath: KeyPath<C, Factory<T>>) -> T {
+    C.shared[keyPath: keyPath]()
 }

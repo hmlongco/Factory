@@ -29,7 +29,7 @@ nonisolated final class PassedContainerNetworkService {
 }
 
 nonisolated final class DependencyFunctionNetworkService {
-    let preferences: Preferences = resolve(\.preferences)
+    let preferences: Preferences = dependency(\.preferences)
     func load() {}
 }
 

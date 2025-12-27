@@ -108,6 +108,16 @@ struct FactoryDemoApp: App {
 }
 
 ```
+Finally, Factory has a set of global dependency resolution functions.
+```swift
+final class NetworkService {
+    let preferences: Preferences = dependency(\.preferences)
+    lazy var service: Service = dependency(\.service, parameter: Mode.secret)
+    ...
+}
+```
+These are discussed in detail below.
+
 Factory is flexible, and it doesn't tie you down to a specific dependency injection pattern or technique.
 
 See [Resolutions](https://hmlongco.github.io/Factory/documentation/factorykit/resolutions) for more examples.
@@ -348,17 +358,19 @@ See [SwiftUI](https://hmlongco.github.io/Factory/documentation/factorykit/swiftu
 If you're using global MainActors but have nonisolated service classes that need dependencies of their own then you may not be able use the 
 various "Injected" property wrappers due to an issue with Swift 6.2.
 
-Factory has a global resolution function that can be used in their place.
+Factory has a global dependency resolution function that can be used in their place.
 
 ```swift
 nonisolated final class NetworkService {
-    let preferences: Preferences = resolve(\.preferences)
-    lazy var service: Service = resolve(\.service)
+    let preferences: Preferences = dependency(\.preferences)
+    lazy var service: Service = dependency(\.service, parameter: Mode.secret)
     ...
 }
 ```
-This function can also be useful when you want to hide Factory and Factory Shared Containers from the rest of your code base. Should you
-ever want to switch away from Factory, just expose your own `resolve` function with the same keyPaths.
+These functions can also be useful when you want to hide Factory and Factory Shared Containers from the rest of your code base. Should you
+ever want to switch away from Factory, just expose your own `dependency` function with the same keyPaths.
+
+One can also use them to pass parameters to Factory's, something the property wrappers don't allow.
 
 ## Documentation
 
