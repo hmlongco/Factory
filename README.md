@@ -343,6 +343,23 @@ struct ContentView: View {
 
 See [SwiftUI](https://hmlongco.github.io/Factory/documentation/factorykit/swiftui) for more discussion.
 
+## Nonisolated Classes
+
+If you're using global MainActors but have nonisolated service classes that need dependencies of their own then you may not be able use the 
+various "Injected" property wrappers due to an issue with Swift 6.2.
+
+Factory has a global resolution function that can be used in their place.
+
+```swift
+nonisolated final class NetworkService {
+    let preferences: Preferences = resolve(\.preferences)
+    lazy var service: Service = resolve(\.service)
+    ...
+}
+```
+This function can also be useful when you want to hide Factory and Factory Shared Containers from the rest of your code base. Should you
+ever want to switch away from Factory, just expose your own `resolve` function with the same keyPaths.
+
 ## Documentation
 
 A single README file barely scratches the surface. Fortunately, Factory is thoroughly documented. 

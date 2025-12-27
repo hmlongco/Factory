@@ -9,6 +9,7 @@ import Foundation
 import FactoryKit
 import Common
 import Networking
+import SwiftUI
 
 protocol MyCustomContainer: SharedContainer {
     var constructedService: Factory<MyConstructedService> { get }

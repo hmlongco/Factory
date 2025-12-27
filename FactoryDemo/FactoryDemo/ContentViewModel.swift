@@ -9,22 +9,24 @@ import Foundation
 import FactoryKit
 import Common
 import Networking
+import SwiftUI
 
 @MainActor
 class ContentViewModel: ObservableObject {
 
+    @InjectedContainer var container
+    @InjectedContainer(DemoContainer.self) var demo
+
     @Injected(\.myServiceType) private var service
     @Injected(\.networkType) private var network
     @Injected(\.fatalType) private var fatal
-
-//    @Injected(\.$macroCommonType) private var macro
 
     private let simpleService = Container.shared.simpleService()
 
     @Published var name: String = "Michael"
 
     init() {
-        print("ContentViewModel Initialized")
+        testContainer()
         testFactory()
         testResolving()
     }
@@ -36,6 +38,13 @@ class ContentViewModel: ObservableObject {
     var testing: String {
         let test = NSClassFromString("XCTest") != nil
         return test ? "Yes" : "No"
+    }
+
+    func testContainer() {
+        let service1 = container.myServiceType()
+        print("Container Service = \(service1.text())")
+        let service2 = demo.myServiceType()
+        print("Demo Container Service = \(service2.text())")
     }
 
     func testFactory() {

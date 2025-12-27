@@ -124,7 +124,7 @@ final class ImplementsAB: AServiceType, BServiceType, @unchecked Sendable {
 }
 
 final class NetworkService {
-    @LazyInjected(\.preferences) var preferences
+    @Injected(\.preferences) var preferences
     func load() {}
 }
 

@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import FactoryMacros
+import FactoryKit
 
 @testable import FactoryDemo
 

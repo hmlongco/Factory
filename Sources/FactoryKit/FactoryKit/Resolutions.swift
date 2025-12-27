@@ -31,6 +31,13 @@ import Foundation
 /// ```swift
 /// @State var model: ContentViewModel = resolve(\.contentViewModel)
 /// ```
+///
+/// ```swift
+/// nonisolated final class NetworkService {
+///     let preferences: Preferences = resolve(\.preferences)
+///     func load() {}
+/// }
+/// ```
 public func resolve<T>(_ keyPath: KeyPath<Container, Factory<T>>) -> T {
     Container.shared[keyPath: keyPath]()
 }
@@ -42,4 +49,30 @@ public func resolve<T>(_ keyPath: KeyPath<Container, Factory<T>>) -> T {
 /// ```
 public func resolve<C:SharedContainer, T>(_ keyPath: KeyPath<C, Factory<T>>) -> T {
     C.shared[keyPath: keyPath]()
+}
+
+/// Global dependency resolution function with passed parameter, operating on Container.shared.
+///
+/// ```swift
+/// nonisolated final class NetworkService {
+///     let preferences: Preferences = resolve(\.preferences, parameter: Mode.secret)
+///     func load() {}
+/// }
+/// ```
+/// Useful when you want to hide Factory and Factory Shared Containers from the rest of your code base.
+public func resolve<T, P>(_ keyPath: KeyPath<Container, ParameterFactory<P, T>>, parameter: P) -> T {
+    Container.shared[keyPath: keyPath](parameter)
+}
+
+/// Global dependency resolution function with passed parameter, operating on specified shared container.
+///
+/// ```swift
+/// nonisolated final class NetworkService {
+///     let preferences: Preferences = resolve(\Custom.preferences, parameter: Mode.secret)
+///     func load() {}
+/// }
+/// ```
+/// Useful when you want to hide Factory and Factory Shared Containers from the rest of your code base.
+public func resolve<C: SharedContainer, P, T>(_ keyPath: KeyPath<C, ParameterFactory<P, T>>, parameter: P) -> T {
+    C.shared[keyPath: keyPath](parameter)
 }
