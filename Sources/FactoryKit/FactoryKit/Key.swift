@@ -104,7 +104,7 @@ private func globalIdentifier(for type: Any.Type) -> ObjectIdentifier {
             return knownID
         }
         // this is what we're bypassing. extremely slow runtime function.
-        let name = String(reflecting: type)
+        let name = _typeName(type, qualified: true)
         // magic happens here, if name is already known then get original key for it
         let id = globalNameToIdentifierTable[name, default: requestedTypeID]
         // and save it so we don't have to do this again
