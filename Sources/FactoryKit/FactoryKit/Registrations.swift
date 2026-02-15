@@ -341,25 +341,25 @@ extension FactoryOptions {
             }
         }
         if let contexts = contexts, !contexts.isEmpty {
-            #if DEBUG
-            if FactoryContext.current.isPreview, let found = contexts["preview"] {
-                return found
+            if FactoryContext.current.isDebug {
+                if FactoryContext.current.isPreview, let found = contexts["preview"] {
+                    return found
+                }
+                if FactoryContext.current.isTest, let found = contexts["test"] {
+                    return found
+                }
             }
-            if FactoryContext.current.isTest, let found = contexts["test"] {
-                return found
-            }
-            #endif
             if FactoryContext.current.isSimulator, let found = contexts["simulator"] {
                 return found
             }
             if !FactoryContext.current.isSimulator, let found = contexts["device"] {
                 return found
             }
-            #if DEBUG
-            if let found = contexts["debug"] {
-                return found
+            if FactoryContext.current.isDebug {
+                if let found = contexts["debug"] {
+                    return found
+                }
             }
-            #endif
         }
         return nil
     }
