@@ -25,7 +25,7 @@
 //
 
 #if DEBUG
-#if swift(>=6.1)
+#if compiler(>=6.1)
 
 #if canImport(FactoryKit)
 import FactoryKit
