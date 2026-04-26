@@ -21,9 +21,9 @@ final class FactoryCoreTests: XCTestCase {
     }
 
     func testGlobalResolutionFunctions() throws {
-        let service1 = resolve(\.myServiceType)
+        let service1 = dependency(\.myServiceType)
         XCTAssertEqual(service1.text(), "MyService")
-        let service2 = resolve(\CustomContainer.test)
+        let service2 = dependency(\CustomContainer.test)
         XCTAssertEqual(service2.text(), "MockService32")
     }
 

@@ -396,6 +396,12 @@ Do not, however, import `FactoryKit` into the Test target. That can lead to dupl
 
 Note that the current version of Factory requires Swift 5.10 minimum and that the minimum version of iOS currently supported with this release is iOS 13.
 
+## Demo Application
+
+Factory includes a test bed application, FactoryDemo, that's used to test basic functionality and ensure various features are working properly.
+
+[MovieDemo](https://github.com/hmlongco/MovieDemo), on the other hand, is a new TMDB movie browsing application that's been built to showcase how to use [Factory](https://github.com/hmlongco/Factory) and [Navigator](https://github.com/hmlongco/Navigator) in a modern, modular iOS application.
+
 ## FactoryKit Migration
 
 Factory 3.0.0 works with SPM, Xcode 26 under Strict Concurrency guidelines, and with Swift Testing.
