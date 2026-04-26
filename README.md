@@ -396,11 +396,13 @@ Do not, however, import `FactoryKit` into the Test target. That can lead to dupl
 
 Note that the current version of Factory requires Swift 5.10 minimum and that the minimum version of iOS currently supported with this release is iOS 13.
 
-## Demo Application
+## Demo Applications
 
 Factory includes a test bed application, FactoryDemo, that's used to test basic functionality and ensure various features are working properly.
 
-[MovieDemo](https://github.com/hmlongco/MovieDemo), on the other hand, is a new TMDB movie browsing application that's been built to showcase how to use [Factory](https://github.com/hmlongco/Factory) and [Navigator](https://github.com/hmlongco/Navigator) in a modern, modular iOS application.
+MovieDemo, on the other hand, is a new TMDB movie browsing application that's been built to showcase how to use [Factory](https://github.com/hmlongco/Factory) and [Navigator](https://github.com/hmlongco/Navigator) in a modern, modular iOS application.
+
+It can be obtained here: [MovieDemo](https://github.com/hmlongco/MovieDemo).
 
 ## FactoryKit Migration
 
@@ -453,6 +455,7 @@ Special thanks to Ákos Grabecz (agrabz) and Mahmood Tahir (tahirmt) for their r
 ## Additional Resources
 
 * [Factory Documentation](https://hmlongco.github.io/Factory/documentation/factorykit)
+* [MovieDemo: A modern, modular iOS application that uses Factory and Navigator](https://github.com/hmlongco/MovieDemo)
 * [Factory 1.0 and Functional Dependency Injection](https://betterprogramming.pub/factory-and-functional-dependency-injection-2d0a38042d05)
 * [Factory 1.0: Multiple Module Registration](https://betterprogramming.pub/factory-multiple-module-registration-f9d19721a31d?sk=a03d78484d8c351762306ff00a8be67c)
 * [Resolver: A Swift Dependency Injection System](https://github.com/hmlongco/Resolver)
