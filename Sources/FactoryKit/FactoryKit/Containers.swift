@@ -46,7 +46,7 @@ import SwiftUI
 ///  If the Container's @TaskLocal macro provided `withValue` function is used, the aforementioned scope of the container will be isolated to that task.
 ///
 ///  See <doc:Containers> for more information.
-public final class Container: SharedContainer {
+public nonisolated final class Container: SharedContainer, @unchecked Sendable {
     /// Define the default shared container.
     #if swift(>=5.5)
     @TaskLocal public static var shared = Container()
@@ -72,7 +72,7 @@ public final class Container: SharedContainer {
 /// The default ``Container`` provided is a SharedContainer. It can be used in both roles as needed.
 ///
 ///  See <doc:Containers> for more information.
-public protocol SharedContainer: ManagedContainer {
+public nonisolated protocol SharedContainer: ManagedContainer {
     /// Defines a single "shared" container for that container type.
     ///
     /// This container is used by the various @Injected property wrappers to resolve the keyPath to a given Factory. Care should be taken in
@@ -144,7 +144,7 @@ extension SharedContainer {
 /// }
 /// ```
 ///  See <doc:Containers> for more information.
-public protocol ManagedContainer: AnyObject, Sendable {
+public nonisolated protocol ManagedContainer: AnyObject, Sendable {
     /// Defines the ContainerManager used to manage registrations, resolutions, and scope caching for that container. Encapsulating the code in
     /// this fashion makes creating and using your own custom containers much simpler.
     var manager: ContainerManager { get }
@@ -211,7 +211,7 @@ extension ManagedContainer {
     /// Defines a decorator for the container. This decorator will see every dependency resolved by this container.
     public func decorator(_ decorator: ((Any) -> ())?) {
         globalVariableLock.withLock {
-            manager.decorator = decorator
+            manager.state.decorator = decorator
         }
     }
     /// Defines a thread safe access mechanism to reset the container.
@@ -226,7 +226,7 @@ extension ManagedContainer {
     }
     /// Defines an async with function to allow container transformation on assignment.
     @discardableResult
-    public func with(_ transform: @Sendable (Self) async -> Void) async -> Self {
+    public func with(_ transform: @Sendable @isolated(any) (Self) async -> Void) async -> Self {
         await transform(self)
         return self
     }
@@ -244,28 +244,28 @@ extension ManagedContainer {
 /// Those functions are designed primarily for testing.
 ///
 /// Class is @unchecked Sendable as all public state is managed via global locking mechanisms
-public final class ContainerManager: @unchecked Sendable {
+public final nonisolated class ContainerManager: @unchecked Sendable {
 
     /// Public initializer
     public init() {}
 
     /// Default scope. Setting scope to nil returns the default to `unique`.
     public var defaultScope: Scope? {
-        get { globalVariableLock.withLock { _defaultScope } }
-        set { globalVariableLock.withLock { _defaultScope = newValue } }
+        get { globalVariableLock.withLock { state.defaultScope } }
+        set { globalVariableLock.withLock { state.defaultScope = newValue } }
     }
 
     #if DEBUG
     /// Public variable exposing dependency chain test maximum
-    public var dependencyChainTestMax: Int {
-        get { globalVariableLock.withLock { _dependencyChainTestMax } }
-        set { globalVariableLock.withLock { _dependencyChainTestMax = newValue } }
+    public var circularDependencyTesting: Bool {
+        get { globalVariableLock.withLock { globalCircularDependencyTesting } }
+        set { globalVariableLock.withLock { globalCircularDependencyTesting = newValue } }
     }
 
     /// Public variable promise behavior
     public var promiseTriggersError: Bool {
-        get { globalVariableLock.withLock { _promiseTriggersError } }
-        set { globalVariableLock.withLock { _promiseTriggersError = newValue } }
+        get { globalVariableLock.withLock { state.promiseTriggersError } }
+        set { globalVariableLock.withLock { state.promiseTriggersError = newValue } }
     }
 
     /// Public var enabling factory resolution trace statements in debug mode for ALL containers.
@@ -284,9 +284,9 @@ public final class ContainerManager: @unchecked Sendable {
         globalRecursiveLock.withLock {
             switch options {
             case .all:
-                return registrations.isEmpty && cache.isEmpty && self.options.isEmpty
+                return registrations.isEmpty && cache.isEmpty && unsafeContextsAreEmpty()
             case .context:
-                return self.options.allSatisfy { $1.argumentContexts == nil && $1.contexts == nil }
+                return unsafeContextsAreEmpty()
             case .none:
                 return true
             case .registration:
@@ -296,34 +296,43 @@ public final class ContainerManager: @unchecked Sendable {
             }
         }
     }
+
+    internal func unsafeContextsAreEmpty() -> Bool {
+        options.allSatisfy { $1.argumentContexts == nil && $1.contexts == nil }
+    }
     #endif
 
-    /// Alias for Factory registration map.
+    /// Updated registrations for Factory's.
     internal typealias FactoryMap = [FactoryKey:AnyFactory]
-    /// Alias for Factory options map.
-    internal typealias FactoryOptionsMap = [FactoryKey:FactoryOptions]
-    /// Alias for Factory once set.
-    internal typealias FactoryOnceSet = Set<String>
+    internal var registrations: FactoryMap = .init(minimumCapacity: 256)
 
-    /// Internal closure decorates all factory resolutions for this container.
-    internal var decorator: ((Any) -> ())?
-    /// Flag indicating auto registration check needs to be performed and executed if needed.
-    internal var autoRegistrationCheckNeeded = true
+    /// Updated options for Factory's.
+    internal typealias FactoryOptionsMap = [FactoryKey:FactoryOptions]
+    internal var options: FactoryOptionsMap = .init(minimumCapacity: 256)
+
+    /// Scope cache for Factory's managed by this container.
+    internal var cache: Scope.Cache = Scope.Cache(minimumCapacity: 256)
+
+    /// Push/Pop stack for registrations, options, cache, and so on.
+    internal var stack: [(FactoryMap, FactoryOptionsMap, Scope.Cache.CacheMap, InternalState)] = []
+
+    /// Internal state values for reset, push/pop, etc.
+    internal var state: InternalState = .init()
+
     /// Flag indicating auto registration is in process.
     internal var autoRegistering = false
-    /// Updated registrations for Factory's.
-    internal lazy var registrations: FactoryMap = .init(minimumCapacity: 256)
-    /// Updated options for Factory's.
-    internal lazy var options: FactoryOptionsMap = .init(minimumCapacity: 256)
-    /// Scope cache for Factory's managed by this container.
-    internal lazy var cache: Scope.Cache = Scope.Cache(minimumCapacity: 256)
-    /// Push/Pop stack for registrations, options, cache, and so on.
-    internal lazy var stack: [(FactoryMap, FactoryOptionsMap, Scope.Cache.CacheMap, Bool)] = []
 
-    // Protected public mutable state
-    private var _defaultScope: Scope?
-    private var _dependencyChainTestMax: Int = 8
-    private var _promiseTriggersError: Bool = FactoryContext.current.isDebug && !FactoryContext.current.isPreview
+    /// Internal state value structure
+    internal struct InternalState {
+        /// Flag indicating auto registration check needs to be performed and executed if needed.
+        internal var autoRegistrationCheckNeeded = true
+        /// Internal closure decorates all factory resolutions for this container.
+        internal var decorator: ((Any) -> ())?
+        // Default scope
+        internal var defaultScope: Scope?
+        // Default promise triggers error flag
+        internal var promiseTriggersError: Bool = FactoryContext.current.isDebug && !FactoryContext.current.isPreview
+    }
 
 }
 
@@ -337,10 +346,7 @@ extension ContainerManager {
                 self.registrations.removeAll(keepingCapacity: true)
                 self.options.removeAll(keepingCapacity: true)
                 self.cache.reset()
-                self.autoRegistrationCheckNeeded = true
-                self._defaultScope = nil
-                self._dependencyChainTestMax = 8
-                self._promiseTriggersError = FactoryContext.current.isDebug && !FactoryContext.current.isPreview
+                self.state = .init()
             case .context:
                 for (key, option) in self.options {
                     var mutable = option
@@ -352,7 +358,7 @@ extension ContainerManager {
                 break
             case .registration:
                 self.registrations.removeAll(keepingCapacity: true)
-                self.autoRegistrationCheckNeeded = true
+                self.state.autoRegistrationCheckNeeded = true
             case .scope:
                 self.cache.reset()
             }
@@ -377,18 +383,18 @@ extension ContainerManager {
     /// Test function pushes the current registration and cache states
     public func push() {
         globalRecursiveLock.withLock {
-            stack.append((registrations, options, cache.cache, autoRegistrationCheckNeeded))
+            stack.append((registrations, options, cache.cache, state))
         }
     }
 
     /// Test function pops and restores a previously pushed registration and cache state
     public func pop() {
         globalRecursiveLock.withLock {
-            if let state = stack.popLast() {
-                registrations = state.0
-                options = state.1
-                cache.cache = state.2
-                autoRegistrationCheckNeeded = state.3
+            if let values = stack.popLast() {
+                registrations = values.0
+                options = values.1
+                cache.cache = values.2
+                state = values.3
             }
         }
     }
@@ -424,11 +430,13 @@ public protocol AutoRegistering {
 extension ManagedContainer {
     /// Performs autoRegistration check. Function is unsafe as it assume we're already behind the globalRecursiveLock.
     internal func unsafeCheckAutoRegistration() {
-        if manager.autoRegistrationCheckNeeded {
-            manager.autoRegistrationCheckNeeded = false
-            manager.autoRegistering = true
-            (self as? AutoRegistering)?.autoRegister()
-            manager.autoRegistering = false
+        if manager.state.autoRegistrationCheckNeeded {
+            manager.state.autoRegistrationCheckNeeded = false
+            if let container = self as? AutoRegistering {
+                manager.autoRegistering = true
+                container.autoRegister()
+                manager.autoRegistering = false
+            }
         }
     }
 }

@@ -19,8 +19,6 @@ final class FactoryMultithreadingTests: XCTestCase, @unchecked Sendable {
         // basically tests that nothing locks up or crashes while doing registrations and resolutions.
         // behavior is pretty apparent if locks are disabled.
 
-        // MultiThreadedContainer.shared.manager.dependencyChainTestMax = 0
-
         let expA = expectation(description: "A")
         let expB = expectation(description: "B")
         let expC = expectation(description: "C")
@@ -89,8 +87,6 @@ final class FactoryMultithreadingTests: XCTestCase, @unchecked Sendable {
         print(iterations)
         XCTAssertEqual(iterations, 80008)
 
-        MultiThreadedContainer.shared.manager.dependencyChainTestMax = 8
-        
     }
 
 }

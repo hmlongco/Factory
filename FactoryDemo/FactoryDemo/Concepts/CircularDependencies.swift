@@ -31,6 +31,7 @@ extension Container {
     var optionalA: Factory<CircularA?> { self { CircularA() } }
 
     static func testCircularDependencies() {
+        Container.shared.manager.trace.toggle()
         let a = Container.shared.circularA()
         print(a)
     }

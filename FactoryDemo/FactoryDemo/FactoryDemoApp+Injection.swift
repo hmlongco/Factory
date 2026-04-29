@@ -12,30 +12,32 @@ import SwiftUI
 
 extension Container {
 
-    var simpleService: Factory<SimpleService> {
+    @MainActor var simpleService: Factory<SimpleService> {
         Factory(self) { SimpleService() }
     }
 
-    var simpleService2: Factory<SimpleService> {
+    @MainActor var simpleService2: Factory<SimpleService> {
         .init(self) { SimpleService() }
     }
 
-    var simpleService3: Factory<SimpleService> {
+    @MainActor var simpleService3: Factory<SimpleService> {
         self { SimpleService() }
     }
 
-    var simpleService4: Factory<SimpleService> {
+    @MainActor var simpleService4: Factory<SimpleService> {
         self { SimpleService() }.singleton
     }
 
 }
 
 extension Container {
-    var contentViewModel: Factory<ContentViewModel> { self { ContentViewModel() } }
+    @MainActor var contentViewModel: Factory<ContentViewModel> {
+        self { ContentViewModel() }
+    }
 }
 
 extension Container {
-    var previewService: Factory<MyServiceType> {
+    @MainActor var previewService: Factory<MyServiceType> {
         self { MyService() }
             .onPreview { MockServiceN(55) }
             .singleton
@@ -43,8 +45,8 @@ extension Container {
 }
 
 extension SharedContainer {
-    var myServiceType: Factory<MyServiceType> { self { MyService() } }
-    var sharedService: Factory<MyServiceType> { self { MyService() }.shared }
+    @MainActor var myServiceType: Factory<MyServiceType> { self { MyService() } }
+    @MainActor var sharedService: Factory<MyServiceType> { self { MyService() }.shared }
 }
 
 final class DemoContainer: ObservableObject, SharedContainer {
@@ -52,7 +54,7 @@ final class DemoContainer: ObservableObject, SharedContainer {
 
     var optionalService: Factory<SimpleService?> { self { nil } }
 
-    var constructedService: Factory<MyConstructedService> {
+    @MainActor var constructedService: Factory<MyConstructedService> {
         self {
             MyConstructedService(service: self.myServiceType())
         }
@@ -67,7 +69,7 @@ final class DemoContainer: ObservableObject, SharedContainer {
 }
 
 extension DemoContainer {
-    var argumentService: ParameterFactory<Int, ParameterService> {
+    @MainActor var argumentService: ParameterFactory<Int, ParameterService> {
         self { count in ParameterService(count: count) }
     }
 }
@@ -80,7 +82,7 @@ extension DemoContainer {
 
 #if DEBUG
 extension DemoContainer {
-    static var mock1: DemoContainer {
+    @MainActor static var mock1: DemoContainer {
         shared.myServiceType.register { ParameterService(count: 3) }
         return shared
     }
@@ -88,7 +90,7 @@ extension DemoContainer {
 #endif
 
 extension Scope {
-    static let session = Cached()
+    nonisolated static let session = Cached()
 }
 
 extension Container {
@@ -100,7 +102,7 @@ extension Container {
 
 // implements
 
-class CycleDemo {
+final class CycleDemo: @unchecked Sendable {
     @Injected(\.aService) var aService: AServiceType
     @Injected(\.bService) var bService: BServiceType
 }
@@ -113,25 +115,25 @@ public protocol BServiceType: AnyObject {
     func text() -> String
 }
 
-class ImplementsAB: AServiceType, BServiceType {
+final class ImplementsAB: AServiceType, BServiceType, @unchecked Sendable {
     @Injected(\.networkService) var networkService
-    var id: UUID = UUID()
+    let id: UUID = UUID()
     func text() -> String {
         "Multiple"
     }
 }
 
-class NetworkService {
-    @LazyInjected(\.preferences) var preferences
+final class NetworkService {
+    @Injected(\.preferences) var preferences
     func load() {}
 }
 
-class Preferences {
+final class Preferences: Sendable {
     func load() {}
 }
 
 extension Container {
-    var cycleDemo: Factory<CycleDemo> {
+    @MainActor var cycleDemo: Factory<CycleDemo> {
         self { CycleDemo() }
     }
     var aService: Factory<AServiceType> {
@@ -157,3 +159,9 @@ extension Container {
         promised()
     }
 }
+
+
+//extension Container {
+//    @DefineFactory({ MyService() }, scope: .unique)
+//    var myMacroService: MyServiceType
+//}

@@ -56,23 +56,23 @@ public class Scope: @unchecked Sendable {
     fileprivate init() {}
 
     /// Internal function returns cached value if it exists. Otherwise it creates a new instance and caches that value for later reference.
-    internal func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, factory: () -> T) -> T {
+    internal func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, factory: () -> T) -> (T, Bool) {
         if let box = cache.value(forKey: key), let cached: T = unboxed(box: box) {
             if let ttl = ttl {
                 let now = CFAbsoluteTimeGetCurrent()
                 if (box.timestamp + ttl) > now {
                     cache.set(timestamp: now, forKey: key)
-                    return cached
+                    return (cached, false)
                 }
             } else {
-                return cached
+                return (cached, false)
             }
         }
         let instance = factory()
         if let box = box(instance) {
              cache.set(value: box, forKey: key)
         }
-        return instance
+        return (instance, true)
     }
 
     /// Internal function returns unboxed value if it exists
@@ -114,13 +114,31 @@ extension Scope {
     ///
     /// This scope is managed and cleared by the main resolution function at the end of each resolution cycle.
     public final class Graph: Scope, @unchecked Sendable  {
-        public override init() {
+        internal override init() {
             super.init()
         }
-        internal override func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, factory: () -> T) -> T {
+        internal override func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, factory: () -> T) -> (T, Bool) {
             // ignore container's cache in favor of our own
             return super.resolve(using: self.cache, key: key, ttl: ttl, factory: factory)
         }
+        // call to enter a new resolution level
+        internal func enter() {
+            depth += 1
+        }
+        // call to leave the current resolution level
+        internal func leave() {
+            depth -= 1
+            if depth == 0 {
+                cache.reset()
+            }
+        }
+        // reset graph scope
+        internal func reset() {
+            depth = 0
+            cache.reset()
+        }
+        // depth of current resolution level
+        public private(set) var depth: Int = 0
         /// Private shared cache
         internal var cache = Cache()
     }
@@ -173,7 +191,7 @@ extension Scope {
             self.cache = from.cache.clone()
             super.init()
         }
-        internal override func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, factory: () -> T) -> T {
+        internal override func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, factory: () -> T) -> (T, Bool) {
             // ignore container's cache in favor of our own
             return super.resolve(using: self.cache, key: key, ttl: ttl, factory: factory)
         }
@@ -201,8 +219,8 @@ extension Scope {
         public override init() {
             super.init()
         }
-        internal override func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, factory: () -> T) -> T {
-            factory()
+        internal override func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, factory: () -> T) -> (T, Bool) {
+            (factory(), true)
         }
     }
 

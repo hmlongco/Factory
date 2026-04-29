@@ -12,6 +12,7 @@
 		4C0280312AF7F44900768BA9 /* Common.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 4C38E9BA2AEC88E9002063CD /* Common.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		4C0AF2022A2BB0F200CA46FE /* FactoryDemoApp+AA.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C0AF2012A2BB0F200CA46FE /* FactoryDemoApp+AA.swift */; };
 		4C0AF2042A2BB11B00CA46FE /* FactoryDemoTestsAA.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C0AF2032A2BB11B00CA46FE /* FactoryDemoTestsAA.swift */; };
+		4C2327412EFF50360012127A /* FacotryDemoApp+Nonisolated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C23273C2EFF50290012127A /* FacotryDemoApp+Nonisolated.swift */; };
 		4C38E9D22AED7166002063CD /* ObservableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C38E9D12AED7166002063CD /* ObservableView.swift */; };
 		4C38E9D52AED74E3002063CD /* Networking.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C38E9C22AEC88F2002063CD /* Networking.framework */; };
 		4C38E9D62AED74E3002063CD /* Networking.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 4C38E9C22AEC88F2002063CD /* Networking.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -23,8 +24,7 @@
 		4C51167629DE961900B4ADD4 /* FactoryDemoTests3.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C51167529DE961900B4ADD4 /* FactoryDemoTests3.swift */; };
 		4C51167829DF03C900B4ADD4 /* FactoryDemoTestsServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C51167729DF03C900B4ADD4 /* FactoryDemoTestsServices.swift */; };
 		4C51169829E1B3E900B4ADD4 /* Tags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C51169729E1B3E900B4ADD4 /* Tags.swift */; };
-		4C6B3BC42DD4D48100DB94FF /* FactoryKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4C6B3BC32DD4D48100DB94FF /* FactoryKit */; };
-		4C6B3BC62DD4D48100DB94FF /* FactoryTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 4C6B3BC52DD4D48100DB94FF /* FactoryTesting */; };
+		4C6EB72D2E9AEC430038D888 /* FactoryKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4C6EB72C2E9AEC430038D888 /* FactoryKit */; };
 		4C947C332988A13800815704 /* ContainerDemoViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C947C322988A13800815704 /* ContainerDemoViewModel.swift */; };
 		4C947C342988A1A100815704 /* ContainerDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C6914432988A05D0083A78F /* ContainerDemoView.swift */; };
 		4C977B3B29A2AD3A0072FC17 /* SimpleContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C977B3A29A2AD3A0072FC17 /* SimpleContainer.swift */; };
@@ -32,6 +32,7 @@
 		4CA2240028CFC49900944456 /* Actors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CA223FF28CFC49900944456 /* Actors.swift */; };
 		4CA5899929DE482D00FA7845 /* FactoryDemoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CA5899829DE482D00FA7845 /* FactoryDemoTests.swift */; };
 		4CAA10E02C2C7EAC00799300 /* AsyncInit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CAA10DF2C2C7EAC00799300 /* AsyncInit.swift */; };
+		4CB1FA8D2DFCADBF00E8AD65 /* FactoryTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 4CB1FA8C2DFCADBF00E8AD65 /* FactoryTesting */; };
 		4CC679202966749400FFBB6C /* FactoryDemoUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CC6791F2966749400FFBB6C /* FactoryDemoUITests.swift */; };
 		4CEEC349284927EE00C979B3 /* FactoryDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CEEC348284927EE00C979B3 /* FactoryDemoApp.swift */; };
 		4CEEC34B284927EE00C979B3 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CEEC34A284927EE00C979B3 /* ContentView.swift */; };
@@ -107,6 +108,7 @@
 		4C02802E2AF6D62A00768BA9 /* ModelTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelTest.swift; sourceTree = "<group>"; };
 		4C0AF2012A2BB0F200CA46FE /* FactoryDemoApp+AA.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "FactoryDemoApp+AA.swift"; sourceTree = "<group>"; };
 		4C0AF2032A2BB11B00CA46FE /* FactoryDemoTestsAA.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FactoryDemoTestsAA.swift; sourceTree = "<group>"; };
+		4C23273C2EFF50290012127A /* FacotryDemoApp+Nonisolated.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FacotryDemoApp+Nonisolated.swift"; sourceTree = "<group>"; };
 		4C38E9D12AED7166002063CD /* ObservableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservableView.swift; sourceTree = "<group>"; };
 		4C3F6FE82932C5F80084A647 /* FactoryDemoApp+AutoRegister.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FactoryDemoApp+AutoRegister.swift"; sourceTree = "<group>"; };
 		4C46E062295642B100185E6E /* GenericAPIs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericAPIs.swift; sourceTree = "<group>"; };
@@ -146,7 +148,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4C6B3BC62DD4D48100DB94FF /* FactoryTesting in Frameworks */,
+				4CB1FA8D2DFCADBF00E8AD65 /* FactoryTesting in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -161,9 +163,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4C6EB72D2E9AEC430038D888 /* FactoryKit in Frameworks */,
 				4C0280302AF7F44800768BA9 /* Common.framework in Frameworks */,
 				4C38E9D52AED74E3002063CD /* Networking.framework in Frameworks */,
-				4C6B3BC42DD4D48100DB94FF /* FactoryKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -191,14 +193,14 @@
 		4C46E064295642BC00185E6E /* Concepts */ = {
 			isa = PBXGroup;
 			children = (
-				4CAA10DF2C2C7EAC00799300 /* AsyncInit.swift */,
 				4CA223FF28CFC49900944456 /* Actors.swift */,
+				4CAA10DF2C2C7EAC00799300 /* AsyncInit.swift */,
 				4C46E0652956433200185E6E /* CircularDependencies.swift */,
 				4C4ED1F728FDADB3009E41A5 /* FunctionInjection.swift */,
 				4C46E062295642B100185E6E /* GenericAPIs.swift */,
 				4C977B3A29A2AD3A0072FC17 /* SimpleContainer.swift */,
-				4C977B3C29A3DAC70072FC17 /* TestNonExtendableContainer.swift */,
 				4C51169729E1B3E900B4ADD4 /* Tags.swift */,
+				4C977B3C29A3DAC70072FC17 /* TestNonExtendableContainer.swift */,
 			);
 			path = Concepts;
 			sourceTree = "<group>";
@@ -259,21 +261,22 @@
 		4CEEC347284927EE00C979B3 /* FactoryDemo */ = {
 			isa = PBXGroup;
 			children = (
-				4CEEC348284927EE00C979B3 /* FactoryDemoApp.swift */,
-				4CEEC35B2849309C00C979B3 /* FactoryDemoApp+Injection.swift */,
-				4C3F6FE82932C5F80084A647 /* FactoryDemoApp+AutoRegister.swift */,
-				4C0AF2012A2BB0F200CA46FE /* FactoryDemoApp+AA.swift */,
-				4CEEC34A284927EE00C979B3 /* ContentView.swift */,
-				4C38E9D12AED7166002063CD /* ObservableView.swift */,
-				4CEEC35F2849311000C979B3 /* ContentViewModel.swift */,
-				4C6914432988A05D0083A78F /* ContainerDemoView.swift */,
-				4C947C322988A13800815704 /* ContainerDemoViewModel.swift */,
-				4CEEC35D284930DB00C979B3 /* Services.swift */,
 				4CEEC34C284927EF00C979B3 /* Assets.xcassets */,
 				4C46E064295642BC00185E6E /* Concepts */,
-				4CEEC34E284927EF00C979B3 /* Preview Content */,
+				4C6914432988A05D0083A78F /* ContainerDemoView.swift */,
+				4C947C322988A13800815704 /* ContainerDemoViewModel.swift */,
+				4CEEC34A284927EE00C979B3 /* ContentView.swift */,
+				4CEEC35F2849311000C979B3 /* ContentViewModel.swift */,
+				4CEEC348284927EE00C979B3 /* FactoryDemoApp.swift */,
+				4C0AF2012A2BB0F200CA46FE /* FactoryDemoApp+AA.swift */,
+				4C3F6FE82932C5F80084A647 /* FactoryDemoApp+AutoRegister.swift */,
+				4CEEC35B2849309C00C979B3 /* FactoryDemoApp+Injection.swift */,
+				4C23273C2EFF50290012127A /* FacotryDemoApp+Nonisolated.swift */,
 				4CF40C3B2A228E5900935E49 /* IODemoView.swift */,
 				4C02802E2AF6D62A00768BA9 /* ModelTest.swift */,
+				4C38E9D12AED7166002063CD /* ObservableView.swift */,
+				4CEEC34E284927EF00C979B3 /* Preview Content */,
+				4CEEC35D284930DB00C979B3 /* Services.swift */,
 			);
 			path = FactoryDemo;
 			sourceTree = "<group>";
@@ -319,7 +322,7 @@
 			);
 			name = FactoryDemoTests;
 			packageProductDependencies = (
-				4C6B3BC52DD4D48100DB94FF /* FactoryTesting */,
+				4CB1FA8C2DFCADBF00E8AD65 /* FactoryTesting */,
 			);
 			productName = FactoryDemoTests;
 			productReference = 4CA5899629DE482D00FA7845 /* FactoryDemoTests.xctest */;
@@ -358,7 +361,7 @@
 			);
 			name = FactoryDemo;
 			packageProductDependencies = (
-				4C6B3BC32DD4D48100DB94FF /* FactoryKit */,
+				4C6EB72C2E9AEC430038D888 /* FactoryKit */,
 			);
 			productName = FactoryDemo;
 			productReference = 4CEEC345284927EE00C979B3 /* FactoryDemo.app */;
@@ -512,6 +515,7 @@
 				4C4ED1F828FDADB3009E41A5 /* FunctionInjection.swift in Sources */,
 				4C0AF2022A2BB0F200CA46FE /* FactoryDemoApp+AA.swift in Sources */,
 				4C947C332988A13800815704 /* ContainerDemoViewModel.swift in Sources */,
+				4C2327412EFF50360012127A /* FacotryDemoApp+Nonisolated.swift in Sources */,
 				4C46E063295642B100185E6E /* GenericAPIs.swift in Sources */,
 				4CEEC349284927EE00C979B3 /* FactoryDemoApp.swift in Sources */,
 				4CF40C3C2A228E5900935E49 /* IODemoView.swift in Sources */,
@@ -550,7 +554,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 9ZVHDWC4WU;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hmlong.FactoryDemoTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -573,7 +577,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 9ZVHDWC4WU;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hmlong.FactoryDemoTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -595,7 +599,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 9ZVHDWC4WU;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hmlong.FactoryDemoUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -614,7 +618,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 9ZVHDWC4WU;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hmlong.FactoryDemoUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -767,6 +771,8 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hmlong.FactoryDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -797,6 +803,8 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hmlong.FactoryDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -852,11 +860,11 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		4C6B3BC32DD4D48100DB94FF /* FactoryKit */ = {
+		4C6EB72C2E9AEC430038D888 /* FactoryKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = FactoryKit;
 		};
-		4C6B3BC52DD4D48100DB94FF /* FactoryTesting */ = {
+		4CB1FA8C2DFCADBF00E8AD65 /* FactoryTesting */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = FactoryTesting;
 		};

@@ -9,8 +9,13 @@ import Foundation
 import FactoryKit
 import Common
 import Networking
+import SwiftUI
 
+@MainActor
 class ContentViewModel: ObservableObject {
+
+    @InjectedContainer var container
+    @InjectedContainer(DemoContainer.self) var demo
 
     @Injected(\.myServiceType) private var service
     @Injected(\.networkType) private var network
@@ -21,7 +26,7 @@ class ContentViewModel: ObservableObject {
     @Published var name: String = "Michael"
 
     init() {
-        print("ContentViewModel Initialized")
+        testContainer()
         testFactory()
         testResolving()
     }
@@ -35,7 +40,16 @@ class ContentViewModel: ObservableObject {
         return test ? "Yes" : "No"
     }
 
+    func testContainer() {
+        let service1 = container.myServiceType()
+        print("Container Service = \(service1.text())")
+        let service2 = demo.myServiceType()
+        print("Demo Container Service = \(service2.text())")
+    }
+
     func testFactory() {
+        let m0 = Container.shared.myServiceType()
+        print("MyServiceType - \(m0.text())")
         let m1 = CycleDemo()
         print("CycleDemo - W/O ROOT \(m1.aService === m1.bService)")
         let m2 = Container.shared.cycleDemo()
@@ -50,10 +64,19 @@ class ContentViewModel: ObservableObject {
         let n1 = Container.shared.networkType()
         n1.test()
 
+//        macro.test()
+
         let processors = Container.shared.processors()
         processors.forEach { p in
             print(p.name)
         }
+
+        DispatchQueue.main.async {
+            let m9 = Container.shared.myServiceType()
+            print("MyServiceType - \(m9.text())")
+        }
+
+        testAsyncInit()
     }
 
     @InjectedType private var simple: SimpleService?

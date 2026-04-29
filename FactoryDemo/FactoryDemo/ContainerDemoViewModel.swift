@@ -9,12 +9,14 @@ import Foundation
 import FactoryKit
 import Common
 import Networking
+import SwiftUI
 
 protocol MyCustomContainer: SharedContainer {
     var constructedService: Factory<MyConstructedService> { get }
     var additionalService: Factory<SimpleService> { get }
 }
 
+@MainActor
 class ContainerDemoViewModel: ObservableObject {
 
     @Injected(\.customContainer) var container
@@ -34,9 +36,7 @@ class ContainerDemoViewModel: ObservableObject {
 
 }
 
-
-
-extension DemoContainer: MyCustomContainer {}
+extension DemoContainer: @preconcurrency MyCustomContainer {}
 
 extension Container {
     var demoContainer: Factory<DemoContainer> { self { DemoContainer.shared }}

@@ -23,7 +23,7 @@ extension SharedContainer {
 //    }
 //}
 
-final class TaggedContainer: SharedContainer {
+nonisolated final class TaggedContainer: SharedContainer {
     static let shared = TaggedContainer()
     let manager = ContainerManager()
 }
@@ -35,13 +35,13 @@ final class TaggedContainer: SharedContainer {
 //    }
 //}
 
-struct Tag<T> {
+nonisolated struct Tag<T>: @unchecked Sendable {
     let path: KeyPath<Container, Factory<T>>
     let priority: Int
 }
 
 extension Container {
-    nonisolated(unsafe) static let processors: [Tag<Processor>] = [
+    static let processors: [Tag<Processor>] = [
         Tag(path: \.processor1, priority: 20),
         Tag(path: \.processor2, priority: 10),
     ]

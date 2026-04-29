@@ -90,15 +90,15 @@ extension Container {
 
     @MainActor
     var isolatedToMainActor: Factory<MainActorFooBarBaz> {
-        self { @MainActor in MainActorFooBarBaz() }
+        self { MainActorFooBarBaz() }
     }
     @MainActor
     var isolatedToMainActorCached: Factory<MainActorFooBarBaz> {
-        self { @MainActor in MainActorFooBarBaz() }.cached
+        self { MainActorFooBarBaz() }.cached
     }
     @MainActor
     var isolatedToMainActorSingleton: Factory<MainActorFooBarBaz> {
-        self { @MainActor in MainActorFooBarBaz() }.singleton
+        self { MainActorFooBarBaz() }.singleton
     }
 
     @MyActor

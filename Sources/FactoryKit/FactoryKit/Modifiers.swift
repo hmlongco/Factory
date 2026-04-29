@@ -154,10 +154,32 @@ extension FactoryModifying {
     /// As shown, decorator can come in handy when you need to perform some operation or manipulation after the fact.
     @discardableResult
     public func decorator(_ decorator: @escaping @Sendable (_ instance: T) -> Void) -> Self {
-        registration.decorator(decorator)
+        registration.decorator({ (instance, _) in decorator(instance) })
         return self
     }
 
+    /// Adds a factory specific decorator. The decorator will *always* be called with the resolved dependency
+    /// for further examination or manipulation.
+    ///
+    /// This includes previously created items that may have been cached by a scope.
+    ///
+    /// The second boolean parameter is true for new instances, false if Factory is returning a cached instance.
+    /// ```swift
+    /// var decoratedService: Factory<ParentChildService> {
+    ///    self { ParentChildService() }
+    ///        .decorated { (instance, instantiated) in
+    ///            if instantiated {
+    ///                 logger.logNewInstance(instance)
+    ///            }
+    ///        }
+    /// }
+    /// ```
+    /// As shown, decorator can come in handy when you need to perform some operation or manipulation after the fact.
+    @discardableResult
+    public func decorator(_ decorator: @escaping @Sendable (_ instance: T, _ instantiated: Bool) -> Void) -> Self {
+        registration.decorator(decorator)
+        return self
+    }
 }
 
 // FactoryModifying Context Functionality

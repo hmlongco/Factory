@@ -26,7 +26,7 @@ protocol ValueProviding: IDProviding {
     var value: Int { get }
 }
 
-protocol MyServiceType {
+public protocol MyServiceType {
     var id: UUID { get }
     var value: Int { get }
     func text() -> String
@@ -98,7 +98,19 @@ class ParameterService: MyServiceType {
 }
 
 extension Container {
-    var myServiceType: Factory<MyServiceType> { self { MyService() } }
+    var myServiceType: Factory<MyServiceType> {
+        self { MyService() }
+    }
+}
+
+protocol MyServiceTypeProviding {
+    // the ideal
+    var myServiceType1: MyServiceType { get }
+    // what's exposed
+    var myServiceType2: Factory<MyServiceType> { get }
+}
+
+extension Container {
     var myServiceType2: Factory<MyServiceType> { self { MyService() } }
 
     var mockService: Factory<MockService> { self { MockService() } }
@@ -186,7 +198,7 @@ class ProtocolConsumer {
 }
 
 extension Container {
-    var consumer: Factory<ProtocolConsumer> { self { ProtocolConsumer() } }
+    var consumer: Factory<ProtocolConsumer> { self { ProtocolConsumer() }.cached }
     var idProvider: Factory<IDProviding> { self { self.commonProvider() } }
     var valueProvider: Factory<ValueProviding> { self { self.commonProvider() } }
     private var commonProvider: Factory<MyService> { self { MyService() }.graph }
@@ -211,6 +223,17 @@ final class CustomContainer: SharedContainer, AutoRegistering {
         .decorator { _ in
             self.count += 1
         }
+    }
+    var decoratedNew: Factory<MyService> {
+        self {
+            MyService()
+        }
+        .decorator { (_, newInstance) in
+            if newInstance {
+                self.count += 1
+            }
+        }
+        .cached
     }
     var once: Factory<MyServiceType> {
         self {

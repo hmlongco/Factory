@@ -153,7 +153,7 @@ class ContentViewModel {
 extension Container {
     @MainActor
     var contentViewModel: Factory<ContentViewModel> {
-        self { @MainActor in ContentViewModel() }
+        self { ContentViewModel() }
     }
 }
 
@@ -171,7 +171,7 @@ While we'd never do it in this case, adding actor isolation to the base factory 
 
 ```swift
 Container.shared.contentViewModel.register { 
-    @MainActor in ContentViewModel()
+    ContentViewModel()
 }
 
 ```

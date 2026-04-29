@@ -338,6 +338,44 @@ extension DynamicInjected: @unchecked Sendable where T: Sendable {}
 
 extension InjectedType: @unchecked Sendable where T: Sendable {}
 
+/// Convenience property wrapper injects the specified Container. similar to using Environment or
+/// EnvironmentObject in SwiftUI.
+/// ```swift
+/// class MyViewModel {
+///    @InjectedContainer var container
+///    @InjectedContainer(\MyCustomContainer) var container2
+/// }
+/// ```
+/// > Note: The @InjectedContainer property wrapper will be resolved on **initialization**. In the above example
+/// the referenced containers will be acquired when the parent class is created.
+@propertyWrapper public struct InjectedContainer<C: SharedContainer> {
+
+    private var container: C
+
+    /// Initializes the property wrapper. The dependency is resolved on initialization.
+    /// - Parameter keyPath: KeyPath to a Factory on the default Container.
+    public init() where C == Container {
+        self.container = Container.shared
+    }
+
+    /// Initializes the property wrapper. The dependency is resolved on initialization.
+    /// - Parameter keyPath: KeyPath to a Factory on the specified Container.
+    public init(_ type: C.Type) {
+        self.container = C.shared
+    }
+
+    /// Manages the wrapped dependency.
+    public var wrappedValue: C {
+        get { return container }
+        mutating set { container = newValue }
+    }
+
+    /// Allows the user to force a Factory resolution at their discretion.
+    public mutating func reset(options: FactoryResetOptions = .none) {
+        container.reset(options: options)
+    }
+}
+
 #if canImport(SwiftUI)
 /// Immediate injection property wrapper for SwiftUI ObservableObjects.
 ///

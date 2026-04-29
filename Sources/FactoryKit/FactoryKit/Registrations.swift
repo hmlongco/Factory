@@ -27,7 +27,7 @@
 import Foundation
 
 /// Shared registration type for Factory and ParameterFactory. Used internally to manage the registration and resolution process.
-public struct FactoryRegistration<P,T>: Sendable {
+public nonisolated struct FactoryRegistration<P,T> {
 
     /// Key used to manage registrations and cached values.
     internal let key: FactoryKey
@@ -35,11 +35,6 @@ public struct FactoryRegistration<P,T>: Sendable {
     internal let container: ManagedContainer
     /// Typed factory with scope and factory.
     internal let factory: ParameterFactoryType<P, T>
-
-    #if DEBUG
-    /// Internal debug
-    internal let debug: FactoryDebugInformation
-    #endif
 
     /// Mutable once flag
     internal var once: Bool = false
@@ -49,15 +44,6 @@ public struct FactoryRegistration<P,T>: Sendable {
         self.key = FactoryKey(type: T.self, key: key)
         self.container = container
         self.factory = factory
-        #if DEBUG
-        self.debug = .init(type: self.key.typeName, key: key)
-        #endif
-    }
-
-    /// Support function for one-time only option updates
-    internal func unsafeCanUpdateOptions() -> Bool {
-        let options = container.manager.options[key]
-        return options == nil || options?.once == once
     }
 
     /// Resolves a Factory, returning an instance of the desired type. All roads lead here.
@@ -70,15 +56,15 @@ public struct FactoryRegistration<P,T>: Sendable {
 
         container.unsafeCheckAutoRegistration()
 
-        let manager = container.manager
-        let options = manager.options[key]
+        let manager: ContainerManager = container.manager
+        let options: FactoryOptions? = manager.options[key]
 
         var current: (P) -> T
 
         #if DEBUG
-        let traceLevel: Int = globalTraceResolutions.count
-        var traceNew: String?
-        var traceNewType: String?
+        let traceIndex: Int = globalTraceResolutions.count
+        let traceLevel: Int = Scope.graph.depth
+        var traceNewType: String
         #endif
 
         if let found = options?.factoryForCurrentContext() as? TypedFactory<P,T> {
@@ -99,71 +85,68 @@ public struct FactoryRegistration<P,T>: Sendable {
         }
 
         #if DEBUG
-        if manager.dependencyChainTestMax > 0 {
-            circularDependencyChainCheck(max: manager.dependencyChainTestMax)
+        if globalTraceFlag {
+            let indent = String(repeating: "    ", count: traceLevel)
+            let entry = "\(traceLevel): \(indent)\(type(of: container)).\(key.key)<\(T.self)>"
+            globalTraceResolutions.append(entry)
         }
-        if manager.trace {
-            let wrapped = current
-            current = {
-                traceNew = traceNewType // detects if new instance was created from the wrapped factory
-                return wrapped($0)
-            }
-            globalTraceResolutions.append("")
+
+        if globalCircularDependencyTesting, globalCircularDependencyKeys.insert(key).0 == false {
+            globalTraceResolutions.forEach { globalLogger($0) }
+            let message = "FACTORY: Circular dependency on \(type(of: container)).\(key.key)"
+            resetAndTriggerFatalError(message, #file, #line)
         }
         #endif
 
-        globalGraphResolutionDepth += 1
-        let instance: T
+        Scope.graph.enter()
+
+        let (instance, instantiated): (T, Bool)
         if let scope = options?.scope ?? manager.defaultScope {
             let parameterizedKey = options?.scopeOnParameters == true ? key.parameterized(parameters) : key
-            instance = scope.resolve(using: manager.cache, key: parameterizedKey, ttl: options?.ttl, factory: { current(parameters) }) }
+            (instance, instantiated) = scope.resolve(using: manager.cache, key: parameterizedKey, ttl: options?.ttl, factory: { current(parameters) }) }
         else {
-            instance = current(parameters)
+            (instance, instantiated) = (current(parameters), true)
         }
-        globalGraphResolutionDepth -= 1
 
-        if globalGraphResolutionDepth == 0 {
-            Scope.graph.cache.reset()
-            #if DEBUG
-            globalDependencyChainMessages = []
-            #endif
-        }
-        
+        Scope.graph.leave()
+
         #if DEBUG
-        if !globalDependencyChain.isEmpty {
-            globalDependencyChain.removeLast()
+        if globalCircularDependencyTesting {
+            globalCircularDependencyKeys.remove(key)
         }
 
-        if manager.trace {
-            let indent = String(repeating: "    ", count: globalGraphResolutionDepth)
+        if globalTraceFlag {
             let address = Int(bitPattern: ObjectIdentifier(instance as AnyObject))
-            let resolution = "\(traceNew ?? "C"):\(address) \(type(of: instance as Any))"
-            if globalTraceResolutions.count > traceLevel {
-                globalTraceResolutions[traceLevel] = "\(globalGraphResolutionDepth): \(indent)\(container).\(debug.key) = \(resolution)"
-            }
-            if globalGraphResolutionDepth == 0 {
+            let type = type(of: instance as Any)
+            let entry = globalTraceResolutions[traceIndex]
+            globalTraceResolutions[traceIndex] = "\(entry) = \(instantiated ? traceNewType : "C"):\(address) \(type)"
+            if traceLevel == 0 {
                 globalTraceResolutions.forEach { globalLogger($0) }
                 globalTraceResolutions = []
             }
         }
         #endif
 
-        if let decorator = options?.decorator as? (T) -> Void {
-            decorator(instance)
+        if let decorator = options?.decorator as? (T, Bool) -> Void {
+            decorator(instance, instantiated)
         }
-        if let decorator = manager.decorator {
+        if let decorator = manager.state.decorator {
             decorator(instance)
         }
 
         return instance
     }
 
+}
+
+extension FactoryRegistration {
+
     /// Registers a new factory closure capable of producing an object or service of the desired type. This factory overrides the original factory and
     /// the next time this factory is resolved Factory will evaluate the newly registered factory instead.
     /// - Parameters:
     ///   - id: ID of associated Factory.
     ///   - factory: Factory closure called to create a new instance of the service when needed.
-    internal func register(_ factory: @escaping @Sendable (P) -> T) {
+    internal func register(_ factory: @escaping (P) -> T) {
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
         container.unsafeCheckAutoRegistration()
@@ -196,7 +179,7 @@ public struct FactoryRegistration<P,T>: Sendable {
     }
 
     /// Registers a new context.
-    internal func context(_ context: FactoryContextType, key: FactoryKey, factory: @escaping @Sendable (P) -> T) {
+    internal func context(_ context: FactoryContextType, key: FactoryKey, factory: @escaping (P) -> T) {
         options { options in
             switch context {
             case .arg(let arg):
@@ -222,22 +205,9 @@ public struct FactoryRegistration<P,T>: Sendable {
     }
 
     /// Registers a new decorator.
-    internal func decorator(_ decorator: @escaping (T) -> Void) {
+    internal func decorator(_ decorator: @escaping (T, Bool) -> Void) {
         options { options in
             options.decorator = decorator
-        }
-    }
-
-    /// Support function for options mutation.
-    internal func options(mutate: (_ options: inout FactoryOptions) -> Void) {
-        defer { globalRecursiveLock.unlock()  }
-        globalRecursiveLock.lock()
-        container.unsafeCheckAutoRegistration()
-        let manager = container.manager
-        var options = manager.options[key, default: FactoryOptions()]
-        if options.once == once {
-            mutate(&options)
-            manager.options[key] = options
         }
     }
 
@@ -271,26 +241,28 @@ public struct FactoryRegistration<P,T>: Sendable {
         }
     }
 
-    #if DEBUG
-    internal func circularDependencyChainCheck(max: Int) {
-        let typeComponents = debug.type.components(separatedBy: CharacterSet(charactersIn: "<>"))
-        let typeName = typeComponents.count > 1 ? typeComponents[1] : typeComponents[0]
-        let typeIndex = globalDependencyChain.firstIndex(where: { $0 == typeName })
-        globalDependencyChain.append(typeName)
-        if let index = typeIndex {
-            let chain = globalDependencyChain[index...]
-            let message = "FACTORY: Circular dependency chain - \(chain.joined(separator: " > "))"
-            if globalDependencyChainMessages.filter({ $0 == message }).count == max {
-                resetAndTriggerFatalError(message, #file, #line)
-            } else {
-                globalDependencyChain = [typeName]
-                globalDependencyChainMessages.append(message)
-            }
+    /// Support function for options mutation.
+    internal func options(mutate: (_ options: inout FactoryOptions) -> Void) {
+        defer { globalRecursiveLock.unlock()  }
+        globalRecursiveLock.lock()
+        container.unsafeCheckAutoRegistration()
+        let manager = container.manager
+        var options = manager.options[key] ?? FactoryOptions()
+        if options.once == once {
+            mutate(&options)
+            manager.options[key] = options
         }
     }
-    #endif
+
+    /// Support function for one-time only option updates
+    internal func unsafeCanUpdateOptions() -> Bool {
+        let options = container.manager.options[key]
+        return options == nil || options?.once == once
+    }
 
 }
+
+extension FactoryRegistration: @unchecked Sendable where P: Sendable, T: Sendable {}
 
 // MARK: - Protocols and Types
 
@@ -366,20 +338,9 @@ extension FactoryOptions {
 
 }
 
-#if DEBUG
-internal struct FactoryDebugInformation {
-    let type: String
-    let key: String
-    internal init(type: String, key: StaticString) {
-        self.type = type
-        self.key = "\(key)<\(type)>"
-    }
-}
-#endif
-
 // Internal Factory type
 internal protocol AnyFactory {}
 
 internal struct TypedFactory<P,T>: AnyFactory {
-    let factory: @Sendable (P) -> T
+    let factory: (P) -> T
 }

@@ -25,11 +25,11 @@ struct ModelTest: View {
         .padding()
 }
 
-struct ModelData {
+nonisolated struct ModelData {
     var games: [Int] = []
 }
 
-struct TestData {
+nonisolated struct TestData {
     static let games2: [Int] = [1,9]
     static let games3: [Int] = [1,2,9]
     static let games4: [Int] = [1,2,8,9]

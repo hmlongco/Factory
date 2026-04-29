@@ -8,18 +8,20 @@
 import Foundation
 import FactoryKit
 
+// @MainActor
 public class SimpleService {
     func text() -> String{
         "Hello World!"
     }
 }
 
-
+nonisolated
 public protocol MyServiceType {
     var id: UUID { get }
     func text() -> String
 }
 
+// @MainActor
 public class MyService: MyServiceType {
     public let id = UUID()
     public func text() -> String {
@@ -27,7 +29,7 @@ public class MyService: MyServiceType {
     }
 }
 
-
+// @MainActor
 public class MockService1: MyServiceType {
     public let id = UUID()
     public func text() -> String {
@@ -35,6 +37,7 @@ public class MockService1: MyServiceType {
     }
 }
 
+// @MainActor
 public class MockService2: MyServiceType {
     public let id = UUID()
     public func text() -> String {
@@ -42,6 +45,7 @@ public class MockService2: MyServiceType {
     }
 }
 
+// @MainActor
 public class MockServiceN: MyServiceType {
     public let id = UUID()
     let n: Int
@@ -53,6 +57,7 @@ public class MockServiceN: MyServiceType {
     }
 }
 
+// @MainActor
 class ParameterService: MyServiceType {
     public let id = UUID()
     public let count: Int
@@ -64,6 +69,7 @@ class ParameterService: MyServiceType {
     }
 }
 
+// @MainActor
 class MyConstructedService: MyServiceType {
 
     public let id = UUID()
@@ -80,10 +86,11 @@ class MyConstructedService: MyServiceType {
 
 }
 
-class InjectedService: MyServiceType {
+@MainActor
+class InjectedService {
 
-    var id = UUID()
-    
+    let id = UUID()
+
     @Injected(\.simpleService) var service
 
     func text() -> String {

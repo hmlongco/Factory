@@ -8,15 +8,15 @@
 import Foundation
 import FactoryKit
 
-struct Account {
+nonisolated struct Account {
 
 }
 
-struct Transaction {
+nonisolated struct Transaction {
 
 }
 
-protocol AccountLoading {
+nonisolated protocol AccountLoading {
     func load() -> [Account]
 }
 
@@ -44,14 +44,14 @@ func setupMocks() {
 
 
 
-struct NetworkLoader<T> {
+nonisolated struct NetworkLoader<T> {
     let path: String
     func load() -> T {
         fatalError()
     }
 }
 
-struct MockLoader<T> {
+nonisolated struct MockLoader<T> {
     let data: T
     func load() -> T {
         return data
@@ -79,12 +79,12 @@ extension NetworkLoader: TypeLoading {}
 extension MockLoader: TypeLoading {}
 
 
-protocol TypeLoading<T> {
+nonisolated protocol TypeLoading<T> {
     associatedtype T
     func load() -> T
 }
 
-struct AnyLoader<T> {
+nonisolated struct AnyLoader<T> {
     let wrapped: any TypeLoading<T>
     init(_ wrapped:  any TypeLoading<T>) {
         self.wrapped = wrapped
@@ -120,7 +120,7 @@ extension Container {
 
 
 
-class AbstractClassLoader<T> {
+nonisolated class AbstractClassLoader<T> {
     func load() -> T {
         fatalError()
     }

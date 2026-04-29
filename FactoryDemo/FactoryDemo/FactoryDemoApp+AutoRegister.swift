@@ -9,11 +9,46 @@ import Foundation
 import FactoryKit
 import Common
 import Networking
+import Synchronization
+
+@globalActor
+public actor FactoryActor {
+    public static let shared: FactoryActor = .init()
+}
 
 extension Container: @retroactive AutoRegistering {
 
     var autoRegisteredService: Factory<MyServiceType?> {
         self { nil }
+    }
+
+    @MainActor public func mainActorAutoRegister() {
+        autoRegisteredService.register {
+            MyService()
+        }
+        myServiceType.register {
+            MockServiceN(0)
+        }
+        myServiceType.onArg("mock1") {
+            MockServiceN(1)
+        }
+        myServiceType.onArg("mock2") {
+            MockServiceN(2)
+        }
+        myActor.register {
+            SomeActor()
+        }
+    }
+
+    @discardableResult
+    func checkMainActorAutoRegistration() -> Bool {
+        if Thread.isMainThread {
+            MainActor.assumeIsolated {
+                mainActorAutoRegister()
+            }
+            return true
+        }
+        return false
     }
 
     public func autoRegister() {
@@ -35,13 +70,22 @@ extension Container: @retroactive AutoRegistering {
         // Registering a CommonType from a class in Networking
         fatalType.register { FatalCommonType() }
 
+        myActor.register {
+            SomeActor()
+        }
+
+        checkMainActorAutoRegistration()
+
         // Demonstrate registration overrides for uitest application passed arguments
-        myServiceType.onArg("mock1") {
-            MockServiceN(1)
-        }
-        myServiceType.onArg("mock2") {
-            MockServiceN(2)
-        }
+//        myServiceType.register {
+//            MockServiceN(0)
+//        }
+//        myServiceType.onArg("mock1") {
+//            MockServiceN(1)
+//        }
+//        myServiceType.onArg("mock2") {
+//            MockServiceN(2)
+//        }
 
         // Demonstrates resolving a type
         register { SimpleService() }
@@ -62,7 +106,7 @@ extension Container: @retroactive AutoRegistering {
 
 extension Container: @retroactive Resolving {}
 
-private class PromisedCommonType: CommonType {
+private nonisolated class PromisedCommonType: CommonType {
     public init() {}
     public func test() {
         print("PromisedCommonType Test")

@@ -21,9 +21,9 @@ final class FactoryCoreTests: XCTestCase {
     }
 
     func testGlobalResolutionFunctions() throws {
-        let service1 = resolve(\.myServiceType)
+        let service1 = dependency(\.myServiceType)
         XCTAssertEqual(service1.text(), "MyService")
-        let service2 = resolve(\CustomContainer.test)
+        let service2 = dependency(\CustomContainer.test)
         XCTAssertEqual(service2.text(), "MockService32")
     }
 
@@ -153,6 +153,16 @@ final class FactoryCoreTests: XCTestCase {
         XCTAssertEqual(CustomContainer.shared.count, 4)
     }
 
+    func testFactoryDecoratorsNew() {
+        XCTAssertEqual(CustomContainer.shared.count, 0)
+        let _ = CustomContainer.shared.decoratedNew()
+        XCTAssertEqual(CustomContainer.shared.count, 2)
+        let _ = CustomContainer.shared.decoratedNew()
+        XCTAssertEqual(CustomContainer.shared.count, 2)
+        let _ = CustomContainer.shared.decoratedNew()
+        XCTAssertEqual(CustomContainer.shared.count, 2)
+    }
+
     func testFactoryOnce() {
         XCTAssertEqual(CustomContainer.shared.count, 0)
         let service1 = CustomContainer.shared.once()
@@ -187,10 +197,25 @@ final class FactoryCoreTests: XCTestCase {
 
     @MainActor
     func testCircularDependencyFailure() {
-        let message = "FACTORY: Circular dependency chain - FactoryTests.RecursiveA > FactoryTests.RecursiveB > FactoryTests.RecursiveC > FactoryTests.RecursiveA"
+        Container.shared.manager.trace = true
+        let message = "FACTORY: Circular dependency on Container.recursiveA"
         expectFatalError(expectedMessage: message) {
             let _ = Container.shared.recursiveA()
         }
+        Container.shared.manager.trace = false
+    }
+
+    @MainActor
+    func testCircularDependencyToggle() {
+        Container.shared.manager.circularDependencyTesting.toggle()
+        var valid: Bool = false
+        let _ = Container.shared.myServiceType.register {
+            valid = globalCircularDependencyTesting == false && globalCircularDependencyKeys.isEmpty
+            return MyService()
+        }
+        let _ = Container.shared.myServiceType()
+        XCTAssert(valid)
+        Container.shared.manager.circularDependencyTesting.toggle()
     }
 
     @MainActor
@@ -222,25 +247,45 @@ final class FactoryCoreTests: XCTestCase {
     }
 
     func testTrace() {
-        var logged: [String] = []
-        Container.shared.manager.trace.toggle()
-        let _ = Container.shared.optionalService()
+        var log: [String] = []
         Container.shared.manager.logger = {
-            logged.append($0)
+            log.append($0)
+            print($0)
+        }
+        Container.shared.manager.trace.toggle()
+        Container.shared.consumer.onDebug {
+            ProtocolConsumer()
         }
         let _ = Container.shared.consumer()
+        XCTAssertNotNil(Container.shared.manager.logger)
+        XCTAssertEqual(log.count, 5)
+        if log.count == 5 {
+            XCTAssert(log[0].contains("0:")) // level 0
+            XCTAssert(log[0].contains("O:")) // onDebug
+            XCTAssert(log[0].contains("consumer"))
+            XCTAssert(log[1].contains("1:")) // level 1
+            XCTAssert(log[1].contains("F:")) // Factory
+            XCTAssert(log[1].contains("idProvider"))
+            XCTAssert(log[2].contains("2:")) // level 2
+            XCTAssert(log[2].contains("F:")) // Factory
+            XCTAssert(log[2].contains("commonProvider"))
+            XCTAssert(log[3].contains("1:")) // level 1
+            XCTAssert(log[3].contains("F:")) // Factory
+            XCTAssert(log[3].contains("valueProvider"))
+            XCTAssert(log[4].contains("2:")) // level 2
+            XCTAssert(log[4].contains("C:")) // graph
+            XCTAssert(log[4].contains("commonProvider"))
+        }
+        let _ = Container.shared.consumer()
+        XCTAssertEqual(log.count, 6)
+        if log.count == 6 {
+            XCTAssert(log[5].contains("0:")) // level 0
+            XCTAssert(log[5].contains("C:")) // cached
+            XCTAssert(log[5].contains("consumer"))
+        }
         Container.shared.manager.trace.toggle()
         Container.shared.manager.logger = {
             print($0)
-        }
-        XCTAssertNotNil(Container.shared.manager.logger)
-        XCTAssertEqual(logged.count, 5)
-        if logged.count == 5 {
-            XCTAssert(logged[0].contains("consumer"))
-            XCTAssert(logged[1].contains("idProvider"))
-            XCTAssert(logged[2].contains("commonProvider"))
-            XCTAssert(logged[3].contains("valueProvider"))
-            XCTAssert(logged[4].contains("commonProvider"))
         }
     }
 

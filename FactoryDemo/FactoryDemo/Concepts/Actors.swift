@@ -14,7 +14,7 @@ extension Container {
 }
 
 extension Container {
-    @MainActor var mainActorTest1: Factory<MainActorTest1> { self { @MainActor in MainActorTest1() } }
+    @MainActor var mainActorTest1: Factory<MainActorTest1> { self { MainActorTest1() } }
     var mainActorTest2: Factory<MainActorTest2> { self { MainActorTest2() } }
 }
 
@@ -50,6 +50,7 @@ actor SomeActor {
 @MainActor
 class SomeActorParent {
 
+    @Injected(\.mainActorTest1) var mainActor
     @Injected(\.myActor) var myActor
 
     let myTest0 = Container.shared.mainActorFuncTest()

@@ -350,10 +350,10 @@ To import FactoryTesting you'll need to add that dependency to your project and 
 ```
 .testTarget(name: "MyAppTests", dependencies: [
   "MyApp", 
-  "Factory", 
   "FactoryTesting"
 ])
 ```
+> Warning: Do not import `FactoryKit` into the Test target. That can lead to duplicate factories and indeterminate behavior.
 
 #### Suite Trait
 
@@ -478,14 +478,14 @@ You might run across one limitation with the transforming sugar if you're access
 extension Container {
   @MainActor
   var mainActorType: Factory<MainActorType> {
-      self { @MainActor in SomeMainActorType() }
+      self { SomeMainActorType() }
   }
 }
 
 struct SomeSuite {
   @Test(.container {
     // ERROR: Call to main actor-isolated initializer 'init()' in a synchronous nonisolated context
-    $0.mainActorType.register { @MainActor in MockActorType() }
+    $0.mainActorType.register { MockActorType() }
   })
   func foo() {
     ...
@@ -495,25 +495,12 @@ The solution is simple since our transforming closure is async. Just use await t
 ```swift
 struct SomeSuite {
   @Test(.container {
-    await $0.mainActorType.register { @MainActor in MockActorType() }
+    await $0.mainActorType.register { MockActorType() }
   })
   func foo() {
     ...
   }
 ```
-
-#### Installing FactoryTesting
-
-If you're using a SPM project file, just include `FactoryTesting` as a package dependency to your test target.
-```swift
-.testTarget(
-    name: "FactoryTests",
-    dependencies: ["FactoryTesting"]
-)
-```
-If you're using a traditional Xcode project file, add the `FactoryTesting` library to the test target your Xcode project file.
-
-> Warning: FactoryTesting is a Swift Testing trait, and as such that library should be added to the **test target**, and **not** to the main app or other targets.
 
 ## Container Injection
 

@@ -5,7 +5,7 @@
 
 A modern approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
-## Factory Version 2.5.3
+## Factory Version 3.0.0
 
 Factory is strongly influenced by SwiftUI, and in my opinion is highly suited for that environment. Factory is...
 
@@ -22,7 +22,7 @@ Factory is strongly influenced by SwiftUI, and in my opinion is highly suited fo
 - **Free**: Factory is free and open source under the MIT License.
 
 Sound too good to be true? Let's take a look.
-
+  
 ---
 
 But before we do, I want to express my thanks to Mercedes-Benz, Süddeutsche Zeitung, and everyone else who's sponsored my open source work! [You folks help make this possible.](https://github.com/sponsors/hmlongco)
@@ -64,8 +64,6 @@ For more examples of Factory definitions that define scopes, use constructor inj
 ## Other Factory Resolution Methods
 
 Earlier we demonstrated how to use the ``Injected`` property wrapper. But it's also possible to bypass the property wrapper and talk to the factory yourself.
-
-You can use the shared container:
 
 ```swift
 class ContentViewModel: ObservableObject {
@@ -110,6 +108,16 @@ struct FactoryDemoApp: App {
 }
 
 ```
+Finally, Factory has a set of global dependency resolution functions.
+```swift
+final class NetworkService {
+    let preferences: Preferences = dependency(\.preferences)
+    lazy var service: Service = dependency(\.service, parameter: Mode.secret)
+    ...
+}
+```
+These are discussed in detail below.
+
 Factory is flexible, and it doesn't tie you down to a specific dependency injection pattern or technique.
 
 See [Resolutions](https://hmlongco.github.io/Factory/documentation/factorykit/resolutions) for more examples.
@@ -165,49 +173,10 @@ See the [Previews](https://hmlongco.github.io/Factory/documentation/factorykit/p
 
 ## Testing
 
-The same concept can be used when writing unit tests. Consider the following.
+The mocking concept can also be used when writing unit tests. Consider the following...
 
 ```swift
-final class FactoryCoreTests: XCTestCase {
-
-    override func setUp() {
-        super.setUp()
-        Container.shared.reset()
-    }
-    
-    func testLoaded() throws {
-        Container.shared.accountProvider.register { MockProvider(accounts: .sampleAccounts) }
-        let model = Container.shared.someViewModel()
-        model.load()
-        XCTAssertTrue(model.isLoaded)
-    }
-
-    func testEmpty() throws {
-        Container.shared.accountProvider.register { MockProvider(accounts: []) }
-        let model = Container.shared.someViewModel()
-        model.load()
-        XCTAssertTrue(model.isEmpty)
-    }
-
-    func testErrors() throws {
-        Container.shared.accountProvider.register { MockProvider(error: .notFoundError) }
-        let model = Container.shared.someViewModel()
-        model.load()
-        XCTAssertTrue(model.errorMessage == "Some Error")
-    }
-    
-}
-```
-Again, Factory makes it easy to reach into a chain of dependencies and make specific changes to the system as needed. This makes testing loading states, empty states, and error conditions simple.
-
-## Xcode 16 Testing
-
-Factory also works with Apple's new Testing framework, and with Xcode 16.3's new test trait support it's now also possible to run tests in parallel!
-
-Here's the same set of tests updated for the new framework. The `.container` trait provides a new, fresh instance of the main shared container to each one of the tests.
-
-```swift
-@Suite(.container) // added container trait
+@Suite(.container) // note container trait
 struct FactoryTests {
 
     @Test func testLoaded() async {
@@ -233,9 +202,39 @@ struct FactoryTests {
     
 }
 ```
-To use container traits, just add the FactoryTesting library or dependency to your test target.
 
-See [Testing](https://hmlongco.github.io/Factory/documentation/factorykit/testing) for more.
+Again, Factory makes it easy to reach into a chain of dependencies and make specific changes to the system as needed. This makes testing loading states, empty states, and error conditions simple.
+
+
+Xcode 16.3's test trait support also makes it possible to run all of our tests in parallel! 
+
+The `.container` trait shown above provides a new, fresh instance of the main shared container to each one of the tests.
+
+See the [Testing Documentation](https://hmlongco.github.io/Factory/documentation/factorykit/testing) for more.
+
+## XCTest
+
+Still using XCTest? Don't worry. Factory works there too.
+
+```swift
+final class FactoryCoreTests: XCTestCase {
+
+    override func setUp() {
+        super.setUp()
+        Container.shared.reset()
+    }
+    
+    func testLoaded() throws {
+        Container.shared.accountProvider.register { MockProvider(accounts: .sampleAccounts) }
+        let model = Container.shared.someViewModel()
+        model.load()
+        XCTAssertTrue(model.isLoaded)
+    }
+    
+    // other tests
+    
+}
+```
 
 But we're not done yet. 
 
@@ -293,7 +292,7 @@ Both definitions provide the same exact result. The sugared function is even inl
 
 ## Contexts
 
-One powerful new feature in Factory 2.1 is contexts. Let's say that for logistical reasons whenever your application runs in debug mode you *never* want it to make calls to your application's analytics engine.
+One powerful feature in Factory is contexts. Let's say that for logistical reasons whenever your application runs in debug mode you *never* want it to make calls to your application's analytics engine.
 
 Easy. Just register an override for that particular context.
 
@@ -302,24 +301,26 @@ container.analytics.onDebug {
     StubAnalyticsEngine()
 }
 ```
-There are other contexts for unit testing, for SwiftUI previews, and even when running UITests both in the simulator or when running an app on services like BrowserStack. See the documentation for more.
+There are other contexts for unit testing, for SwiftUI previews, and even when running **UITests** both in the simulator or when running an app on services like BrowserStack.
+
+For a complete list, go to [Contexts](https://hmlongco.github.io/Factory/documentation/factorykit/contexts).
 
 ## Debugging
 
 Factory can also help you debug your code. When running in DEBUG mode Factory allows you to trace the injection process and see every object instantiated or returned from a cache during a given resolution cycle.
 ```
-0: Factory.Container.cycleDemo<CycleDemo> = N:105553131389696
-1:     Factory.Container.aService<AServiceType> = N:105553119821680
-2:         Factory.Container.implementsAB<AServiceType & BServiceType> = N:105553119821680
-3:             Factory.Container.networkService<NetworkService> = N:105553119770688
-1:     Factory.Container.bService<BServiceType> = N:105553119821680
+0: Factory.Container.cycleDemo<CycleDemo> = F:105553131389696
+1:     Factory.Container.aService<AServiceType> = F:105553119821680
+2:         Factory.Container.implementsAB<AServiceType & BServiceType> = F:105553119821680
+3:             Factory.Container.networkService<NetworkService> = F:105553119770688
+1:     Factory.Container.bService<BServiceType> = F:105553119821680
 2:         Factory.Container.implementsAB<AServiceType & BServiceType> = C:105553119821680
 ```
 This can make it a lot easier to see the entire dependency tree for a given object or service.
 
 See [Debugging](https://hmlongco.github.io/Factory/documentation/factorykit/debugging) for more on this and other features.
 
-## Observation / @MainActor
+## Observation / Actor Isolation
 
 Factory also works with Observation, `@MainActor` and actor isolation in Swift concurrency. Just annotate the Factory as needed.
 
@@ -336,7 +337,7 @@ class ContentViewModel {
 extension Container {
     @MainActor
     var contentViewModel: Factory<ContentViewModel> {
-        self { @MainActor in ContentViewModel() }
+        self { ContentViewModel() }
     }
 }
 
@@ -348,9 +349,28 @@ struct ContentView: View {
     }
 }
 ```
-`InjectedObservable` was another new addition added to Factory 2.4.
+`InjectedObservable` was added to Factory 2.4.
 
 See [SwiftUI](https://hmlongco.github.io/Factory/documentation/factorykit/swiftui) for more discussion.
+
+## Nonisolated Classes
+
+If you're using global MainActors but have nonisolated service classes that need dependencies of their own then you may not be able use the 
+various "Injected" property wrappers due to an issue with Swift 6.2.
+
+Factory has a global dependency resolution function that can be used in their place.
+
+```swift
+nonisolated final class NetworkService {
+    let preferences: Preferences = dependency(\.preferences)
+    lazy var service: Service = dependency(\.service, parameter: Mode.secret)
+    ...
+}
+```
+These functions can also be useful when you want to hide Factory and Factory Shared Containers from the rest of your code base. Should you
+ever want to switch away from Factory, just expose your own `dependency` function with the same keyPaths.
+
+One can also use them to pass parameters to Factory's, something the property wrappers don't allow.
 
 ## Documentation
 
@@ -358,30 +378,35 @@ A single README file barely scratches the surface. Fortunately, Factory is thoro
 
 Current DocC documentation can be found in the project as well as online on [GitHub Pages](https://hmlongco.github.io/Factory/documentation/factorykit).
 
+## Demo Applications
+
+Factory includes a test bed application, `FactoryDemo`, that's used to test basic functionality and ensure various features are working properly.
+
+Factory 3.0 also has `MovieDemo`, a new TMDB movie browsing application that's been built to showcase how to use [Factory](https://github.com/hmlongco/Factory) and [Navigator](https://github.com/hmlongco/Navigator) in a modern, modular iOS application.
+
 ## Installation
 
 Factory supports the Swift Package Manager and has legacy support for CocoaPods.
 
 Factory's primary import library is named `FactoryKit`. This is done in order to avoid SPM import conflicts between the library itself and the `Factory` object defined within the library.
 
-Just add the Factory package to your project, select the `FactoryKit` library when asked, and then import `FactoryKit` in your Swift files where needed.
+Just add the Factory package to your project target, select the `FactoryKit` library when asked, and then import `FactoryKit` in your Swift files where needed.
 
 ```swift
 import FactoryKit
 ```
-While the original `Factory` library import still exists, it will be deprecated in the future. 
 
-If you're using Swift Testing you'll probably also want to also import the `FactoryTesting` library and add it to your test target. (Do **not** add it to your app target or other targets.)
+If you're using Swift Testing you'll probably also want to also import the `FactoryTesting` library and add it to your test target. 
 
-Similarly, don't import `FactoryKit` into the Test target. That can lead to duplicate factories and indeterminate behavior.
+**Do not, however, import `FactoryKit` into the Test target. That can lead to duplicate factories and indeterminate behavior.**
 
-Note that the current version of Factory requires Swift 5.10 minimum and that the minimum version of iOS currently supported with this release is iOS 13.
+Note that the current version of Factory requires Swift 6.1.
 
-## FactoryKit Migration
+## Migration
 
-Factory 2.5.0 works with SPM, Xcode 16 under Strict Concurrency guidelines, and with Swift Testing.
+Factory 3.0.0 works with SPM, Xcode 26 under Strict Concurrency guidelines, and with Swift Testing.
 
-If you're a current Factory user it's recommended that you switch from importing `Factory` to `FactoryKit`. This avoids SPM naming conflicts between the import library name and the primary `Factory` object.
+If you're a current Factory user you'll need to update your code and switch from importing `Factory` to importing `FactoryKit`. This avoids SPM naming conflicts between the import library name and the primary `Factory` object.
 
 To do so, open your project in Xcode and...
 
@@ -393,9 +418,31 @@ To do so, open your project in Xcode and...
 
 You may need to do the same for any other targets or modules that imported Factory.
 
+One other significant change lies in MainActor Factory definitions. Factory 2.x required a definition that required `self { @MainActor in ContentViewModel() }`, which wasn't the most inutitive thing in the world. Factory 3.0 simplifies that.
+
+```swift
+// Old @MainActor
+extension Container {
+    @MainActor
+    var contentViewModel: Factory<ContentViewModel> {
+        self { @MainActor in ContentViewModel() }
+    }
+}
+
+// New @MainActor
+extension Container {
+    @MainActor
+    var contentViewModel: Factory<ContentViewModel> {
+        self { ContentViewModel() }
+    }
+}
+```
+
+It can be obtained here: [MovieDemo](https://github.com/hmlongco/MovieDemo).
+
 ## Discussion Forum
 
-Discussion and comments on Factory and Factory 2.0 can be found in [Discussions](https://github.com/hmlongco/Factory/discussions). Go there if you have something to say or if you want to stay up to date.
+Discussion and comments on Factory can be found in [Discussions](https://github.com/hmlongco/Factory/discussions). Go there if you have something to say or if you want to stay up to date.
 
 ## License
 
@@ -403,7 +450,11 @@ Factory is available under the MIT license. See the LICENSE file for more info.
 
 ## Sponsor Factory!
 
-If you want to support my work on Factory and Resolver, consider a [GitHub Sponsorship](https://github.com/sponsors/hmlongco)! Many levels exist for increased support and even for mentorship and company training. 
+Many thanks to Mercedes-Benz, Süddeutsche Zeitung, and everyone else who's sponsored my open source work!
+
+If you want to support my work on Factory, Navigator, and my other projects and articles, please consider a [GitHub Sponsorship](https://github.com/sponsors/hmlongco)! 
+
+Many levels exist for increased support and even for mentorship and company training. 
 
 Or you can just buy me a cup of coffee!
 
@@ -424,6 +475,7 @@ Special thanks to Ákos Grabecz (agrabz) and Mahmood Tahir (tahirmt) for their r
 ## Additional Resources
 
 * [Factory Documentation](https://hmlongco.github.io/Factory/documentation/factorykit)
+* [MovieDemo: A modern, modular iOS application that uses Factory and Navigator](https://github.com/hmlongco/MovieDemo)
 * [Factory 1.0 and Functional Dependency Injection](https://betterprogramming.pub/factory-and-functional-dependency-injection-2d0a38042d05)
 * [Factory 1.0: Multiple Module Registration](https://betterprogramming.pub/factory-multiple-module-registration-f9d19721a31d?sk=a03d78484d8c351762306ff00a8be67c)
 * [Resolver: A Swift Dependency Injection System](https://github.com/hmlongco/Resolver)
