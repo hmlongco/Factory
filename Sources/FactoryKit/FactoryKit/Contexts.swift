@@ -60,6 +60,9 @@ public struct FactoryContext {
         if ProcessInfo.processInfo.processName.contains("xctest") {
             testing = true
         }
+        if ProcessInfo.processInfo.processName.contains("swiftpm-testing-helper") {
+            testing = true
+        }
         return testing
     }()
     /// Proxy check for application running in simulator.

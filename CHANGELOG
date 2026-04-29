@@ -4,6 +4,8 @@
 
 * Fix swift testing compiler mode check #353
 * Minor performance improvement for LazyInjected #340
+* Fix documentation Referencing-Other-Containers section #330
+* Fix for registering test containers using swift test command #326
 
 ## 3.0.0
 
