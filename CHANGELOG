@@ -1,5 +1,10 @@
 # Factory Changelog
 
+## 3.0.1
+
+* Fix swift testing compiler mode check #353
+* Minor performance improvement for LazyInjected #340
+
 ## 3.0.0
 
 * Redefine factory closures to avoid isolation issues in Swift 6.1 and 6.2

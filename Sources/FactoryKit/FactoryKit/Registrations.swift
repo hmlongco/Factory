@@ -217,6 +217,9 @@ extension FactoryRegistration {
     ///   - options: Reset option: .all, .registration, .scope, .none
     ///   - id: ID of item to remove from the appropriate cache.
     internal func reset(options: FactoryResetOptions) {
+        guard options != .none else {
+            return
+        }
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
         let manager = container.manager
