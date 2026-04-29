@@ -10,8 +10,7 @@
 * Refactor trace mechanism to better work with circular dependency checks
 * Returns to ObjectIdentifier for keys (multi-module key issues seem to be due to multiple copies of Factory)
 * Adds decorator variant that returns true for new instances and false if a cached instance is returned
-
-* Testing possible addition of Swift macros
+* Moves to SPM, dropping support for CocoaPods
 
 ## 2.5.3
 
