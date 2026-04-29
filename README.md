@@ -384,6 +384,8 @@ Factory includes a test bed application, `FactoryDemo`, that's used to test basi
 
 Factory 3.0 also has `MovieDemo`, a new TMDB movie browsing application that's been built to showcase how to use [Factory](https://github.com/hmlongco/Factory) and [Navigator](https://github.com/hmlongco/Navigator) in a modern, modular iOS application.
 
+It can be obtained here: [MovieDemo](https://github.com/hmlongco/MovieDemo).
+
 ## Installation
 
 Factory supports the Swift Package Manager and has legacy support for CocoaPods.
@@ -418,27 +420,22 @@ To do so, open your project in Xcode and...
 
 You may need to do the same for any other targets or modules that imported Factory.
 
-One other significant change lies in MainActor Factory definitions. Factory 2.x required a definition that required `self { @MainActor in ContentViewModel() }`, which wasn't the most inutitive thing in the world. Factory 3.0 simplifies that.
+One other significant change lies in MainActor Factory definitions. Factory 2.x required a definition that needed an additional `@MainActor` embedded in the Factory closure.
 
 ```swift
-// Old @MainActor
-extension Container {
-    @MainActor
-    var contentViewModel: Factory<ContentViewModel> {
-        self { @MainActor in ContentViewModel() }
-    }
-}
-
-// New @MainActor
-extension Container {
-    @MainActor
-    var contentViewModel: Factory<ContentViewModel> {
-        self { ContentViewModel() }
-    }
+@MainActor
+var contentViewModel: Factory<ContentViewModel> {
+    self { @MainActor in ContentViewModel() }
 }
 ```
+Something that wasn't the most intuitive thing in the world. Factory 3.0 simplifies that.
 
-It can be obtained here: [MovieDemo](https://github.com/hmlongco/MovieDemo).
+```swift
+@MainActor
+var contentViewModel: Factory<ContentViewModel> {
+    self { ContentViewModel() }
+}
+```
 
 ## Discussion Forum
 
