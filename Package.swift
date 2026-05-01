@@ -24,10 +24,15 @@ let package = Package(
             name: "FactoryTesting",
             targets: ["FactoryTesting"]
         ),
+        .library(
+            name: "FactoryDependency",
+            targets: ["FactoryDependency"]
+        ),
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.1.0"),
+        .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "601.0.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -45,10 +50,29 @@ let package = Package(
             ],
             swiftSettings: FactorySwiftSetting.common
         ),
+        .target(
+            name: "FactoryDependency",
+            dependencies: [
+                "FactoryDependencyMacros",
+                "FactoryKit",
+            ],
+            swiftSettings: FactorySwiftSetting.common
+        ),
+        .macro(
+            name: "FactoryDependencyMacros",
+            dependencies: [
+                .product(name: "SwiftSyntax",         package: "swift-syntax"),
+                .product(name: "SwiftSyntaxMacros",   package: "swift-syntax"),
+                .product(name: "SwiftSyntaxBuilder",  package: "swift-syntax"),
+                .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
+            ],
+            swiftSettings: FactorySwiftSetting.common
+        ),
         .testTarget(
             name: "FactoryTests",
             dependencies: [
-                "FactoryTesting"
+                "FactoryTesting",
+                "FactoryDependency",
             ],
             swiftSettings: FactorySwiftSetting.common
         )

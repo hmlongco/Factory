@@ -1,139 +1,239 @@
-////
-////  MacroTests.swift
-////  Factory
-////
-////  Created by Michael Long on 5/28/25.
-////
-//
-//import Testing
-//import FactoryTesting
-//
-//@testable import FactoryKit
-//@testable import FactoryMacros
-//
-//@Suite(.container)
-//struct MacroTests {
-//
-//    @Test func basicMacroEvaluationTest() async throws {
-//        let service = Container.shared.macroMyService
-//        #expect(service is MyService)
-//    }
-//
-//    @Test func basicMacroRegistrationTest() async throws {
-//        Container.shared.$macroMyService.register { MockService() }
-//        let service = Container.shared.macroMyService
-//        #expect(service is MockService)
-//    }
-//
-//    @Test func basicMacroScopeTest() async throws {
-//        let service1 = Container.shared.macroCachedService
-//        let service2 = Container.shared.macroCachedService
-//        #expect(service1.id == service2.id)
-//    }
-//
-//    @Test func basicMacroOptionalTest() async throws {
-//        let service1 = Container.shared.macroOptionalService
-//        #expect(service1 == nil)
-//
-//        Container.shared.$macroOptionalService.register { MockService() }
-//        let service2 = Container.shared.macroOptionalService
-//        #expect(service2 is MockService)
-//    }
-//
-////    @Test func macroMainActorTypeTest() async throws {
-////        let service: SomeMainActorType? = Container.shared.macroMainActorType
-////        #expect(service != nil)
-////    }
-////
-////    @Test func macroTestActorTypeTest() async throws {
-////        let service: TestActorType? = Container.shared.macroTestActorType
-////        #expect(service != nil)
-////    }
-//
-//    @Test func macroMirrorTest() async throws {
-//        let service1: MyServiceType = Container.shared.mirrorMyService
-//        #expect(service1 is MyService)
-//
-//        Container.shared.$mirrorMyService.register {
-//            MockService()
-//        }
-//
-//        let service2: MyServiceType = Container.shared.mirrorMyService
-//        #expect(service2 is MockService)
-//        #expect(service1.id != service2.id)
-//
-//        let service3: MyServiceType = Container.shared.mirrorMyService
-//        #expect(service3 is MockService)
-//        #expect(service2.id == service3.id)
-//    }
-//
-//    @MainActor @Test func macroMirrorActorTest() async throws {
-//        let service: MyMainActorType = Container.shared.mirrorMyActorService
-//        #expect(type(of: service) == MyMainActorService.self)
-//        Container.shared.$mirrorMyActorService.register {
-//            MockMainActorService()
-//        }
-//        let service2: MyMainActorType = Container.shared.mirrorMyActorService
-//        #expect(type(of: service2) == MockMainActorService.self)
-//    }
-//
-//}
-//
-//extension Container {
-//
-//    func instance<T>(key: StaticString = #function, _ factory: @escaping () -> T) -> Factory<T> {
-//        Factory<T>(self, key: key, factory)
-//    }
-//
-//    public var anotherMyService: MyServiceType {
-//        instance { MyService() }.cached()
-//    }
-//
-//}
-//
-//extension Container {
-//
-//    @DefineFactory({ MyService() })
-//    var macroMyService: MyServiceType
-//
-//    @DefineFactory({ MyService() }, scope: .cached)
-//    public var macroCachedService: MyServiceType
-//
-//    @DefineFactory({ nil as MyServiceType? })
-//    var macroOptionalService: MyServiceType?
-//
-//    @DefineFactory({ NonisolatedMainActorType() })
-//    var macroNonisolatedMainActorType: NonisolatedMainActorType
-//
-//    //    @DefineFactory({ MyMainActorService() })
-//    //    var macroMainActorType: MyMainActorType
-//
-//    //    @DefineFactory({ TestActorType() })
-//    //    var macroTestActorType: TestActorType
-//
-//}
-//
-//protocol MirrorServiceTypeProviding {
-//    var mirrorMyService: MyServiceType { get }
-//    @MainActor var mirrorMyActorService: MyMainActorType { get }
-//}
-//
-//extension Container: MirrorServiceTypeProviding {
-//    @MirrorFactory
-//    public var mirrorMyService: MyServiceType {
-//        //        self { MyService() }.cached() // fails
-//        //        instance { MyService() }.cached() // fails
-//        Factory<MyServiceType>(self) { MyService() }.cached()
-//    }
-//
-//    @MirrorFactory
-//    public var mirrorMyService2: MyServiceType {
-//        Factory(self) { MyService() as MyServiceType }()
-//    }
-//
-//    @MirrorFactory
-//    @MainActor var mirrorMyActorService: MyMainActorType {
-//        Factory<MyMainActorType>(self) { MyMainActorService() }.cached()
-//    }
-//}
-//
+import Testing
+import SwiftUI
+import FactoryDependency
+import FactoryTesting
+
+// MARK: - Container factories
+
+extension Container {
+    var macroMyService: Factory<MyServiceType> {
+        self { MyService() }
+    }
+    var macroCachedService: Factory<MyServiceType> {
+        self { MyService() }.cached
+    }
+    var macroOptionalService: Factory<MyServiceType?> {
+        self { MyService() }
+    }
+    // cached so the container holds a strong ref during weak-mode tests
+    var macroWeakService: Factory<MyService> {
+        self { MyService() }.cached
+    }
+    @MainActor var macroMainActorService: Factory<MyMainActorType> {
+        self { MyMainActorService() }
+    }
+    @TestActor var macroTestActorService: Factory<MyTestActorType> {
+        self { MyTestActorService() }
+    }
+}
+
+// MARK: - Observable view-model types (iOS 17 / macOS 14)
+
+@available(macOS 14.0, iOS 17.0, *)
+@Observable @MainActor
+final class ViewModel {
+    var value: Int
+    init(value: Int = 1) {
+        self.value = value
+    }
+}
+
+@available(macOS 14.0, iOS 17.0, *)
+extension Container {
+    @MainActor var macroViewModel: Factory<ViewModel> {
+        self { ViewModel() }
+    }
+}
+
+// MARK: - Consumer types
+
+@Dependency(\.macroMyService)
+final class ImmediateConsumer {}
+
+@Dependency(\.macroMyService, mode: .lazy)
+final class LazyConsumer {}
+
+@Dependency(\.macroCachedService)
+final class CachedConsumer {}
+
+// factory returns MyServiceType? — _wrapOptional pass-through gives MyServiceType?
+@Dependency(\.macroOptionalService, mode: .optional)
+final class OptionalModeConsumer {}
+
+@Dependency(\.macroWeakService, mode: .weak)
+final class WeakConsumer {}
+
+@Dependency(\.macroMyService)
+@Dependency(\.macroCachedService)
+final class MultiDependencyConsumer {}
+
+@available(macOS 14.0, iOS 17.0, *)
+@MainActor
+@Observable
+@Dependency(\.macroMyService)
+final class ObservableConsumer {}
+
+@available(macOS 14.0, iOS 17.0, *)
+@MainActor
+@Observable
+@Dependency(\.macroMainActorService)
+final class MainActorConsumer {}
+
+@TestActor
+@Dependency(\.macroTestActorService)
+final class TestActorConsumer {}
+
+@available(macOS 14.0, iOS 17.0, *)
+@Dependency(\.macroViewModel)
+struct ViewModelConsumerView: View {
+    var body: some View { EmptyView() }
+}
+
+// MARK: - Tests
+
+@Suite(.container)
+struct MacroTests {
+
+    // MARK: Immediate mode
+
+    @Test func immediateResolvesDefaultFactory() {
+        let sut = ImmediateConsumer()
+        #expect(sut.macroMyService is MyService)
+    }
+
+    @Test func immediateUsesRegistrationOverride() {
+        Container.shared.macroMyService.register { MockService() }
+        let sut = ImmediateConsumer()
+        #expect(sut.macroMyService is MockService)
+    }
+
+    @Test func immediateIsolatedBetweenTests() {
+        // No registration — should always get the default
+        let sut = ImmediateConsumer()
+        #expect(sut.macroMyService is MyService)
+    }
+
+    // MARK: Lazy mode
+
+    @Test func lazyResolvesOnFirstAccess() {
+        let sut = LazyConsumer()
+        #expect(sut.macroMyService is MyService)
+    }
+
+    @Test func lazyUsesRegistrationOverrideAtAccessTime() {
+        Container.shared.macroMyService.register { MockService() }
+        let sut = LazyConsumer()
+        #expect(sut.macroMyService is MockService)
+    }
+
+    // MARK: Scope
+
+    @Test func cachedScopeReturnsSameInstance() {
+        let a = CachedConsumer()
+        let b = CachedConsumer()
+        #expect(a.macroCachedService.id == b.macroCachedService.id)
+    }
+
+    @Test func cachedScopeResetYieldsNewInstance() {
+        let a = CachedConsumer()
+        let idBefore = a.macroCachedService.id
+        Container.shared.macroCachedService.reset(.scope)
+        let b = CachedConsumer()
+        #expect(b.macroCachedService.id != idBefore)
+    }
+
+    // MARK: Optional mode
+
+    @Test func optionalModeWrapsNonNilValue() {
+        let sut = OptionalModeConsumer()
+        #expect(sut.macroOptionalService != nil)
+        #expect(sut.macroOptionalService is MyService)
+    }
+
+    @Test func optionalModeReflectsNilRegistration() {
+        Container.shared.macroOptionalService.register { nil }
+        let sut = OptionalModeConsumer()
+        #expect(sut.macroOptionalService == nil)
+    }
+
+    // MARK: Weak mode
+
+    @Test func weakRetainsWhileContainerCacheIsAlive() {
+        let sut = WeakConsumer()
+        #expect(sut.macroWeakService != nil)
+    }
+
+    // MARK: Multiple dependencies
+
+    @Test func multipleDependenciesAllInjected() {
+        let sut = MultiDependencyConsumer()
+        #expect(sut.macroMyService is MyService)
+        #expect(sut.macroCachedService is MyService)
+    }
+
+    @Test func multipleDependenciesOverrideIndependently() {
+        Container.shared.macroMyService.register { MockService() }
+        let sut = MultiDependencyConsumer()
+        #expect(sut.macroMyService is MockService)
+        #expect(sut.macroCachedService is MyService)
+    }
+
+    // MARK: @Observable
+
+    @available(macOS 14.0, iOS 17.0, *)
+    @MainActor @Test func observableConsumerResolvesService() {
+        let sut = ObservableConsumer()
+        #expect(sut.macroMyService is MyService)
+    }
+
+    @available(macOS 14.0, iOS 17.0, *)
+    @MainActor @Test func observableConsumerUsesRegistrationOverride() {
+        Container.shared.macroMyService.register { MockService() }
+        let sut = ObservableConsumer()
+        #expect(sut.macroMyService is MockService)
+    }
+
+    // MARK: @MainActor
+
+    @available(macOS 14.0, iOS 17.0, *)
+    @MainActor @Test func mainActorConsumerResolvesService() {
+        let sut = MainActorConsumer()
+        #expect(sut.macroMainActorService is MyMainActorService)
+    }
+
+    @available(macOS 14.0, iOS 17.0, *)
+    @MainActor @Test func mainActorConsumerUsesRegistrationOverride() {
+        Container.shared.macroMainActorService.register { MockMainActorService() }
+        let sut = MainActorConsumer()
+        #expect(sut.macroMainActorService is MockMainActorService)
+    }
+
+    // MARK: Custom global actor (@TestActor)
+
+    @TestActor @Test func testActorConsumerResolvesService() async {
+        let sut = TestActorConsumer()
+        #expect(sut.macroTestActorService is MyTestActorService)
+    }
+
+    @TestActor @Test func testActorConsumerUsesRegistrationOverride() async {
+        Container.shared.macroTestActorService.register { MockTestActorService() }
+        let sut = TestActorConsumer()
+        #expect(sut.macroTestActorService is MockTestActorService)
+    }
+
+    // MARK: SwiftUI View with @Observable @MainActor view-model
+
+    @available(macOS 14.0, iOS 17.0, *)
+    @MainActor @Test func swiftUIViewResolvesObservableViewModel() {
+        let sut = ViewModelConsumerView()
+        #expect(sut.macroViewModel.value == 1)
+    }
+
+    @available(macOS 14.0, iOS 17.0, *)
+    @MainActor @Test func swiftUIViewUsesRegistrationOverrideForObservableViewModel() {
+        Container.shared.macroViewModel.register { ViewModel(value: 99) }
+        let sut = ViewModelConsumerView()
+        #expect(sut.macroViewModel.value == 99)
+    }
+
+}
