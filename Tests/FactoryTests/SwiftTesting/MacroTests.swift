@@ -63,6 +63,9 @@ final class OptionalModeConsumer {}
 @Dependency(\.macroWeakService, mode: .weak)
 final class WeakConsumer {}
 
+@Dependency(\.macroMyService, mode: .dynamic)
+final class DynamicConsumer {}
+
 @Dependency(\.macroMyService)
 @Dependency(\.macroCachedService)
 final class MultiDependencyConsumer {}
@@ -82,6 +85,14 @@ final class MainActorConsumer {}
 @TestActor
 @Dependency(\.macroTestActorService)
 final class TestActorConsumer {}
+
+// name only — property is "service", factory key is "macroMyService"
+@Dependency(\.macroMyService, name: "service")
+final class NamedConsumer {}
+
+// name + mode combined
+@Dependency(\.macroCachedService, name: "cachedService", mode: .lazy)
+final class NamedLazyConsumer {}
 
 @available(macOS 14.0, iOS 17.0, *)
 @Dependency(\.macroViewModel)
@@ -123,6 +134,21 @@ struct MacroTests {
     @Test func lazyUsesRegistrationOverrideAtAccessTime() {
         Container.shared.macroMyService.register { MockService() }
         let sut = LazyConsumer()
+        #expect(sut.macroMyService is MockService)
+    }
+
+    // MARK: Dynamic mode
+
+    @Test func dynamicResolvesDefault() {
+        let sut = DynamicConsumer()
+        #expect(sut.macroMyService is MyService)
+    }
+
+    @Test func dynamicReflectsRegistrationMadeAfterInit() {
+        let sut = DynamicConsumer()
+        #expect(sut.macroMyService is MyService)
+        Container.shared.macroMyService.register { MockService() }
+        // Unlike immediate mode, the re-registration is visible on the next access.
         #expect(sut.macroMyService is MockService)
     }
 
@@ -206,6 +232,24 @@ struct MacroTests {
         Container.shared.macroMainActorService.register { MockMainActorService() }
         let sut = MainActorConsumer()
         #expect(sut.macroMainActorService is MockMainActorService)
+    }
+
+    // MARK: Named override
+
+    @Test func namedPropertyResolvesDefault() {
+        let sut = NamedConsumer()
+        #expect(sut.service is MyService)
+    }
+
+    @Test func namedPropertyUsesRegistrationOverride() {
+        Container.shared.macroMyService.register { MockService() }
+        let sut = NamedConsumer()
+        #expect(sut.service is MockService)
+    }
+
+    @Test func namedLazyPropertyResolvesDefault() {
+        let sut = NamedLazyConsumer()
+        #expect(sut.cachedService is MyService)
     }
 
     // MARK: Custom global actor (@TestActor)
