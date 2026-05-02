@@ -28,12 +28,12 @@
 #if compiler(>=6.1)
 
 #if canImport(FactoryKit)
-import FactoryKit
+public import FactoryKit
 #elseif canImport(Factory)
-import Factory
+public import Factory
 #endif
 
-import Testing
+public import Testing
 
 /// ``ContainerTrait`` is a generic test trait that provides a scoped container for dependency injection in tests.
 ///

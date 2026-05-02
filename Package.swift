@@ -60,6 +60,7 @@ let package = Package(
 
 enum FactorySwiftSetting {
     static let common: [SwiftSetting] = [
-        .enableExperimentalFeature("StrictConcurrency")
+        .enableExperimentalFeature("StrictConcurrency"),
+        .enableUpcomingFeature("InternalImportsByDefault"),
     ]
 }

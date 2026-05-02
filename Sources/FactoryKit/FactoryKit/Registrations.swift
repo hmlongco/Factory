@@ -24,7 +24,7 @@
 // THE SOFTWARE.
 //
 
-import Foundation
+internal import Foundation
 
 /// Shared registration type for Factory and ParameterFactory. Used internally to manage the registration and resolution process.
 public nonisolated struct FactoryRegistration<P,T> {

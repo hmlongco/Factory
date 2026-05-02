@@ -26,7 +26,7 @@
 //  Created by Michael Long on 4/30/23.
 //
 
-import Foundation
+internal import Foundation
 
 /// When protocol is applied to a container it enables a typed registration/resolution mode.
 public protocol Resolving: ManagedContainer {
