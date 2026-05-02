@@ -386,8 +386,10 @@ declaration.
 import FactoryMacros
 
 // Before
-final class HomeService {
+@MainActor @Observable final class HomeViewModel {
+    @ObservationIgnored
     @Injected(\.movieRepository) var movieRepository: MovieRepositoryType
+    @ObservationIgnored
     @Injected(\.analytics) var analytics: AnalyticServices
     func load() async -> [Movie] {
         analytics.log("loading")
@@ -398,7 +400,7 @@ final class HomeService {
 // After
 @Dependency(\.movieRepository)
 @Dependency(\.analytics)
-final class HomeService {
+@MainActor @Observable final class HomeViewModel {
     func load() async -> [Movie] {
         analytics.log("loading")
         await movieRepository.load()

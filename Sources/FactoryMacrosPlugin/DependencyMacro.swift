@@ -63,7 +63,7 @@ public struct DependencyMacro: MemberMacro {
                 let dynPrefix = isObservable ? "@ObservationIgnored @DynamicDependency " : "@DynamicDependency "
                 decl = "\(raw: dynPrefix)internal var \(raw: varName) = \(raw: call)"
             default: // immediate
-                decl = "\(raw: prefix)internal var \(raw: varName) = \(raw: call)"
+                decl = "\(raw: prefix)internal let \(raw: varName) = \(raw: call)"
             }
         }
 

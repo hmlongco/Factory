@@ -16,8 +16,10 @@ declaration.
 import FactoryMacros
 
 // Before
-final class HomeService {
+@MainActor @Observable final class HomeViewModel {
+    @ObservationIgnored
     @Injected(\.movieRepository) var movieRepository: MovieRepositoryType
+    @ObservationIgnored
     @Injected(\.analytics) var analytics: AnalyticServices
     func load() async -> [Movie] {
         analytics.log("loading")
@@ -28,7 +30,7 @@ final class HomeService {
 // After
 @Dependency(\.movieRepository)
 @Dependency(\.analytics)
-final class HomeService {
+@MainActor @Observable final class HomeViewModel {
     func load() async -> [Movie] {
         analytics.log("loading")
         await movieRepository.load()
@@ -90,8 +92,9 @@ Resolved once when the containing type is initialized. This is the default.
 
 ```swift
 @Dependency(\.myService)
-final class SomeViewModel { }
-// generates: internal var myService = Container.shared.myService()
+final class SomeViewModel {
+    // generates: internal var myService = Container.shared.myService()
+}
 ```
 
 ### Lazy
@@ -101,8 +104,9 @@ and actors only — structs do not support `lazy var`.
 
 ```swift
 @Dependency(\.myService, mode: .lazy)
-final class SomeViewModel { }
-// generates: internal lazy var myService = Container.shared.myService()
+final class SomeViewModel {
+    // generates: internal lazy var myService = Container.shared.myService()
+}
 ```
 
 ### Optional
@@ -112,8 +116,9 @@ overload prevents double-wrapping when the factory itself already returns an opt
 
 ```swift
 @Dependency(\.myService, mode: .optional)
-final class SomeViewModel { }
-// generates: internal var myService: MyServiceType? = ...
+final class SomeViewModel {
+    // generates: internal var myService: MyServiceType? = ...
+}
 ```
 
 ### Weak
@@ -122,8 +127,9 @@ Holds a weak reference to the resolved instance. The property type becomes `T?`.
 
 ```swift
 @Dependency(\.myService, mode: .weak)
-final class SomeViewModel { }
-// generates: internal weak var myService = Container.shared.myService()
+final class SomeViewModel {
+    // generates: internal weak var myService = Container.shared.myService()
+}
 ```
 
 ### Dynamic
@@ -135,8 +141,9 @@ consumer.
 
 ```swift
 @Dependency(\.myService, mode: .dynamic)
-final class SomeViewModel { }
-// generates: @DynamicDependency internal var myService = Container.shared.myService()
+final class SomeViewModel {
+    // generates: @DynamicDependency internal var myService = Container.shared.myService()
+}
 ```
 
 The `@DynamicDependency` property wrapper captures the factory call as a deferred
@@ -151,8 +158,9 @@ more expressive at the call site.
 
 ```swift
 @Dependency(\.movieRepository, name: "repo")
-final class HomeViewModel { }
-// generates: internal var repo = Container.shared.movieRepository()
+final class HomeViewModel {
+    // generates: internal var repo = Container.shared.movieRepository()
+}
 ```
 
 ## Combining Parameters
@@ -161,8 +169,9 @@ The `name:` and `mode:` parameters can be used together:
 
 ```swift
 @Dependency(\.movieRepository, name: "repo", mode: .lazy)
-final class HomeViewModel { }
-// generates: internal lazy var repo = Container.shared.movieRepository()
+@MainActor @Observable final class HomeViewModel {
+    // generates: internal lazy var repo = Container.shared.movieRepository()
+}
 ```
 
 ## Custom Containers
@@ -172,8 +181,9 @@ The container type is inferred from the key path root:
 
 ```swift
 @Dependency(\MyContainer.myService)
-final class SomeViewModel { }
-// generates: internal var myService = MyContainer.shared.myService()
+final class SomeService {
+    // generates: internal var myService = MyContainer.shared.myService()
+}
 ```
 
 ## @Observable Classes
@@ -184,11 +194,10 @@ of the `@Observable` tracking machinery — the service itself is not an observa
 so there is nothing for the system to track.
 
 ```swift
-@MainActor
-@Observable
 @Dependency(\.movieRepository)
-final class HomeViewModel { }
-// generates: @ObservationIgnored internal var movieRepository = Container.shared.movieRepository()
+@MainActor @Observable final class HomeViewModel {
+    // generates: @ObservationIgnored internal var movieRepository = Container.shared.movieRepository()
+}
 ```
 
 ## SwiftUI Views
@@ -200,9 +209,9 @@ render passes, preventing the dependency from being recreated on every view upda
 ```swift
 @Dependency(\.viewModel)
 struct HomeView: View {
+    // generates: @State internal var viewModel = Container.shared.viewModel()
     var body: some View { ... }
 }
-// generates: @State internal var viewModel = Container.shared.viewModel()
 ```
 
 Because `View` conformance carries `@MainActor` isolation, the factory key path may
@@ -229,9 +238,8 @@ No extra annotation is needed, and calling a `@MainActor`-isolated factory from 
 `@MainActor` class is perfectly valid:
 
 ```swift
-@MainActor
 @Dependency(\.mainActorService)
-final class MainActorViewModel { }
+@MainActor @Observable final class MainActorViewModel { }
 ```
 
 ### Custom global actors
@@ -240,9 +248,8 @@ Any `@globalActor` is handled identically. The macro detects the actor annotatio
 generates an actor-isolated property that the owning type can access without `await`:
 
 ```swift
-@TestActor
 @Dependency(\.testActorService)
-final class TestActorViewModel { }
+@TestActor @Observable final class TestActorViewModel { }
 ```
 
 ### Nonisolated classes
@@ -355,9 +362,9 @@ Module 'SwiftSyntax' was created for incompatible target aarch64-apple-macosx10.
 the cause is Xcode's prebuilt swift-syntax cache. Xcode downloads pre-compiled
 SwiftSyntax binaries to speed up macro builds, but those binaries are compiled against
 an older macOS deployment target and will be rejected when your toolchain builds macro
-plugins targeting the host OS (e.g. `arm64-apple-macosx26.0` on macOS 26). The
-command-line tools (`swift build`, `swift test`) compile SwiftSyntax from source and are
-not affected.
+plugins targeting the host OS (e.g. `arm64-apple-macosx26.0` on macOS 26). The same
+root cause also produces a "macro produced malformed response" error on macOS 26.4 /
+Xcode 26.3+.
 
 The fix is to disable prebuilts so Xcode compiles SwiftSyntax from source alongside the
 rest of the package:
@@ -373,3 +380,13 @@ prebuilts after a future Xcode release that ships compatible binaries:
 ```bash
 defaults delete com.apple.dt.Xcode IDEPackageEnablePrebuilts
 ```
+
+Command-line builds (`swift build`, `swift test`) accept a per-invocation equivalent:
+pass `--disable-experimental-prebuilts`. As of Swift 6.2 the CLI also opts into
+prebuilts by default, so it can hit the same mismatch. SwiftPM 6.3 additionally
+auto-disables prebuilts when it detects swift-syntax being used by a non-macro target,
+which avoids many — but not all — instances of this error.
+
+There is no per-project Xcode setting for this; the `defaults` key is user-wide.
+Apple's SwiftPM team has acknowledged the issue on the Swift Forums and treats the
+`defaults` flag as the supported workaround pending a fix.
