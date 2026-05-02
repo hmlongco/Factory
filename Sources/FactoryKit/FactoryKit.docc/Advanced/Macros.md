@@ -1,47 +1,71 @@
-# Dependency Macros
+# FactoryMacros
 
 Reduce dependency-injection boilerplate with the `@Dependency` attached macro.
 
 ## Overview
 
-`FactoryDependency` is a companion library that ships alongside FactoryKit. It provides
+`FactoryMacros` is a companion library that ships alongside FactoryKit. It provides
 the `@Dependency` macro, which generates injected stored properties automatically from a
-key-path expression. 
+key-path expression.
 
-Where you would previously write an `@Injected` property wrapper or
-a `var` initializer by hand for each dependency, a single `@Dependency` attribute
-covers the entire declaration.
+Where you would previously write an `@Injected` property wrapper or a `var` initializer
+by hand for each dependency, a single `@Dependency` attribute covers the entire
+declaration.
 
 ```swift
-import FactoryDependency
+import FactoryMacros
 
 // Before
-final class HomeViewModel {
+final class HomeService {
     @Injected(\.movieRepository) var movieRepository: MovieRepositoryType
-    @Injected(\.authService) var authService: AuthServiceType
+    @Injected(\.analytics) var analytics: AnalyticServices
+    func load() async -> [Movie] {
+        analytics.log("loading")
+        await movieRepository.load()
+    }
 }
 
 // After
 @Dependency(\.movieRepository)
-@Dependency(\.authService)
-final class HomeViewModel { }
+@Dependency(\.analytics)
+final class HomeService {
+    func load() async -> [Movie] {
+        analytics.log("loading")
+        await movieRepository.load()
+    }
+}
 ```
 
-The macro expands at compile time into plain stored properties with the same name as the factory. 
+The macro expands at compile time into simple, internally accessible properties with the
+same name as the factory. This approach avoids all of the runtime overhead
+associated with property wrappers and their accessors. 
 
-This approach avoids all of the runtime overhead typically attached to property wrappers and property wrapper accessors. It also exposes the object's dependencies and promotes thesm out of the object's internal properties and other clutter, making them crystal clear.
+Perhaps more significantly, it also surfaces the object's
+dependencies at the class declaration site, making them immediately obvious and visible rather than hidden and buried
+somewhere in the body or in the class initializer.
 
 ## Generated Code
 
-For the default (immediate) mode, prepending `@Dependency(\.myService)` to a class expands to:
+For the default (immediate) mode, prepending `@Dependency(\.movieRepository)` to a class currently expands to:
 
 ```swift
-internal var myService = Container.shared.myService()
+final class HomeService {
+    internal var movieRepository = Container.shared.movieRepository() // generated property
+    func load() async -> [Movie] {
+        await movieRepository.load()
+    }
+}
 ```
 
-The property name and resolved type are both derived from the key path, so no annotation
-is needed on the declaration itself. Stack multiple attributes to inject multiple
-dependencies:
+The property name and resolved type are both derived from the key path, so no annotation or property wrappers are
+needed on the declaration itself. 
+
+Note the phrase "currently" used earlier. Future versions may resolve services differently or more efficiently at compile time,
+but the "we need one of these" syntax will never change.
+
+## Multiple Dependencies
+
+Stack multiple attributes to inject multiple dependencies:
 
 ```swift
 @Dependency(\.repository)
@@ -55,10 +79,10 @@ final class DashboardViewModel { }
 The `mode` parameter controls storage and resolution behavior. The options are:
 
 * Immediate (default)
-* Dynamic
 * Lazy
 * Optional
 * Weak
+* Dynamic
 
 ### Immediate
 
@@ -66,49 +90,31 @@ Resolved once when the containing type is initialized. This is the default.
 
 ```swift
 @Dependency(\.myService)
-final class SomeService { }
+final class SomeViewModel { }
 // generates: internal var myService = Container.shared.myService()
 ```
 
-### Dynamic
-
-Resolved on every property access. Unlike immediate mode, registrations made or reset
-after the containing object is created are immediately visible — useful for feature-flag
-driven services or when you need to observe container changes without recreating the
-consumer.
-
-```swift
-@Dependency(\.myService, mode: .dynamic)
-final class SomeService { }
-// generates: @DynamicDependency(wrappedValue: Container.shared.myService()) internal var myService
-```
-
-The `@DynamicDependency` property wrapper captures the factory call as a deferred
-closure so the container is queried fresh on every read. `mode: .dynamic` is not
-supported on SwiftUI `View` types.
-
 ### Lazy
 
-Resolved on the first access, then cached in the stored property. Available on classes
-and actors; structs do not support `lazy var`.
+Resolved on first access, then cached in the stored property. Available on classes
+and actors only — structs do not support `lazy var`.
 
 ```swift
 @Dependency(\.myService, mode: .lazy)
-final class SomeService { }
+final class SomeViewModel { }
 // generates: internal lazy var myService = Container.shared.myService()
 ```
 
 ### Optional
 
-Wraps the resolved value in an `Optional`, yielding a `T?` property. 
+Wraps the resolved value in `Optional`, yielding a `T?` property. A pass-through
+overload prevents double-wrapping when the factory itself already returns an optional.
 
 ```swift
 @Dependency(\.myService, mode: .optional)
-final class SomeService { }
-// generates: internal var myService = _wrapOptional(Container.shared.myService())
+final class SomeViewModel { }
+// generates: internal var myService: MyServiceType? = ...
 ```
-
-A pass-through overload prevents double-wrapping when the factory itself already returns an optional, but in that case `.optional` isn't really needed.
 
 ### Weak
 
@@ -116,9 +122,26 @@ Holds a weak reference to the resolved instance. The property type becomes `T?`.
 
 ```swift
 @Dependency(\.myService, mode: .weak)
-final class SomeService { }
+final class SomeViewModel { }
 // generates: internal weak var myService = Container.shared.myService()
 ```
+
+### Dynamic
+
+Resolved on every property access. Unlike immediate mode, registrations made or reset
+after the containing object is created are immediately visible — useful for feature-flag
+driven services or when you need the latest container state without recreating the
+consumer.
+
+```swift
+@Dependency(\.myService, mode: .dynamic)
+final class SomeViewModel { }
+// generates: @DynamicDependency internal var myService = Container.shared.myService()
+```
+
+The `@DynamicDependency` property wrapper captures the factory call as a deferred
+closure (using `@autoclosure @escaping`) so the container is queried fresh on every
+read. Mode `.dynamic` is not supported on SwiftUI `View` types.
 
 ## Renaming the Property
 
@@ -128,8 +151,29 @@ more expressive at the call site.
 
 ```swift
 @Dependency(\.movieRepository, name: "repo")
-final class SomeService { }
+final class HomeViewModel { }
 // generates: internal var repo = Container.shared.movieRepository()
+```
+
+## Combining Parameters
+
+The `name:` and `mode:` parameters can be used together:
+
+```swift
+@Dependency(\.movieRepository, name: "repo", mode: .lazy)
+final class HomeViewModel { }
+// generates: internal lazy var repo = Container.shared.movieRepository()
+```
+
+## Custom Containers
+
+`@Dependency` works with any custom `SharedContainer`, not just the default `Container`.
+The container type is inferred from the key path root:
+
+```swift
+@Dependency(\MyContainer.myService)
+final class SomeViewModel { }
+// generates: internal var myService = MyContainer.shared.myService()
 ```
 
 ## @Observable Classes
@@ -149,9 +193,9 @@ final class HomeViewModel { }
 
 ## SwiftUI Views
 
-When applied to a type that conforms to `View`, the macro generates a `@State` property
-instead of a plain `var`. This ensures SwiftUI owns the storage across render passes,
-preventing the dependency from being recreated on every view update.
+When applied to a type that conforms to `View`, the macro automatically generates a
+`@State` property instead of a plain `var`. This ensures SwiftUI owns the storage across
+render passes, preventing the dependency from being recreated on every view update.
 
 ```swift
 @Dependency(\.viewModel)
@@ -170,8 +214,9 @@ extension Container {
 }
 ```
 
-> Note: `mode: .lazy` and `mode: .weak` are not supported on `View` types and produce a
-> compile-time error. Use the default mode and let SwiftUI's `@State` manage the lifecycle.
+> Note: `mode: .lazy`, `.weak`, and `.dynamic` are not supported on `View` types and
+> produce a compile-time error. Use the default mode and let SwiftUI's `@State` manage
+> the lifecycle.
 
 ## Actor Isolation
 
@@ -203,13 +248,55 @@ final class TestActorViewModel { }
 ### Nonisolated classes
 
 `nonisolated` classes (a common pattern in Swift 6.2 Approachable Concurrency) are fully
-supported. The macro generates a plain nonisolated stored property initialized from the
+supported. The macro generates a plain nonisolated stored property initialized from a
 nonisolated factory:
 
 ```swift
 @Dependency(\.analyticsService)
 nonisolated final class AnalyticsLogger { }
 ```
+
+Note that the factory itself must not be actor-isolated when the consumer is nonisolated.
+An actor-isolated factory cannot be called from a nonisolated context.
+
+## Testing
+
+### Immediate and lazy mode
+
+Because properties in these modes are resolved at initialization time, register mock
+factories before constructing the consumer:
+
+```swift
+@Suite(.container)
+struct MyTests {
+    @Test func usesOverride() {
+        Container.shared.myService.register { MockService() }
+        let sut = MyViewModel()  // picks up MockService
+        #expect(sut.myService is MockService)
+    }
+}
+```
+
+### Dynamic mode
+
+`mode: .dynamic` is particularly convenient in tests because a single consumer instance
+can observe multiple registrations:
+
+```swift
+@Suite(.container)
+struct DynamicTests {
+    @Test func reflectsLateRegistration() {
+        let sut = MyViewModel()
+        #expect(sut.myService is MyService)        // default
+
+        Container.shared.myService.register { MockService() }
+        #expect(sut.myService is MockService)      // immediately visible
+    }
+}
+```
+
+The `.container` trait from `FactoryTesting` resets `Container.shared` between test
+runs, so registrations in one test never bleed into another regardless of mode.
 
 ## Why Macros Instead of Property Wrappers
 
@@ -248,13 +335,13 @@ type's actor isolation naturally, with no `Sendable` requirement on the resolved
 
 ### Comparison
 
-| | `@Injected` | `lazy var dependency()` | `@Dependency` macro |
+| | `@Injected` | `var dependency()` | `@Dependency` macro |
 |---|---|---|---|
 | Nonisolated class | ✗ compile error | ✓ | ✓ |
 | `@MainActor` class (non-Sendable T) | ✗ compile error | ✓ | ✓ |
-| `nonisolated` modifier | ✗ not supported | N/A | N/A |
+| `nonisolated` modifier on property | ✗ not supported | N/A | N/A |
 | Boilerplate per property | medium | high | minimal |
-| Modes (lazy / optional / weak) | separate wrappers | manual | single parameter |
+| Modes (lazy / optional / weak / dynamic) | separate wrappers | manual | single parameter |
 | `@ObservationIgnored` / `@State` | manual | manual | automatic |
 
 ## SwiftSyntax Prebuilt Modules in Xcode

@@ -1,7 +1,7 @@
 import Testing
 import FactoryKit
 import FactoryTesting
-import FactoryDependency
+import FactoryMacros
 
 // MARK: - Service types
 

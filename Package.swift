@@ -25,8 +25,8 @@ let package = Package(
             targets: ["FactoryTesting"]
         ),
         .library(
-            name: "FactoryDependency",
-            targets: ["FactoryDependency"]
+            name: "FactoryMacros",
+            targets: ["FactoryMacros"]
         ),
     ],
     dependencies: [
@@ -51,15 +51,15 @@ let package = Package(
             swiftSettings: FactorySwiftSetting.common
         ),
         .target(
-            name: "FactoryDependency",
+            name: "FactoryMacros",
             dependencies: [
-                "FactoryDependencyMacros",
+                "FactoryMacrosPlugin",
                 "FactoryKit",
             ],
             swiftSettings: FactorySwiftSetting.common
         ),
         .macro(
-            name: "FactoryDependencyMacros",
+            name: "FactoryMacrosPlugin",
             dependencies: [
                 .product(name: "SwiftSyntax",         package: "swift-syntax"),
                 .product(name: "SwiftSyntaxMacros",   package: "swift-syntax"),
@@ -72,7 +72,7 @@ let package = Package(
             name: "FactoryTests",
             dependencies: [
                 "FactoryTesting",
-                "FactoryDependency",
+                "FactoryMacros",
             ],
             swiftSettings: FactorySwiftSetting.common
         )

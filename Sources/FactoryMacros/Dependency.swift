@@ -87,7 +87,7 @@ public macro Dependency<T>(
     _ keyPath: KeyPath<Container, Factory<T>>,
     name: String? = nil,
     mode: DependencyMode = .immediate
-) = #externalMacro(module: "FactoryDependencyMacros", type: "DependencyMacro")
+) = #externalMacro(module: "FactoryMacrosPlugin", type: "DependencyMacro")
 
 /// Injects a Factory dependency from a custom `SharedContainer`.
 /// The container type is inferred from the keypath root:
@@ -100,4 +100,4 @@ public macro Dependency<C: SharedContainer, T>(
     _ keyPath: KeyPath<C, Factory<T>>,
     name: String? = nil,
     mode: DependencyMode = .immediate
-) = #externalMacro(module: "FactoryDependencyMacros", type: "DependencyMacro")
+) = #externalMacro(module: "FactoryMacrosPlugin", type: "DependencyMacro")

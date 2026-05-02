@@ -1,6 +1,6 @@
 import Testing
 import SwiftUI
-import FactoryDependency
+import FactoryMacros
 import FactoryTesting
 
 // MARK: - Container factories

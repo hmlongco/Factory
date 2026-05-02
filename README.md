@@ -372,6 +372,50 @@ ever want to switch away from Factory, just expose your own `dependency` functio
 
 One can also use them to pass parameters to Factory's, something the property wrappers don't allow.
 
+## Factory Macros
+
+`FactoryMacros` is a new companion library that ships alongside FactoryKit. It provides
+a `@Dependency` macro which generates injected stored properties automatically from a
+key-path expression.
+
+Where you would previously write an `@Injected` property wrapper or a `var` initializer
+by hand for each dependency, a single `@Dependency` attribute covers the entire
+declaration.
+
+```swift
+import FactoryMacros
+
+// Before
+final class HomeService {
+    @Injected(\.movieRepository) var movieRepository: MovieRepositoryType
+    @Injected(\.analytics) var analytics: AnalyticServices
+    func load() async -> [Movie] {
+        analytics.log("loading")
+        await movieRepository.load()
+    }
+}
+
+// After
+@Dependency(\.movieRepository)
+@Dependency(\.analytics)
+final class HomeService {
+    func load() async -> [Movie] {
+        analytics.log("loading")
+        await movieRepository.load()
+    }
+}
+```
+
+The macro expands at compile time into simple, internally accessible properties with the
+same name as the factory. This approach avoids all of the runtime overhead
+associated with property wrappers and their accessors. 
+
+Perhaps more significantly, it also surfaces the object's
+dependencies at the class declaration site, making them immediately obvious and visible rather than hidden and buried
+somewhere in the body or in the class initializer.
+
+For more, see: [Macros](https://hmlongco.github.io/Factory/documentation/factorykit/advanced/macros)
+
 ## Documentation
 
 A single README file barely scratches the surface. Fortunately, Factory is thoroughly documented. 
