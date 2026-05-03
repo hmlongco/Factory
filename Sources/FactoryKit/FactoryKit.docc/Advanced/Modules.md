@@ -225,6 +225,53 @@ private class AnalyticsAdaptor: Analytics {
 }
 ```
 
+## Static and Dynamic Linking
+
+The cross-module wiring shown above assumes there is exactly one `Container.shared` in your process. In a single-target app that's automatic — FactoryKit is linked once and every consumer sees the same container. In more elaborate modular setups it is possible to end up with two, and when that happens registrations made in one place are silently invisible to consumers in another. Mocks fail to take effect, and `@Injected` properties resolve from whichever container the surrounding code happened to be linked against.
+
+### When duplication happens
+
+The hazard appears when two static copies of FactoryKit are separated by a **dynamic boundary** in the same process:
+
+- An app target statically links FactoryKit *and* loads a dynamic feature framework that also statically baked FactoryKit into itself.
+- Two dynamic feature frameworks each statically link FactoryKit independently.
+
+Pure-static graphs do not have this problem. If your features are static libraries that get pulled into one final app binary, `ld` deduplicates FactoryKit's symbols and you end up with exactly one set. The duplicate only survives across a dylib boundary, because each dylib carries its own symbol table and its own private state — including the `@TaskLocal` that backs `Container.shared`.
+
+### `FactoryKitDynamic`
+
+For projects that need to cross dynamic boundaries, the package vends a second product alongside `FactoryKit`:
+
+```swift
+.library(
+name: "FactoryKitDynamic",
+type: .dynamic,
+targets: ["FactoryKit"]
+),
+```
+
+`FactoryKitDynamic` wraps the same FactoryKit target as the default product but forces it to be linked as a separate dylib. Every dynamic feature framework that depends on `FactoryKitDynamic` — plus the app target itself — resolves FactoryKit symbols from a single shared image at runtime. One `Container.shared`, one set of registrations, one set of scope caches.
+
+`FactoryTesting` is unaffected. They continue to depend on the FactoryKit target by name, and at runtime they resolve their FactoryKit references against whichever copy the consumer linked.
+
+### When to use it
+
+Reach for `FactoryKitDynamic` when:
+
+- Your app uses dynamic frameworks for build modularity (Tuist, XcodeGen-driven graphs, hand-rolled `.framework` targets) and more than one of them — or a framework plus the app — depend on FactoryKit.
+- You are seeing the symptoms above: registrations not sticking, mocks not taking effect, or different code paths apparently seeing different containers.
+
+Stick with the default `FactoryKit` product when:
+
+- You have a single app target.
+- All your modules are static libraries that link into one final binary.
+- You are targeting a server-side or command-line environment and would prefer not to embed an extra dylib.
+
+### One rule
+
+**Do not mix the two products in the same dependency graph.** If one transitive consumer pulls in `FactoryKit` while another pulls in `FactoryKitDynamic`, you have reintroduced the duplicate-symbol problem in a different form. SwiftPM does not diagnose this; it is the consumer's responsibility to make sure every dependency on FactoryKit resolves through the same product.
+
+
 ## Mix and Match
 
 In a real world application where multiple modules provide varying sets of features and services, one would probably use all of the techniques mentioned here.

@@ -1,5 +1,9 @@
 # Factory Changelog
 
+## 3.0.2
+
+* Added FactoryKitDynamic for multi-module support
+
 ## 3.0.1
 
 * Fix swift testing compiler mode check #353
