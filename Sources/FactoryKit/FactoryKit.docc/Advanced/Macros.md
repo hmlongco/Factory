@@ -1,4 +1,4 @@
-# FactoryMacros
+# Factory Macros
 
 Reduce dependency-injection boilerplate with the `@Dependency` attached macro.
 
