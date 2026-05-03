@@ -21,11 +21,18 @@ let package = Package(
             targets: ["FactoryKit"]
         ),
         .library(
+            name: "FactoryKitDynamic",
+            type: .dynamic,
+            targets: ["FactoryKit"]
+        ),
+        .library(
             name: "FactoryTesting",
+            type: .dynamic,
             targets: ["FactoryTesting"]
         ),
         .library(
             name: "FactoryMacros",
+            type: .dynamic,
             targets: ["FactoryMacros"]
         ),
     ],
