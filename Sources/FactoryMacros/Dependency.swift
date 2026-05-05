@@ -3,7 +3,9 @@
 
 /// Controls the storage and resolution behavior of a `@Dependency`-injected property.
 public enum DependencyMode {
-    /// Resolve immediately when the type is initialized. Works on classes, structs, and actors. This is the default.
+    /// Resolve immediately and store as a plain `let`. Works on classes, structs, and actors.
+    /// Used automatically when `mode:` is omitted off a SwiftUI `View`; pass `.immediate` explicitly
+    /// inside a `View` to opt out of `@State` storage.
     case immediate
     /// Resolve on first access, then cache. Classes and actors only (lazy var` is unsupported on structs).
     case lazy
@@ -16,43 +18,53 @@ public enum DependencyMode {
     /// Hold a weak reference to the resolved value, yielding a `T?` property.
     /// The declared type must be a class — protocol types require an `AnyObject` constraint.
     case weak
+    /// Stores resolved object in a `@State` property. Default when the enclosing type is a SwiftUI `View`;
+    /// errors elsewhere; `@State` requires SwiftUI-owned storage.
+    case observable
+    /// Store resolved object in a `@StateObject` property. Use on a SwiftUI `View` when the injected dependency
+    /// conforms to `ObservableObject`; errors elsewhere.
+    case observableObject
 }
 
-/// Injects a Factory dependency as a private stored property into the annotated type.
+/// Injects a Factory dependency as an internally-accessible stored property on the annotated type.
 /// The property name and type are both derived from the key path — no annotation needed.
+///
+/// When `mode:` is omitted, the storage shape depends on context: a SwiftUI `View` gets `@State`
+/// (equivalent to `.observable`); any other enclosing type gets a plain `let` (equivalent to
+/// `.immediate`).
 ///
 /// Apply once per dependency on the type declaration itself:
 /// ```swift
-/// // Immediate (default) mode
+/// // Immediate (default off a View)
 /// @Dependency(\.movieRepository)
 /// final class HomeService { }
-/// // generates: private var movieRepository = Container.shared.movieRepository()
+/// // generates: internal let movieRepository = Container.shared.movieRepository()
 ///
 /// // Lazy (classes/actors only):
-/// @Dependency(\.movieRepository, mode: .lazy)
+/// @Dependency(\.movieRepository, .lazy)
 /// final class HomeService { }
-/// // generates: private lazy var movieRepository = Container.shared.movieRepository()
+/// // generates: internal lazy var movieRepository = Container.shared.movieRepository()
 ///
 /// // Optional — property type becomes T?:
-/// @Dependency(\.movieRepository, mode: .optional)
+/// @Dependency(\.movieRepository, .optional)
 /// final class HomeService { }
-/// // generates: private var movieRepository = Optional(Container.shared.movieRepository())
+/// // generates: internal var movieRepository = _wrapOptional(Container.shared.movieRepository())
 ///
 /// // Weak — property type becomes T? with weak storage:
-/// @Dependency(\.someService, mode: .weak)
+/// @Dependency(\.someService, .weak)
 /// final class HomeService { }
-/// // generates: private weak var someService = Container.shared.someService()
+/// // generates: internal weak var someService = Container.shared.someService()
 ///
 /// // Dynamic:
-/// @Dependency(\.movieRepository, mode: .dynamic)
+/// @Dependency(\.movieRepository, .dynamic)
 /// final class HomeService { }
-/// // generates: private @DynamicDependency(Container.shared.movieRepository()) var movieRepository
+/// // generates: @DynamicDependency internal var movieRepository = Container.shared.movieRepository()
 ///
 /// // Renaming services
 /// @Observable @MainActor
 /// @Dependency(\.movieRepository, name: "repo")
 /// final class HomeViewModel { }
-/// // generates: @ObservationIgnored private var repo = Container.shared.movieRepository()
+/// // generates: @ObservationIgnored internal let repo = Container.shared.movieRepository()
 /// ```
 ///
 /// Stack multiple attributes for multiple dependencies:
@@ -66,27 +78,47 @@ public enum DependencyMode {
 /// Non-`@Observable` types (plain classes, structs, actors) receive no `@ObservationIgnored`.
 ///
 /// ```swift
-/// @MainActor
-/// @Observable
 /// @Dependency(\.movieRepository)
-/// final class HomeViewModel { }
-/// // generates: @ObservationIgnored private var movieRepository = Container.shared.movieRepository()
+/// @MainActor @Observable final class HomeViewModel { }
+/// // generates: @ObservationIgnored internal let movieRepository = Container.shared.movieRepository()
 /// ```
 ///
-/// Also generates a `State` variable when the macro detects the enclosing type is a SwiftUI View.
+/// On a SwiftUI `View`, the macro defaults to `.observable` and generates a `@State` property
+/// so SwiftUI owns the storage across body re-evaluations:
 ///
 /// ```swift
 /// @Dependency(\.viewModel)
 /// struct HomeView: View {
+///     // generates: @State internal var viewModel = Container.shared.viewModel()
 ///     var body: some View { ... }
 /// }
-/// // generates: @State internal var viewModel = Container.shared.viewModel()
+/// ```
+///
+/// For a view-model that conforms to `ObservableObject`, pass `mode: .observableObject` so the
+/// macro emits a `@StateObject` property instead — SwiftUI then owns the subscription:
+///
+/// ```swift
+/// @Dependency(\.legacyViewModel, .observableObject)
+/// struct HomeView: View {
+///     // generates: @StateObject internal var legacyViewModel = Container.shared.legacyViewModel()
+///     var body: some View { ... }
+/// }
+/// ```
+///
+/// To opt out of `@State` inside a `View`, pass `mode: .immediate` explicitly:
+///
+/// ```swift
+/// @Dependency(\.cache, .immediate)
+/// struct CacheView: View {
+///     // generates: internal let cache = Container.shared.cache()
+///     var body: some View { ... }
+/// }
 /// ```
 @attached(member, names: arbitrary)
 public macro Dependency<T>(
     _ keyPath: KeyPath<Container, Factory<T>>,
-    name: String? = nil,
-    mode: DependencyMode = .immediate
+    _ mode: DependencyMode? = nil,
+    name: String? = nil
 ) = #externalMacro(module: "FactoryMacrosPlugin", type: "DependencyMacro")
 
 /// Injects a Factory dependency from a custom `SharedContainer`.
@@ -98,6 +130,6 @@ public macro Dependency<T>(
 @attached(member, names: arbitrary)
 public macro Dependency<C: SharedContainer, T>(
     _ keyPath: KeyPath<C, Factory<T>>,
-    name: String? = nil,
-    mode: DependencyMode = .immediate
+    _ mode: DependencyMode? = nil,
+    name: String? = nil
 ) = #externalMacro(module: "FactoryMacrosPlugin", type: "DependencyMacro")

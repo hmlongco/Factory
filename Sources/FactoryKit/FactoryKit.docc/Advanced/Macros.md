@@ -48,11 +48,11 @@ somewhere in the body or in the class initializer.
 
 ## Generated Code
 
-For the default (immediate) mode, prepending `@Dependency(\.movieRepository)` to a class currently expands to:
+For the default mode on a class, prepending `@Dependency(\.movieRepository)` expands to:
 
 ```swift
 final class HomeService {
-    internal var movieRepository = Container.shared.movieRepository() // generated property
+    internal let movieRepository = Container.shared.movieRepository() // generated property
     func load() async -> [Movie] {
         await movieRepository.load()
     }
@@ -78,44 +78,57 @@ final class DashboardViewModel { }
 
 ## Dependency Modes
 
-The `mode` parameter controls storage and resolution behavior. The options are:
+The optional mode parameter adds additional storage and resolution behaviors. The options are:
 
-* Immediate (default)
+* Immediate
 * Lazy
 * Optional
 * Weak
 * Dynamic
+* Observable
+* ObservableObject
+
+When mode is omitted, the default depends on context: a SwiftUI `View` defaults to `.observable`
+(`@State` storage), while any other enclosing type defaults to `.immediate` (a plain stored property).
 
 ### Immediate
 
-Resolved once when the containing type is initialized. This is the default.
+Resolved once when the containing type is initialized and stored as a plain `let`. This is the
+default off a SwiftUI `View`. Pass `.immediate` explicitly inside a `View` to opt out of `@State`.
 
 ```swift
 @Dependency(\.myService)
 final class SomeViewModel {
-    // generates: internal var myService = Container.shared.myService()
+    // generates: internal let myService = Container.shared.myService()
+}
+
+// explicitly defined
+@Dependency(\.myService, .immediate)
+final class SomeViewModel {
+    // generates: internal let myService = Container.shared.myService()
 }
 ```
 
 ### Lazy
 
-Resolved on first access, then cached in the stored property. Available on classes
-and actors only — structs do not support `lazy var`.
+In lazy mode the dependency is esolved on first access, then cached in the stored property. 
 
 ```swift
-@Dependency(\.myService, mode: .lazy)
+@Dependency(\.myService, .lazy)
 final class SomeViewModel {
     // generates: internal lazy var myService = Container.shared.myService()
 }
 ```
 
+Available on classes and actors only — structs do not support `lazy var`.
+
 ### Optional
 
-Wraps the resolved value in `Optional`, yielding a `T?` property. A pass-through
+Wraps the resolved value in `Optional`yielding a `T?` property. A pass-through
 overload prevents double-wrapping when the factory itself already returns an optional.
 
 ```swift
-@Dependency(\.myService, mode: .optional)
+@Dependency(\.myService, .optional)
 final class SomeViewModel {
     // generates: internal var myService: MyServiceType? = ...
 }
@@ -126,7 +139,7 @@ final class SomeViewModel {
 Holds a weak reference to the resolved instance. The property type becomes `T?`.
 
 ```swift
-@Dependency(\.myService, mode: .weak)
+@Dependency(\.myService, .weak)
 final class SomeViewModel {
     // generates: internal weak var myService = Container.shared.myService()
 }
@@ -140,7 +153,7 @@ driven services or when you need the latest container state without recreating t
 consumer.
 
 ```swift
-@Dependency(\.myService, mode: .dynamic)
+@Dependency(\.myService, .dynamic)
 final class SomeViewModel {
     // generates: @DynamicDependency internal var myService = Container.shared.myService()
 }
@@ -165,10 +178,10 @@ final class HomeViewModel {
 
 ## Combining Parameters
 
-The `name:` and `mode:` parameters can be used together:
+The mode and `name:` parameters can be used together:
 
 ```swift
-@Dependency(\.movieRepository, name: "repo", mode: .lazy)
+@Dependency(\.movieRepository, .lazy, name: "repo")
 @MainActor @Observable final class HomeViewModel {
     // generates: internal lazy var repo = Container.shared.movieRepository()
 }
@@ -176,7 +189,7 @@ The `name:` and `mode:` parameters can be used together:
 
 ## Custom Containers
 
-`@Dependency` works with any custom `SharedContainer`, not just the default `Container`.
+`@Dependency` works with any custom `SharedContainer`not just the default `Container`.
 The container type is inferred from the key path root:
 
 ```swift
@@ -190,21 +203,21 @@ final class SomeService {
 
 When `@Observable` is present on the enclosing type, the macro automatically prefixes
 the generated property with `@ObservationIgnored`. This opts the injected dependency out
-of the `@Observable` tracking machinery — the service itself is not an observable value,
+of the `@Observable` tracking machinery — injected services tend not to be observable values,
 so there is nothing for the system to track.
 
 ```swift
 @Dependency(\.movieRepository)
 @MainActor @Observable final class HomeViewModel {
-    // generates: @ObservationIgnored internal var movieRepository = Container.shared.movieRepository()
+    // generates: @ObservationIgnored internal let movieRepository = Container.shared.movieRepository()
 }
 ```
 
 ## SwiftUI Views
 
-When applied to a type that conforms to `View`, the macro automatically generates a
-`@State` property instead of a plain `var`. This ensures SwiftUI owns the storage across
-render passes, preventing the dependency from being recreated on every view update.
+Supporting modern SwiftUI views and view models, applying `@Dependency` to a `View` causes the macro to default to `.observable` mode and
+generate an enclosing `@State` property. SwiftUI then owns the storage across body re-evaluations,
+preventing the dependency from being recreated on every view update.
 
 ```swift
 @Dependency(\.viewModel)
@@ -214,8 +227,8 @@ struct HomeView: View {
 }
 ```
 
-Because `View` conformance carries `@MainActor` isolation, the factory key path may
-also be `@MainActor`-isolated without any additional annotation:
+Because `View` conformance carries `@MainActor` isolation, the factory key path should
+also be `@MainActor`-isolated:
 
 ```swift
 extension Container {
@@ -223,9 +236,50 @@ extension Container {
 }
 ```
 
-> Note: `mode: .lazy`, `.weak`, and `.dynamic` are not supported on `View` types and
-> produce a compile-time error. Use the default mode and let SwiftUI's `@State` manage
-> the lifecycle.
+Pass it explicitly when you want the intent to be obvious at the declaration site:
+
+```swift
+@Dependency(\.viewModel, .observable)
+struct HomeView: View {
+    // generates: @State internal var viewModel = Container.shared.viewModel()
+    var body: some View { ... }
+}
+```
+
+Mode `.observable` is only valid on a `View`. It generates a simple immediate assignment on any other type.
+
+### ObservableObject
+
+For a view-model that conforms to Combine's `ObservableObject` (the pre-Observation pattern),
+pass `.observableObject` instead. The macro generates a `@StateObject` property so SwiftUI owns
+the subscription across body re-evaluations:
+
+```swift
+@Dependency(\.legacyViewModel, .observableObject)
+struct HomeView: View {
+    // generates: @StateObject internal var legacyViewModel = Container.shared.legacyViewModel()
+    var body: some View { ... }
+}
+```
+
+Like `.observable`, `.observableObject` generates a simple immediate assignment as a member of any other type.
+
+### Opting out of state management inside a View
+
+Pass `.immediate` explicitly inside a `View` to suppress the `@State` wrapper and get a
+plain stored property. Useful for dependencies that don't drive view updates (caches, loggers, analytics):
+
+```swift
+@Dependency(\.cache, .immediate)
+struct CacheView: View {
+    // generates: internal let cache = Container.shared.cache()
+    var body: some View { ... }
+}
+```
+
+> Note: `.lazy``.weak``.dynamic`and `.optional` are not supported on `View` types
+> and produce a compile-time error. Conversely, `.observable` and `.observableObject` are only
+> valid on `View` types.
 
 ## Actor Isolation
 
@@ -286,7 +340,7 @@ struct MyTests {
 
 ### Dynamic mode
 
-`mode: .dynamic` is particularly convenient in tests because a single consumer instance
+`.dynamic` is particularly convenient in tests because a single consumer instance
 can observe multiple registrations:
 
 ```swift
@@ -381,7 +435,7 @@ prebuilts after a future Xcode release that ships compatible binaries:
 defaults delete com.apple.dt.Xcode IDEPackageEnablePrebuilts
 ```
 
-Command-line builds (`swift build`, `swift test`) accept a per-invocation equivalent:
+Command-line builds (`swift build``swift test`) accept a per-invocation equivalent:
 pass `--disable-experimental-prebuilts`. As of Swift 6.2 the CLI also opts into
 prebuilts by default, so it can hit the same mismatch. SwiftPM 6.3 additionally
 auto-disables prebuilts when it detects swift-syntax being used by a non-macro target,

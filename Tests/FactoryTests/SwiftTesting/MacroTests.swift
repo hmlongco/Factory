@@ -45,58 +45,99 @@ extension Container {
     }
 }
 
+// MARK: - ObservableObject (Combine) view-model
+
+@MainActor
+final class LegacyViewModel: ObservableObject {
+    @Published var value: Int
+    init(value: Int = 1) {
+        self.value = value
+    }
+}
+
+extension Container {
+    @MainActor var macroLegacyViewModel: Factory<LegacyViewModel> {
+        self { LegacyViewModel() }
+    }
+}
+
 // MARK: - Consumer types
 
 @Dependency(\.macroMyService)
-final class ImmediateConsumer {}
+final class ImmediateConsumer {
+    func load() {
+        let _ = macroMyService.text()
+    }
+}
 
-@Dependency(\.macroMyService, mode: .lazy)
+@Dependency(\.macroMyService, .lazy)
 final class LazyConsumer {}
 
 @Dependency(\.macroCachedService)
 final class CachedConsumer {}
 
 // factory returns MyServiceType? — _wrapOptional pass-through gives MyServiceType?
-@Dependency(\.macroOptionalService, mode: .optional)
+@Dependency(\.macroOptionalService, .optional)
 final class OptionalModeConsumer {}
 
-@Dependency(\.macroWeakService, mode: .weak)
+@Dependency(\.macroWeakService, .weak)
 final class WeakConsumer {}
 
-@Dependency(\.macroMyService, mode: .dynamic)
+@Dependency(\.macroMyService, .dynamic)
 final class DynamicConsumer {}
+
+// .optional applied to a non-optional Factory<T> — proves _wrapOptional is emitted
+// (existing OptionalModeConsumer uses an already-optional factory so it can't tell
+// .optional apart from .immediate).
+@Dependency(\.macroMyService, .optional)
+final class OptionalLiftConsumer {}
 
 @Dependency(\.macroMyService)
 @Dependency(\.macroCachedService)
 final class MultiDependencyConsumer {}
 
 @available(macOS 14.0, iOS 17.0, *)
-@MainActor
-@Observable
 @Dependency(\.macroMyService)
-final class ObservableConsumer {}
+@MainActor @Observable final class ObservableConsumer {}
 
 @available(macOS 14.0, iOS 17.0, *)
-@MainActor
-@Observable
 @Dependency(\.macroMainActorService)
-final class MainActorConsumer {}
+@MainActor @Observable final class MainActorConsumer {}
 
-@TestActor
 @Dependency(\.macroTestActorService)
-final class TestActorConsumer {}
+@TestActor final class TestActorConsumer {}
 
 // name only — property is "service", factory key is "macroMyService"
 @Dependency(\.macroMyService, name: "service")
 final class NamedConsumer {}
 
 // name + mode combined
-@Dependency(\.macroCachedService, name: "cachedService", mode: .lazy)
+@Dependency(\.macroCachedService, .lazy, name: "cachedService",)
 final class NamedLazyConsumer {}
 
 @available(macOS 14.0, iOS 17.0, *)
 @Dependency(\.macroViewModel)
 struct ViewModelConsumerView: View {
+    var body: some View { EmptyView() }
+}
+
+// Explicit .observableObject — emits @StateObject for an ObservableObject view-model
+@available(macOS 14.0, iOS 17.0, *)
+@Dependency(\.macroLegacyViewModel, .observableObject)
+struct LegacyViewModelConsumerView: View {
+    var body: some View { EmptyView() }
+}
+
+// Explicit .observable — exercises the explicit @State path (matches the View default)
+@available(macOS 14.0, iOS 17.0, *)
+@Dependency(\.macroViewModel, .observable)
+struct ExplicitObservableConsumerView: View {
+    var body: some View { EmptyView() }
+}
+
+// Explicit .immediate inside a View — emits a plain `let`, opting out of @State storage
+@Dependency(\.macroMyService, .immediate)
+struct ImmediateInsideViewConsumer: View {
     var body: some View { EmptyView() }
 }
 
@@ -135,6 +176,22 @@ struct MacroTests {
         Container.shared.macroMyService.register { MockService() }
         let sut = LazyConsumer()
         #expect(sut.macroMyService is MockService)
+    }
+
+    // Distinguishing test: immediate would resolve the factory at init.
+    @Test func lazyDoesNotResolveAtInit() {
+        final class Counter: @unchecked Sendable { var count = 0 }
+        let counter = Counter()
+        Container.shared.macroMyService.register {
+            counter.count += 1
+            return MyService()
+        }
+        let sut = LazyConsumer()
+        #expect(counter.count == 0)
+        _ = sut.macroMyService
+        #expect(counter.count == 1)
+        _ = sut.macroMyService
+        #expect(counter.count == 1)   // cached after first access
     }
 
     // MARK: Dynamic mode
@@ -182,11 +239,31 @@ struct MacroTests {
         #expect(sut.macroOptionalService == nil)
     }
 
+    // Distinguishing test: applies .optional to a non-optional Factory<T>; the
+    // generated property must have type T?, not T. Without _wrapOptional the
+    // property would be MyServiceType (immediate fallback) and Mirror's display
+    // style would not be .optional.
+    @Test func optionalLiftsNonOptionalFactoryToOptional() {
+        let sut = OptionalLiftConsumer()
+        #expect(Mirror(reflecting: sut.macroMyService as Any).displayStyle == .optional)
+        #expect(sut.macroMyService is MyService)
+    }
+
     // MARK: Weak mode
 
     @Test func weakRetainsWhileContainerCacheIsAlive() {
         let sut = WeakConsumer()
         #expect(sut.macroWeakService != nil)
+    }
+
+    // Distinguishing test: with .weak the property holds only a weak reference,
+    // so dropping the container's cached strong ref must let the value deallocate.
+    // Immediate (strong let) would keep it alive forever.
+    @Test func weakReleasesWhenContainerCacheReleases() {
+        let sut = WeakConsumer()
+        #expect(sut.macroWeakService != nil)
+        Container.shared.macroWeakService.reset(.scope)
+        #expect(sut.macroWeakService == nil)
     }
 
     // MARK: Multiple dependencies
@@ -278,6 +355,34 @@ struct MacroTests {
         Container.shared.macroViewModel.register { ViewModel(value: 99) }
         let sut = ViewModelConsumerView()
         #expect(sut.macroViewModel.value == 99)
+    }
+
+    // MARK: SwiftUI View with ObservableObject (StateObject) view-model
+
+    @available(macOS 14.0, iOS 17.0, *)
+    @MainActor @Test func swiftUIViewResolvesObservableObjectViewModel() {
+        let sut = LegacyViewModelConsumerView()
+        #expect(sut.macroLegacyViewModel.value == 1)
+    }
+
+    @available(macOS 14.0, iOS 17.0, *)
+    @MainActor @Test func swiftUIViewUsesRegistrationOverrideForObservableObjectViewModel() {
+        Container.shared.macroLegacyViewModel.register { LegacyViewModel(value: 99) }
+        let sut = LegacyViewModelConsumerView()
+        #expect(sut.macroLegacyViewModel.value == 99)
+    }
+
+    // MARK: SwiftUI View — explicit modes
+
+    @available(macOS 14.0, iOS 17.0, *)
+    @MainActor @Test func swiftUIViewExplicitObservableModeResolves() {
+        let sut = ExplicitObservableConsumerView()
+        #expect(sut.macroViewModel.value == 1)
+    }
+
+    @MainActor @Test func swiftUIViewImmediateModeResolves() {
+        let sut = ImmediateInsideViewConsumer()
+        #expect(sut.macroMyService is MyService)
     }
 
 }
