@@ -5,7 +5,7 @@
 
 A modern approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
-## Factory Version 3.0.1
+## Factory Version 3.1.0
 
 Factory is strongly influenced by SwiftUI, and in my opinion is highly suited for that environment. Factory is...
 

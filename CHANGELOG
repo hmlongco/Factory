@@ -1,5 +1,11 @@
 # Factory Changelog
 
+## 3.1.0
+
+* Add FactoryMacro @Dependency macro for object resolution
+* Add FactoryKitDynamic import library for modular builds
+* Fix .onPreview/.onTest not working in Xcode previews #351
+
 ## 3.0.1
 
 * Fix swift testing compiler mode check #353
