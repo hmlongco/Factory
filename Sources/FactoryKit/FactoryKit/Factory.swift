@@ -24,7 +24,7 @@
 // THE SOFTWARE.
 //
 
-import Foundation
+internal import Foundation
 
 public typealias ParameterFactoryType<P, T> = (P) -> T
 public typealias VoidFactoryType<T> = () -> T

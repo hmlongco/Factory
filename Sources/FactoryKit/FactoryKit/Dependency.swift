@@ -24,7 +24,7 @@
 // THE SOFTWARE.
 //
 
-import Foundation
+internal import Foundation
 
 /// Global function to resolve a keyPath on Container.shared into the requested type
 ///
