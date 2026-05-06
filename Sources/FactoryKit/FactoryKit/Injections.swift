@@ -353,13 +353,11 @@ extension InjectedType: @unchecked Sendable where T: Sendable {}
     private var container: C
 
     /// Initializes the property wrapper. The dependency is resolved on initialization.
-    /// - Parameter keyPath: KeyPath to a Factory on the default Container.
     public init() where C == Container {
         self.container = Container.shared
     }
 
     /// Initializes the property wrapper. The dependency is resolved on initialization.
-    /// - Parameter keyPath: KeyPath to a Factory on the specified Container.
     public init(_ type: C.Type) {
         self.container = C.shared
     }

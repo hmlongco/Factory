@@ -199,7 +199,7 @@ ModuleP is now completely independent.
 
 ## Adaptors
 
-There's one last case, that of using some third party library.
+There's another case, that of using some third party library.
 
 In that case, we're often better off implementing an adaptor protocol to wrap the library and provide an agnostic, independent interface to its functionality.
 
@@ -224,6 +224,83 @@ private class AnalyticsAdaptor: Analytics {
     }
 }
 ```
+
+## Static and Dynamic Linking
+
+The cross-module wiring shown above assumes there is exactly one `Container.shared` in your process. In a single-target app that's automatic — FactoryKit is linked once and every consumer sees the same container. 
+
+In more elaborate modular setups it's possible to end up with two, and when that happens registrations made in one place are silently invisible to consumers in another. Mocks may fail to take effect, and `@Injected` properties resolve from whichever container the surrounding code happened to be linked against.
+
+### When duplication happens
+
+The hazard appears when two static copies of FactoryKit are separated by a **dynamic boundary** in the same process:
+
+- An app target statically links FactoryKit *and* loads a dynamic feature framework that also statically baked FactoryKit into itself.
+- Two dynamic feature frameworks each statically link FactoryKit independently.
+
+Pure-static graphs do not have this problem. If your features are static libraries that get pulled into one final app binary, `ld` deduplicates FactoryKit's symbols and you end up with exactly one set. The duplicate only survives across a dylib boundary, because each dylib carries its own symbol table and its own private state — including the `@TaskLocal` that backs `Container.shared`.
+
+### `FactoryKitDynamic`
+
+For projects that need to cross dynamic boundaries, the package vends a second product alongside `FactoryKit`:
+
+```swift
+.library(
+    name: "FactoryKitDynamic",
+    type: .dynamic,
+    targets: ["FactoryKit"]
+),
+```
+
+`FactoryKitDynamic` wraps the same FactoryKit target as the default product but forces it to be linked as a separate dylib. Every dynamic feature framework that depends on `FactoryKitDynamic` — plus the app target itself — resolves FactoryKit symbols from a single shared image at runtime. One `Container.shared`, one set of registrations, one set of scope caches.
+
+`FactoryTesting` is unaffected. They continue to depend on the FactoryKit target by name, and at runtime they resolve their FactoryKit references against whichever copy the consumer linked.
+
+### When to use it
+
+Reach for `FactoryKitDynamic` when:
+
+- Your app uses dynamic frameworks for build modularity (Tuist, XcodeGen-driven graphs, hand-rolled `.framework` targets) and more than one of them — or a framework plus the app — depend on FactoryKit.
+- You are seeing the symptoms above: registrations not sticking, mocks not taking effect, or different code paths apparently seeing different containers.
+
+Stick with the default `FactoryKit` product when:
+
+- You have a single app target.
+- All your modules are static libraries that link into one final binary.
+- You are targeting a server-side or command-line environment and would prefer not to embed an extra dylib.
+
+`FactoryKitDynamic` only helps if every path to FactoryKit in the final image actually goes through that dylib. The next subsection covers the case where it cannot.
+
+### Test bundles in multi-framework projects
+
+There is one topology where `FactoryKitDynamic` may not be enough on its own: a test bundle whose `PBXTargetDependency` list points at two or more dynamic frameworks that each independently depend on `FactoryKit` through SwiftPM, *and* that also pulls in `FactoryTesting` as a separate package product. In that arrangement you can switch every framework over to `FactoryKitDynamic` and still see hundreds of `objc` duplicate-class warnings, two `Container` types, and two singleton scopes at runtime.
+
+The reason is that the duplicate is born at link time, not at load time. When SwiftPM resolves a test bundle that has multiple framework dependencies, it promotes every transitive package product simultaneously. `FactoryTesting` statically links FactoryKit when *it* is built, so `ld` welds FactoryKit's object files into `FactoryTesting.framework` before the dynamic/static distinction has any chance to take effect. By the time the test bundle loads, the second copy already lives inside `FactoryTesting`'s binary. No amount of dylib coercion downstream is going to undo that.
+
+The fix is to remove the second linkage entirely. Drop `FactoryTesting` from the test target's package dependencies and copy the contents of [`Sources/FactoryTesting/ContainerTrait.swift`](https://github.com/hmlongco/Factory/blob/main/Sources/FactoryTesting/ContainerTrait.swift) directly into the test target as a regular Swift file. It is one file, around ninety lines, and it depends only on `FactoryKit` and `Testing`. Once it lives inside the test target, it compiles against whichever copy of FactoryKit your existing framework graph already supplies, and no new image is introduced.
+
+```swift
+// In your test target: TestSupport/ContainerTrait.swift
+// Verbatim copy of Sources/FactoryTesting/ContainerTrait.swift
+import FactoryKit
+import Testing
+
+public struct ContainerTrait<C: SharedContainer>: TestTrait, SuiteTrait, TestScoping {
+    // ... copied from upstream
+}
+
+extension Trait where Self == ContainerTrait<Container> {
+    public static var container: ContainerTrait<Container> {
+        .init(shared: Container.$shared, container: .init())
+    }
+}
+```
+
+Call sites do not change. `@Suite(.container)` and `@Test` keep working exactly as the `Testing.md` examples show; the only difference is which module supplies the trait.
+
+This is a workaround, not a free lunch. You take on a small maintenance cost, keeping the copied file in sync with upstream when `ContainerTrait` evolves. In return you get one `Container.shared`, zero duplicate-class warnings, and parallel-safe Swift Testing suites in a topology where the published `FactoryTesting` product cannot deliver them.
+
+The invariant underneath all of this is simple. Every path from your final test or app binary to FactoryKit must terminate at the same image. `FactoryKitDynamic` is one way to honor that invariant. An inline `ContainerTrait` is another. Mixing `FactoryKit` and `FactoryKitDynamic` in the same dependency graph violates it, and so does pulling `FactoryTesting` into a test bundle that already reaches FactoryKit through multiple framework dependencies. SwiftPM will not diagnose either case for you. The responsibility is yours.
 
 ## Mix and Match
 

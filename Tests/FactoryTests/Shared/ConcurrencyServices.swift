@@ -61,6 +61,19 @@ extension Container {
     }
 }
 
+@TestActor
+protocol MyTestActorType {}
+
+@TestActor
+final class MyTestActorService: MyTestActorType {
+    init() {}
+}
+
+@TestActor
+final class MockTestActorService: MyTestActorType {
+    init() {}
+}
+
 @MainActor
 protocol MyMainActorType {
     func load() async -> String

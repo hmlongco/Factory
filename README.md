@@ -5,7 +5,7 @@
 
 A modern approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
-## Factory Version 3.0.0
+## Factory Version 3.0.1
 
 Factory is strongly influenced by SwiftUI, and in my opinion is highly suited for that environment. Factory is...
 
@@ -372,15 +372,69 @@ ever want to switch away from Factory, just expose your own `dependency` functio
 
 One can also use them to pass parameters to Factory's, something the property wrappers don't allow.
 
+## Factory Macros
+
+`FactoryMacros` is a new companion library that ships alongside FactoryKit. It provides
+a `@Dependency` macro which generates injected stored properties automatically from a
+key-path expression.
+
+Where you would previously write an `@Injected` property wrapper or a `var` initializer
+by hand for each dependency, a single `@Dependency` attribute covers the entire
+declaration.
+
+```swift
+import FactoryMacros
+
+// Before
+@MainActor @Observable final class HomeViewModel {
+    @ObservationIgnored
+    @Injected(\.movieRepository) var movieRepository: MovieRepositoryType
+    @ObservationIgnored
+    @Injected(\.analytics) var analytics: AnalyticServices
+    func load() async -> [Movie] {
+        analytics.log("loading")
+        await movieRepository.load()
+    }
+}
+
+// After
+@Dependency(\.movieRepository)
+@Dependency(\.analytics)
+@MainActor @Observable final class HomeViewModel {
+    func load() async -> [Movie] {
+        analytics.log("loading")
+        await movieRepository.load()
+    }
+}
+```
+
+The macro expands at compile time into simple, internally accessible properties with the
+same name as the factory. This approach avoids all of the runtime overhead
+associated with property wrappers and their accessors. 
+
+Perhaps more significantly, it also surfaces the object's
+dependencies at the class declaration site, making them immediately obvious and visible rather than hidden and buried
+somewhere in the body or in the class initializer.
+
+For more, see: [Macros](https://hmlongco.github.io/Factory/documentation/factorykit/advanced/macros)
+
 ## Documentation
 
 A single README file barely scratches the surface. Fortunately, Factory is thoroughly documented. 
 
 Current DocC documentation can be found in the project as well as online on [GitHub Pages](https://hmlongco.github.io/Factory/documentation/factorykit).
 
+## Demo Applications
+
+Factory includes a test bed application, `FactoryDemo`, that's used to test basic functionality and ensure various features are working properly.
+
+Factory 3.0 also has `MovieDemo`, a new TMDB movie browsing application that's been built to showcase how to use [Factory](https://github.com/hmlongco/Factory) and [Navigator](https://github.com/hmlongco/Navigator) in a modern, modular iOS application.
+
+It can be obtained here: [MovieDemo](https://github.com/hmlongco/MovieDemo).
+
 ## Installation
 
-Factory supports the Swift Package Manager and has legacy support for CocoaPods.
+With the subsetting of CocoaPods, Factory 3.0 supports the Swift Package Manager. Period.
 
 Factory's primary import library is named `FactoryKit`. This is done in order to avoid SPM import conflicts between the library itself and the `Factory` object defined within the library.
 
@@ -392,23 +446,15 @@ import FactoryKit
 
 If you're using Swift Testing you'll probably also want to also import the `FactoryTesting` library and add it to your test target. 
 
-Do not, however, import `FactoryKit` into the Test target. That can lead to duplicate factories and indeterminate behavior.
+**Do not, however, import `FactoryKit` into the Test target. That can lead to duplicate factories and indeterminate behavior.**
 
-Note that the current version of Factory requires Swift 5.10 minimum and that the minimum version of iOS currently supported with this release is iOS 13.
+> Note: If you still require CocoaPods support, drop down to Factory 2.5.3, or simply clone and embed Factory in your project directly.
 
-## Demo Applications
-
-Factory includes a test bed application, FactoryDemo, that's used to test basic functionality and ensure various features are working properly.
-
-MovieDemo, on the other hand, is a new TMDB movie browsing application that's been built to showcase how to use [Factory](https://github.com/hmlongco/Factory) and [Navigator](https://github.com/hmlongco/Navigator) in a modern, modular iOS application.
-
-It can be obtained here: [MovieDemo](https://github.com/hmlongco/MovieDemo).
-
-## FactoryKit Migration
+## Migration
 
 Factory 3.0.0 works with SPM, Xcode 26 under Strict Concurrency guidelines, and with Swift Testing.
 
-If you're a current Factory user you'll' need to update your code and switch from importing `Factory` to importing `FactoryKit`. This avoids SPM naming conflicts between the import library name and the primary `Factory` object.
+If you're a current Factory user you'll need to update your code and switch from importing `Factory` to importing `FactoryKit`. This avoids SPM naming conflicts between the import library name and the primary `Factory` object.
 
 To do so, open your project in Xcode and...
 
@@ -419,6 +465,23 @@ To do so, open your project in Xcode and...
 5. Clean and build your project.
 
 You may need to do the same for any other targets or modules that imported Factory.
+
+One other significant change lies in MainActor Factory definitions. Factory 2.x required a definition that needed an additional `@MainActor` embedded in the Factory closure.
+
+```swift
+@MainActor
+var contentViewModel: Factory<ContentViewModel> {
+    self { @MainActor in ContentViewModel() }
+}
+```
+Something that wasn't the most intuitive thing in the world. Factory 3.0 simplifies that.
+
+```swift
+@MainActor
+var contentViewModel: Factory<ContentViewModel> {
+    self { ContentViewModel() }
+}
+```
 
 ## Discussion Forum
 
