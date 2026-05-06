@@ -316,14 +316,12 @@ extension FactoryOptions {
             }
         }
         if let contexts = contexts, !contexts.isEmpty {
-            #if DEBUG
             if FactoryContext.current.isPreview, let found = contexts["preview"] {
                 return found
             }
             if FactoryContext.current.isTest, let found = contexts["test"] {
                 return found
             }
-            #endif
             if FactoryContext.current.isSimulator, let found = contexts["simulator"] {
                 return found
             }
