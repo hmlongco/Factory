@@ -1,9 +1,5 @@
 # Factory Changelog
 
-## 3.0.3
-
-* Add support for Swift's InternalImportsByDefault upcoming feature #361
-
 ## 3.0.2
 
 * Added FactoryKitDynamic for multi-module support
