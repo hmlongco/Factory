@@ -108,7 +108,7 @@ struct FactoryDemoApp: App {
 }
 
 ```
-Finally, Factory has a set of global dependency resolution functions.
+Factory also has a set of global dependency resolution functions.
 ```swift
 final class NetworkService {
     let preferences: Preferences = dependency(\.preferences)
@@ -116,9 +116,16 @@ final class NetworkService {
     ...
 }
 ```
+And finally, as of 3.1 there's a brand new Dependency macro that's even simpler while also improving runtime performance.
+```swift
+@Dependency(\.myService)
+class ContentViewModel: ObservableObject {
+    ...
+}
+```
 These are discussed in detail below.
 
-Factory is flexible, and it doesn't tie you down to a specific dependency injection pattern or technique.
+The bottom line is that Factory is *extremely* flexible and it doesn't tie you down to a specific dependency injection pattern or technique.
 
 See [Resolutions](https://hmlongco.github.io/Factory/documentation/factorykit/resolutions) for more examples.
 
