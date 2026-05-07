@@ -116,10 +116,10 @@ final class NetworkService {
     ...
 }
 ```
-And finally, as of 3.1 there's a brand new `@Dependency` macro that's even simpler than the property wrapper, while also improving runtime performance.
+And finally, as of 3.1 there's a brand new `@Dependency` macro that improves runtime performance and is even simpler to use than the property wrapper.
 ```swift
 @Dependency(\.myService)
-class ContentViewModel: ObservableObject {
+@MainActor @Observable class ContentViewModel {
     ...
 }
 ```
