@@ -24,10 +24,10 @@
 // THE SOFTWARE.
 //
 
-internal import Foundation
+import Foundation
 
 #if canImport(SwiftUI)
-public import SwiftUI
+import SwiftUI
 #endif
 
 // MARK: - Container

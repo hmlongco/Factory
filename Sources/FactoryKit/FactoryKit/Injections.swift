@@ -24,12 +24,12 @@
 // THE SOFTWARE.
 //
 
-internal import Foundation
+import Foundation
 
 #if canImport(SwiftUI)
-public import Combine
-public import Observation
-public import SwiftUI
+import Combine
+import Observation
+import SwiftUI
 #endif
 
 /// Convenience property wrapper takes a factory and resolves an instance of the desired type.

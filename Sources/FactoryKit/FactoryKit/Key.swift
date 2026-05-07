@@ -23,7 +23,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-internal import Foundation
+import Foundation
 
 internal struct FactoryKey: Hashable {
 

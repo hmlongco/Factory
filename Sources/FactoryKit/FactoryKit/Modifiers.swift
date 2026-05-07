@@ -24,10 +24,10 @@
 // THE SOFTWARE.
 //
 
-public import Foundation
+import Foundation
 
 #if canImport(SwiftUI)
-public import SwiftUI
+import SwiftUI
 #endif
 
 /// Public protocol with functionality common to all Factory's. Used to add scope and decorator modifiers to Factory.

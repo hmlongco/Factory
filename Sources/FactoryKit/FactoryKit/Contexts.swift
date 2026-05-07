@@ -24,7 +24,7 @@
 // THE SOFTWARE.
 //
 
-internal import Foundation
+import Foundation
 
 /// Context types available for special purpose factory registrations.
 public enum FactoryContextType: Equatable {

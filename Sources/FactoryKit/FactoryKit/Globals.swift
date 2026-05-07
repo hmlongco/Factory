@@ -24,7 +24,7 @@
 // THE SOFTWARE.
 //
 
-internal import Foundation
+import Foundation
 
 // MARK: - Internal Variables
 
