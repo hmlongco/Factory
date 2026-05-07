@@ -65,12 +65,17 @@ internal final class RecursiveLock: NSLocking {
 nonisolated(unsafe) internal let globalVariableLock = SpinLock()
 
 #if os(macOS) || os(iOS) || os(watchOS)
-/// Custom spin lock
-internal final class SpinLock: NSLocking {
+/// Custom spin lock using os_unfair_lock on Apple platforms.
+internal final class SpinLock: NSLocking, @unchecked Sendable {
 
     init() {
         oslock = UnsafeMutablePointer<os_unfair_lock>.allocate(capacity: 1)
         oslock.initialize(to: .init())
+    }
+
+    deinit {
+        oslock.deinitialize(count: 1)
+        oslock.deallocate()
     }
 
     @inlinable @inline(__always) func lock() {
@@ -85,8 +90,8 @@ internal final class SpinLock: NSLocking {
 
 }
 #else
-/// Custom spin lock compatible with Linux
-internal final class SpinLock: NSLocking {
+/// Custom spin lock compatible with Linux using pthread_mutex.
+internal final class SpinLock: NSLocking, @unchecked Sendable {
 
     init() {
         mutex = UnsafeMutablePointer<pthread_mutex_t>.allocate(capacity: 1)
@@ -96,6 +101,11 @@ internal final class SpinLock: NSLocking {
         pthread_mutex_init(mutex, attributes)
         pthread_mutexattr_destroy(attributes)
         attributes.deallocate()
+    }
+
+    deinit {
+        pthread_mutex_destroy(mutex)
+        mutex.deallocate()
     }
 
     @inlinable @inline(__always) func lock() {
