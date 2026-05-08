@@ -444,3 +444,36 @@ which avoids many — but not all — instances of this error.
 There is no per-project Xcode setting for this; the `defaults` key is user-wide.
 Apple's SwiftPM team has acknowledged the issue on the Swift Forums and treats the
 `defaults` flag as the supported workaround pending a fix.
+
+## Continuous Integration
+
+Xcode requires explicit user approval before running a Swift macro compiler plugin for
+the first time. On a developer machine this appears as a one-time dialog. On a CI runner
+there is no user to click it, so the build either fails immediately with a
+"macro plugin not trusted" error or hangs indefinitely waiting for input that never
+arrives.
+
+The fix for `xcodebuild`-based pipelines is to pass one of these flags:
+
+```bash
+xcodebuild -skipPackagePluginValidation ...
+xcodebuild -skipMacroValidation ...
+```
+
+`-skipMacroValidation` is the narrower option — it bypasses trust checks only for macro
+plugins. `-skipPackagePluginValidation` disables validation for all package plugins,
+including build-tool plugins such as SwiftLint or SwiftGen. Either is safe for a
+controlled CI environment where the package graph is already reviewed.
+
+For command-line Swift builds, pass `--disable-sandbox` instead:
+
+```bash
+swift build --disable-sandbox
+swift test --disable-sandbox
+```
+
+The sandbox is what enforces the trust boundary at the CLI level. Disabling it skips
+macro plugin validation entirely.
+
+Neither flag persists — both must be present on every invocation that builds a target
+containing `@Dependency` or any other macro from `FactoryMacros`.
