@@ -405,7 +405,7 @@ type's actor isolation naturally, with no `Sendable` requirement on the resolved
 | Modes (lazy / optional / weak / dynamic) | separate wrappers | manual | single parameter |
 | `@ObservationIgnored` / `@State` | manual | manual | automatic |
 
-## SwiftSyntax Prebuilt Modules in Xcode
+## Xcode and SwiftSyntax Prebuilt Modules
 
 If you open the package in Xcode and see errors such as:
 
@@ -436,14 +436,15 @@ defaults delete com.apple.dt.Xcode IDEPackageEnablePrebuilts
 ```
 
 Command-line builds (`swift build``swift test`) accept a per-invocation equivalent:
-pass `--disable-experimental-prebuilts`. As of Swift 6.2 the CLI also opts into
-prebuilts by default, so it can hit the same mismatch. SwiftPM 6.3 additionally
-auto-disables prebuilts when it detects swift-syntax being used by a non-macro target,
-which avoids many — but not all — instances of this error.
+```bash
+xcodebuild --disable-experimental-prebuilts ...
+```
 
-There is no per-project Xcode setting for this; the `defaults` key is user-wide.
-Apple's SwiftPM team has acknowledged the issue on the Swift Forums and treats the
-`defaults` flag as the supported workaround pending a fix.
+As of Swift 6.2 the CLI also opts into prebuilts by default, so it can hit the same mismatch. SwiftPM 6.3 additionally
+auto-disables prebuilts when it detects swift-syntax being used by a non-macro target, which avoids many — but not all — instances of this error.
+
+There is no per-project Xcode setting for this; the `defaults` key is user-wide. Apple's SwiftPM team has acknowledged the issue 
+on the Swift Forums and treats the `defaults` flag as the supported workaround pending a fix.
 
 ## Continuous Integration
 
