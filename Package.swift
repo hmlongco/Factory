@@ -27,7 +27,6 @@ let package = Package(
         ),
         .library(
             name: "FactoryTesting",
-            type: .dynamic,
             targets: ["FactoryTesting"]
         ),
     ],

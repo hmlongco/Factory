@@ -1,5 +1,9 @@
 # Factory Changelog
 
+## 3.0.3
+
+* Remove .dynamic from FactoryTesting package definition #363
+
 ## 3.0.2
 
 * Added FactoryKitDynamic for multi-module support
