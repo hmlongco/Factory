@@ -1,5 +1,10 @@
 # Factory Changelog
 
+## 3.0.4
+
+* Fix data race in @LazyInjected and @WeakLazyInjected on concurrent first access #362
+* Fix potential CrossPlatformLock memory leak (missing deinit for heap-allocated lock storage) #362
+
 ## 3.0.3
 
 * Remove .dynamic from FactoryTesting package definition #363
@@ -128,7 +133,7 @@
 
 ## 2.3.1
 
-* Fix for SpinLock on Linux
+* Fix for CrossPlatformLock on Linux
 * Add action to test linux - Issue #113
 * Add various aliases to avoid external naming conflicts - Issue #154
 
