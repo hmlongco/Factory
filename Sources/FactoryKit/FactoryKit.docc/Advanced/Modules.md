@@ -197,6 +197,31 @@ And the application, which can see everything, cross wires the various service r
 
 ModuleP is now completely independent.
 
+## Re-Exporting FactoryKit
+
+Once Services owns all of the Factory definitions, it's a short step to having it own the FactoryKit import entirely as well.
+
+Right now, every module in the graph imports FactoryKit directly. That's coupling to an infrastructure detail that the modules themselves don't need to care about. Services already mediates between FactoryKit and the rest of the world — it may as well make that role official.
+
+In Swift 5.9 and later, `public import` re-exports a module to any consumer of the importing module. Add this to any file in Services (an umbrella file works well):
+
+```swift
+// Services/DependencyContainer.swift
+public import FactoryKit
+
+extension Container {
+    public var accountLoader: Factory<AccountLoading?> { promised() }
+}
+```
+
+That one line is the whole change on the Services side. Now every module that does `import Services` automatically gets FactoryKit's symbols — `Factory`, `Container`, `@Injected`, all of it — without an explicit import.
+
+ModuleA, ModuleB, ModuleP, and the application all drop their `import FactoryKit` lines. They keep `import Services` and nothing else changes. Container extensions, property wrappers, and resolution calls all compile exactly as before because the symbols arrive through the re-export.
+
+For projects still on Swift 5.8, the unofficial `@_exported import FactoryKit` attribute achieves the same result and is supported across all Swift versions.
+
+One thing to be aware of: re-exporting makes FactoryKit's full public API visible to every consumer of Services. That is generally the intent — it saves imports without hiding anything useful — but it does mean there is no way to restrict which parts of the FactoryKit surface a downstream module can reach. If that matters, keep the imports explicit.
+
 ## Adaptors
 
 There's one last case, that of using some third party library.
