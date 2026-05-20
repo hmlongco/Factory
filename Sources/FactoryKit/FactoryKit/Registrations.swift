@@ -84,7 +84,7 @@ public nonisolated struct FactoryRegistration<P,T> {
                 if let existing = plan.cache.value(forKey: lookupKey),
                    let cached: T = scope.unboxed(box: existing) {
                     if let ttl = plan.ttl {
-                        let now = CFAbsoluteTimeGetCurrent()
+                        let now = currentTimestamp()
                         if (existing.timestamp + ttl) > now {
                             plan.cache.set(timestamp: now, forKey: lookupKey)
                             if canUseFastPath { return cached }

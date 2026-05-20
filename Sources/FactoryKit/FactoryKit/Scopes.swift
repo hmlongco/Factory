@@ -69,11 +69,11 @@ public class Scope: @unchecked Sendable {
     fileprivate func box<T>(_ instance: T) -> AnyBox? {
         if let optional = instance as? OptionalProtocol {
             if optional.hasWrappedValue {
-                return StrongBox<T>(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: instance)
+                return StrongBox<T>(scopeID: scopeID, timestamp: currentTimestamp(), boxed: instance)
             }
             return nil
         }
-        return StrongBox<T>(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: instance)
+        return StrongBox<T>(scopeID: scopeID, timestamp: currentTimestamp(), boxed: instance)
     }
 
     internal let scopeID: UUID = UUID()
@@ -143,14 +143,9 @@ extension Scope {
             return key
         }()
 
-        private static let cacheKey: pthread_key_t = {
-            var key: pthread_key_t = 0
-            pthread_key_create(&key) { rawPointer in
-                // Clean up the cache when the thread exits
-                Unmanaged<Cache>.fromOpaque(rawPointer).release()
-            }
-            return key
-        }()
+        private static let cacheKey: pthread_key_t = makePthreadKey { rawPointer in
+            Unmanaged<Cache>.fromOpaque(rawPointer).release()
+        }
 
         private var threadLocalDepth: Int {
             get {
@@ -194,10 +189,10 @@ extension Scope {
         fileprivate override func box<T>(_ instance: T) -> AnyBox? {
             if let optional = instance as? OptionalProtocol {
                 if let unwrapped = optional.wrappedValue, type(of: unwrapped) is AnyObject.Type {
-                    return WeakBox(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: unwrapped as AnyObject)
+                    return WeakBox(scopeID: scopeID, timestamp: currentTimestamp(), boxed: unwrapped as AnyObject)
                 }
             } else if type(of: instance as Any) is AnyObject.Type {
-                return WeakBox(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: instance as AnyObject)
+                return WeakBox(scopeID: scopeID, timestamp: currentTimestamp(), boxed: instance as AnyObject)
             }
             return nil
         }
@@ -325,7 +320,7 @@ extension Scope {
             if let existing = lock.withLock({ cache[key] }) {
                 if let cached: T = scope.unboxed(box: existing) {
                     if let ttl = ttl {
-                        let now = CFAbsoluteTimeGetCurrent()
+                        let now = currentTimestamp()
                         if (existing.timestamp + ttl) > now {
                             lock.withLock { cache[key]?.timestamp = now }
                             return (cached, false)
@@ -367,7 +362,7 @@ extension Scope {
                     // Double-check cache after acquiring per-key lock
                     if let existing = lock.withLock({ cache[key] }), let cached: T = scope.unboxed(box: existing) {
                         if let ttl = ttl {
-                            let now = CFAbsoluteTimeGetCurrent()
+                            let now = currentTimestamp()
                             if (existing.timestamp + ttl) > now {
                                 lock.withLock { cache[key]?.timestamp = now }
                                 return (cached, false)

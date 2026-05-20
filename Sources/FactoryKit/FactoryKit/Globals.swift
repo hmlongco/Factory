@@ -26,6 +26,30 @@
 
 import Foundation
 
+// MARK: - Cross-Platform Timestamp
+
+@inline(__always)
+internal func currentTimestamp() -> Double {
+    var ts = timespec()
+    clock_gettime(CLOCK_MONOTONIC, &ts)
+    return Double(ts.tv_sec) + Double(ts.tv_nsec) / 1_000_000_000
+}
+
+// MARK: - Cross-Platform pthread Key
+
+internal func makePthreadKey(destructor: @convention(c) (UnsafeMutableRawPointer) -> Void) -> pthread_key_t {
+    var key: pthread_key_t = 0
+    #if canImport(Darwin)
+    pthread_key_create(&key, destructor)
+    #else
+    pthread_key_create(&key) { raw in
+        guard let raw else { return }
+        destructor(raw)
+    }
+    #endif
+    return key
+}
+
 // MARK: - Internal Variables
 
 /// Internal key used for Resolver mode
@@ -50,13 +74,9 @@ internal enum ThreadLocalDebugState {
         var traceResolutions: [String] = []
     }
 
-    private static let storageKey: pthread_key_t = {
-        var key: pthread_key_t = 0
-        pthread_key_create(&key) { raw in
-            Unmanaged<Storage>.fromOpaque(raw).release()
-        }
-        return key
-    }()
+    private static let storageKey: pthread_key_t = makePthreadKey { raw in
+        Unmanaged<Storage>.fromOpaque(raw).release()
+    }
 
     @inline(__always)
     private static func getStorage() -> Storage? {
