@@ -57,26 +57,11 @@ public class Scope: @unchecked Sendable {
 
     /// Internal function returns cached value if it exists. Otherwise it creates a new instance and caches that value for later reference.
     internal func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, factory: () -> T) -> (T, Bool) {
-        if let box = cache.value(forKey: key), let cached: T = unboxed(box: box) {
-            if let ttl = ttl {
-                let now = CFAbsoluteTimeGetCurrent()
-                if (box.timestamp + ttl) > now {
-                    cache.set(timestamp: now, forKey: key)
-                    return (cached, false)
-                }
-            } else {
-                return (cached, false)
-            }
-        }
-        let instance = factory()
-        if let box = box(instance) {
-             cache.set(value: box, forKey: key)
-        }
-        return (instance, true)
+        cache.resolve(key: key, ttl: ttl, scope: self, factory: factory)
     }
 
     /// Internal function returns unboxed value if it exists
-    fileprivate func unboxed<T>(box: AnyBox?) -> T? {
+    internal func unboxed<T>(box: AnyBox?) -> T? {
         (box as? StrongBox<T>)?.boxed
     }
 
@@ -106,6 +91,9 @@ extension Scope {
         public override init() {
             super.init()
         }
+        internal override func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, factory: () -> T) -> (T, Bool) {
+            cache.resolve(key: key, ttl: ttl, scope: self, factory: factory, exclusiveCreation: true)
+        }
     }
 
     /// A reference to the default graph scope manager.
@@ -113,34 +101,74 @@ extension Scope {
     /// Defines the graph scope. A single instance of a given type will be returned during a given resolution cycle.
     ///
     /// This scope is managed and cleared by the main resolution function at the end of each resolution cycle.
+    /// Thread safety: Each thread gets its own graph cache via thread-local storage, so concurrent
+    /// resolutions do not interfere with each other's resolution cycles.
     public final class Graph: Scope, @unchecked Sendable  {
         internal override init() {
             super.init()
         }
         internal override func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, factory: () -> T) -> (T, Bool) {
-            // ignore container's cache in favor of our own
-            return super.resolve(using: self.cache, key: key, ttl: ttl, factory: factory)
+            // Use the thread-local graph cache instead of the container's cache
+            let graphCache = threadLocalCache
+            return super.resolve(using: graphCache, key: key, ttl: ttl, factory: factory)
         }
-        // call to enter a new resolution level
+        /// Enter a new resolution level on the current thread
         internal func enter() {
-            depth += 1
+            let current = threadLocalDepth
+            threadLocalDepth = current + 1
         }
-        // call to leave the current resolution level
+        /// Leave the current resolution level on the current thread
         internal func leave() {
-            depth -= 1
-            if depth == 0 {
-                cache.reset()
+            let current = threadLocalDepth - 1
+            threadLocalDepth = current
+            if current == 0 {
+                threadLocalCache.reset()
             }
         }
-        // reset graph scope
+        /// Reset graph scope (used in error recovery)
         internal func reset() {
-            depth = 0
-            cache.reset()
+            threadLocalDepth = 0
+            threadLocalCache.reset()
         }
-        // depth of current resolution level
-        public private(set) var depth: Int = 0
-        /// Private shared cache
-        internal var cache = Cache()
+        /// Depth of current resolution level (per-thread)
+        public var depth: Int {
+            threadLocalDepth
+        }
+
+        // MARK: - Thread-Local Storage
+
+        private static let depthKey: pthread_key_t = {
+            var key: pthread_key_t = 0
+            pthread_key_create(&key, nil)
+            return key
+        }()
+
+        private static let cacheKey: pthread_key_t = {
+            var key: pthread_key_t = 0
+            pthread_key_create(&key) { rawPointer in
+                // Clean up the cache when the thread exits
+                Unmanaged<Cache>.fromOpaque(rawPointer).release()
+            }
+            return key
+        }()
+
+        private var threadLocalDepth: Int {
+            get {
+                Int(bitPattern: pthread_getspecific(Graph.depthKey))
+            }
+            set {
+                pthread_setspecific(Graph.depthKey, UnsafeRawPointer(bitPattern: newValue))
+            }
+        }
+
+        private var threadLocalCache: Cache {
+            if let raw = pthread_getspecific(Graph.cacheKey) {
+                return Unmanaged<Cache>.fromOpaque(raw).takeUnretainedValue()
+            }
+            let cache = Cache(minimumCapacity: 16)
+            pthread_setspecific(Graph.cacheKey, Unmanaged.passRetained(cache).toOpaque())
+            return cache
+        }
     }
 
     /// A reference to the default shared scope manager.
@@ -150,7 +178,7 @@ extension Scope {
         public override init() {
             super.init()
         }
-        fileprivate override func unboxed<T>(box: AnyBox?) -> T? {
+        internal override func unboxed<T>(box: AnyBox?) -> T? {
             if let box = box as? WeakBox, let instance = box.boxed as? T {
                 if let optional = instance as? OptionalProtocol {
                     if optional.hasWrappedValue {
@@ -192,8 +220,8 @@ extension Scope {
             super.init()
         }
         internal override func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, factory: () -> T) -> (T, Bool) {
-            // ignore container's cache in favor of our own
-            return super.resolve(using: self.cache, key: key, ttl: ttl, factory: factory)
+            // Use our own cache with exclusive creation to guarantee the factory runs exactly once
+            self.cache.resolve(key: key, ttl: ttl, scope: self, factory: factory, exclusiveCreation: true)
         }
         /// Private shared cache
         internal var cache: Cache
@@ -230,43 +258,165 @@ extension Scope {
 
 extension Scope {
     /// Internal class that manages scope caching for containers and scopes.
+    ///
+    /// Thread safety: All access is protected by an internal CrossPlatformLock, allowing
+    /// cache operations to be performed without holding the global recursive lock.
+    /// Per-key creation locks use a sleeping mutex to avoid spinning during factory creation.
     internal final class Cache {
         typealias CacheMap = [FactoryKey:AnyBox]
+
+        private let lock = CrossPlatformLock()
+        private let creationLockGuard = CrossPlatformLock()
+        /// Per-key creation locks for exclusive creation (singleton guarantee).
+        private var creationLocks: [FactoryKey: MutexLock] = [:]
+
         /// Internal support functions
         @inlinable @inline(__always) func value(forKey key: FactoryKey) -> AnyBox? {
-            cache[key]
+            lock.withLock { cache[key] }
         }
         @inlinable @inline(__always) func set(value: AnyBox, forKey key: FactoryKey)  {
-            cache[key] = value
+            lock.withLock { cache[key] = value }
         }
         @inlinable @inline(__always) func set(timestamp: Double, forKey key: FactoryKey)  {
-            cache[key]?.timestamp = timestamp
+            lock.withLock { cache[key]?.timestamp = timestamp }
         }
         @inlinable @inline(__always) func removeValue(forKey key: FactoryKey) {
-            cache = cache.filter { $0.key.normalized() != key }
+            lock.withLock { cache = cache.filter { $0.key.normalized() != key } }
+            creationLockGuard.withLock {
+                creationLocks = creationLocks.filter { $0.key.normalized() != key }
+            }
         }
         internal func reset(scopeID: UUID) {
-            cache = cache.filter { $1.scopeID != scopeID }
+            lock.withLock { cache = cache.filter { $1.scopeID != scopeID } }
+            creationLockGuard.withLock {
+                creationLocks.removeAll(keepingCapacity: true)
+            }
         }
         /// Internal function to clear cache if needed
         internal func reset() {
-            if !cache.isEmpty {
+            lock.withLock {
                 cache.removeAll(keepingCapacity: true)
             }
+            creationLockGuard.withLock {
+                creationLocks.removeAll(keepingCapacity: true)
+            }
         }
+
+        /// Atomic get-or-create: returns cached value if present, otherwise executes
+        /// the factory closure (without holding the cache lock) and stores the result.
+        ///
+        /// Takes the `scope` directly instead of closure trampolines for unbox/box,
+        /// eliminating 2 heap-allocated closure contexts per resolve call.
+        ///
+        /// When `exclusiveCreation` is true (used by singleton/cached scope), a per-key lock
+        /// ensures only one thread ever executes the factory for a given key. Other threads
+        /// wait and receive the cached result.
+        ///
+        /// When `exclusiveCreation` is false (default), concurrent cache misses for the same
+        /// key may both create instances. First write wins — matches Swift's `lazy var` semantics.
+        internal func resolve<T>(
+            key: FactoryKey,
+            ttl: TimeInterval?,
+            scope: Scope,
+            factory: () -> T,
+            exclusiveCreation: Bool = false
+        ) -> (T, Bool) {
+            // Fast path: check cache
+            if let existing = lock.withLock({ cache[key] }) {
+                if let cached: T = scope.unboxed(box: existing) {
+                    if let ttl = ttl {
+                        let now = CFAbsoluteTimeGetCurrent()
+                        if (existing.timestamp + ttl) > now {
+                            lock.withLock { cache[key]?.timestamp = now }
+                            return (cached, false)
+                        }
+                        // TTL expired — fall through to slow path
+                    } else {
+                        return (cached, false)
+                    }
+                }
+            }
+
+            if exclusiveCreation {
+                // Singleton/cached guarantee: per-key lock ensures only one thread creates.
+                //
+                // NOTE: The per-key MutexLock is non-recursive. A circular dependency on
+                // scoped factories (e.g. A → B → A, all singletons) will deadlock the
+                // calling thread in release builds. In DEBUG builds, circular dependencies
+                // are detected earlier by `globalCircularDependencyKeys` in `resolveSlow`
+                // before reaching this point. This trade-off is acceptable: circular
+                // dependencies are always programmer errors, and DEBUG detection covers
+                // the development cycle.
+                let keyLock: MutexLock = creationLockGuard.withLock {
+                    if let existing = creationLocks[key] {
+                        return existing
+                    } else {
+                        let newLock = MutexLock()
+                        creationLocks[key] = newLock
+                        return newLock
+                    }
+                }
+
+                return keyLock.withLock {
+                    defer {
+                        // Auto-prune: creation lock served its purpose, free the MutexLock.
+                        // Any thread already holding a reference to this lock is unaffected.
+                        creationLockGuard.withLock { _ = creationLocks.removeValue(forKey: key) }
+                    }
+
+                    // Double-check cache after acquiring per-key lock
+                    if let existing = lock.withLock({ cache[key] }), let cached: T = scope.unboxed(box: existing) {
+                        if let ttl = ttl {
+                            let now = CFAbsoluteTimeGetCurrent()
+                            if (existing.timestamp + ttl) > now {
+                                lock.withLock { cache[key]?.timestamp = now }
+                                return (cached, false)
+                            }
+                        } else {
+                            return (cached, false)
+                        }
+                    }
+
+                    let instance = factory()
+                    if let boxed = scope.box(instance) {
+                        lock.withLock { cache[key] = boxed }
+                    }
+                    return (instance, true)
+                }
+            }
+
+            // Non-exclusive: create instance WITHOUT holding cache lock (first-write-wins)
+            let instance = factory()
+
+            // Write back
+            if let boxed = scope.box(instance) {
+                lock.withLock { cache[key] = boxed }
+            }
+
+            return (instance, true)
+        }
+
         var cache: CacheMap
-        internal init(minimumCapacity: Int = 1024) {
+        internal init(minimumCapacity: Int = 32) {
             self.cache = .init(minimumCapacity: minimumCapacity)
         }
         internal init(copy: CacheMap) {
             self.cache = copy
         }
         internal func clone() -> Cache {
-            .init(copy: cache)
+            lock.withLock { .init(copy: cache) }
+        }
+        /// Returns a snapshot of the cache dictionary under the internal lock.
+        internal func snapshot() -> CacheMap {
+            lock.withLock { cache }
+        }
+        /// Replaces the cache dictionary under the internal lock.
+        internal func restore(_ map: CacheMap) {
+            lock.withLock { cache = map }
         }
         #if DEBUG
         internal var isEmpty: Bool {
-            cache.isEmpty
+            lock.withLock { cache.isEmpty }
         }
         #endif
     }

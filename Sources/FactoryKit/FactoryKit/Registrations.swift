@@ -48,43 +48,160 @@ public nonisolated struct FactoryRegistration<P,T> {
 
     /// Resolves a Factory, returning an instance of the desired type. All roads lead here.
     ///
+    /// Resolution uses a fast path for cache hits that avoids the global lock entirely,
+    /// with a slow path fallback that builds the resolution plan on first access.
+    ///
+    /// **Consistency model:** A resolve in flight concurrently with a registration may still
+    /// return a previously cached value (eventual consistency). All subsequent resolves after
+    /// registration completes are guaranteed to see the new factory. This trade-off is acceptable
+    /// because registrations are typically performed at startup or in tests, not during steady-state.
+    ///
     /// - Parameter factory: Factory wanting resolution.
     /// - Returns: Instance of the desired type.
     internal func resolve(with parameters: P) -> T {
-        defer { globalRecursiveLock.unlock()  }
-        globalRecursiveLock.lock()
 
-        container.unsafeCheckAutoRegistration()
+        // ═══════════════════════════════════════════════════════════════════
+        // FAST PATH: Cache hit without global lock (steady-state 95%+ case)
+        // Only requires read locks — no global recursive lock, no TLS.
+        // ═══════════════════════════════════════════════════════════════════
 
         let manager: ContainerManager = container.manager
-        let options: FactoryOptions? = manager.options[key]
-
-        var current: (P) -> T
 
         #if DEBUG
-        let traceIndex: Int = globalTraceResolutions.count
-        let traceLevel: Int = Scope.graph.depth
-        var traceNewType: String
+        let tracingEnabled = globalTraceFlag
         #endif
 
-        if let found = options?.factoryForCurrentContext() as? TypedFactory<P,T> {
+        if let plan = manager.cachedPlan(for: key) {
+
             #if DEBUG
-            traceNewType = "O" // .onTest, .onDebug, etc.
+            let canUseFastPath = !tracingEnabled && !plan.hasDecorator && !plan.hasManagerDecorator
+            #else
+            let canUseFastPath = !plan.hasDecorator && !plan.hasManagerDecorator
             #endif
-            current = found.factory
-        } else if let found = manager.registrations[key] as? TypedFactory<P,T> {
-            #if DEBUG
-            traceNewType = "R" // .register {}
-            #endif
-            current = found.factory
-        } else {
-            #if DEBUG
-            traceNewType = "F" // Factory { ... }
-            #endif
-            current = factory
+
+            if let scope = plan.scope {
+                let lookupKey = plan.scopeOnParameters ? key.parameterized(parameters) : key
+                if let existing = plan.cache.value(forKey: lookupKey),
+                   let cached: T = scope.unboxed(box: existing) {
+                    if let ttl = plan.ttl {
+                        let now = CFAbsoluteTimeGetCurrent()
+                        if (existing.timestamp + ttl) > now {
+                            plan.cache.set(timestamp: now, forKey: lookupKey)
+                            if canUseFastPath { return cached }
+                        }
+                        // TTL expired or needs decorator/trace — fall through
+                    } else {
+                        if canUseFastPath { return cached }
+                    }
+                }
+            } else {
+                // Unique-scope fast path — no lock, no cache, just call the factory.
+                // Plan with nil scope is only stored when no override exists.
+                if canUseFastPath {
+                    Scope.graph.enter()
+                    let result = factory(parameters)
+                    Scope.graph.leave()
+                    return result
+                }
+            }
         }
 
+        // ═══════════════════════════════════════════════════════════════════
+        // SLOW PATH: Full resolution with global lock (first resolve or cache miss)
+        // ═══════════════════════════════════════════════════════════════════
+
+        return resolveSlow(with: parameters, manager: manager)
+    }
+
+    /// Slow path: takes global lock, reads options/registrations, executes factory if needed.
+    @inline(never)
+    private func resolveSlow(with parameters: P, manager: ContainerManager) -> T {
+
+        // Phase 1: Under global lock — lookups only (nanoseconds)
+
+        let current: (P) -> T
+        let scope: Scope?
+        let resolvedCache: Scope.Cache
+        let parameterizedKey: FactoryKey
+        let ttl: TimeInterval?
+        let decorator: ((T, Bool) -> Void)?
+        let managerDecorator: ((Any) -> ())?
+        var shouldStorePlanAfterFactory = false
+        var planGeneration: UInt64 = 0
+
         #if DEBUG
+        var traceNewType: String = "F"
+        #endif
+
+        do {
+            globalRecursiveLock.lock()
+            defer { globalRecursiveLock.unlock() }
+
+            container.unsafeCheckAutoRegistration()
+
+            let options: FactoryOptions? = manager.options[key]
+
+            let isOriginalFactory: Bool
+
+            if let found = options?.factoryForCurrentContext() as? TypedFactory<P,T> {
+                #if DEBUG
+                traceNewType = "O"
+                #endif
+                current = found.factory
+                isOriginalFactory = false
+            } else if let found = manager.registrations[key] as? TypedFactory<P,T> {
+                #if DEBUG
+                traceNewType = "R"
+                #endif
+                current = found.factory
+                isOriginalFactory = false
+            } else {
+                #if DEBUG
+                traceNewType = "F"
+                #endif
+                current = factory
+                isOriginalFactory = true
+            }
+
+            scope = options?.scope ?? manager.defaultScope
+            parameterizedKey = options?.scopeOnParameters == true ? key.parameterized(parameters) : key
+            ttl = options?.ttl
+            decorator = options?.decorator as? (T, Bool) -> Void
+            managerDecorator = manager.state.decorator
+
+            if let s = scope {
+                resolvedCache = (s as? InternalScopeCaching)?.cache ?? manager.cache
+            } else {
+                resolvedCache = manager.cache
+            }
+
+            // Build and cache the resolution plan for future fast-path use
+            if scope != nil {
+                let plan = ResolutionPlan(
+                    scope: scope,
+                    cache: resolvedCache,
+                    ttl: ttl,
+                    scopeOnParameters: options?.scopeOnParameters ?? false,
+                    hasDecorator: decorator != nil,
+                    hasManagerDecorator: managerDecorator != nil
+                )
+                manager.storePlan(plan, for: key)
+            } else if isOriginalFactory {
+                // Defer storing the unique-scope plan until after the factory
+                // executes (phase 2). Storing it here would let recursive
+                // resolves of the same key hit the fast path, bypassing the
+                // circular dependency check in resolveSlow.
+                shouldStorePlanAfterFactory = true
+                planGeneration = manager.currentPlanGeneration
+            }
+        }
+
+        // DEBUG: Trace + circular dependency detection
+
+        #if DEBUG
+        let traceLevel: Int = Scope.graph.depth
+        let traceIndex: Int = globalTraceResolutions.count
+
         if globalTraceFlag {
             let indent = String(repeating: "    ", count: traceLevel)
             let entry = "\(traceLevel): \(indent)\(type(of: container)).\(key.key)<\(T.self)>"
@@ -98,17 +215,37 @@ public nonisolated struct FactoryRegistration<P,T> {
         }
         #endif
 
+        // Phase 2: No global lock — execute factory closure
+
         Scope.graph.enter()
 
         let (instance, instantiated): (T, Bool)
-        if let scope = options?.scope ?? manager.defaultScope {
-            let parameterizedKey = options?.scopeOnParameters == true ? key.parameterized(parameters) : key
-            (instance, instantiated) = scope.resolve(using: manager.cache, key: parameterizedKey, ttl: options?.ttl, factory: { current(parameters) }) }
-        else {
+        if let scope = scope {
+            (instance, instantiated) = scope.resolve(using: resolvedCache, key: parameterizedKey, ttl: ttl, factory: { current(parameters) })
+        } else {
             (instance, instantiated) = (current(parameters), true)
         }
 
         Scope.graph.leave()
+
+        // Store the unique-scope plan now that the factory has executed
+        // successfully. This is deferred from phase 1 so that circular
+        // dependencies are caught by the slow path's detection logic.
+        // Uses generation check to avoid storing a stale plan if a concurrent
+        // register/reset/decorator change occurred during phase 2.
+        if shouldStorePlanAfterFactory {
+            let plan = ResolutionPlan(
+                scope: nil,
+                cache: resolvedCache,
+                ttl: nil,
+                scopeOnParameters: false,
+                hasDecorator: decorator != nil,
+                hasManagerDecorator: managerDecorator != nil
+            )
+            manager.storePlan(plan, for: key, ifGeneration: planGeneration)
+        }
+
+        // Phase 3: Decorators
 
         #if DEBUG
         if globalCircularDependencyTesting {
@@ -127,11 +264,11 @@ public nonisolated struct FactoryRegistration<P,T> {
         }
         #endif
 
-        if let decorator = options?.decorator as? (T, Bool) -> Void {
+        if let decorator = decorator {
             decorator(instance, instantiated)
         }
-        if let decorator = manager.state.decorator {
-            decorator(instance)
+        if let managerDecorator = managerDecorator {
+            managerDecorator(instance)
         }
 
         return instance
@@ -143,6 +280,10 @@ extension FactoryRegistration {
 
     /// Registers a new factory closure capable of producing an object or service of the desired type. This factory overrides the original factory and
     /// the next time this factory is resolved Factory will evaluate the newly registered factory instead.
+    ///
+    /// - Note: Registration invalidates the resolution plan cache and clears any cached scope value for this key.
+    ///   A concurrent `resolve()` already in flight on another thread may still return a previously cached value if it read
+    ///   the cache before this registration completed. Subsequent resolves are guaranteed to use the new factory.
     /// - Parameters:
     ///   - id: ID of associated Factory.
     ///   - factory: Factory closure called to create a new instance of the service when needed.
@@ -153,6 +294,7 @@ extension FactoryRegistration {
         if unsafeCanUpdateOptions() {
             let manager = container.manager
             manager.registrations[key] = TypedFactory(factory: factory)
+            manager.invalidatePlan(for: key)
             if manager.autoRegistering == false, let scope = manager.options[key]?.scope {
                 let cache = (scope as? InternalScopeCaching)?.cache ?? manager.cache
                 cache.removeValue(forKey: key)
@@ -172,9 +314,11 @@ extension FactoryRegistration {
                 options.scope = scope
                 manager.options[key] = options
                 manager.cache.removeValue(forKey: key)
+                manager.invalidatePlan(for: key)
             }
         } else {
             manager.options[key] = FactoryOptions(scope: scope)
+            manager.invalidatePlan(for: key)
         }
     }
 
@@ -229,6 +373,7 @@ extension FactoryRegistration {
             cache.removeValue(forKey: key)
             manager.registrations.removeValue(forKey: key)
             manager.options.removeValue(forKey: key)
+            manager.invalidatePlan(for: key)
         case .context:
             self.options {
                 $0.argumentContexts = nil
@@ -238,6 +383,7 @@ extension FactoryRegistration {
             break
         case .registration:
             manager.registrations.removeValue(forKey: key)
+            manager.invalidatePlan(for: key)
         case .scope:
             let cache = (manager.options[key]?.scope as? InternalScopeCaching)?.cache ?? manager.cache
             cache.removeValue(forKey: key)
@@ -254,6 +400,7 @@ extension FactoryRegistration {
         if options.once == once {
             mutate(&options)
             manager.options[key] = options
+            manager.invalidatePlan(for: key)
         }
     }
 
@@ -346,4 +493,17 @@ internal protocol AnyFactory {}
 
 internal struct TypedFactory<P,T>: AnyFactory {
     let factory: (P) -> T
+}
+
+// MARK: - Resolution Plan
+
+/// Lightweight per-key snapshot of resolution metadata, enabling lock-free cache-hit resolution.
+/// Built on first resolve, invalidated when write operations change the relevant state.
+internal struct ResolutionPlan {
+    let scope: Scope?
+    let cache: Scope.Cache
+    let ttl: TimeInterval?
+    let scopeOnParameters: Bool
+    let hasDecorator: Bool
+    let hasManagerDecorator: Bool
 }
