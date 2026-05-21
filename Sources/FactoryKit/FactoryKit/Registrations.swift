@@ -146,7 +146,7 @@ extension FactoryRegistration {
     /// - Parameters:
     ///   - id: ID of associated Factory.
     ///   - factory: Factory closure called to create a new instance of the service when needed.
-    internal func register(_ factory: @escaping (P) -> T) {
+    internal func register(factory: @escaping (P) -> T) {
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
         container.unsafeCheckAutoRegistration()
@@ -162,7 +162,7 @@ extension FactoryRegistration {
 
     /// Registers a new factory scope.
     /// - Parameter: - scope: New scope
-    internal func scope(_ scope: Scope?) {
+    internal func register(scope: Scope?) {
         defer { globalRecursiveLock.unlock()  }
         globalRecursiveLock.lock()
         container.unsafeCheckAutoRegistration()
@@ -179,7 +179,7 @@ extension FactoryRegistration {
     }
 
     /// Registers a new context.
-    internal func context(_ context: FactoryContextType, key: FactoryKey, factory: @escaping (P) -> T) {
+    internal func register(context: FactoryContextType, key: FactoryKey, factory: @escaping (P) -> T) {
         options { options in
             switch context {
             case .arg(let arg):
@@ -205,7 +205,7 @@ extension FactoryRegistration {
     }
 
     /// Registers a new decorator.
-    internal func decorator(_ decorator: @escaping (T, Bool) -> Void) {
+    internal func register(decorator: @escaping (T, Bool) -> Void) {
         options { options in
             options.decorator = decorator
         }

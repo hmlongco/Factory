@@ -137,7 +137,7 @@ public nonisolated struct Factory<T>: FactoryModifying {
     /// Allows updating registered factory and scope.
     @discardableResult
     public func register(factory: @escaping VoidFactoryType<T>) -> Self {
-        registration.register(factory)
+        registration.register(factory: factory)
         return self
     }
 
@@ -230,7 +230,7 @@ public nonisolated struct ParameterFactory<P,T>: FactoryModifying {
     ///  - factory: A new factory closure that produces an object of the desired type when needed.
     @discardableResult
     public func register(factory: @escaping ParameterFactoryType<P, T>) -> Self {
-        registration.register(factory)
+        registration.register(factory: factory)
         return self
     }
 

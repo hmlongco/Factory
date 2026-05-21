@@ -58,7 +58,7 @@ extension FactoryModifying {
     /// Primarily used to assign custom scopes.
     @discardableResult
     public func scope(_ scope: Scope) -> Self {
-        registration.scope(scope)
+        registration.register(scope: scope)
         return self
     }
 
@@ -70,7 +70,7 @@ extension FactoryModifying {
     /// }
     /// ```
     public var cached: Self {
-        registration.scope(.cached)
+        registration.register(scope: .cached)
         return self
     }
 
@@ -82,7 +82,7 @@ extension FactoryModifying {
     /// }
     /// ```
     public var graph: Self {
-        registration.scope(.graph)
+        registration.register(scope: .graph)
         return self
     }
 
@@ -94,7 +94,7 @@ extension FactoryModifying {
     /// }
     /// ```
     public var shared: Self {
-        registration.scope(.shared)
+        registration.register(scope: .shared)
         return self
     }
 
@@ -106,7 +106,7 @@ extension FactoryModifying {
     /// }
     /// ```
     public var singleton: Self {
-        registration.scope(.singleton)
+        registration.register(scope: .singleton)
         return self
     }
 
@@ -119,7 +119,7 @@ extension FactoryModifying {
     /// ```
     /// While you can add the modifier, Factory's are unique by default.
     public var unique: Self {
-        registration.scope(.unique)
+        registration.register(scope: .unique)
         return self
     }
 
@@ -154,7 +154,7 @@ extension FactoryModifying {
     /// As shown, decorator can come in handy when you need to perform some operation or manipulation after the fact.
     @discardableResult
     public func decorator(_ decorator: @escaping @Sendable (_ instance: T) -> Void) -> Self {
-        registration.decorator({ (instance, _) in decorator(instance) })
+        registration.register(decorator: { (instance, _) in decorator(instance) })
         return self
     }
 
@@ -177,7 +177,7 @@ extension FactoryModifying {
     /// As shown, decorator can come in handy when you need to perform some operation or manipulation after the fact.
     @discardableResult
     public func decorator(_ decorator: @escaping @Sendable (_ instance: T, _ instantiated: Bool) -> Void) -> Self {
-        registration.decorator(decorator)
+        registration.register(decorator: decorator)
         return self
     }
 }
@@ -195,10 +195,10 @@ extension FactoryModifying {
         for context in contexts {
             switch context {
             case .arg, .args, .device, .simulator:
-                registration.context(context, key: registration.key, factory: factory)
+                registration.register(context: context, key: registration.key, factory: factory)
             default:
                 #if DEBUG
-                registration.context(context, key: registration.key, factory: factory)
+                registration.register(context: context, key: registration.key, factory: factory)
                 #endif
                 break
             }
@@ -324,7 +324,7 @@ extension Factory {
     /// Not a lot, but every little bit helps.
     @discardableResult
     public func preview(factory: @escaping VoidFactoryType<T>) -> EmptyView {
-        registration.register(factory)
+        registration.register(factory: factory)
         return EmptyView()
     }
 }
@@ -347,7 +347,7 @@ extension ParameterFactory {
     /// Not a lot, but every little bit helps.
     @discardableResult
     public func preview(factory: @escaping ParameterFactoryType<P,T>) -> EmptyView {
-        registration.register(factory)
+        registration.register(factory: factory)
         return EmptyView()
     }
 }
