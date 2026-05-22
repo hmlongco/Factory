@@ -38,12 +38,14 @@ nonisolated(unsafe) internal var globalCircularDependencyKeys: Set<FactoryKey> =
 nonisolated(unsafe) internal var globalLogger: (String) -> Void = { print($0) }
 nonisolated(unsafe) internal var globalTraceFlag: Bool = false
 nonisolated(unsafe) internal var globalTraceResolutions: [String] = []
+nonisolated(unsafe) internal var globalTraceDepth: Int = 0
 
 /// Triggers fatalError after resetting enough stuff so unit tests can continue
 internal func resetAndTriggerFatalError(_ message: String, _ file: StaticString, _ line: UInt) -> Never {
     globalCircularDependencyKeys = []
     globalRecursiveLock = RecursiveLock()
     globalTraceResolutions = []
+    globalTraceDepth = 0
     Scope.graph.reset()
     triggerFatalError(message, file, line) // GOES BOOM
 }

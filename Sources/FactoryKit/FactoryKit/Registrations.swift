@@ -55,29 +55,26 @@ public nonisolated struct FactoryRegistration<P,T> {
 
         manager.lock.lock()
         container.unsafeCheckAutoRegistration()
-        let registration: TypedFactory<P,T>? = manager.registrations[key] as? TypedFactory<P,T>
         let options: FactoryOptions? = manager.options[key]
+        let scope: Scope? = options?.scope ?? manager.defaultScope
         manager.lock.unlock()
 
-        let scope: Scope? = options?.scope ?? manager.defaultScope
-        let isGraphScope = scope === Scope.graph
-        let globalLockNeeded: Bool
+        #if DEBUG
+        let globalLockRequired = manager.state.hasGraphScope || globalTraceFlag || globalCircularDependencyTesting
+        #else
+        let globalLockRequired = manager.state.hasGraphScope
+        #endif
+
         let current: (P) -> T
         let (instance, instantiated): (T, Bool)
 
-        #if DEBUG
-        globalLockNeeded = isGraphScope || globalTraceFlag || globalCircularDependencyTesting
-        #else
-        globalLockNeeded = isGraphScope
-        #endif
-
-        if globalLockNeeded {
+        if globalLockRequired {
             globalRecursiveLock.lock()
         }
 
         #if DEBUG
         let traceIndex: Int = globalTraceResolutions.count
-        let traceLevel: Int = Scope.graph.depth
+        let traceLevel: Int = globalTraceDepth
         var traceNewType: String
         #endif
 
@@ -86,7 +83,7 @@ public nonisolated struct FactoryRegistration<P,T> {
             traceNewType = "O" // .onTest, .onDebug, etc.
             #endif
             current = found.factory
-        } else if let found = registration {
+        } else if let found = options?.registration as? TypedFactory<P,T> {
             #if DEBUG
             traceNewType = "R" // .register {}
             #endif
@@ -100,6 +97,7 @@ public nonisolated struct FactoryRegistration<P,T> {
 
         #if DEBUG
         if globalTraceFlag {
+            globalTraceDepth += 1
             let indent = String(repeating: "    ", count: traceLevel)
             let entry = "\(traceLevel): \(indent)\(type(of: container)).\(key.key)<\(T.self)>"
             globalTraceResolutions.append(entry)
@@ -137,10 +135,11 @@ public nonisolated struct FactoryRegistration<P,T> {
                 globalTraceResolutions.forEach { globalLogger($0) }
                 globalTraceResolutions = []
             }
+            globalTraceDepth -= 1
         }
         #endif
 
-        if globalLockNeeded {
+        if globalLockRequired {
             globalRecursiveLock.unlock()
         }
 
@@ -170,10 +169,15 @@ extension FactoryRegistration {
         container.unsafeCheckAutoRegistration()
         if unsafeCanUpdateOptions() {
             let manager = container.manager
-            manager.registrations[key] = TypedFactory(factory: factory)
-            if manager.autoRegistering == false, let scope = manager.options[key]?.scope {
-                let cache = (scope as? InternalScopeCaching)?.cache ?? manager.cache
-                cache.removeValue(forKey: key)
+            if var options = manager.options[key] {
+                options.registration = TypedFactory(factory: factory)
+                manager.options[key] = options
+                if manager.autoRegistering == false, let scope = options.scope {
+                    let cache = (scope as? InternalScopeCaching)?.cache ?? manager.cache
+                    cache.removeValue(forKey: key)
+                }
+            } else {
+                manager.options[key] = FactoryOptions(registration: TypedFactory(factory: factory))
             }
         }
     }
@@ -193,6 +197,9 @@ extension FactoryRegistration {
             }
         } else {
             manager.options[key] = FactoryOptions(scope: scope)
+        }
+        if scope === Scope.graph {
+            manager.state.hasGraphScope = true
         }
     }
 
@@ -245,7 +252,6 @@ extension FactoryRegistration {
         case .all:
             let cache = (manager.options[key]?.scope as? InternalScopeCaching)?.cache ?? manager.cache
             cache.removeValue(forKey: key)
-            manager.registrations.removeValue(forKey: key)
             manager.options.removeValue(forKey: key)
         case .context:
             var options = manager.options[key] ?? FactoryOptions()
@@ -255,7 +261,9 @@ extension FactoryRegistration {
         case .none:
             break
         case .registration:
-            manager.registrations.removeValue(forKey: key)
+            var options = manager.options[key] ?? FactoryOptions()
+            options.registration = nil
+            manager.options[key] = options
         case .scope:
             let cache = (manager.options[key]?.scope as? InternalScopeCaching)?.cache ?? manager.cache
             cache.removeValue(forKey: key)
@@ -302,7 +310,8 @@ public enum FactoryResetOptions {
 }
 
 internal struct FactoryOptions {
-    /// 
+    /// Registered factory
+    var registration: AnyFactory?
     /// Managed scope for this factory instance
     var scope: Scope?
     /// Scope cache value also based on ParameterFactory parameter

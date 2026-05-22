@@ -67,7 +67,7 @@ extension Resolving {
             unsafeCheckAutoRegistration()
             // if we have a registration for this type, then build registration and factory for it
             let key = FactoryKey(type: T.self, key: globalResolverKey)
-            if let factory = manager.registrations[key] as? TypedFactory<Void,T> {
+            if let factory = manager.options[key]?.registration as? TypedFactory<Void,T> {
                 return Factory(FactoryRegistration<Void,T>(key: globalResolverKey, container: self, factory: factory.factory))
             }
             // otherwise return nil

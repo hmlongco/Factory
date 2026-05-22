@@ -284,27 +284,27 @@ public final nonisolated class ContainerManager: @unchecked Sendable {
         lock.withLock {
             switch options {
             case .all:
-                return registrations.isEmpty && cache.isEmpty && unsafeContextsAreEmpty()
+                return cache.isEmpty && unsafeRegistrationsAreEmpty() && unsafeContextsAreEmpty()
             case .context:
                 return unsafeContextsAreEmpty()
             case .none:
                 return true
             case .registration:
-                return registrations.isEmpty
+                return unsafeRegistrationsAreEmpty()
             case .scope:
                 return cache.isEmpty
             }
         }
     }
 
+    internal func unsafeRegistrationsAreEmpty() -> Bool {
+        options.allSatisfy { $1.registration == nil }
+    }
+
     internal func unsafeContextsAreEmpty() -> Bool {
         options.allSatisfy { $1.argumentContexts == nil && $1.contexts == nil }
     }
     #endif
-
-    /// Updated registrations for Factory's.
-    internal typealias FactoryMap = [FactoryKey:AnyFactory]
-    internal var registrations: FactoryMap = .init(minimumCapacity: 256)
 
     /// Updated options for Factory's.
     internal typealias FactoryOptionsMap = [FactoryKey:FactoryOptions]
@@ -314,7 +314,7 @@ public final nonisolated class ContainerManager: @unchecked Sendable {
     internal var cache: Scope.Cache = Scope.Cache(minimumCapacity: 256)
 
     /// Push/Pop stack for registrations, options, cache, and so on.
-    internal var stack: [(FactoryMap, FactoryOptionsMap, Scope.Cache.CacheMap, InternalState)] = []
+    internal var stack: [(FactoryOptionsMap, Scope.Cache.CacheMap, InternalState)] = []
 
     /// Internal state values for reset, push/pop, etc.
     internal var state: InternalState = .init()
@@ -333,6 +333,8 @@ public final nonisolated class ContainerManager: @unchecked Sendable {
         internal var decorator: ((Any) -> ())?
         // Default scope
         internal var defaultScope: Scope?
+        // Graph scope enabled
+        internal var hasGraphScope: Bool = false
         // Default promise triggers error flag
         internal var promiseTriggersError: Bool = FactoryContext.current.isDebug && !FactoryContext.current.isPreview
     }
@@ -346,7 +348,6 @@ extension ContainerManager {
         lock.withLock {
             switch options {
             case .all:
-                self.registrations.removeAll(keepingCapacity: true)
                 self.options.removeAll(keepingCapacity: true)
                 self.cache.reset()
                 self.state = .init()
@@ -360,7 +361,11 @@ extension ContainerManager {
             case .none:
                 break
             case .registration:
-                self.registrations.removeAll(keepingCapacity: true)
+                for (key, option) in self.options {
+                    var mutable = option
+                    mutable.registration = nil
+                    self.options[key] = mutable
+                }
                 self.state.autoRegistrationCheckNeeded = true
             case .scope:
                 self.cache.reset()
@@ -386,7 +391,7 @@ extension ContainerManager {
     /// Test function pushes the current registration and cache states
     public func push() {
         lock.withLock {
-            stack.append((registrations, options, cache.cache, state))
+            stack.append((options, cache.cache, state))
         }
     }
 
@@ -394,10 +399,9 @@ extension ContainerManager {
     public func pop() {
         lock.withLock {
             if let values = stack.popLast() {
-                registrations = values.0
-                options = values.1
-                cache.cache = values.2
-                state = values.3
+                options = values.0
+                cache.cache = values.1
+                state = values.2
             }
         }
     }

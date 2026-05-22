@@ -176,19 +176,6 @@ extension Container {
     var recursiveC: Factory<RecursiveC?> { self { RecursiveC() } }
 }
 
-// Classes for graph scope tests
-
-class GraphWrapper {
-    @Injected(\.graphService) var service1
-    @Injected(\.graphService) var service2
-    init() {}
-}
-
-extension Container {
-    var graphWrapper: Factory<GraphWrapper> { self { GraphWrapper() } }
-    var graphService: Factory<MyService> { self { MyService() }.graph }
-}
-
 // Classes for implements scope tests
 
 class ProtocolConsumer {
@@ -268,4 +255,17 @@ final class CustomContainer: SharedContainer, AutoRegistering {
         #endif
     }
     let manager = ContainerManager()
+}
+
+// Classes for graph scope tests
+
+class GraphWrapper {
+    @Injected(\CustomContainer.graphService) var service1
+    @Injected(\CustomContainer.graphService) var service2
+    init() {}
+}
+
+extension CustomContainer {
+    var graphWrapper: Factory<GraphWrapper> { self { GraphWrapper() } }
+    var graphService: Factory<MyService> { self { MyService() }.graph }
 }
