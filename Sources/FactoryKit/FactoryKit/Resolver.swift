@@ -49,7 +49,7 @@ extension Resolving {
     /// Also returns Factory for further specialization for scopes, decorators, etc.
     @discardableResult
     public func register<T>(_ type: T.Type = T.self, factory: @escaping @Sendable () -> T) -> Factory<T> {
-        globalRecursiveLock.withLock {
+        manager.lock.withLock {
             // Perform autoRegistration check
             unsafeCheckAutoRegistration()
             // Add register to persist in container, and return factory so user can specialize if desired
@@ -62,7 +62,7 @@ extension Resolving {
     ///
     /// Note that nothing will be applied if initial registration is not found.
     public func factory<T>(_ type: T.Type = T.self) -> Factory<T>? {
-        globalRecursiveLock.withLock {
+        manager.lock.withLock {
             // Perform autoRegistration check
             unsafeCheckAutoRegistration()
             // if we have a registration for this type, then build registration and factory for it

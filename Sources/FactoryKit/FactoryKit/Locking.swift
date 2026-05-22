@@ -119,3 +119,44 @@ internal final class CrossPlatformLock: NSLocking, @unchecked Sendable {
     private let mutex: UnsafeMutablePointer<pthread_mutex_t>
 }
 #endif
+
+// MARK: - ReadWriteLock
+
+/// Readers-writer lock: multiple concurrent readers, exclusive writers.
+internal final class ReadWriteLock: @unchecked Sendable {
+
+    init() {
+        rwlock = UnsafeMutablePointer<pthread_rwlock_t>.allocate(capacity: 1)
+        pthread_rwlock_init(rwlock, nil)
+    }
+
+    deinit {
+        pthread_rwlock_destroy(rwlock)
+        rwlock.deallocate()
+    }
+
+    @inlinable @inline(__always) func readLock() {
+        pthread_rwlock_rdlock(rwlock)
+    }
+
+    @inlinable @inline(__always) func writeLock() {
+        pthread_rwlock_wrlock(rwlock)
+    }
+
+    @inlinable @inline(__always) func unlock() {
+        pthread_rwlock_unlock(rwlock)
+    }
+
+    @inlinable @inline(__always) func withReadLock<T>(_ body: () -> T) -> T {
+        readLock(); defer { unlock() }
+        return body()
+    }
+
+    @inlinable @inline(__always) func withWriteLock<T>(_ body: () -> T) -> T {
+        writeLock(); defer { unlock() }
+        return body()
+    }
+
+    private let rwlock: UnsafeMutablePointer<pthread_rwlock_t>
+
+}

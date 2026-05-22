@@ -51,15 +51,29 @@ public nonisolated struct FactoryRegistration<P,T> {
     /// - Parameter factory: Factory wanting resolution.
     /// - Returns: Instance of the desired type.
     internal func resolve(with parameters: P) -> T {
-        defer { globalRecursiveLock.unlock()  }
-        globalRecursiveLock.lock()
-
-        container.unsafeCheckAutoRegistration()
-
         let manager: ContainerManager = container.manager
-        let options: FactoryOptions? = manager.options[key]
 
-        var current: (P) -> T
+        manager.lock.lock()
+        container.unsafeCheckAutoRegistration()
+        let registration: TypedFactory<P,T>? = manager.registrations[key] as? TypedFactory<P,T>
+        let options: FactoryOptions? = manager.options[key]
+        manager.lock.unlock()
+
+        let scope: Scope? = options?.scope ?? manager.defaultScope
+        let isGraphScope = scope === Scope.graph
+        let globalLockNeeded: Bool
+        let current: (P) -> T
+        let (instance, instantiated): (T, Bool)
+
+        #if DEBUG
+        globalLockNeeded = isGraphScope || globalTraceFlag || globalCircularDependencyTesting
+        #else
+        globalLockNeeded = isGraphScope
+        #endif
+
+        if globalLockNeeded {
+            globalRecursiveLock.lock()
+        }
 
         #if DEBUG
         let traceIndex: Int = globalTraceResolutions.count
@@ -72,7 +86,7 @@ public nonisolated struct FactoryRegistration<P,T> {
             traceNewType = "O" // .onTest, .onDebug, etc.
             #endif
             current = found.factory
-        } else if let found = manager.registrations[key] as? TypedFactory<P,T> {
+        } else if let found = registration {
             #if DEBUG
             traceNewType = "R" // .register {}
             #endif
@@ -100,11 +114,10 @@ public nonisolated struct FactoryRegistration<P,T> {
 
         Scope.graph.enter()
 
-        let (instance, instantiated): (T, Bool)
-        if let scope = options?.scope ?? manager.defaultScope {
+        if let scope {
             let parameterizedKey = options?.scopeOnParameters == true ? key.parameterized(parameters) : key
-            (instance, instantiated) = scope.resolve(using: manager.cache, key: parameterizedKey, ttl: options?.ttl, factory: { current(parameters) }) }
-        else {
+            (instance, instantiated) = scope.resolve(using: manager.cache, key: parameterizedKey, ttl: options?.ttl, factory: { current(parameters) })
+        } else {
             (instance, instantiated) = (current(parameters), true)
         }
 
@@ -127,9 +140,14 @@ public nonisolated struct FactoryRegistration<P,T> {
         }
         #endif
 
+        if globalLockNeeded {
+            globalRecursiveLock.unlock()
+        }
+
         if let decorator = options?.decorator as? (T, Bool) -> Void {
             decorator(instance, instantiated)
         }
+
         if let decorator = manager.state.decorator {
             decorator(instance)
         }
@@ -147,8 +165,8 @@ extension FactoryRegistration {
     ///   - id: ID of associated Factory.
     ///   - factory: Factory closure called to create a new instance of the service when needed.
     internal func register(factory: @escaping (P) -> T) {
-        defer { globalRecursiveLock.unlock()  }
-        globalRecursiveLock.lock()
+        defer { container.manager.lock.unlock()  }
+        container.manager.lock.lock()
         container.unsafeCheckAutoRegistration()
         if unsafeCanUpdateOptions() {
             let manager = container.manager
@@ -163,8 +181,8 @@ extension FactoryRegistration {
     /// Registers a new factory scope.
     /// - Parameter: - scope: New scope
     internal func register(scope: Scope?) {
-        defer { globalRecursiveLock.unlock()  }
-        globalRecursiveLock.lock()
+        defer { container.manager.lock.unlock()  }
+        container.manager.lock.lock()
         container.unsafeCheckAutoRegistration()
         let manager = container.manager
         if var options = manager.options[key] {
@@ -220,8 +238,8 @@ extension FactoryRegistration {
         guard options != .none else {
             return
         }
-        defer { globalRecursiveLock.unlock()  }
-        globalRecursiveLock.lock()
+        defer { container.manager.lock.unlock()  }
+        container.manager.lock.lock()
         let manager = container.manager
         switch options {
         case .all:
@@ -230,10 +248,10 @@ extension FactoryRegistration {
             manager.registrations.removeValue(forKey: key)
             manager.options.removeValue(forKey: key)
         case .context:
-            self.options {
-                $0.argumentContexts = nil
-                $0.contexts = nil
-            }
+            var options = manager.options[key] ?? FactoryOptions()
+            options.argumentContexts = nil
+            options.contexts = nil
+            manager.options[key] = options
         case .none:
             break
         case .registration:
@@ -246,8 +264,8 @@ extension FactoryRegistration {
 
     /// Support function for options mutation.
     internal func options(mutate: (_ options: inout FactoryOptions) -> Void) {
-        defer { globalRecursiveLock.unlock()  }
-        globalRecursiveLock.lock()
+        defer { container.manager.lock.unlock()  }
+        container.manager.lock.lock()
         container.unsafeCheckAutoRegistration()
         let manager = container.manager
         var options = manager.options[key] ?? FactoryOptions()
@@ -284,6 +302,7 @@ public enum FactoryResetOptions {
 }
 
 internal struct FactoryOptions {
+    /// 
     /// Managed scope for this factory instance
     var scope: Scope?
     /// Scope cache value also based on ParameterFactory parameter

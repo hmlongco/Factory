@@ -33,8 +33,8 @@ internal let globalResolverKey: StaticString = "*"
 
 #if DEBUG
 /// Internal variables used for debugging
-nonisolated(unsafe) internal var globalCircularDependencyKeys: Set<FactoryKey> = []
 nonisolated(unsafe) internal var globalCircularDependencyTesting = true
+nonisolated(unsafe) internal var globalCircularDependencyKeys: Set<FactoryKey> = []
 nonisolated(unsafe) internal var globalLogger: (String) -> Void = { print($0) }
 nonisolated(unsafe) internal var globalTraceFlag: Bool = false
 nonisolated(unsafe) internal var globalTraceResolutions: [String] = []

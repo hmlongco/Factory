@@ -281,7 +281,7 @@ public final nonisolated class ContainerManager: @unchecked Sendable {
     }
 
     internal func isEmpty(_ options: FactoryResetOptions) -> Bool {
-        globalRecursiveLock.withLock {
+        lock.withLock {
             switch options {
             case .all:
                 return registrations.isEmpty && cache.isEmpty && unsafeContextsAreEmpty()
@@ -322,6 +322,9 @@ public final nonisolated class ContainerManager: @unchecked Sendable {
     /// Flag indicating auto registration is in process.
     internal var autoRegistering = false
 
+    /// Internal lock for this container. Recursive since auto registration block may trigger additional changes to container.
+    internal var lock = RecursiveLock()
+
     /// Internal state value structure
     internal struct InternalState {
         /// Flag indicating auto registration check needs to be performed and executed if needed.
@@ -340,7 +343,7 @@ extension ContainerManager {
 
     /// Resets the Container to its original state, removing all registrations and clearing all scope caches.
     public func reset(options: FactoryResetOptions = .all) {
-        globalRecursiveLock.withLock {
+        lock.withLock {
             switch options {
             case .all:
                 self.registrations.removeAll(keepingCapacity: true)
@@ -367,7 +370,7 @@ extension ContainerManager {
 
     /// Clears any cached values associated with a specific scope, leaving the other scope caches intact.
     public func reset(scope: Scope) {
-        globalRecursiveLock.withLock {
+        lock.withLock {
             switch scope {
             case is Scope.Singleton:
                 #if DEBUG
@@ -382,14 +385,14 @@ extension ContainerManager {
 
     /// Test function pushes the current registration and cache states
     public func push() {
-        globalRecursiveLock.withLock {
+        lock.withLock {
             stack.append((registrations, options, cache.cache, state))
         }
     }
 
     /// Test function pops and restores a previously pushed registration and cache state
     public func pop() {
-        globalRecursiveLock.withLock {
+        lock.withLock {
             if let values = stack.popLast() {
                 registrations = values.0
                 options = values.1
@@ -428,7 +431,7 @@ public protocol AutoRegistering {
 }
 
 extension ManagedContainer {
-    /// Performs autoRegistration check. Function is unsafe as it assume we're already behind the globalRecursiveLock.
+    /// Performs autoRegistration check. Function is unsafe as it assume we're already behind the required lock.
     internal func unsafeCheckAutoRegistration() {
         if manager.state.autoRegistrationCheckNeeded {
             manager.state.autoRegistrationCheckNeeded = false

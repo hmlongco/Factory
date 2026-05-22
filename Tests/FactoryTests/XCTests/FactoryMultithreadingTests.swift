@@ -8,10 +8,21 @@ final class FactoryMultithreadingTests: XCTestCase, @unchecked Sendable {
     let qc = DispatchQueue(label: "C", qos: .background, attributes: .concurrent)
     let qd = DispatchQueue(label: "E", qos: .background, attributes: .concurrent)
 
+    var globalCircularDependencyTestingState: Bool = false
+
     override func setUp() {
         super.setUp()
         MultiThreadedContainer.shared.reset()
         iterations = 0
+
+        globalCircularDependencyTestingState = globalCircularDependencyTesting
+        globalCircularDependencyTesting = false
+    }
+
+    override func tearDown() {
+        super.tearDown()
+
+        globalCircularDependencyTesting = globalCircularDependencyTestingState
     }
 
     func testMultiThreading() throws {
