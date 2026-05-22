@@ -210,7 +210,7 @@ extension ManagedContainer {
     }
     /// Defines a decorator for the container. This decorator will see every dependency resolved by this container.
     public func decorator(_ decorator: ((Any) -> ())?) {
-        globalVariableLock.withLock {
+        manager.lock.withLock {
             manager.state.decorator = decorator
         }
     }
@@ -313,11 +313,11 @@ public final nonisolated class ContainerManager: @unchecked Sendable {
     /// Scope cache for Factory's managed by this container.
     internal var cache: Scope.Cache = Scope.Cache(minimumCapacity: 256)
 
-    /// Push/Pop stack for registrations, options, cache, and so on.
-    internal var stack: [(FactoryOptionsMap, Scope.Cache.CacheMap, InternalState)] = []
-
     /// Internal state values for reset, push/pop, etc.
     internal var state: InternalState = .init()
+
+    /// Push/Pop stack for registrations, options, cache, and so on.
+    internal var stack: [(FactoryOptionsMap, Scope.Cache.CacheMap, InternalState)] = []
 
     /// Flag indicating auto registration is in process.
     internal var autoRegistering = false
@@ -331,11 +331,11 @@ public final nonisolated class ContainerManager: @unchecked Sendable {
         internal var autoRegistrationCheckNeeded = true
         /// Internal closure decorates all factory resolutions for this container.
         internal var decorator: ((Any) -> ())?
-        // Default scope
+        /// Default scope
         internal var defaultScope: Scope?
-        // Graph scope enabled
+        /// Graph scope enabled
         internal var hasGraphScope: Bool = false
-        // Default promise triggers error flag
+        /// Default promise triggers error flag
         internal var promiseTriggersError: Bool = FactoryContext.current.isDebug && !FactoryContext.current.isPreview
     }
 

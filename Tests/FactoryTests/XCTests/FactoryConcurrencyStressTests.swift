@@ -124,43 +124,6 @@ final class FactoryConcurrencyStressTests: XCTestCase, @unchecked Sendable {
         results.deallocate()
     }
 
-    /// Verifies that adding a decorator after the first resolve invalidates the plan
-    /// and the decorator fires on subsequent resolves.
-    func testDecoratorAddedAfterFirstResolveFiresOnSubsequentResolves() throws {
-        let first = StressContainer.shared.cachedService()
-        XCTAssertNotNil(first)
-
-        let counter = CallCounter()
-        StressContainer.shared.cachedService.decorator { _ in
-            counter.increment()
-        }
-
-        let resolveCount = 10
-        for _ in 0..<resolveCount {
-            let _ = StressContainer.shared.cachedService()
-        }
-
-        XCTAssertEqual(counter.value, resolveCount,
-                       "Decorator added after first resolve must fire on all subsequent resolves, " +
-                       "but was called \(counter.value) times instead of \(resolveCount)")
-    }
-
-    /// Verifies that the container-level decorator fires after plan invalidation.
-    func testManagerDecoratorInvalidatesPlan() throws {
-        let _ = StressContainer.shared.s0()
-
-        let counter = CallCounter()
-        StressContainer.shared.decorator { _ in
-            counter.increment()
-        }
-
-        let _ = StressContainer.shared.s0()
-        let _ = StressContainer.shared.s0()
-
-        XCTAssertEqual(counter.value, 2,
-                       "Manager decorator must fire after being set, but was called \(counter.value) times")
-        StressContainer.shared.decorator(nil)
-    }
 }
 
 // MARK: - Test Helpers

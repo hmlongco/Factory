@@ -54,9 +54,15 @@ public nonisolated struct FactoryRegistration<P,T> {
         let manager: ContainerManager = container.manager
 
         manager.lock.lock()
-        container.unsafeCheckAutoRegistration()
-        let options: FactoryOptions? = manager.options[key]
+
+        if manager.state.autoRegistrationCheckNeeded {
+            container.unsafeCheckAutoRegistration()
+        }
+
+        let options: FactoryOptions? = manager.options[key] 
         let scope: Scope? = options?.scope ?? manager.defaultScope
+        let decorator: ((Any) -> ())? = manager.state.decorator
+
         manager.lock.unlock()
 
         #if DEBUG
@@ -113,8 +119,8 @@ public nonisolated struct FactoryRegistration<P,T> {
         Scope.graph.enter()
 
         if let scope {
-            let parameterizedKey = options?.scopeOnParameters == true ? key.parameterized(parameters) : key
-            (instance, instantiated) = scope.resolve(using: manager.cache, key: parameterizedKey, ttl: options?.ttl, factory: { current(parameters) })
+            let pKey = options?.scopeOnParameters == true ? key.parameterized(parameters) : key
+            (instance, instantiated) = scope.resolve(using: manager.cache, key: pKey, ttl: options?.ttl, factory: { current(parameters) })
         } else {
             (instance, instantiated) = (current(parameters), true)
         }
@@ -147,9 +153,7 @@ public nonisolated struct FactoryRegistration<P,T> {
             decorator(instance, instantiated)
         }
 
-        if let decorator = manager.state.decorator {
-            decorator(instance)
-        }
+        decorator?(instance)
 
         return instance
     }
