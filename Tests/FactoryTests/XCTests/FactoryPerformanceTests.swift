@@ -26,12 +26,10 @@ private final class Leaf1 {
 }
 private final class Leaf2 {
     @Injected(\PerfContainer.leaf3) var d
+    @Injected(\PerfContainer.leaf3) var e
+    @Injected(\PerfContainer.leaf3) var f
+    @Injected(\PerfContainer.leaf3) var g
     var total: Int = 0
-    init() {
-        for i in 0..<10 {
-            total += i
-        }
-    }
 }
 private final class Leaf3 {
     var total: Int = 0
@@ -44,32 +42,32 @@ private final class Leaf3 {
 private final class Mid1 {
     @Injected(\PerfContainer.leaf1) var a
     var total: Int = 0
-    init() {
-        for i in 0..<10 {
-            total += i
-        }
-    }
+//    init() {
+//        for i in 0..<10 {
+//            total += i
+//        }
+//    }
 }
 private final class Mid2 {
     @Injected(\PerfContainer.leaf2) var b
     @Injected(\PerfContainer.leaf2) var c
     @Injected(\PerfContainer.leaf2) var d
     var total: Int = 0
-    init() {
-        for i in 0..<10 {
-            total += i
-        }
-    }
+//    init() {
+//        for i in 0..<10 {
+//            total += i
+//        }
+//    }
 }
 private final class Root {
     @Injected(\PerfContainer.mid1) var m1
     @Injected(\PerfContainer.mid2) var m2
     var total: Int = 0
-    init() {
-        for i in 0..<10 {
-            total += i
-        }
-    }
+//    init() {
+//        for i in 0..<10 {
+//            total += i
+//        }
+//    }
 }
 
 /// Dedicated container for the performance tests so registrations, scope caches,
@@ -102,30 +100,34 @@ final class FactoryPerformanceTests: XCTestCase {
 
     /// Raw multi-threaded throughput. Prints ns/op per run so you can diff the
     /// console output between `main` and `locks` directly.
+    @available(iOS 15.0, *)
     func testMultiThreadedResolutionThroughput() {
         let threads = ProcessInfo.processInfo.activeProcessorCount
         let perThread = 10_000
 
         // Warm up — let modifiers fire, autoRegister settle, caches prime.
-        for _ in 0..<1_000 { _ = PerfContainer.shared.root() }
+        for _ in 0..<10 { _ = PerfContainer.shared.root() }
 
         print("---- FactoryPerformanceTests ----")
         for run in 1...3 {
-            let (wallMs, nsPerOp) = measureOnce(threads: threads, perThread: perThread)
-            print("run\(run)\tthreads=\(threads)\titers=\(threads * perThread)\twall=\(wallMs)ms\tns/op=\(String(format: "%.1f", nsPerOp))")
+            let (wallMs, msPerOp) = measureOnce(threads: threads, perThread: perThread)
+            let iters = (threads * perThread).formatted(.number)
+            let wall = wallMs.formatted(.number)
+            let op = msPerOp.formatted(.number.precision(.fractionLength(4)))
+            print("run\(run)\tthreads=\(threads)\titers=\(iters)\twall=\(wall)ms\top=\(op)ms")
         }
         print("---- FactoryPerformanceTests ----")
-   }
+    }
 
     // MARK: - Helpers
 
-    private func measureOnce(threads: Int, perThread: Int) -> (wallMs: UInt64, nsPerOp: Double) {
+    private func measureOnce(threads: Int, perThread: Int) -> (wallMs: UInt64, msPerOp: Double) {
         let start = DispatchTime.now()
         DispatchQueue.concurrentPerform(iterations: threads) { _ in
             for _ in 0..<perThread { _ = PerfContainer.shared.root() }
         }
         let ns = DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds
         let total = threads * perThread
-        return (ns / 1_000_000, Double(ns) / Double(total))
+        return (ns / 1_000_000, (Double(ns) / Double(total)) / 1_000_000)
     }
 }
