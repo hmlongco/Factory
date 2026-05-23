@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(swift build *)",
-      "Bash(swift test *)"
+      "Bash(swift test *)",
+      "Bash(git -C /Users/michael/Dropbox/Projects/iOS/OSS/Factory/Factory branch --show-current)",
+      "Bash(git -C /Users/michael/Dropbox/Projects/iOS/OSS/Factory/Factory status --short)"
     ]
   }
 }

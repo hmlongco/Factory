@@ -59,7 +59,7 @@ public nonisolated struct FactoryRegistration<P,T> {
             container.unsafeCheckAutoRegistration()
         }
 
-        let options: FactoryOptions? = manager.options[key] 
+        let options: FactoryOptions? = manager.options[key]
         let scope: Scope? = options?.scope ?? manager.defaultScope
         let decorator: ((Any) -> ())? = manager.state.decorator
 
