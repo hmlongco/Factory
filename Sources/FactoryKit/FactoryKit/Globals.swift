@@ -26,6 +26,30 @@
 
 import Foundation
 
+// MARK: - Cross-Platform Timestamp
+
+@inline(__always)
+internal func currentTimestamp() -> Double {
+    var ts = timespec()
+    clock_gettime(CLOCK_MONOTONIC, &ts)
+    return Double(ts.tv_sec) + Double(ts.tv_nsec) / 1_000_000_000
+}
+
+// MARK: - Cross-Platform pthread Key
+
+internal func makePthreadKey(destructor: @convention(c) (UnsafeMutableRawPointer) -> Void) -> pthread_key_t {
+    var key: pthread_key_t = 0
+    #if canImport(Darwin)
+    pthread_key_create(&key, destructor)
+    #else
+    pthread_key_create(&key) { raw in
+        guard let raw else { return }
+        destructor(raw)
+    }
+    #endif
+    return key
+}
+
 // MARK: - Internal Variables
 
 /// Internal key used for Resolver mode
@@ -33,17 +57,73 @@ internal let globalResolverKey: StaticString = "*"
 
 #if DEBUG
 /// Internal variables used for debugging
-nonisolated(unsafe) internal var globalCircularDependencyKeys: Set<FactoryKey> = []
 nonisolated(unsafe) internal var globalCircularDependencyTesting = true
 nonisolated(unsafe) internal var globalLogger: (String) -> Void = { print($0) }
 nonisolated(unsafe) internal var globalTraceFlag: Bool = false
-nonisolated(unsafe) internal var globalTraceResolutions: [String] = []
+
+// MARK: - Thread-Local Debug State
+
+/// Per-thread circular dependency tracking and trace resolutions.
+/// These must be thread-local because factory closures now execute outside the global lock,
+/// meaning multiple threads can be mid-resolution simultaneously.
+/// Both values share a single TLS key to minimize pthread_getspecific calls.
+internal enum ThreadLocalDebugState {
+    /// Combined storage for all per-thread debug state.
+    private final class Storage {
+        var circularDependencyKeys: Set<FactoryKey> = []
+        var traceResolutions: [String] = []
+    }
+
+    private static let storageKey: pthread_key_t = makePthreadKey { raw in
+        Unmanaged<Storage>.fromOpaque(raw).release()
+    }
+
+    @inline(__always)
+    private static func getStorage() -> Storage? {
+        guard let raw = pthread_getspecific(storageKey) else { return nil }
+        return Unmanaged<Storage>.fromOpaque(raw).takeUnretainedValue()
+    }
+
+    @inline(__always)
+    private static func getOrCreateStorage() -> Storage {
+        if let storage = getStorage() { return storage }
+        let storage = Storage()
+        pthread_setspecific(storageKey, Unmanaged.passRetained(storage).toOpaque())
+        return storage
+    }
+
+    internal static var circularDependencyKeys: Set<FactoryKey> {
+        get { getStorage()?.circularDependencyKeys ?? [] }
+        set { getOrCreateStorage().circularDependencyKeys = newValue }
+    }
+
+    internal static var traceResolutions: [String] {
+        get { getStorage()?.traceResolutions ?? [] }
+        set { getOrCreateStorage().traceResolutions = newValue }
+    }
+
+    internal static func reset() {
+        guard let storage = getStorage() else { return }
+        storage.circularDependencyKeys = []
+        storage.traceResolutions = []
+    }
+}
+
+/// Convenience accessors maintaining the old global naming convention
+internal var globalCircularDependencyKeys: Set<FactoryKey> {
+    get { ThreadLocalDebugState.circularDependencyKeys }
+    set { ThreadLocalDebugState.circularDependencyKeys = newValue }
+}
+
+internal var globalTraceResolutions: [String] {
+    get { ThreadLocalDebugState.traceResolutions }
+    set { ThreadLocalDebugState.traceResolutions = newValue }
+}
 
 /// Triggers fatalError after resetting enough stuff so unit tests can continue
 internal func resetAndTriggerFatalError(_ message: String, _ file: StaticString, _ line: UInt) -> Never {
-    globalCircularDependencyKeys = []
+    ThreadLocalDebugState.reset()
     globalRecursiveLock = RecursiveLock()
-    globalTraceResolutions = []
     Scope.graph.reset()
     triggerFatalError(message, file, line) // GOES BOOM
 }
