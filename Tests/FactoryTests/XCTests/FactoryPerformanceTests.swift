@@ -19,7 +19,7 @@ private final class Leaf1 {
     @Injected(\PerfContainer.leaf2) var d
     var total: Int = 0
     init() {
-        for i in 0..<10 {
+        for i in 0..<10000 {
             total += i
         }
     }
@@ -30,6 +30,11 @@ private final class Leaf2 {
     @Injected(\PerfContainer.leaf3) var f
     @Injected(\PerfContainer.leaf3) var g
     var total: Int = 0
+    init() {
+        for i in 0..<10 {
+            total += i
+        }
+    }
 }
 private final class Leaf3 {
     var total: Int = 0
@@ -42,32 +47,17 @@ private final class Leaf3 {
 private final class Mid1 {
     @Injected(\PerfContainer.leaf1) var a
     var total: Int = 0
-//    init() {
-//        for i in 0..<10 {
-//            total += i
-//        }
-//    }
 }
 private final class Mid2 {
     @Injected(\PerfContainer.leaf2) var b
     @Injected(\PerfContainer.leaf2) var c
     @Injected(\PerfContainer.leaf2) var d
     var total: Int = 0
-//    init() {
-//        for i in 0..<10 {
-//            total += i
-//        }
-//    }
 }
 private final class Root {
     @Injected(\PerfContainer.mid1) var m1
     @Injected(\PerfContainer.mid2) var m2
     var total: Int = 0
-//    init() {
-//        for i in 0..<10 {
-//            total += i
-//        }
-//    }
 }
 
 /// Dedicated container for the performance tests so registrations, scope caches,
@@ -89,12 +79,10 @@ final class FactoryPerformanceTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        PerfContainer.shared.manager.reset()
         globalCircularDependencyTesting = false
     }
     override func tearDown() {
         super.tearDown()
-        PerfContainer.shared.manager.reset()
         globalCircularDependencyTesting = true
     }
 
@@ -102,11 +90,8 @@ final class FactoryPerformanceTests: XCTestCase {
     /// console output between `main` and `locks` directly.
     @available(iOS 15.0, *)
     func testMultiThreadedResolutionThroughput() {
-        let threads = ProcessInfo.processInfo.activeProcessorCount
+        let threads = ProcessInfo.processInfo.activeProcessorCount - 1
         let perThread = 1_000
-
-        // Warm up — let modifiers fire, autoRegister settle, caches prime.
-        for _ in 0..<10 { _ = PerfContainer.shared.root() }
 
         print("---- FactoryPerformanceTests ----")
         for run in 1...3 {
@@ -123,6 +108,7 @@ final class FactoryPerformanceTests: XCTestCase {
 
     private func measureOnce(threads: Int, perThread: Int) -> (wallMs: UInt64, msPerOp: Double) {
         let start = DispatchTime.now()
+        PerfContainer.shared.manager.reset()
         DispatchQueue.concurrentPerform(iterations: threads) { _ in
             for _ in 0..<perThread { _ = PerfContainer.shared.root() }
         }

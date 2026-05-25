@@ -1,5 +1,10 @@
 # Factory Changelog
 
+## 3.0.5
+
+* Fix additional data race issues in @LazyInjected and @WeakLazyInjected on concurrent first access #362
+* Add performance tests for locking and resolution #365
+
 ## 3.0.4
 
 * Fix data race in @LazyInjected and @WeakLazyInjected on concurrent first access #362
