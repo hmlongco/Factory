@@ -8,7 +8,7 @@ final class FactoryMultithreadingTests: XCTestCase, @unchecked Sendable {
     let qc = DispatchQueue(label: "C", qos: .background, attributes: .concurrent)
     let qd = DispatchQueue(label: "E", qos: .background, attributes: .concurrent)
 
-    var globalCircularDependencyTestingState: Bool = false
+    var globalCircularDependencyTestingState = false
 
     override func setUp() {
         super.setUp()
@@ -91,12 +91,12 @@ final class FactoryMultithreadingTests: XCTestCase, @unchecked Sendable {
 
         // threads not quite done yet
 
-        while interationValue() < 80008 {
+        while interationValue() < 100010 {
             Thread.sleep(forTimeInterval: 0.2)
         }
 
         print(iterations)
-        XCTAssertEqual(iterations, 80008)
+        XCTAssertEqual(iterations, 100010)
 
     }
 
@@ -154,9 +154,9 @@ fileprivate class D {
     }
 }
 
-fileprivate class E {
+fileprivate class E: @unchecked Sendable {
     @LazyInjected(\MultiThreadedContainer.d) var d: D
-    init() {}
+    init() { Task { test() }}
     func test() {
         d.test()
         increment()
