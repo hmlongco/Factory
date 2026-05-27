@@ -391,7 +391,7 @@ extension ContainerManager {
     /// Test function pushes the current registration and cache states
     public func push() {
         lock.withLock {
-            stack.append((options, cache.cache, state))
+            stack.append((options, cache.clone().cache, state))
         }
     }
 
@@ -400,7 +400,7 @@ extension ContainerManager {
         lock.withLock {
             if let values = stack.popLast() {
                 options = values.0
-                cache.cache = values.1
+                cache.assign(map: values.1)
                 state = values.2
             }
         }

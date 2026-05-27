@@ -68,11 +68,35 @@ public class Scope: @unchecked Sendable {
                 return (cached, false)
             }
         }
-        let instance = factory()
-        if let box = box(instance) {
-             cache.set(value: box, forKey: key)
+
+        let keyLock = lock.withLock {
+            locks[key, default: CrossPlatformLock()]
         }
-        return (instance, true)
+
+        let result: (instance: T, cached: Bool) = keyLock.withLock {
+            if let box = cache.value(forKey: key), let cached: T = unboxed(box: box) {
+                if let ttl = ttl {
+                    let now = CFAbsoluteTimeGetCurrent()
+                    if (box.timestamp + ttl) > now {
+                        cache.set(timestamp: now, forKey: key)
+                        return (cached, false)
+                    }
+                } else {
+                    return (cached, false)
+                }
+            }
+            let instance = factory()
+            if let box = box(instance) {
+                cache.set(value: box, forKey: key)
+            }
+            return (instance, true)
+        }
+
+        lock.withLock {
+            _ = locks.removeValue(forKey: key)
+        }
+
+        return (result.instance, result.cached)
     }
 
     /// Internal function returns unboxed value if it exists
@@ -92,6 +116,8 @@ public class Scope: @unchecked Sendable {
     }
 
     internal let scopeID: UUID = UUID()
+    internal let lock = CrossPlatformLock()
+    internal var locks: [FactoryKey: CrossPlatformLock] = [:]
 
 }
 
@@ -118,8 +144,14 @@ extension Scope {
             super.init()
         }
         internal override func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, factory: () -> T) -> (T, Bool) {
-            // ignore container's cache in favor of our own
-            return super.resolve(using: self.cache, key: key, ttl: ttl, factory: factory)
+            if let box = self.cache.value(forKey: key), let cached: T = unboxed(box: box) {
+                return (cached, false)
+            }
+            let instance = factory()
+            if let box = box(instance) {
+                self.cache.set(value: box, forKey: key)
+            }
+            return (instance, true)
         }
         // call to enter a new resolution level
         internal func enter() {
@@ -147,7 +179,6 @@ extension Scope {
         public private(set) var depth: Int = 0
         /// Private shared cache
         internal var cache = Cache()
-        internal let lock = CrossPlatformLock()
     }
 
     /// A reference to the default shared scope manager.
@@ -273,6 +304,9 @@ extension Scope {
         }
         internal func clone() -> Cache {
             lock.withReadLock { .init(copy: cache) }
+        }
+        internal func assign(map: CacheMap) {
+            lock.withWriteLock { self.cache = map }
         }
         #if DEBUG
         internal var isEmpty: Bool {
