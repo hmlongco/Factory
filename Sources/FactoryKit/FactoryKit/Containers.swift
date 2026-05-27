@@ -211,7 +211,7 @@ extension ManagedContainer {
     /// Defines a decorator for the container. This decorator will see every dependency resolved by this container.
     public func decorator(_ decorator: ((Any) -> ())?) {
         manager.lock.withLock {
-            manager.state.decorator = decorator
+            manager.state.defaultDecorator = decorator
         }
     }
     /// Defines a thread safe access mechanism to reset the container.
@@ -330,7 +330,7 @@ public final nonisolated class ContainerManager: @unchecked Sendable {
         /// Flag indicating auto registration check needs to be performed and executed if needed.
         internal var autoRegistrationCheckNeeded = true
         /// Internal closure decorates all factory resolutions for this container.
-        internal var decorator: ((Any) -> ())?
+        internal var defaultDecorator: ((Any) -> ())?
         /// Default scope
         internal var defaultScope: Scope?
         /// Graph scope enabled

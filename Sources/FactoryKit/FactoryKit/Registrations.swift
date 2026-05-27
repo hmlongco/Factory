@@ -61,7 +61,7 @@ public nonisolated struct FactoryRegistration<P,T> {
 
         let options: FactoryOptions? = manager.options[key]
         let scope: Scope? = options?.scope ?? manager.defaultScope
-        let decorator: ((Any) -> ())? = manager.state.decorator
+        let decorator: ((Any) -> ())? = manager.state.defaultDecorator
 
         manager.lock.unlock()
 
@@ -151,9 +151,9 @@ public nonisolated struct FactoryRegistration<P,T> {
 
         if let decorator = options?.decorator as? (T, Bool) -> Void {
             decorator(instance, instantiated)
+        } else {
+            decorator?(instance)
         }
-
-        decorator?(instance)
 
         return instance
     }
