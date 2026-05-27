@@ -68,25 +68,15 @@ internal let globalVariableLock = CrossPlatformLock()
 /// Custom lock using os_unfair_lock on Apple platforms.
 internal final class CrossPlatformLock: NSLocking, @unchecked Sendable {
 
-    init() {
-        oslock = UnsafeMutablePointer<os_unfair_lock>.allocate(capacity: 1)
-        oslock.initialize(to: .init())
-    }
-
-    deinit {
-        oslock.deinitialize(count: 1)
-        oslock.deallocate()
-    }
+    private var _lock = os_unfair_lock()
 
     @inlinable @inline(__always) func lock() {
-        os_unfair_lock_lock(oslock)
+        withUnsafeMutablePointer(to: &_lock) { os_unfair_lock_lock($0) }
     }
 
     @inlinable @inline(__always) func unlock() {
-        os_unfair_lock_unlock(oslock)
+        withUnsafeMutablePointer(to: &_lock) { os_unfair_lock_unlock($0) }
     }
-
-    private let oslock: UnsafeMutablePointer<os_unfair_lock>
 
 }
 #else

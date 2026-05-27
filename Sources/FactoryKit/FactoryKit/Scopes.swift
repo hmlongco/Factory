@@ -24,6 +24,7 @@
 // THE SOFTWARE.
 //
 
+import Atomics
 import CoreFoundation
 import Foundation
 
@@ -116,7 +117,7 @@ public class Scope: @unchecked Sendable {
     }
 
     internal let scopeID: UUID = UUID()
-    internal let lock = CrossPlatformLock()
+    internal let lock: NSLocking = CrossPlatformLock()
     internal var locks: [FactoryKey: CrossPlatformLock] = [:]
 
 }
@@ -155,28 +156,26 @@ extension Scope {
         }
         // call to enter a new resolution level
         internal func enter() {
-            lock.withLock {
-                depth += 1
-            }
+            _depth.wrappingIncrement(ordering: .acquiringAndReleasing)
         }
         // call to leave the current resolution level
         internal func leave() {
-            lock.withLock {
-                depth -= 1
-                if depth == 0 {
-                    cache.reset()
-                }
+            let newDepth = _depth.wrappingDecrementThenLoad(ordering: .acquiringAndReleasing)
+            if newDepth == 0 {
+                cache.reset()
             }
         }
         // reset graph scope
         internal func reset() {
-            lock.withLock {
-                depth = 0
-                cache.reset()
-            }
+            _depth.store(0, ordering: .releasing)
+            cache.reset()
         }
         // depth of current resolution level
-        public private(set) var depth: Int = 0
+        public var depth: Int {
+            _depth.load(ordering: .acquiring)
+        }
+        /// Atomic backing for `depth`.
+        private let _depth = ManagedAtomic<Int>(0)
         /// Private shared cache
         internal var cache = Cache()
     }
