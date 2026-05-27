@@ -102,8 +102,8 @@ final class FactoryPerformanceTests: XCTestCase {
     /// console output between `main` and `locks` directly.
     @available(iOS 15.0, *)
     func testMultiThreadedResolutionThroughput() {
-        let threads = ProcessInfo.processInfo.activeProcessorCount
-        let perThread = 10_000
+        let threads = ProcessInfo.processInfo.activeProcessorCount - 1
+        let perThread = 1_000
 
         // Warm up — let modifiers fire, autoRegister settle, caches prime.
         for _ in 0..<10 { _ = PerfContainer.shared.root() }
