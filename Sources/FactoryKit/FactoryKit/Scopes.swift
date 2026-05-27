@@ -156,11 +156,11 @@ extension Scope {
         }
         // call to enter a new resolution level
         internal func enter() {
-            _depth.wrappingIncrement(ordering: .acquiringAndReleasing)
+            _depth.wrappingIncrement(ordering: .relaxed)
         }
         // call to leave the current resolution level
         internal func leave() {
-            let newDepth = _depth.wrappingDecrementThenLoad(ordering: .acquiringAndReleasing)
+            let newDepth = _depth.wrappingDecrementThenLoad(ordering: .relaxed)
             if newDepth == 0 {
                 cache.reset()
             }
