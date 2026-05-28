@@ -32,7 +32,7 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.1.0"),
+        .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.5.0"),
         .package(url: "https://github.com/apple/swift-atomics.git", from: "1.2.0"),
     ],
     targets: [
