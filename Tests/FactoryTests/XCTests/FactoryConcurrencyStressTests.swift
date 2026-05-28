@@ -16,7 +16,7 @@ final class FactoryConcurrencyStressTests: XCTestCase, @unchecked Sendable {
         let group = DispatchGroup()
         let queue = DispatchQueue(label: "singleton-stress", attributes: .concurrent)
 
-        let results = UnsafeMutableBufferPointer<ObjectIdentifier?>.allocate(capacity: threadCount)
+        nonisolated(unsafe) let results = UnsafeMutableBufferPointer<ObjectIdentifier?>.allocate(capacity: threadCount)
         results.initialize(repeating: nil)
 
         for i in 0..<threadCount {
@@ -72,7 +72,7 @@ final class FactoryConcurrencyStressTests: XCTestCase, @unchecked Sendable {
         // Pre-warm to establish the cached instance
         let expected = ObjectIdentifier(StressContainer.shared.cachedService())
 
-        let failures = UnsafeMutablePointer<Int>.allocate(capacity: 1)
+        nonisolated(unsafe) let failures = UnsafeMutablePointer<Int>.allocate(capacity: 1)
         failures.initialize(to: 0)
         let failureLock = NSLock()
 
@@ -103,7 +103,7 @@ final class FactoryConcurrencyStressTests: XCTestCase, @unchecked Sendable {
         let group = DispatchGroup()
         let queue = DispatchQueue(label: "graph-stress", attributes: .concurrent)
 
-        let results = UnsafeMutableBufferPointer<Bool>.allocate(capacity: threadCount)
+        nonisolated(unsafe) let results = UnsafeMutableBufferPointer<Bool>.allocate(capacity: threadCount)
         results.initialize(repeating: false)
 
         for i in 0..<threadCount {
@@ -160,7 +160,7 @@ private class StressService {
 }
 
 private class CountedService {
-    nonisolated(unsafe) private static let _lock = NSLock()
+    private static let _lock = NSLock()
     nonisolated(unsafe) private static var _count = 0
     static var creationCount: Int {
         _lock.lock()
