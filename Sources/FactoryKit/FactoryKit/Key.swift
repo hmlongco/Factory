@@ -41,7 +41,7 @@ internal struct FactoryKey: Hashable {
     internal func hash(into hasher: inout Hasher) {
         hasher.combine(self.type)
         if key.hasPointerRepresentation {
-            hasher.combine(bytes: UnsafeRawBufferPointer(start: key.utf8Start, count: key.utf8CodeUnitCount))
+            hasher.combine(UInt(bitPattern: key.utf8Start))
         } else {
             hasher.combine(key.unicodeScalar.value)
         }

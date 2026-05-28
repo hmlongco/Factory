@@ -210,8 +210,8 @@ extension ManagedContainer {
     }
     /// Defines a decorator for the container. This decorator will see every dependency resolved by this container.
     public func decorator(_ decorator: ((Any) -> ())?) {
-        globalVariableLock.withLock {
-            manager.state.decorator = decorator
+        manager.lock.withLock {
+            manager.state.defaultDecorator = decorator
         }
     }
     /// Defines a thread safe access mechanism to reset the container.
@@ -281,30 +281,30 @@ public final nonisolated class ContainerManager: @unchecked Sendable {
     }
 
     internal func isEmpty(_ options: FactoryResetOptions) -> Bool {
-        globalRecursiveLock.withLock {
+        lock.withLock {
             switch options {
             case .all:
-                return registrations.isEmpty && cache.isEmpty && unsafeContextsAreEmpty()
+                return cache.isEmpty && unsafeRegistrationsAreEmpty() && unsafeContextsAreEmpty()
             case .context:
                 return unsafeContextsAreEmpty()
             case .none:
                 return true
             case .registration:
-                return registrations.isEmpty
+                return unsafeRegistrationsAreEmpty()
             case .scope:
                 return cache.isEmpty
             }
         }
     }
 
+    internal func unsafeRegistrationsAreEmpty() -> Bool {
+        options.allSatisfy { $1.registration == nil }
+    }
+
     internal func unsafeContextsAreEmpty() -> Bool {
         options.allSatisfy { $1.argumentContexts == nil && $1.contexts == nil }
     }
     #endif
-
-    /// Updated registrations for Factory's.
-    internal typealias FactoryMap = [FactoryKey:AnyFactory]
-    internal var registrations: FactoryMap = .init(minimumCapacity: 256)
 
     /// Updated options for Factory's.
     internal typealias FactoryOptionsMap = [FactoryKey:FactoryOptions]
@@ -313,24 +313,29 @@ public final nonisolated class ContainerManager: @unchecked Sendable {
     /// Scope cache for Factory's managed by this container.
     internal var cache: Scope.Cache = Scope.Cache(minimumCapacity: 256)
 
-    /// Push/Pop stack for registrations, options, cache, and so on.
-    internal var stack: [(FactoryMap, FactoryOptionsMap, Scope.Cache.CacheMap, InternalState)] = []
-
     /// Internal state values for reset, push/pop, etc.
     internal var state: InternalState = .init()
 
+    /// Push/Pop stack for registrations, options, cache, and so on.
+    internal var stack: [(FactoryOptionsMap, Scope.Cache.CacheMap, InternalState)] = []
+
     /// Flag indicating auto registration is in process.
     internal var autoRegistering = false
+
+    /// Internal lock for this container. Recursive since auto registration block may trigger additional changes to container.
+    internal var lock = RecursiveLock()
 
     /// Internal state value structure
     internal struct InternalState {
         /// Flag indicating auto registration check needs to be performed and executed if needed.
         internal var autoRegistrationCheckNeeded = true
         /// Internal closure decorates all factory resolutions for this container.
-        internal var decorator: ((Any) -> ())?
-        // Default scope
+        internal var defaultDecorator: ((Any) -> ())?
+        /// Default scope
         internal var defaultScope: Scope?
-        // Default promise triggers error flag
+        /// Graph scope enabled
+        internal var hasGraphScope: Bool = false
+        /// Default promise triggers error flag
         internal var promiseTriggersError: Bool = FactoryContext.current.isDebug && !FactoryContext.current.isPreview
     }
 
@@ -340,10 +345,9 @@ extension ContainerManager {
 
     /// Resets the Container to its original state, removing all registrations and clearing all scope caches.
     public func reset(options: FactoryResetOptions = .all) {
-        globalRecursiveLock.withLock {
+        lock.withLock {
             switch options {
             case .all:
-                self.registrations.removeAll(keepingCapacity: true)
                 self.options.removeAll(keepingCapacity: true)
                 self.cache.reset()
                 self.state = .init()
@@ -357,7 +361,11 @@ extension ContainerManager {
             case .none:
                 break
             case .registration:
-                self.registrations.removeAll(keepingCapacity: true)
+                for (key, option) in self.options {
+                    var mutable = option
+                    mutable.registration = nil
+                    self.options[key] = mutable
+                }
                 self.state.autoRegistrationCheckNeeded = true
             case .scope:
                 self.cache.reset()
@@ -367,7 +375,7 @@ extension ContainerManager {
 
     /// Clears any cached values associated with a specific scope, leaving the other scope caches intact.
     public func reset(scope: Scope) {
-        globalRecursiveLock.withLock {
+        lock.withLock {
             switch scope {
             case is Scope.Singleton:
                 #if DEBUG
@@ -382,19 +390,18 @@ extension ContainerManager {
 
     /// Test function pushes the current registration and cache states
     public func push() {
-        globalRecursiveLock.withLock {
-            stack.append((registrations, options, cache.cache, state))
+        lock.withLock {
+            stack.append((options, cache.clone().cache, state))
         }
     }
 
     /// Test function pops and restores a previously pushed registration and cache state
     public func pop() {
-        globalRecursiveLock.withLock {
+        lock.withLock {
             if let values = stack.popLast() {
-                registrations = values.0
-                options = values.1
-                cache.cache = values.2
-                state = values.3
+                options = values.0
+                cache.assign(map: values.1)
+                state = values.2
             }
         }
     }
@@ -428,7 +435,7 @@ public protocol AutoRegistering {
 }
 
 extension ManagedContainer {
-    /// Performs autoRegistration check. Function is unsafe as it assume we're already behind the globalRecursiveLock.
+    /// Performs autoRegistration check. Function is unsafe as it assume we're already behind the required lock.
     internal func unsafeCheckAutoRegistration() {
         if manager.state.autoRegistrationCheckNeeded {
             manager.state.autoRegistrationCheckNeeded = false

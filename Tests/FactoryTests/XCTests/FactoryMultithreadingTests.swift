@@ -6,12 +6,23 @@ final class FactoryMultithreadingTests: XCTestCase, @unchecked Sendable {
     let qa = DispatchQueue(label: "A", qos: .userInteractive, attributes: .concurrent)
     let qb = DispatchQueue(label: "B", qos: .userInitiated, attributes: .concurrent)
     let qc = DispatchQueue(label: "C", qos: .background, attributes: .concurrent)
-    let qd = DispatchQueue(label: "E", qos: .utility, attributes: .concurrent)
+    let qd = DispatchQueue(label: "E", qos: .background, attributes: .concurrent)
+
+    var globalCircularDependencyTestingState = false
 
     override func setUp() {
         super.setUp()
         MultiThreadedContainer.shared.reset()
         iterations = 0
+
+        globalCircularDependencyTestingState = globalCircularDependencyTesting
+        globalCircularDependencyTesting = false
+    }
+
+    override func tearDown() {
+        super.tearDown()
+
+        globalCircularDependencyTesting = globalCircularDependencyTestingState
     }
 
     func testMultiThreading() throws {
@@ -19,84 +30,74 @@ final class FactoryMultithreadingTests: XCTestCase, @unchecked Sendable {
         // basically tests that nothing locks up or crashes while doing registrations and resolutions.
         // behavior is pretty apparent if locks are disabled.
 
-        let group = DispatchGroup()
+        let expA = expectation(description: "A")
+        let expB = expectation(description: "B")
+        let expC = expectation(description: "C")
+        let expD = expectation(description: "D")
 
         for _ in 0...10000 {
-            group.enter()
             qa.async {
                 MultiThreadedContainer.shared.a.register { A(b: MultiThreadedContainer.shared.b()) }
-                group.leave()
             }
-            group.enter() // outer qa
-            group.enter() // nested qc
-            group.enter() // nested qd
             qa.async {
                 self.qc.async {
                     MultiThreadedContainer.shared.b.register { B(c: MultiThreadedContainer.shared.c()) }
-                    group.leave()
                 }
                 self.qd.async {
                     let b: B = MultiThreadedContainer.shared.b()
                     b.test()
-                    group.leave()
                 }
-                group.leave()
             }
-            group.enter()
             qc.async {
                 MultiThreadedContainer.shared.b.register { B(c: MultiThreadedContainer.shared.c()) }
-                group.leave()
             }
-            group.enter()
             qd.async {
                 let b: B = MultiThreadedContainer.shared.b()
                 b.test()
-                group.leave()
             }
-            group.enter()
             qa.async {
                 let a: A = MultiThreadedContainer.shared.a()
                 a.test()
-                group.leave()
             }
-            group.enter()
             qb.async {
                 let b: B = MultiThreadedContainer.shared.b()
                 b.test()
-                group.leave()
             }
-            group.enter()
             qb.async {
                 let d: D = MultiThreadedContainer.shared.d()
                 d.test()
-                group.leave()
             }
-            group.enter()
             qc.async {
                 let b: B = MultiThreadedContainer.shared.b()
                 b.test()
-                group.leave()
             }
-            group.enter() // outer qc
-            group.enter() // nested qd register
-            group.enter() // nested qd resolve
             qc.async {
                 self.qd.async {
                     MultiThreadedContainer.shared.e.register { E() }
-                    group.leave()
                 }
                 self.qd.async {
                     let e: E = MultiThreadedContainer.shared.e()
                     e.test()
-                    group.leave()
                 }
-                group.leave()
             }
         }
 
-        let result = group.wait(timeout: .now() + 60)
-        XCTAssertEqual(result, .success, "test timed out — stuck at \(interationValue())/80008 iterations")
-        XCTAssertEqual(iterations, 80008)
+        self.qa.async {  expA.fulfill() }
+        self.qb.async {  expB.fulfill() }
+        self.qc.async {  expC.fulfill() }
+        self.qd.async {  expD.fulfill() }
+
+        wait(for: [expA, expB, expC, expD], timeout: 60)
+
+        // threads not quite done yet
+
+        while interationValue() < 100010 {
+            Thread.sleep(forTimeInterval: 0.2)
+        }
+
+        print(iterations)
+        XCTAssertEqual(iterations, 100010)
+
     }
 
 }
@@ -153,9 +154,9 @@ fileprivate class D {
     }
 }
 
-fileprivate class E {
+fileprivate class E: @unchecked Sendable {
     @LazyInjected(\MultiThreadedContainer.d) var d: D
-    init() {}
+    init() { Task { test() }}
     func test() {
         d.test()
         increment()

@@ -2,12 +2,29 @@
 
 ## 3.1.0
 
-* Add FactoryMacro @Dependency macro for object resolution
-* Fix .onPreview/.onTest not working in Xcode previews #351
+* Reduce global lock contention when resolving "heavy" dependencies across multiple threads, see PR #365
+* Improve cache performance and reduce lock contention with r/w locks
+* Improve graph scope enter/leave performance with atomics
+* Improve key hash performance
+* Revises default decorator behavior to match that of default scope behavior (default unless overriden)
+
+## 3.0.5
+
+* Fix additional data race issues in @LazyInjected and @WeakLazyInjected on concurrent first access #362
+* Add performance tests for locking and resolution #365
+
+## 3.0.4
+
+* Fix data race in @LazyInjected and @WeakLazyInjected on concurrent first access #362
+* Fix potential CrossPlatformLock memory leak (missing deinit for heap-allocated lock storage) #362
+
+## 3.0.3
+
+* Remove .dynamic from FactoryTesting package definition #363
 
 ## 3.0.2
 
-* Add FactoryKitDynamic import library for modular builds
+* Added FactoryKitDynamic for multi-module support
 
 ## 3.0.1
 
@@ -129,7 +146,7 @@
 
 ## 2.3.1
 
-* Fix for SpinLock on Linux
+* Fix for CrossPlatformLock on Linux
 * Add action to test linux - Issue #113
 * Add various aliases to avoid external naming conflicts - Issue #154
 

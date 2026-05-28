@@ -24,6 +24,7 @@
 // THE SOFTWARE.
 //
 
+import Atomics
 import CoreFoundation
 import Foundation
 
@@ -68,11 +69,35 @@ public class Scope: @unchecked Sendable {
                 return (cached, false)
             }
         }
-        let instance = factory()
-        if let box = box(instance) {
-             cache.set(value: box, forKey: key)
+
+        let keyLock = lock.withLock {
+            locks[key, default: CrossPlatformLock()]
         }
-        return (instance, true)
+
+        let result: (instance: T, cached: Bool) = keyLock.withLock {
+            if let box = cache.value(forKey: key), let cached: T = unboxed(box: box) {
+                if let ttl = ttl {
+                    let now = CFAbsoluteTimeGetCurrent()
+                    if (box.timestamp + ttl) > now {
+                        cache.set(timestamp: now, forKey: key)
+                        return (cached, false)
+                    }
+                } else {
+                    return (cached, false)
+                }
+            }
+            let instance = factory()
+            if let box = box(instance) {
+                cache.set(value: box, forKey: key)
+            }
+            return (instance, true)
+        }
+
+        lock.withLock {
+            _ = locks.removeValue(forKey: key)
+        }
+
+        return (result.instance, result.cached)
     }
 
     /// Internal function returns unboxed value if it exists
@@ -92,6 +117,8 @@ public class Scope: @unchecked Sendable {
     }
 
     internal let scopeID: UUID = UUID()
+    internal let lock: NSLocking = CrossPlatformLock()
+    internal var locks: [FactoryKey: CrossPlatformLock] = [:]
 
 }
 
@@ -123,22 +150,26 @@ extension Scope {
         }
         // call to enter a new resolution level
         internal func enter() {
-            depth += 1
+            _depth.wrappingIncrement(ordering: .relaxed)
         }
         // call to leave the current resolution level
         internal func leave() {
-            depth -= 1
-            if depth == 0 {
+            let newDepth = _depth.wrappingDecrementThenLoad(ordering: .relaxed)
+            if newDepth == 0 {
                 cache.reset()
             }
         }
         // reset graph scope
         internal func reset() {
-            depth = 0
+            _depth.store(0, ordering: .releasing)
             cache.reset()
         }
         // depth of current resolution level
-        public private(set) var depth: Int = 0
+        public var depth: Int {
+            _depth.load(ordering: .acquiring)
+        }
+        /// Atomic backing for `depth`.
+        private let _depth = ManagedAtomic<Int>(0)
         /// Private shared cache
         internal var cache = Cache()
     }
@@ -199,9 +230,7 @@ extension Scope {
         internal var cache: Cache
         /// Reset
         public func reset() {
-            globalRecursiveLock.withLock {
-                cache.reset()
-            }
+            cache.reset()
         }
         /// For testing
         public func clone() -> Singleton {
@@ -232,29 +261,34 @@ extension Scope {
     /// Internal class that manages scope caching for containers and scopes.
     internal final class Cache {
         typealias CacheMap = [FactoryKey:AnyBox]
-        /// Internal support functions
+        // locals
+        let lock = ReadWriteLock()
+        var cache: CacheMap
+        /// internal support functions
         @inlinable @inline(__always) func value(forKey key: FactoryKey) -> AnyBox? {
-            cache[key]
+            lock.withReadLock { cache[key] }
         }
         @inlinable @inline(__always) func set(value: AnyBox, forKey key: FactoryKey)  {
-            cache[key] = value
+            lock.withWriteLock { cache[key] = value }
         }
         @inlinable @inline(__always) func set(timestamp: Double, forKey key: FactoryKey)  {
-            cache[key]?.timestamp = timestamp
+            lock.withWriteLock { cache[key]?.timestamp = timestamp }
         }
         @inlinable @inline(__always) func removeValue(forKey key: FactoryKey) {
-            cache = cache.filter { $0.key.normalized() != key }
+            lock.withWriteLock { cache = cache.filter { $0.key.normalized() != key } }
         }
         internal func reset(scopeID: UUID) {
-            cache = cache.filter { $1.scopeID != scopeID }
+            lock.withWriteLock { cache = cache.filter { $1.scopeID != scopeID } }
         }
         /// Internal function to clear cache if needed
         internal func reset() {
-            if !cache.isEmpty {
-                cache.removeAll(keepingCapacity: true)
+            lock.withWriteLock {
+                if !cache.isEmpty {
+                    cache.removeAll(keepingCapacity: true)
+                }
             }
         }
-        var cache: CacheMap
+        // lifecycle
         internal init(minimumCapacity: Int = 1024) {
             self.cache = .init(minimumCapacity: minimumCapacity)
         }
@@ -262,11 +296,14 @@ extension Scope {
             self.cache = copy
         }
         internal func clone() -> Cache {
-            .init(copy: cache)
+            lock.withReadLock { .init(copy: cache) }
+        }
+        internal func assign(map: CacheMap) {
+            lock.withWriteLock { self.cache = map }
         }
         #if DEBUG
         internal var isEmpty: Bool {
-            cache.isEmpty
+            lock.withReadLock { cache.isEmpty }
         }
         #endif
     }

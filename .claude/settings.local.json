@@ -3,23 +3,8 @@
     "allow": [
       "Bash(swift build *)",
       "Bash(swift test *)",
-      "Bash(xcodebuild -scheme Factory-Package -destination 'platform=macOS' build-for-testing)",
-      "Bash(xcodebuild -scheme Factory-Package -destination 'platform=macOS' test)",
-      "Bash(xcodebuild -scheme Factory-Package -destination 'platform=macOS' build)",
-      "Bash(xcodebuild -project /Users/michael/Dropbox/Projects/iOS/OSS/Factory/Factory/FactoryDemo/FactoryDemo.xcodeproj -list)",
-      "Bash(xcodebuild -project /Users/michael/Dropbox/Projects/iOS/OSS/Factory/Factory/FactoryDemo/FactoryDemo.xcodeproj -scheme FactoryDemo -destination 'platform=iOS Simulator,name=iPhone 16' build)",
-      "Bash(xcrun simctl *)",
-      "Bash(xcodebuild -project /Users/michael/Dropbox/Projects/iOS/OSS/Factory/Factory/FactoryDemo/FactoryDemo.xcodeproj -scheme FactoryDemoTests -destination 'platform=iOS Simulator,name=iPhone 16 Pro' build-for-testing)",
-      "Bash(xcodebuild -project /Users/michael/Dropbox/Projects/iOS/OSS/Factory/Factory/FactoryDemo/FactoryDemo.xcodeproj -scheme FactoryDemo -destination 'platform=iOS Simulator,name=iPhone 16 Pro' build)",
-      "Bash(xcodebuild -project /Users/michael/Dropbox/Projects/iOS/OSS/Factory/Factory/FactoryDemo/FactoryDemo.xcodeproj -scheme FactoryDemo -destination 'id=59E1898A-85AC-4698-BC9A-3CEA04E4F7EF' build)",
-      "Bash(xcodebuild -project /Users/michael/Dropbox/Projects/iOS/OSS/Factory/Factory/FactoryDemo/FactoryDemo.xcodeproj -scheme Factory-Package -destination 'platform=macOS' test)",
-      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(p['identity'], p.get\\('checkoutState',{}\\).get\\('version','?'\\)\\) for p in d.get\\('object',{}\\).get\\('dependencies',[]\\)]\")",
-      "Bash(xcrun swift *)",
-      "Bash(curl -sf \"https://download.swift.org/prebuilts/swift-syntax/601.0.0/swiftlang-6.2.4.1.4-manifest.json\" -o /dev/null -w \"%{http_code}\")",
-      "Bash(curl -sf \"https://download.swift.org/prebuilts/swift-syntax/601.0.1/swiftlang-6.2.4.1.4-manifest.json\" -o /dev/null -w \"%{http_code}\")",
-      "Bash(curl -sL \"https://download.swift.org/prebuilts/swift-syntax/601.0.0/swiftlang-6.2.4.1.4-manifest.json\")",
-      "Bash(python3 -c \"import sys,json,base64; d=json.load\\(sys.stdin\\); payload=d['signature']['signature'].split\\('.'\\)[1]; padded=payload+'=='*3; decoded=base64.urlsafe_b64decode\\(padded[:len\\(padded\\)//4*4+4]\\); inner=json.loads\\(decoded\\); print\\(json.dumps\\(inner.get\\('libraries',[{}]\\)[0].get\\('artifacts',[]\\),indent=2\\)\\)\")",
-      "Bash(curl -sf -o /dev/null -w '%{http_code}' https://download.swift.org/prebuilts/swift-syntax/__TRACKED_VAR__/swiftlang-6.2.4.1.4-manifest.json)"
+      "Bash(git -C /Users/michael/Dropbox/Projects/iOS/OSS/Factory/Factory branch --show-current)",
+      "Bash(git -C /Users/michael/Dropbox/Projects/iOS/OSS/Factory/Factory status --short)"
     ]
   }
 }

@@ -111,52 +111,67 @@ extension Injected: @unchecked Sendable where T: Sendable {}
 /// > Note: Lazy injection is resolved the first time the dependency is referenced by the code, and **not** on initialization.
 @propertyWrapper public struct LazyInjected<T> {
 
+    private final class Storage: @unchecked Sendable {
+        let lock = CrossPlatformLock()
+        var dependency: T?
+        var initialized = false
+    }
+
     private var thunk: () -> Factory<T>
-    private var dependency: T!
-    private var initialize = true
-    
+    private let storage: Storage
+
     /// Initializes the property wrapper. The dependency isn't resolved until the wrapped value is accessed for the first time.
     /// - Parameter keyPath: KeyPath to a Factory on the default Container.
     public init(_ keyPath: KeyPath<Container, Factory<T>>) {
         self.thunk = { Container.shared[keyPath: keyPath] }
+        self.storage = Storage()
     }
-    
+
     /// Initializes the property wrapper. The dependency isn't resolved until the wrapped value is accessed for the first time.
     /// - Parameter keyPath: KeyPath to a Factory on the specified Container.
     public init<C:SharedContainer>(_ keyPath: KeyPath<C, Factory<T>>) {
         self.thunk = { C.shared[keyPath: keyPath] }
+        self.storage = Storage()
     }
-    
+
     /// Manages the wrapped dependency, which is resolved when this value is accessed for the first time.
     public var wrappedValue: T {
-        mutating get {
-            if initialize {
-                resolve()
+        get {
+            storage.lock.withLock {
+                if !storage.initialized {
+                    storage.dependency = thunk().resolve()
+                    storage.initialized = true
+                }
+                return storage.dependency!
             }
-            return dependency
         }
-        mutating set {
-            dependency = newValue
+        set {
+            storage.lock.withLock {
+                storage.dependency = newValue
+                storage.initialized = true
+            }
         }
     }
-    
+
     /// Unwraps the property wrapper granting access to the resolve/reset function.
     public var projectedValue: LazyInjected<T> {
         get { return self }
-        mutating set { self = newValue }
+        set { self = newValue }
     }
-    
+
     /// Grants access to the internal Factory.
     public var factory: Factory<T> {
         thunk()
     }
-    
+
     /// Allows the user to force a Factory resolution at their discretion.
-    public mutating func resolve(reset options: FactoryResetOptions = .none) {
-        let factory = thunk()
-        factory.reset(options)
-        dependency = factory()
-        initialize = false
+    public func resolve(reset options: FactoryResetOptions = .none) {
+        storage.lock.withLock {
+            let factory = thunk()
+            factory.reset(options)
+            storage.dependency = factory()
+            storage.initialized = true
+        }
     }
 
     /// Projected function returns resolved instance if it exists.
@@ -168,7 +183,7 @@ extension Injected: @unchecked Sendable where T: Sendable {}
     ///     $myService.resolvedOrNil()?.cleanup()
     /// }
     public func resolvedOrNil() -> T? {
-        dependency
+        storage.lock.withLock { storage.initialized ? storage.dependency : nil }
     }
 
 }
@@ -196,52 +211,67 @@ extension LazyInjected: @unchecked Sendable where T: Sendable {}
 /// > Note: Lazy injection is resolved the first time the dependency is referenced by the code, **not** on initialization.
 @propertyWrapper public struct WeakLazyInjected<T> {
 
+    private final class Storage: @unchecked Sendable {
+        let lock = CrossPlatformLock()
+        weak var dependency: AnyObject?
+        var initialized = false
+    }
+
     private var thunk: () -> Factory<T>
-    private weak var dependency: AnyObject?
-    private var initialize = true
-    
+    private let storage: Storage
+
     /// Initializes the property wrapper. The dependency isn't resolved until the wrapped value is accessed for the first time.
     /// - Parameter keyPath: KeyPath to a Factory on the default Container.
     public init(_ keyPath: KeyPath<Container, Factory<T>>) {
         self.thunk = { Container.shared[keyPath: keyPath] }
+        self.storage = Storage()
     }
-    
+
     /// Initializes the property wrapper. The dependency isn't resolved until the wrapped value is accessed for the first time.
     /// - Parameter keyPath: KeyPath to a Factory on the specified Container.
     public init<C:SharedContainer>(_ keyPath: KeyPath<C, Factory<T>>) {
         self.thunk = { C.shared[keyPath: keyPath] }
+        self.storage = Storage()
     }
-    
+
     /// Manages the wrapped dependency, which is resolved when this value is accessed for the first time.
     public var wrappedValue: T? {
-        mutating get {
-            if initialize {
-                resolve()
+        get {
+            storage.lock.withLock {
+                if !storage.initialized {
+                    storage.dependency = thunk().resolve() as AnyObject
+                    storage.initialized = true
+                }
+                return storage.dependency as? T
             }
-            return dependency as? T
         }
-        mutating set {
-            dependency = newValue as AnyObject
+        set {
+            storage.lock.withLock {
+                storage.dependency = newValue as AnyObject
+                storage.initialized = true
+            }
         }
     }
-    
+
     /// Unwraps the property wrapper granting access to the resolve/reset function.
     public var projectedValue: WeakLazyInjected<T> {
         get { return self }
-        mutating set { self = newValue }
+        set { self = newValue }
     }
-    
+
     /// Grants access to the internal Factory.
     public var factory: Factory<T> {
         thunk()
     }
-    
+
     /// Allows the user to force a Factory resolution at their discretion.
-    public mutating func resolve(reset options: FactoryResetOptions = .none) {
-        let factory = thunk()
-        factory.reset(options)
-        dependency = factory() as AnyObject
-        initialize = false
+    public func resolve(reset options: FactoryResetOptions = .none) {
+        storage.lock.withLock {
+            let factory = thunk()
+            factory.reset(options)
+            storage.dependency = factory() as AnyObject
+            storage.initialized = true
+        }
     }
 
     /// Projected function returns resolved instance if it exists.
@@ -253,7 +283,7 @@ extension LazyInjected: @unchecked Sendable where T: Sendable {}
     ///     $myService.resolvedOrNil()?.cleanup()
     /// }
     public func resolvedOrNil() -> T? {
-        dependency as? T
+        storage.lock.withLock { storage.dependency as? T }
     }
 
 }
