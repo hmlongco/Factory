@@ -63,13 +63,13 @@ public nonisolated struct FactoryRegistration<P,T> {
         let scope: Scope? = options?.scope ?? manager.defaultScope
         let decorator: ((Any) -> ())? = manager.state.defaultDecorator
 
-        manager.lock.unlock()
-
         #if DEBUG
         let globalLockRequired = manager.state.hasGraphScope || globalTraceFlag || globalCircularDependencyTesting
         #else
         let globalLockRequired = manager.state.hasGraphScope
         #endif
+
+        manager.lock.unlock()
 
         let current: (P) -> T
         let (instance, instantiated): (T, Bool)

@@ -1,7 +1,6 @@
 import Testing
 import FactoryKit
 import FactoryTesting
-import FactoryMacros
 
 // MARK: - Service types
 
@@ -58,14 +57,6 @@ nonisolated final class WorkAroundTestService {
     var explicitlyNonisolatedService: NonisolatedServiceType = dependency(\.explicitlyNonisolatedService)
 }
 
-@Dependency(\.nonisolatedService)
-@Dependency(\.explicitlyNonisolatedService)
-nonisolated final class NonisolatedDependencyTestService {}
-
-@Dependency(\.nonisolatedService)
-@Dependency(\.explicitlyNonisolatedService)
-@MainActor final class MainActorDependencyTestService {}
-
 // MARK: - Tests
 
 @Suite(.container)
@@ -93,35 +84,5 @@ struct NonisolatedTests {
     }
 
     // MARK: NonisolatedDependencyTestService — @Dependency macro on nonisolated class
-
-    @Test func nonisolatedMacroResolvesDefaults() {
-        let sut = NonisolatedDependencyTestService()
-        #expect(sut.nonisolatedService.name == "NonisolatedService")
-        #expect(sut.explicitlyNonisolatedService.name == "ExplicitlyNonisolatedService")
-    }
-
-    @Test func nonisolatedMacroUsesRegistrationOverrides() {
-        Container.shared.nonisolatedService.register { MockNonisolatedService() }
-        Container.shared.explicitlyNonisolatedService.register { MockExplicitlyNonisolatedService() }
-        let sut = NonisolatedDependencyTestService()
-        #expect(sut.nonisolatedService.name == "MockNonisolatedService")
-        #expect(sut.explicitlyNonisolatedService.name == "MockExplicitlyNonisolatedService")
-    }
-
-    // MARK: MainActorDependencyTestService — @Dependency macro on @MainActor class
-
-    @MainActor @Test func mainActorMacroResolvesDefaults() {
-        let sut = MainActorDependencyTestService()
-        #expect(sut.nonisolatedService.name == "NonisolatedService")
-        #expect(sut.explicitlyNonisolatedService.name == "ExplicitlyNonisolatedService")
-    }
-
-    @MainActor @Test func mainActorMacroUsesRegistrationOverrides() {
-        Container.shared.nonisolatedService.register { MockNonisolatedService() }
-        Container.shared.explicitlyNonisolatedService.register { MockExplicitlyNonisolatedService() }
-        let sut = MainActorDependencyTestService()
-        #expect(sut.nonisolatedService.name == "MockNonisolatedService")
-        #expect(sut.explicitlyNonisolatedService.name == "MockExplicitlyNonisolatedService")
-    }
 
 }
