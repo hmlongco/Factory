@@ -47,7 +47,6 @@ Ready to get started?
 - <doc:Optionals>
 - <doc:Functional>
 - <doc:Tags>
-- <doc:Macros>
 
 ### Additional Topics
 

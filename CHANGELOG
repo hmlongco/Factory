@@ -4,7 +4,6 @@
 
 * Reduce global lock contention when resolving "heavy" dependencies across multiple threads, see PR #365
 * Improve cache performance and reduce lock contention with r/w locks
-* Improve graph scope enter/leave performance with atomics
 * Improve key hash performance
 * Revises default decorator behavior to match that of default scope behavior (default unless overriden)
 

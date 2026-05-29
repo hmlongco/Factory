@@ -24,7 +24,6 @@
 // THE SOFTWARE.
 //
 
-import Atomics
 import CoreFoundation
 import Foundation
 
@@ -93,10 +92,6 @@ public class Scope: @unchecked Sendable {
             return (instance, true)
         }
 
-        lock.withLock {
-            _ = locks.removeValue(forKey: key)
-        }
-
         return (result.instance, result.cached)
     }
 
@@ -150,26 +145,28 @@ extension Scope {
         }
         // call to enter a new resolution level
         internal func enter() {
-            _depth.wrappingIncrement(ordering: .relaxed)
+            lock.withLock {
+                depth += 1
+            }
         }
         // call to leave the current resolution level
         internal func leave() {
-            let newDepth = _depth.wrappingDecrementThenLoad(ordering: .relaxed)
-            if newDepth == 0 {
-                cache.reset()
+            lock.withLock {
+                depth -= 1
+                if depth == 0 {
+                    cache.reset()
+                }
             }
         }
         // reset graph scope
         internal func reset() {
-            _depth.store(0, ordering: .releasing)
-            cache.reset()
+            lock.withLock {
+                cache.reset()
+                depth = 0
+            }
         }
         // depth of current resolution level
-        public var depth: Int {
-            _depth.load(ordering: .acquiring)
-        }
-        /// Atomic backing for `depth`.
-        private let _depth = ManagedAtomic<Int>(0)
+        public private(set) var depth: Int = 0
         /// Private shared cache
         internal var cache = Cache()
     }
