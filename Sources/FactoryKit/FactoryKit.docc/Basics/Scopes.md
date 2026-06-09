@@ -124,7 +124,7 @@ Custom scopes are powerful tools to have in your arsenal. Use them.
 
 ## Graph Scope
 
-There's one additional scope, called `graph`. This scope will reuse any factory instances resolved during a given resolution cycle. This can come in handy when a single class implements multiple protocols. Consider the following...
+There's one additional scope, called `graph`. This scope will reuse any factory instances resolved for a given container during a given resolution cycle. This can come in handy when a single class implements multiple protocols. Consider the following...
 ```swift
 class ProtocolConsumer {
     @Injected(\.idProvider) var ids
@@ -155,6 +155,25 @@ In the above example, the `consumer` object is the root. Factory is asked for a 
 If you were to instantiate an instance of `ProtocolConsumer` yourself, each one of ProtocolConsumer's Injected property wrappers would initialize sequentially on the same thread, resulting in two separate and distinct resolution cycles.
 
 See: <doc:Cycle> for more on this.
+
+Finally, any container with a Factory that uses graph scope will suffer a slight performance penalty on *all* Factory resolutions, especially when resolving across multiple threads. 
+
+Use it only if and when you need it. 
+
+One could get much the same result from doing the following.
+
+```swift
+    extension Container {
+        // the root
+        var consumer: Factory<ProtocolConsumer> { self { ProtocolConsumer() } }
+        // the interfaces
+        var idProvider: Factory<IDProviding> { self { commonProviding() } }
+        var valueProvider: Factory<ValueProviding> { self { commonProviding() } }
+        // the common implementation
+        private var commonProviding: Factory<MyService> { self { MyService() }.cached }
+    }
+```
+With the caveat that in this case that *anyone* who requests an instance of `commonProviding` will get and share the same reference.
 
 ## Unique
 

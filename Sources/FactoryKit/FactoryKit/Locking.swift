@@ -68,25 +68,15 @@ internal let globalVariableLock = CrossPlatformLock()
 /// Custom lock using os_unfair_lock on Apple platforms.
 internal final class CrossPlatformLock: NSLocking, @unchecked Sendable {
 
-    init() {
-        oslock = UnsafeMutablePointer<os_unfair_lock>.allocate(capacity: 1)
-        oslock.initialize(to: .init())
-    }
-
-    deinit {
-        oslock.deinitialize(count: 1)
-        oslock.deallocate()
-    }
+    private var _lock = os_unfair_lock()
 
     @inlinable @inline(__always) func lock() {
-        os_unfair_lock_lock(oslock)
+        withUnsafeMutablePointer(to: &_lock) { os_unfair_lock_lock($0) }
     }
 
     @inlinable @inline(__always) func unlock() {
-        os_unfair_lock_unlock(oslock)
+        withUnsafeMutablePointer(to: &_lock) { os_unfair_lock_unlock($0) }
     }
-
-    private let oslock: UnsafeMutablePointer<os_unfair_lock>
 
 }
 #else
@@ -119,3 +109,44 @@ internal final class CrossPlatformLock: NSLocking, @unchecked Sendable {
     private let mutex: UnsafeMutablePointer<pthread_mutex_t>
 }
 #endif
+
+// MARK: - ReadWriteLock
+
+/// Readers-writer lock: multiple concurrent readers, exclusive writers.
+internal final class ReadWriteLock: @unchecked Sendable {
+
+    init() {
+        rwlock = UnsafeMutablePointer<pthread_rwlock_t>.allocate(capacity: 1)
+        pthread_rwlock_init(rwlock, nil)
+    }
+
+    deinit {
+        pthread_rwlock_destroy(rwlock)
+        rwlock.deallocate()
+    }
+
+    @inlinable @inline(__always) func readLock() {
+        pthread_rwlock_rdlock(rwlock)
+    }
+
+    @inlinable @inline(__always) func writeLock() {
+        pthread_rwlock_wrlock(rwlock)
+    }
+
+    @inlinable @inline(__always) func unlock() {
+        pthread_rwlock_unlock(rwlock)
+    }
+
+    @inlinable @inline(__always) func withReadLock<T>(_ body: () -> T) -> T {
+        readLock(); defer { unlock() }
+        return body()
+    }
+
+    @inlinable @inline(__always) func withWriteLock<T>(_ body: () -> T) -> T {
+        writeLock(); defer { unlock() }
+        return body()
+    }
+
+    private let rwlock: UnsafeMutablePointer<pthread_rwlock_t>
+
+}

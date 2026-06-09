@@ -24,7 +24,7 @@
 		4C51167629DE961900B4ADD4 /* FactoryDemoTests3.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C51167529DE961900B4ADD4 /* FactoryDemoTests3.swift */; };
 		4C51167829DF03C900B4ADD4 /* FactoryDemoTestsServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C51167729DF03C900B4ADD4 /* FactoryDemoTestsServices.swift */; };
 		4C51169829E1B3E900B4ADD4 /* Tags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C51169729E1B3E900B4ADD4 /* Tags.swift */; };
-		4C6EB72D2E9AEC430038D888 /* FactoryKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4C6EB72C2E9AEC430038D888 /* FactoryKit */; };
+		4C79717E2FA685D200833096 /* FactoryKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4C79717D2FA685D200833096 /* FactoryKit */; };
 		4C947C332988A13800815704 /* ContainerDemoViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C947C322988A13800815704 /* ContainerDemoViewModel.swift */; };
 		4C947C342988A1A100815704 /* ContainerDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C6914432988A05D0083A78F /* ContainerDemoView.swift */; };
 		4C977B3B29A2AD3A0072FC17 /* SimpleContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C977B3A29A2AD3A0072FC17 /* SimpleContainer.swift */; };
@@ -163,7 +163,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4C6EB72D2E9AEC430038D888 /* FactoryKit in Frameworks */,
+				4C79717E2FA685D200833096 /* FactoryKit in Frameworks */,
 				4C0280302AF7F44800768BA9 /* Common.framework in Frameworks */,
 				4C38E9D52AED74E3002063CD /* Networking.framework in Frameworks */,
 			);
@@ -361,7 +361,7 @@
 			);
 			name = FactoryDemo;
 			packageProductDependencies = (
-				4C6EB72C2E9AEC430038D888 /* FactoryKit */,
+				4C79717D2FA685D200833096 /* FactoryKit */,
 			);
 			productName = FactoryDemo;
 			productReference = 4CEEC345284927EE00C979B3 /* FactoryDemo.app */;
@@ -860,7 +860,7 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		4C6EB72C2E9AEC430038D888 /* FactoryKit */ = {
+		4C79717D2FA685D200833096 /* FactoryKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = FactoryKit;
 		};

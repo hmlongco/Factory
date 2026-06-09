@@ -28,7 +28,7 @@ final class FactoryLazyInjectedLockingTests: XCTestCase, @unchecked Sendable {
 
     // Runs the exactly-once check multiple times to catch probabilistic races.
     func testConcurrentFirstAccessInvokesFactoryExactlyOnceRepeated() {
-        for _ in 0..<20 {
+        for _ in 0..<50 {
             LazyLockingContainer.shared.reset()
             let counter = InvocationCounter()
             LazyLockingContainer.shared.service.register {

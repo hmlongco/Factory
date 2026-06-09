@@ -5,7 +5,7 @@
 
 A modern approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
-## Factory Version 3.0.5
+## Factory Version 3.1.0
 
 Factory is strongly influenced by SwiftUI, and in my opinion is highly suited for that environment. Factory is...
 
@@ -108,7 +108,7 @@ struct FactoryDemoApp: App {
 }
 
 ```
-Finally, Factory has a set of global dependency resolution functions.
+Factory also has a set of global dependency resolution functions.
 ```swift
 final class NetworkService {
     let preferences: Preferences = dependency(\.preferences)
@@ -116,9 +116,16 @@ final class NetworkService {
     ...
 }
 ```
+And finally, as of 3.1 there's a brand new `@Dependency` macro that improves runtime performance and is even simpler to use than the property wrapper.
+```swift
+@Dependency(\.myService)
+@MainActor @Observable class ContentViewModel {
+    ...
+}
+```
 These are discussed in detail below.
 
-Factory is flexible, and it doesn't tie you down to a specific dependency injection pattern or technique.
+The bottom line is that Factory is *extremely* flexible and it doesn't tie you down to a specific dependency injection pattern or technique.
 
 See [Resolutions](https://hmlongco.github.io/Factory/documentation/factorykit/resolutions) for more examples.
 
@@ -371,6 +378,52 @@ These functions can also be useful when you want to hide Factory and Factory Sha
 ever want to switch away from Factory, just expose your own `dependency` function with the same keyPaths.
 
 One can also use them to pass parameters to Factory's, something the property wrappers don't allow.
+
+## Factory Macros
+
+`FactoryMacros` is a new companion library that ships alongside FactoryKit. It provides
+a `@Dependency` macro which generates injected stored properties automatically from a
+key-path expression.
+
+Where you would previously write an `@Injected` property wrapper or a `var` initializer
+by hand for each dependency, a single `@Dependency` attribute covers the entire
+declaration.
+
+```swift
+import FactoryMacros
+
+// Before
+@MainActor @Observable final class HomeViewModel {
+    @ObservationIgnored
+    @Injected(\.movieRepository) var movieRepository: MovieRepositoryType
+    @ObservationIgnored
+    @Injected(\.analytics) var analytics: AnalyticServices
+    func load() async -> [Movie] {
+        analytics.log("loading")
+        await movieRepository.load()
+    }
+}
+
+// After
+@Dependency(\.movieRepository)
+@Dependency(\.analytics)
+@MainActor @Observable final class HomeViewModel {
+    func load() async -> [Movie] {
+        analytics.log("loading")
+        await movieRepository.load()
+    }
+}
+```
+
+The macro expands at compile time into simple, internally accessible properties with the
+same name as the factory. This approach avoids all of the runtime overhead
+associated with property wrappers and their accessors. 
+
+Perhaps more significantly, it also surfaces the object's
+dependencies at the class declaration site, making them immediately obvious and visible rather than hidden and buried
+somewhere in the body or in the class initializer.
+
+For more, see: [Macros](https://hmlongco.github.io/Factory/documentation/factorykit/advanced/macros)
 
 ## Documentation
 

@@ -6,6 +6,7 @@ final class FactoryScopeTests: XCTestCase {
     override func setUp() {
         super.setUp()
         Container.shared.reset()
+        CustomContainer.shared.reset()
     }
 
     func testUniqueScope() throws {
@@ -105,13 +106,13 @@ final class FactoryScopeTests: XCTestCase {
 
     func testGraphScope() throws {
         // Has base to graph scope
-        let graph1 = Container.shared.graphWrapper()
+        let graph1 = CustomContainer.shared.graphWrapper()
         XCTAssertTrue(graph1.service1.id == graph1.service2.id)
-        XCTAssertTrue(Container.shared.manager.isEmpty(.scope))
+        XCTAssertTrue(CustomContainer.shared.manager.isEmpty(.scope))
         // No base to the graph scope
         let graph2 = GraphWrapper()
         XCTAssertTrue(graph2.service1.id != graph2.service2.id)
-        XCTAssertTrue(Container.shared.manager.isEmpty(.scope))
+        XCTAssertTrue(CustomContainer.shared.manager.isEmpty(.scope))
     }
 
     func testExplicitProtocolSharedScope() throws {
