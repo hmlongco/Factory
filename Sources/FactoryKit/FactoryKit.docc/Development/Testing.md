@@ -353,7 +353,22 @@ To import FactoryTesting you'll need to add that dependency to your project and 
   "FactoryTesting"
 ])
 ```
-> Warning: Do not import `FactoryKit` into the Test target. That can lead to duplicate factories and indeterminate behavior.
+> Warning: Do not copy the `FactoryKit` library into the Test target. That can lead to duplicate factories and indeterminate behavior.
+
+```
+// DO THIS
+.testTarget(name: "MyAppTests", dependencies: [
+    "MyApp", 
+    "FactoryTesting"
+])
+
+// DO NOT DO THIS
+.testTarget(name: "MyAppTests", dependencies: [
+    "MyApp", 
+    "FactoryKit", // BAD!!!
+    "FactoryTesting"
+])
+```
 
 #### Suite Trait
 
