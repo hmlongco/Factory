@@ -517,6 +517,28 @@ struct SomeSuite {
   }
 ```
 
+The same isolation rule applies when you *resolve* an actor-isolated Factory, not just when you register one. The registration closure inherits the property's isolation, but Factory's resolution path is synchronous and `nonisolated`, so `callAsFunction()` runs the closure on the caller's executor. Resolve from a mismatched context and Swift's dynamic isolation check on the closure traps at runtime with `EXC_BREAKPOINT` (`dispatch_assert_queue_fail`). Adding `await` to the property access doesn't help because that `await` covers the property getter, not the resolution.
+
+So make sure your test resolves an actor-isolated Factory from the matching isolation. Annotate the test or suite with the actor, or hop explicitly.
+
+```swift
+@MainActor
+struct SomeSuite {
+  @Test func resolvesOnMain() {
+    let service = Container.shared.mainActorType()   // resolved on the main actor
+    ...
+  }
+}
+
+// or, from a non-isolated test:
+@Test func resolvesFromBackground() async {
+  let service = await MainActor.run { Container.shared.mainActorType() }
+  ...
+}
+```
+
+This holds for any actor-isolated Factory, not only `@MainActor` ones.
+
 ## Container Injection
 
 There is another way to achieve parallel testing without using `ContainerTrait`. 

@@ -175,3 +175,36 @@ Container.shared.contentViewModel.register {
 }
 
 ```
+
+### Resolving Actor-Isolated Factory's
+
+Here's the catch that the compiler won't warn you about. When you annotate the Factory property with `@MainActor`, the registration closure inherits that isolation. But Factory's resolution path is synchronous and `nonisolated`. The Factory is returned on the actor, but `callAsFunction()` runs the closure on whatever executor the *caller* happens to be on, and if that isn't the main actor Swift's dynamic isolation check on the closure traps.
+
+```swift
+Task.detached {
+    // The property getter is @MainActor, so this access needs await.
+    let factory = await Container.shared.contentViewModel
+    // callAsFunction() is nonisolated, so no await here. It runs the
+    // @MainActor closure on this background executor and crashes:
+    // EXC_BREAKPOINT, dispatch_assert_queue_fail, _swift_task_checkIsolatedSwift.
+    let viewModel = factory()
+}
+```
+
+Notice that adding `await` to the property access does *not* save you. The `await` belongs to the property getter, not to `callAsFunction()`. The getter builds the lightweight `Factory` struct on the main actor and hands it back; the actual resolution still happens wherever the caller is running. Synchronous resolution has no suspension point at which Swift can hop actors, so there's nowhere for it to cross back to the main actor.
+
+This isn't unique to `@MainActor`. *Any* actor-isolated factory, including one bound to a custom global actor, will trap the same way when it's resolved from a mismatched executor.
+
+The fix is simpl and lives on the calling side: resolve the factory from the isolation its closure requires. For a `@MainActor` factory, hop onto the main actor first and resolve there.
+
+```swift
+Task.detached {
+    let viewModel = await MainActor.run {
+        Container.shared.contentViewModel()
+    }
+}
+```
+
+`MainActor.run` runs both the property access *and* `callAsFunction()` on the main actor, so the closure's isolation check passes. The resolved instance then crosses back to the caller as a normal `Sendable` value.
+
+In practice you rarely hit this, because most resolution of a `@MainActor` dependency already happens from main-actor-isolated code. The `@Injected` property wrapper inside a `@MainActor` view model, for example, resolves on the main actor by construction. The crash shows up when you reach for a `@MainActor` factory from a background `Task`, a `Task.detached`, or a `nonisolated` function.
