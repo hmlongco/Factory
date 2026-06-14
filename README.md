@@ -41,7 +41,7 @@ extension Container {
 
 Unlike frameworks that require registering every single type up front, or SwiftUI, where defining a new environment variable requires creating a new EnvironmentKey and adding additional getters and setters, here we simply add a new `Factory` computed variable to the default container. When it's called our Factory is created, its closure is evaluated, and we get an instance of our dependency when we need it. 
 
-\*That `self { ... }` syntax is sugared shorthand for the more formal and explicit `Factory(self) { ... }` format. Both are equivalent and are covered in [Simplified Syntax](#simplified-syntax) below.\*
+*That `self { ... }` syntax is sugared shorthand for the original, more formal, and more explicit `Factory(self) { ... }` format. Both are equivalent and are covered in [Simplified Syntax](#simplified-syntax) below.*
 
 Injecting an instance of our service is equally straightforward. Here's just one of the many ways Factory can be used.
 
@@ -396,7 +396,7 @@ It can be obtained here: [MovieDemo](https://github.com/hmlongco/MovieDemo).
 
 ## Installation
 
-With the sunsetting of CocoaPods, Factory 3.0 supports the Swift Package Manager. Period.
+With the sunsetting of CocoaPods, Factory 3.x supports the Swift Package Manager. Period.
 
 Factory's primary import library is named `FactoryKit`. This is done in order to avoid SPM import conflicts between the library itself and the `Factory` object defined within the library.
 
@@ -414,7 +414,7 @@ If you're using Swift Testing you'll probably also want to also import the `Fact
 
 ## Migration
 
-Factory 3.0.0 works with SPM, Xcode 26 under Strict Concurrency guidelines, and with Swift Testing.
+Factory 3.0.0 works with SPM, Xcode 26 (and 27) under Strict Concurrency guidelines, and with Swift Testing.
 
 If you're a current Factory user you'll need to update your code and switch from importing `Factory` to importing `FactoryKit`. This avoids SPM naming conflicts between the import library name and the primary `Factory` object.
 
@@ -444,6 +444,7 @@ var contentViewModel: Factory<ContentViewModel> {
     self { ContentViewModel() }
 }
 ```
+Keep in mind that resolution of `@MainActor` dependencies should occur *on* the `@MainActor` and not simply be awaited.
 
 ## Discussion Forum
 
