@@ -1,6 +1,6 @@
 ---
-name: factory
-description: In-depth guide to Factory, a container-based dependency injection system for Swift and SwiftUI. Use this skill any time the user is writing, reading, refactoring, debugging, or testing Swift code that uses Factory, FactoryKit, or FactoryTesting — including registrations on Container, the `@Injected`/`@LazyInjected`/`@WeakLazyInjected`/`@DynamicInjected`/`@InjectedObject`/`@InjectedObservable` property wrappers, `Factory<T>` and `ParameterFactory<P, T>`, scopes (`.unique`, `.cached`, `.shared`, `.singleton`, `.graph`), context modifiers (`.onTest`, `.onPreview`, `.onDebug`, `.onArg`, `.onSimulator`, `.onDevice`), `AutoRegistering`, custom containers, the `.container` Swift Testing trait, and cross-module wiring with `promised()`. Trigger when you see `Factory<`, `Container.shared`, `extension Container`, `@Injected(\.`, `import FactoryKit`, or when the user mentions "Factory DI", "FactoryKit", or compares against Resolver, Swinject, or Needle.
+name: factory-dependency-injection
+description: In-depth guide to Factory, a container-based dependency injection system for Swift and SwiftUI. Use this skill any time the user is writing, reading, refactoring, debugging, or testing Swift code that uses Factory, FactoryKit, or FactoryTesting — including registrations on Container, the `@Injected`/`@LazyInjected`/`@WeakLazyInjected`/`@DynamicInjected`/`@InjectedObject`/`@InjectedObservable`/`@InjectedContainer`/`@InjectedType` property wrappers, `Factory<T>` and `ParameterFactory<P, T>`, scopes (`.unique`, `.cached`, `.shared`, `.singleton`, `.graph`), context modifiers (`.onTest`, `.onPreview`, `.onDebug`, `.onArg`, `.onSimulator`, `.onDevice`), the global `dependency(\.path)` functions, `AutoRegistering`, custom containers, the `.container` Swift Testing trait, and cross-module wiring with `promised()`. Trigger when you see `Factory<`, `Container.shared`, `extension Container`, `@Injected(\.`, `import FactoryKit`, or when the user mentions "Factory DI", "FactoryKit", or compares against Resolver, Swinject, or Needle.
 ---
 
 # Factory
@@ -11,12 +11,15 @@ Use this skill as the reference when working with Factory code. The authoritativ
 
 ## Module names
 
-The package ships two products:
+The package ships these products:
 
 - `FactoryKit` — the library. Import this in app/library code: `import FactoryKit`.
-- `FactoryTesting` — Swift Testing traits. Import only in test targets: `import FactoryTesting`.
+- `FactoryKitDynamic` — a dynamic-library variant of the same target, for multi-module setups that need a single shared copy.
+- `FactoryTesting` — Swift Testing traits. Import in test targets: `import FactoryTesting`.
 
-The library is named `FactoryKit` (not `Factory`) so the import doesn't collide with the `Factory` type. Don't import `FactoryKit` into a test target that also imports `FactoryTesting` — that creates duplicate factories and indeterminate behavior.
+The library is named `FactoryKit` (not `Factory`) so the import doesn't collide with the `Factory` type.
+
+> **Do not add `FactoryKit` to the test target.** Add only `FactoryTesting` — it depends on `FactoryKit`, so the test target sees your factory types transitively. Copying `FactoryKit` directly into the test target creates duplicate factories and indeterminate behavior.
 
 ## Core mental model
 
@@ -35,7 +38,7 @@ import FactoryKit
 
 extension Container {
     var myService: Factory<MyServiceType> {
-        self { MyService() }            // sugar — ContainerManager.callAsFunction
+        self { MyService() }            // sugar — ManagedContainer.callAsFunction
     }
 }
 ```
@@ -123,7 +126,7 @@ A `ParameterFactory` overload of `promised()` exists for parameterized cross-mod
 
 ### Same-type / multiple instances
 
-Factory keys are derived from the property name (via `#function`), so this works fine:
+Factory keys are derived from the property name (via `#function`) plus type, so this works fine:
 
 ```swift
 extension Container {
@@ -186,6 +189,8 @@ class ContentViewModel {
     var results: Results = .empty
 }
 ```
+
+> The README and DocC describe a `@Dependency(\.x)` macro (a `FactoryMacros` companion library) that generates injected stored properties at the class declaration site. That macro is **not** part of this package build (the package has no `FactoryMacros` target). Until it ships here, use the `@Injected` wrappers or the global `dependency(\.x)` functions.
 
 ## Scopes
 
@@ -509,7 +514,7 @@ struct ContentView: View {
 
 `@InjectedObservable` is backed by `@State<ThunkedValue<T>>`; the dep is created lazily on first read of `wrappedValue`, then memoized for the view's lifetime. Its projected value is a `Binding<T>` (read-only setter).
 
-In Factory 3.0, a `@MainActor` factory only needs the annotation on the property — *not* on the closure. (2.x required `self { @MainActor in ... }`; that form is no longer needed.)
+In Factory 3.0+, a `@MainActor` factory only needs the annotation on the property — *not* on the closure. (2.x required `self { @MainActor in ... }`; that form is no longer needed.)
 
 ### Previews
 
@@ -707,7 +712,9 @@ extension Container: @retroactive AutoRegistering {
 
 If the protocol module is in the same target as the impl, the simpler "public protocol + public Factory + private impl" pattern is fine — no nullable needed.
 
-For tagged groups of dependencies (Factory has no built-in tag system), maintain a `KeyPath` array:
+### Tags (rolling your own)
+
+Factory has no built-in tag system. For groups of dependencies of a given type, maintain a `KeyPath` array (see `Advanced/Tags.md`):
 
 ```swift
 extension Container {
@@ -720,10 +727,12 @@ extension Container {
 }
 ```
 
+The keypaths keep the array type-safe, and `autoRegister()` (or per-module helpers) can append more entries at startup.
+
 ## Concurrency
 
-- The package builds under Swift 6 with strict concurrency.
-- `Container.shared` is `@TaskLocal var`. Reading it across a Task suspension point is fine; writing it directly isn't supported (and as of 2.2 the default `Container.shared` can't be reassigned). Use `Container.$shared.withValue(...)` to set scoped values.
+- The package builds under Swift 6 language mode with strict concurrency.
+- `Container.shared` is `@TaskLocal var`. Reading it across a Task suspension point is fine; the default `Container.shared` can't be reassigned directly. Use `Container.$shared.withValue(...)` to set scoped values.
 - For an actor-isolated dep, annotate the *Factory property*:
 
 ```swift
@@ -830,7 +839,9 @@ Container-wide decorator (sees every dep resolved by the container):
 Container.shared.decorator { resolved in print("resolved: \(type(of: resolved))") }
 ```
 
-## Resolver mode (typed registration)
+As of 3.1, the container-wide decorator behaves like the default scope: it's the default, and a factory-level `.decorator { ... }` overrides it for that factory rather than running in addition to it.
+
+## Resolver mode (typed registration, deprecated)
 
 Opt-in `Resolving` protocol gives you Resolver-style runtime register/resolve by `T.Type`:
 
@@ -847,7 +858,7 @@ This is provided for migration from Resolver and isn't the recommended idiom. St
 
 When debugging Factory code, walk this list:
 
-- Did you import `FactoryKit` (not `Factory`)? In the test target, did you import `FactoryTesting` instead?
+- Did you import `FactoryKit` (not `Factory`)? In the test target, depend only on `FactoryTesting` (not `FactoryKit`) — adding `FactoryKit` as a test-target dependency creates duplicate factories.
 - Does the registration live on the correct container? `@Injected(\.x)` looks at `Container.shared`; for a custom container use `@Injected(\CustomContainer.x)`.
 - Is the override unexpectedly losing? If the Factory definition bakes in `.onTest`/`.singleton` and you're trying to override at a call site, re-read "the factory wins" — move the override to `autoRegister()`, or add `.once()`, or chain at the resolve site.
 - Did you `register` on a singleton at runtime and not see the change? `register` clears scope normally, but inside `autoRegister` it doesn't (singletons must survive container instantiation).
@@ -859,6 +870,7 @@ When debugging Factory code, walk this list:
 - `ParameterFactory` cached but parameter ignored? Default scope behavior caches the first resolved value. Add `.scopeOnParameters` (P must be `Hashable`).
 - Cross-module wire missing in production? Prefer `promised()` over `fatalError()` factories — degrades gracefully.
 - Optional `@Injected(\.x)` for a `Factory<T?>`? Works directly — there's no `@OptionalInjected`. Just spell the property type as `T?` (or let inference handle it).
+- Reaching for a `@Dependency` macro from the README? It isn't in this package build. Use `@Injected` or `dependency(\.x)`.
 
 ## Where each topic is documented in the package
 

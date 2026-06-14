@@ -116,14 +116,6 @@ final class NetworkService {
     ...
 }
 ```
-And finally, as of 3.1 there's a brand new `@Dependency` macro that improves runtime performance and is even simpler to use than the property wrapper.
-```swift
-@Dependency(\.myService)
-@MainActor @Observable class ContentViewModel {
-    ...
-}
-```
-These are discussed in detail below.
 
 The bottom line is that Factory is *extremely* flexible and it doesn't tie you down to a specific dependency injection pattern or technique.
 
@@ -381,7 +373,7 @@ One can also use them to pass parameters to Factory's, something the property wr
 
 ## Factory Macros
 
-`FactoryMacros` is a new companion library that ships alongside FactoryKit. It provides
+`FactoryMacros` is an **unreleased** companion library that ships alongside FactoryKit. It provides
 a `@Dependency` macro which generates injected stored properties automatically from a
 key-path expression.
 
@@ -423,7 +415,7 @@ Perhaps more significantly, it also surfaces the object's
 dependencies at the class declaration site, making them immediately obvious and visible rather than hidden and buried
 somewhere in the body or in the class initializer.
 
-For more, see: [Macros](https://hmlongco.github.io/Factory/documentation/factorykit/advanced/macros)
+The library code is in the **macros** branch if you want to experiment.
 
 ## Documentation
 

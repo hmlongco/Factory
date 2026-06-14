@@ -2,7 +2,9 @@
 
 A modern, container-based dependency injection system for Swift and SwiftUI. Compile-time safe, lightweight (~1k lines), zero-codegen.
 
-This file is the quick orientation. For deep guidance on Factory APIs and idioms, invoke the `factory` skill in `.claude/skills/factory/SKILL.md`.
+This file is the quick orientation. For deep guidance on Factory APIs and idioms, invoke the `factory-dependency-injection` skill in `.claude/skills/factory-dependency-injection/SKILL.md`.
+
+The skill is the in-depth reference. It condenses the DocC catalog and covers: defining factories (standard, constructor injection, `ParameterFactory`, `promised()`), all eight property wrappers (`@Injected`, `@LazyInjected`, `@WeakLazyInjected`, `@DynamicInjected`, `@InjectedObject`, `@InjectedObservable`, `@InjectedContainer`, `@InjectedType`) and when each resolves, scopes and the "factory wins" modifier-ordering rule, contexts and their precedence, custom containers and `AutoRegistering`, SwiftUI/Observation integration, previews, Swift Testing (`.container` trait) and XCTest, cross-module wiring, the global `dependency(\.path)` functions, functional injection, the resolution trace, and a gotchas checklist. Reach for it whenever you touch `Factory<`, `Container.shared`, `extension Container`, `@Injected(\.`, or `import FactoryKit`.
 
 ## Repository layout
 
