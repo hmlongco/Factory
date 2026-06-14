@@ -5,7 +5,7 @@
 
 A modern approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
-## Factory Version 3.1.0
+## Factory Version 3.1.1
 
 Factory is strongly influenced by SwiftUI, and in my opinion is highly suited for that environment. Factory is...
 
@@ -22,10 +22,6 @@ Factory is strongly influenced by SwiftUI, and in my opinion is highly suited fo
 - **Free**: Factory is free and open source under the MIT License.
 
 Sound too good to be true? Let's take a look.
-  
----
-
-But before we do, I want to express my thanks to Mercedes-Benz, Süddeutsche Zeitung, and everyone else who's sponsored my open source work! [You folks help make this possible.](https://github.com/sponsors/hmlongco)
 
 ---
 
@@ -38,18 +34,21 @@ Most container-based dependency injection systems require you to define in some 
 ```swift
 extension Container {
     var myService: Factory<MyServiceType> { 
-        Factory(self) { MyService() }
+        self { MyService() }
     }
 }
 ```
 
 Unlike frameworks that require registering every single type up front, or SwiftUI, where defining a new environment variable requires creating a new EnvironmentKey and adding additional getters and setters, here we simply add a new `Factory` computed variable to the default container. When it's called our Factory is created, its closure is evaluated, and we get an instance of our dependency when we need it. 
 
+\*That `self { ... }` syntax is sugared shorthand for the more formal and explicit `Factory(self) { ... }` format. Both are equivalent and are covered in [Simplified Syntax](#simplified-syntax) below.\*
+
 Injecting an instance of our service is equally straightforward. Here's just one of the many ways Factory can be used.
 
 ```swift
-class ContentViewModel: ObservableObject {
-    @Injected(\.myService) private var myService
+@Observable
+class ContentViewModel {
+    @ObservationIgnored @Injected(\.myService) private var myService
     ...
 }
 ```
@@ -63,10 +62,11 @@ For more examples of Factory definitions that define scopes, use constructor inj
 
 ## Other Factory Resolution Methods
 
-Earlier we demonstrated how to use the ``Injected`` property wrapper. But it's also possible to bypass the property wrapper and talk to the factory yourself.
+Earlier we demonstrated how to use the `@Injected` property wrapper. But it's also possible to bypass the property wrapper and talk to the factory yourself.
 
 ```swift
-class ContentViewModel: ObservableObject {
+@Observable
+class ContentViewModel {
     private let myService = Container.shared.myService()
     private let eventLogger = Container.shared.eventLogger()
     ...
@@ -74,12 +74,13 @@ class ContentViewModel: ObservableObject {
 ```
 Just call the desired factory as a function and you'll get an instance of its managed dependency. It's that simple.
 
-If you're into container-based dependency injection, note that you can also pass an instance of a container to a view model and obtain an instance of your service directly from that container.
+If you're into container-based dependency injection, note that you can simply pass a container to a view model and obtain an instance of your service directly from that container.
 ```swift
-class ContentViewModel: ObservableObject {
+@Observable
+class ContentViewModel {
     let service: MyServiceType
     init(container: Container) {
-        service = container.service()
+        service = container.myService()
     }
 }
 ```
@@ -88,10 +89,10 @@ Or if you want to use a Composition Root structure, just use the container to pr
 ```swift
 extension Container {
     var myRepository: Factory<MyRepositoryType> {
-        Factory(self) { MyRepository(service: self.networkService()) }
+        self { MyRepository(service: self.networkService()) }
     }
     var networkService: Factory<Networking> {
-        Factory(self) { MyNetworkService() }
+        self { MyNetworkService() }
     }
 }
 
@@ -100,7 +101,7 @@ struct FactoryDemoApp: App {
     let viewModel = MyViewModel(repository: Container.shared.myRepository())
     var body: some Scene {
         WindowGroup {
-            NavigationView {
+            NavigationStack {
                 ContentView(viewModel: viewModel)
             }
         }
@@ -108,7 +109,7 @@ struct FactoryDemoApp: App {
 }
 
 ```
-Factory also has a set of global dependency resolution functions.
+Factory also has a set of global dependency resolution functions. This global function can be easily replaced should you want to minimize your codebase's apparent dependency on Factory.
 ```swift
 final class NetworkService {
     let preferences: Preferences = dependency(\.preferences)
@@ -137,7 +138,7 @@ Well, the primary benefit one gains from using a container-based dependency inje
 
 ```swift
 struct ContentView: View {
-    @StateObject var model = ContentViewModel()
+    @State private var model = ContentViewModel()
     var body: some View {
         Text(model.text())
             .padding()
@@ -145,7 +146,7 @@ struct ContentView: View {
 }
 ```
 
-Our ContentView uses our view model, which is assigned to a StateObject. Great. But now we want to preview our code. How do we change the behavior of `ContentViewModel` so that its `MyService` dependency isn't making live API calls during development? 
+Our ContentView uses our view model, which is assigned to a `@State` property. Great. But now we want to preview our code. How do we change the behavior of `ContentViewModel` so that its `MyService` dependency isn't making live API calls during development? 
 
 It's easy. Just replace `MyService` with a mock that also conforms to `MyServiceType`.
 
@@ -161,10 +162,10 @@ Now when our preview is displayed `ContentView` creates a `ContentViewModel` whi
 
 This is a powerful concept that lets us reach deep into a chain of dependencies and alter the behavior of a system as needed.
 
-Note that Factory 2.5.1 made it even cleaner.
+Note that Factory 3.1.1 added more sugar with a global `register function similar to the` `dependency function mentioned earlier`.
 ```swift
 #Preview {
-    Container.shared.myService.preview { MockService2() }
+    register(.myService) { MockService2() }
     ContentView()
 }
 ```
@@ -205,7 +206,7 @@ struct FactoryTests {
 Again, Factory makes it easy to reach into a chain of dependencies and make specific changes to the system as needed. This makes testing loading states, empty states, and error conditions simple.
 
 
-Xcode 16.3's test trait support also makes it possible to run all of our tests in parallel! 
+Swift Testing's test trait support also makes it possible to run all of our tests in parallel! 
 
 The `.container` trait shown above provides a new, fresh instance of the main shared container to each one of the tests.
 
@@ -373,49 +374,11 @@ One can also use them to pass parameters to Factory's, something the property wr
 
 ## Factory Macros
 
-`FactoryMacros` is an **unreleased** companion library that ships alongside FactoryKit. It provides
-a `@Dependency` macro which generates injected stored properties automatically from a
-key-path expression.
+`FactoryMacros` is an **unreleased** companion library that will ship alongside FactoryKit. It provides a `@Dependency` macro that generates injected stored properties automatically from a key-path expression, replacing hand-written `@Injected` declarations and surfacing a type's dependencies at its declaration site rather than buried in the body or initializer.
 
-Where you would previously write an `@Injected` property wrapper or a `var` initializer
-by hand for each dependency, a single `@Dependency` attribute covers the entire
-declaration.
+The macro expands at compile time into simple stored properties, avoiding the runtime overhead of property wrappers and their accessors.
 
-```swift
-import FactoryMacros
-
-// Before
-@MainActor @Observable final class HomeViewModel {
-    @ObservationIgnored
-    @Injected(\.movieRepository) var movieRepository: MovieRepositoryType
-    @ObservationIgnored
-    @Injected(\.analytics) var analytics: AnalyticServices
-    func load() async -> [Movie] {
-        analytics.log("loading")
-        await movieRepository.load()
-    }
-}
-
-// After
-@Dependency(\.movieRepository)
-@Dependency(\.analytics)
-@MainActor @Observable final class HomeViewModel {
-    func load() async -> [Movie] {
-        analytics.log("loading")
-        await movieRepository.load()
-    }
-}
-```
-
-The macro expands at compile time into simple, internally accessible properties with the
-same name as the factory. This approach avoids all of the runtime overhead
-associated with property wrappers and their accessors. 
-
-Perhaps more significantly, it also surfaces the object's
-dependencies at the class declaration site, making them immediately obvious and visible rather than hidden and buried
-somewhere in the body or in the class initializer.
-
-The library code is in the **macros** branch if you want to experiment.
+The library code is in the **macros** branch if you want to experiment. Full documentation will accompany its release.
 
 ## Documentation
 
@@ -433,7 +396,7 @@ It can be obtained here: [MovieDemo](https://github.com/hmlongco/MovieDemo).
 
 ## Installation
 
-With the subsetting of CocoaPods, Factory 3.0 supports the Swift Package Manager. Period.
+With the sunsetting of CocoaPods, Factory 3.0 supports the Swift Package Manager. Period.
 
 Factory's primary import library is named `FactoryKit`. This is done in order to avoid SPM import conflicts between the library itself and the `Factory` object defined within the library.
 

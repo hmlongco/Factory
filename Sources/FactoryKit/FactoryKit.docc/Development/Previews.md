@@ -49,15 +49,15 @@ The same can be done using the new macro-based #Preview option added to Xcode 15
     ContentView()
 }
 ```
-In fact, this `let _ = Container.shared.xxx.register` syntax happens so frequently that Factory 2.5 added some sugar to make it a bit easier.
+In fact, this `let _ = Container.shared.xxx.register` syntax happens so frequently that Factory 3.1.1 added some sugar to make it a bit easier.
 
 ```swift
 #Preview {
-    Container.shared.myService.preview { MockServiceN(4) }
+    register(\.myService) { MockServiceN(4) }
     ContentView()
 }
 ```
-The `preview` modifier wraps `register` and also returns an EmptyView, satisfying SwiftUI's ViewBuilder and eliminating the need for `let _ =`.
+The global `register` modifier even returns a discardable EmptyView, satisfying SwiftUI's ViewBuilder and eliminating the need for `let _ =`.
 
 ## Multiple Registrations
 
@@ -96,11 +96,11 @@ struct ContentView_Previews: PreviewProvider {
 Of course, it's even easier with #Preview as each one runs in its own context..
 ```swift
 #Preview {
-    Container.shared.myService.preview { MockServiceN(4) }
+    register(\.myService){ MockServiceN(4) }
     ContentView()
 }
 #Preview {
-    Container.shared.myService.preview { MockServiceN(0) }
+    register(\.myService) { MockServiceN(0) }
     ContentView()
 }
 ```

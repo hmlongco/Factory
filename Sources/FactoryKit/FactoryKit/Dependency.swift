@@ -77,6 +77,61 @@ public func dependency<C: SharedContainer, P, T>(_ keyPath: KeyPath<C, Parameter
     C.shared[keyPath: keyPath](parameter)
 }
 
+#if canImport(SwiftUI)
+import SwiftUI
+
+/// Global function to register a new factory closure on a keyPath of Container.shared.
+///
+/// Returns an `EmptyView` so registrations can be made directly within a SwiftUI `@ViewBuilder` context such as
+/// `#Preview`, where every statement must be a `View`.
+///
+/// ```swift
+/// #Preview {
+///     register(\.myService) { MockService() }
+///     ContentView()
+/// }
+/// ```
+/// Shorthand for `Container.shared.myService.register { MockService() }`.
+@MainActor
+@discardableResult
+public func register<T>(_ keyPath: KeyPath<Container, Factory<T>>, factory: @escaping VoidFactoryType<T>) -> EmptyView {
+    Container.shared[keyPath: keyPath].register(factory: factory)
+    return EmptyView()
+}
+
+/// Global function to register a new factory closure on a keyPath of the specified shared container.
+///
+/// ```swift
+/// register(\MyContainer.myService) { MockService() }
+/// ```
+@MainActor
+@discardableResult
+public func register<C: SharedContainer, T>(_ keyPath: KeyPath<C, Factory<T>>, factory: @escaping VoidFactoryType<T>) -> EmptyView {
+    C.shared[keyPath: keyPath].register(factory: factory)
+    return EmptyView()
+}
+#else
+
+/// Global function to register a new factory closure on a keyPath of Container.shared.
+///
+/// ```swift
+/// register(\.myService) { MockService() }
+/// ```
+/// Shorthand for `Container.shared.myService.register { MockService() }`.
+public func register<T>(_ keyPath: KeyPath<Container, Factory<T>>, factory: @escaping VoidFactoryType<T>) {
+    Container.shared[keyPath: keyPath].register(factory: factory)
+}
+
+/// Global function to register a new factory closure on a keyPath of the specified shared container.
+///
+/// ```swift
+/// register(\MyContainer.myService) { MockService() }
+/// ```
+public func register<C: SharedContainer, T>(_ keyPath: KeyPath<C, Factory<T>>, factory: @escaping VoidFactoryType<T>) {
+    C.shared[keyPath: keyPath].register(factory: factory)
+}
+#endif
+
 // deprecations
 
 @available(*, deprecated, renamed: "dependency", message: "Deprecated. Use `dependency` with a keypath instead.")

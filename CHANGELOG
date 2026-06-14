@@ -2,9 +2,10 @@
 
 ## 3.1.1
 
+* Added global register function to simplify SwiftUI previews even further
 * Documentation clarification: FactoryKit import required in test target despite warning #369
 * Documentation clarification: Factory declared in a @MainActor accessor crashes when resolved off the main actor #370
-* Claude file and skill update
+* Claude file and skill files updated
 
 ## 3.1.0
 
