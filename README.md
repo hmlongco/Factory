@@ -399,8 +399,6 @@ It can be obtained here: [MovieDemo](https://github.com/hmlongco/MovieDemo).
 
 ## Installation
 
-With the sunsetting of CocoaPods, Factory 3.x supports the Swift Package Manager. Period.
-
 Factory's primary import library is named `FactoryKit`. This is done in order to avoid SPM import conflicts between the library itself and the `Factory` object defined within the library.
 
 Just add the Factory package to your project target, select the `FactoryKit` library when asked, and then import `FactoryKit` in your Swift files where needed.
@@ -411,7 +409,24 @@ import FactoryKit
 
 If you're using Swift Testing you'll probably also want to also import the `FactoryTesting` library and add it to your test target. 
 
-**Do not, however, import `FactoryKit` into the Test target. That can lead to duplicate factories and indeterminate behavior.**
+**Warning: Do not copy the FactoryKit library into the Test target. That can lead to duplicate factories and indeterminate behavior.**
+
+```swift
+// DO THIS
+.testTarget(name: "MyAppTests", dependencies: [
+    "MyApp",
+    "FactoryTesting"
+])
+
+// DO NOT DO THIS
+.testTarget(name: "MyAppTests", dependencies: [
+    "MyApp",
+    "FactoryKit", // BAD!!!
+    "FactoryTesting"
+])
+```
+
+With the sunsetting of CocoaPods, Factory 3.x supports the Swift Package Manager. Period.
 
 > Note: If you still require CocoaPods support, drop down to Factory 2.5.3, or simply clone and embed Factory in your project directly.
 
