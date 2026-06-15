@@ -43,6 +43,8 @@ Unlike frameworks that require registering every single type up front, or SwiftU
 
 *That `self { ... }` syntax is sugared shorthand that replaces the more explicit `Factory(self) { ... }` format. Both are equivalent.*
 
+## Resolution
+
 Injecting an instance of our service is equally straightforward. Here's just one of the many ways Factory can be used.
 
 ```swift
@@ -61,7 +63,7 @@ For more examples of Factory definitions that define scopes, use constructor inj
 
 ## Other Factory Resolution Methods
 
-Earlier we demonstrated how to use the `@Injected` property wrapper. But it's also possible to bypass the property wrapper and talk to the factory yourself.
+We started by demonstrating the `@Injected` property wrapper. But it's also possible to bypass the property wrapper and talk to the factory yourself.
 
 ```swift
 @Observable
