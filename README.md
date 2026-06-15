@@ -41,18 +41,17 @@ extension Container {
 
 Unlike frameworks that require registering every single type up front, or SwiftUI, where defining a new environment variable requires creating a new EnvironmentKey and adding additional getters and setters, here we simply add a new `Factory` computed variable to the default container. When it's called our Factory is created, its closure is evaluated, and we get an instance of our dependency when we need it. 
 
-*That `self { ... }` syntax is sugared shorthand for the original, more formal, and more explicit `Factory(self) { ... }` format. Both are equivalent and are covered in [Simplified Syntax](#simplified-syntax) below.*
+*That `self { ... }` syntax is sugared shorthand that replaces the more explicit `Factory(self) { ... }` format. Both are equivalent.*
 
 Injecting an instance of our service is equally straightforward. Here's just one of the many ways Factory can be used.
 
 ```swift
-@Observable
-class ContentViewModel {
-    @ObservationIgnored @Injected(\.myService) private var myService
+class ContentRepository {
+    @Injected(\.myService) private var myService
     ...
 }
 ```
-This particular view model uses one of Factory's `@Injected` property wrappers to request the desired dependency. Similar to `@Environment` in SwiftUI, we provide the property wrapper with a keyPath to a factory of the desired type and it resolves that type the moment `ContentViewModel` is created.
+This particular class uses one of Factory's `@Injected` property wrappers to request the desired dependency. Similar to `@Environment` in SwiftUI, we provide the property wrapper with a keyPath to a factory of the desired type and it resolves that type the moment `ContentRepository` is created.
 
 And that's the core mechanism. In order to use the property wrapper you *must* define a factory within the specified container. That factory *must* return the desired type when asked. Fail to do either one and the code will simply not compile. As such, Factory is compile-time safe.
 
@@ -67,20 +66,24 @@ Earlier we demonstrated how to use the `@Injected` property wrapper. But it's al
 ```swift
 @Observable
 class ContentViewModel {
+    @ObservationIgnored
     private let myService = Container.shared.myService()
+    @ObservationIgnored
     private let eventLogger = Container.shared.eventLogger()
     ...
 }
 ```
-Just call the desired factory as a function and you'll get an instance of its managed dependency. It's that simple.
+Just call the desired factory as a function and you'll get an instance of its managed dependency. It's that simple. Note that this is an `@Observable` view model, and as such services are typically marked as `@ObservationIgnored`.
 
 If you're into container-based dependency injection, note that you can simply pass a container to a view model and obtain an instance of your service directly from that container.
 ```swift
 @Observable
 class ContentViewModel {
-    let service: MyServiceType
+    @ObservationIgnored 
+    let myService: MyServiceType
+    
     init(container: Container) {
-        service = container.myService()
+        myService = container.myService()
     }
 }
 ```
@@ -124,7 +127,7 @@ See [Resolutions](https://hmlongco.github.io/Factory/documentation/factorykit/re
 
 ## Mocking
 
-If we go back and look at our original view model code one might wonder why we've gone to all of this trouble? Why not simply say `let myService = MyService()` and be done with it? 
+If we go back and look at our `ContentViewModel` code one might wonder why we've gone to all of this trouble? Why not simply say `let myService = MyService()` and be done with it? 
 
 Or keep the container idea, but write something similar to this…
 
@@ -165,12 +168,12 @@ This is a powerful concept that lets us reach deep into a chain of dependencies 
 Note that Factory 3.2.0 added the new `callAsFunction` registration function that eliminated some of the boilerplate.
 ```swift
 #Preview {
-    // the old way
+    // the old way, prior to 3.2
     let _ = Container.shared.myService.register { MockService2() }
     ContentView()
 }
 ```
-We'll use the new format going forward.
+The new way is cleaner and a lot more concise, so we'll use the new format going forward.
 
 See the [Previews](https://hmlongco.github.io/Factory/documentation/factorykit/previews) documentation for more.
 
@@ -273,29 +276,13 @@ If no scope is specified the default scope is unique. A new instance of the serv
 
 Other common scopes are `cached` and `shared`. Cached items are persisted until the cache is reset, while shared items exist just as long as someone holds a strong reference to them. When the last reference goes away, the weakly held shared reference also goes away.
 
-Factory has other scope types, plus the ability to add more of your own. See [Scopes](https://hmlongco.github.io/Factory/documentation/factorykit/scopes) for additional examples.
+Factory has other scope types, plus the ability to add more of your own (`.session` in the above example). See [Scopes](https://hmlongco.github.io/Factory/documentation/factorykit/scopes) for additional documentation and examples.
 
 Scopes and scope management are powerful tools to have in your dependency injection arsenal.
 
-## Simplified Syntax
-
-You may have noticed in the previous example that Factory also provides a bit of syntactical sugar that lets us make our definitions more concise. We simply ask the enclosing container to make a properly bound Factory for us using `self.callAsFunction { ... }`.
-
-```swift
-extension Container {
-    var sugared: Factory<MyServiceType> { 
-        self { MyService() }
-    }
-    var formal: Factory<MyServiceType> { 
-        Factory(self) { MyService() }
-    }
-}
-```
-Both definitions provide the same exact result. The sugared function is even inlined, so there's not even a performance difference between the two versions.
-
 ## Contexts
 
-One powerful feature in Factory is contexts. Let's say that for logistical reasons whenever your application runs in debug mode you *never* want it to make calls to your application's analytics engine.
+One powerful feature unique to Factory is contexts. Let's say that for logistical reasons whenever your application runs in debug mode you *never* want it to make calls to your application's analytics engine.
 
 Easy. Just register an override for that particular context.
 
@@ -352,7 +339,7 @@ struct ContentView: View {
     }
 }
 ```
-`InjectedObservable` was added to Factory 2.4.
+`InjectedObservable` was added to Factory 2.4, and is roughly equivalent to `@State var viewModel = Container.shared.contentViewModel()`.
 
 See [SwiftUI](https://hmlongco.github.io/Factory/documentation/factorykit/swiftui) for more discussion.
 
