@@ -100,14 +100,14 @@ struct ContentView_Previews: PreviewProvider {
 // New Previews
 #Preview {
     Group {
-        register(\.myServiceType) { MockServiceN(4) }
+        Container.shared.myServiceType { MockServiceN(4) }
         ContentView()
     }
 }
 
 #Preview {
     Group {
-        register(\.myServiceType) { MockServiceN(8) }
+        Container.shared.myServiceType { MockServiceN(8) }
         ContentView()
     }
 }

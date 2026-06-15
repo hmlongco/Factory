@@ -119,8 +119,14 @@ container.service.register {
 ```
 
 This new factory registration overrides the original factory closure and then asks the container to clear its associated scope. The next time this factory is resolved Factory will evaluate the new closure and return an instance of the newly registered object instead.
-
 *This includes singletons, with a few caveats. See the Singleton section in <doc:Testing>*
+Theres's also new registration shortcut.
+
+```swift
+container.service {
+    MockService()
+}
+```
 
 ## Mocking and Testing
 
@@ -153,7 +159,7 @@ It's easy. Just replace `MyService` with a mock that also conforms to `MyService
 ```swift
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        let _ = Container.shared.myService.register { MockService2() }
+        Container.shared.myService { MockService2() }
         ContentView()
     }
 }

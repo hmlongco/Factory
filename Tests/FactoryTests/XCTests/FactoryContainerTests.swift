@@ -63,7 +63,7 @@ final class FactoryContainerTests: XCTestCase {
         let service1 = Container.shared.myServiceType()
         XCTAssertTrue(service1.text() == "MyService")
 
-        Container.shared.with {
+        Container.shared {
             $0.myServiceType.register(factory: { MockService() })
         }
 
@@ -76,14 +76,14 @@ final class FactoryContainerTests: XCTestCase {
         let service1 = Container.shared.myServiceType()
         XCTAssertTrue(service1.text() == "MyService")
 
-        Container.preview {
+        Container.shared {
             $0.myServiceType.register(factory: { MockService() })
         }
 
         let service2 = Container.shared.myServiceType()
         XCTAssertTrue(service2.text() == "MockService")
 
-        Container.shared.preview {
+        Container.shared {
             $0.myServiceType.register(factory: { MockServiceN(9) })
         }
 

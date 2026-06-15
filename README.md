@@ -5,7 +5,7 @@
 
 A modern approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
-## Factory Version 3.1.1
+## Factory Version 3.2.0
 
 Factory is strongly influenced by SwiftUI, and in my opinion is highly suited for that environment. Factory is...
 
@@ -152,7 +152,7 @@ It's easy. Just replace `MyService` with a mock that also conforms to `MyService
 
 ```swift
 #Preview {
-    let _ = Container.shared.myService.register { MockService2() }
+    Container.shared.myService { MockService2() }
     ContentView()
 }
 ```
@@ -162,13 +162,16 @@ Now when our preview is displayed `ContentView` creates a `ContentViewModel` whi
 
 This is a powerful concept that lets us reach deep into a chain of dependencies and alter the behavior of a system as needed.
 
-Note that Factory 3.1.1 added more sugar with a global `register function similar to the` `dependency function mentioned earlier`.
+Note that Factory 3.2.0 added the new `callAsFunction` registration function that eliminated some of the boilerplate.
 ```swift
 #Preview {
-    register(.myService) { MockService2() }
+    // the old way
+    let _ = Container.shared.myService.register { MockService2() }
     ContentView()
 }
 ```
+We'll use the new format going forward.
+
 See the [Previews](https://hmlongco.github.io/Factory/documentation/factorykit/previews) documentation for more.
 
 ## Testing
@@ -180,21 +183,21 @@ The mocking concept can also be used when writing unit tests. Consider the follo
 struct FactoryTests {
 
     @Test func testLoaded() async {
-        Container.shared.accountProvider.register { MockProvider(accounts: .sampleAccounts) }
+        Container.shared.accountProvider { MockProvider(accounts: .sampleAccounts) }
         let model = Container.shared.someViewModel()
         model.load()
         #expect(model.isLoaded)
     }
 
     @Test func testEmpty() async {
-        Container.shared.accountProvider.register { MockProvider(accounts: []) }
+        Container.shared.accountProvider { MockProvider(accounts: []) }
         let model = Container.shared.someViewModel()
         model.load()
         #expect(model.isEmpty)
     }
 
     @Test func testErrors() async {
-        Container.shared.accountProvider.register { MockProvider(error: .notFoundError) }
+        Container.shared.accountProvider { MockProvider(error: .notFoundError) }
         let model = Container.shared.someViewModel()
         model.load()
         #expect(model.errorMessage == "Some Error")
@@ -225,7 +228,7 @@ final class FactoryCoreTests: XCTestCase {
     }
     
     func testLoaded() throws {
-        Container.shared.accountProvider.register { MockProvider(accounts: .sampleAccounts) }
+        Container.shared.accountProvider { MockProvider(accounts: .sampleAccounts) }
         let model = Container.shared.someViewModel()
         model.load()
         XCTAssertTrue(model.isLoaded)

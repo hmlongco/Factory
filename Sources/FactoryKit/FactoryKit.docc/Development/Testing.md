@@ -57,12 +57,12 @@ func testNoAccounts() async {
     XCTAssertTrue(model.isEmpty)
 }
 ```
-Or we can write a test against unstable test data...
+Or we can write a test against unstable test data. Let's do that using the new simplified syntax.
 
 ```swift
 func testNoAccounts() async {
     // register a mock
-    Container.shared.accountLoading.register { MockAccountError(404) }
+    Container.shared.accountLoading { MockAccountError(404) } // no .register needed
     // instantiate the model that uses the mock
     let model = Container.shared.accountsViewModel()
     // and test...
@@ -104,7 +104,7 @@ final class FactoryCoreTests: XCTestCase {
     }
     
     func testNoAccounts() async {
-        Container.shared.accountLoading.register { MockNoAccounts() }
+        Container.shared.accountLoading { MockNoAccounts() }
         let model = Container.shared.accountsViewModel()
         await model.load()
         XCTAssertTrue(model.isLoaded)
@@ -112,7 +112,7 @@ final class FactoryCoreTests: XCTestCase {
     }
 
     func testError() async {
-        Container.shared.accountLoading.register { MockAccountError(404) }
+        Container.shared.accountLoading { MockAccountError(404) }
         let model = Container.shared.accountsViewModel()
         await model.load()
         XCTAssertTrue(model.isError)
@@ -132,7 +132,7 @@ Note that the above is just one way of doing things. If, for example, our `Accou
 ```swift
 func testNoAccounts() async throws {
     let json = #"{ "accounts": [] }"#
-    Container.shared.networking.register { MockJSON(json) }
+    Container.shared.networking { MockJSON(json) }
     let model = Container.shared.accountsViewModel()
     // as before
 }
@@ -143,7 +143,7 @@ Same for our error code.
 
 ```swift
 func testNoAccounts() async throws {
-    Container.shared.networking.register { MockError(404) }
+    Container.shared.networking { MockError(404) }
     let model = Container.shared.accountsViewModel()
     // as before
 }
@@ -188,7 +188,7 @@ final class FactoryCoreTests: XCTestCase {
     }
     
     func testSomething() throws {
-        container.myServiceType.register(factory: { MockService() })
+        container.myServiceType.register { MockService() }
         let model = MyViewModel(container: container)
         model.load()
         XCTAssertTrue(model.isLoaded)
@@ -205,8 +205,8 @@ As shown in the earlier examples, if we have several mocks that we use all of th
 ```swift
 extension Container {
     func setupMocks() {
-        myService.register { MockServiceN(4) }
-        sharedService.register { MockService2() }
+        myService { MockServiceN(4) }
+        sharedService { MockService2() }
     }
 }
 ```
@@ -279,14 +279,14 @@ import Testing
 
 struct AppTests {
   @Test func testA() async {
-    Container.shared.someService.register { ErrorService() }
+    Container.shared.someService { ErrorService() }
     let service = Container.shared.someService()
     #expect(service.error == "Oops")
   }
 
   @Test(arguments: Parameters.allCases) 
   func testB(parameter: Parameters) async {
-    Container.shared.someService.register { MockService(parameter: parameter) }
+    Container.shared.someService { MockService(parameter: parameter) }
     let service = Container.shared.someService()
     #expect(service.parameter == parameter)
   }
@@ -312,14 +312,14 @@ import FactoryTesting
 struct AppTests {
   @Test(.container) 
   func testA() async {
-    Container.shared.someService.register { ErrorService() }
+    Container.shared.someService{ ErrorService() }
     let service = Container.shared.someService()
     #expect(service.error == "Oops")
   }
 
   @Test(.container, arguments: Parameters.allCases) 
   func testB(parameter: Parameters) async {
-    Container.shared.someService.register { MockService(parameter: parameter) }
+    Container.shared.someService { MockService(parameter: parameter) }
     let service = Container.shared.someService()
     #expect(service.parameter == parameter)
   }
@@ -473,8 +473,8 @@ Factory provides a way to put these registrations right next to the `ContainerTr
 ```swift
 struct AppTests {
   @Test(.container {
-    $0.someService.register { ErrorService() }
-    $0.someOtherService.register { OtherErrorService() }
+    $0.someService { ErrorService() }
+    $0.someOtherService { OtherErrorService() }
   }) 
   func testA() async {
     let service = Container.shared.someService()
@@ -500,7 +500,7 @@ extension Container {
 struct SomeSuite {
   @Test(.container {
     // ERROR: Call to main actor-isolated initializer 'init()' in a synchronous nonisolated context
-    $0.mainActorType.register { MockActorType() }
+    $0.mainActorType { MockActorType() }
   })
   func foo() {
     ...
@@ -510,7 +510,7 @@ The solution is simple since our transforming closure is async. Just use await t
 ```swift
 struct SomeSuite {
   @Test(.container {
-    await $0.mainActorType.register { MockActorType() }
+    await $0.mainActorType { MockActorType() }
   })
   func foo() {
     ...
@@ -556,14 +556,14 @@ class ContentViewModel {
 @Suite struct AppTests {
   @Test(arguments: Parameters.allCases) func testA(parameter: Parameters) {
     let container = Container()
-    container.someService.register { MockService(parameter: parameter) }
+    container.someService { MockService(parameter: parameter) }
     let model = ContentViewModel(container: container)
     #expect(model.parameter == parameter)
   }
 
   @Test func testB() async throws {
     let container = Container()
-    container.someService.register { ErrorService() }
+    container.someService { ErrorService() }
     let model = ContentViewModel(container: container)
     #expect(model.error == "Oops")
   }
@@ -609,7 +609,7 @@ extension Container: AutoRegistering {
     public func autoRegister() {
         #if DEBUG
         if ProcessInfo().arguments.contains("mock1") {
-            myServiceType.register { MockServiceN(1) }
+            myServiceType { MockServiceN(1) }
         }
         #endif
     }

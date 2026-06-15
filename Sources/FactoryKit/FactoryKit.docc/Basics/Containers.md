@@ -152,7 +152,7 @@ As mentioned earlier, factory registrations and scopes are managed by the contai
 
 ```swift
 let containerA = MyContainer()
-containerA.register.cachedService { MockService() }
+containerA.cachedService { MockService() }
 
 // Will have a MockService
 let service1 = containerA.cachedService() 
@@ -166,7 +166,7 @@ From time to time you may find that you need to register or change some instance
 ```swift
 extension MyContainer: AutoRegistering {
     func autoRegister() {
-        someService.register { ModuleB.SomeService() }
+        someService { ModuleB.SomeService() }
     }
 }
 ```
@@ -182,7 +182,7 @@ attribute to the `AutoRegistering` protocol definition.
 ```swift
 extension Container: @retroactive AutoRegistering {
     func autoRegister() {
-        someService.register { ModuleB.SomeService() }
+        someService { ModuleB.SomeService() }
     }
 }
 ```
@@ -248,5 +248,4 @@ let service4 = container.cachedService()
 assert(service3.id == service4.id)
 ```
 From a certain point of view, replacing a container with a new one is the ultimate reset mechanism.
-
 > Note: As of Factory 2.2 it's no longer possible to reassign the default "shared" container. This change clears several warnings that could be issued by Swift concurrency when "complete" checking is enabled and one attempts to access the container via the shared static variable (e.g. `let s = Container.shared.myService()`).

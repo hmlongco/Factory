@@ -85,9 +85,41 @@ public nonisolated protocol SharedContainer: ManagedContainer {
 
 }
 
-#if canImport(SwiftUI)
 /// Defines the default factory helpers for shared containers
 extension SharedContainer {
+#if canImport(SwiftUI)
+    /// Defines a convenience function to allow easy container transformations in SwiftUI Previews.
+    /// ```swift
+    /// #Preview {
+    ///     Container.shared {
+    ///         $0.requestUsers { MockAsyncRequest { User.mockUsers } }
+    ///         // as many as needed
+    ///     }
+    ///     MainView()
+    /// }
+    /// ```
+    /// Without it you'd need something like the following let assignment.
+    /// ```swift
+    /// #Preview {
+    ///     let _ = Container.shared {
+    ///         $0.requestUsers { MockAsyncRequest { User.mockUsers } }
+    ///     }
+    ///     MainView()
+    /// }
+    /// ```
+    @discardableResult
+    public func callAsFunction(_ transform: (Self) -> Void) -> EmptyView {
+        transform(self)
+        return EmptyView()
+    }
+
+    /// async versions
+    @discardableResult
+    public func callAsFunction(_ transform: @Sendable @isolated(any) (Self) async -> Void) async -> Self {
+        await transform(self)
+        return self
+    }
+
     /// Defines a preview convenience function to allow easy container transformations in SwiftUI Previews.
     /// ```swift
     /// #Preview {
@@ -106,6 +138,7 @@ extension SharedContainer {
     ///     MainView()
     /// }
     /// ```
+    @available(*, deprecated, message: "Use callAsFunction version instead.")
     @discardableResult
     public func preview(_ transform: (Self) -> Void) -> EmptyView {
         transform(self)
@@ -116,18 +149,36 @@ extension SharedContainer {
     /// ```swift
     /// #Preview {
     ///     Container.preview {
-    ///         $0.requestUsers.register { MockAsyncRequest { User.mockUsers } }
+    ///         $0.requestUsers { MockAsyncRequest { User.mockUsers } }
     ///     }
     ///     MainView()
     /// }
     /// ```
+    @available(*, deprecated, message: "Use callAsFunction version instead.")
     @discardableResult
     public static func preview(_ transform: (Self) -> Void) -> EmptyView {
         transform(shared)
         return EmptyView()
     }
-}
+#else
+    /// Sugared version of with
+    /// ```swift
+    /// Container.shared {
+    ///     $0.requestUsers { MockAsyncRequest { User.mockUsers } }
+    /// }
+    /// ```
+    public func callAsFunction(_ transform: (Self) -> Void) {
+        transform(self)
+    }
+
+    @discardableResult
+    public func callAsFunction(_ transform: @Sendable @isolated(any) (Self) async -> Void) async -> Self {
+        await transform(self)
+        return self
+    }
+
 #endif
+}
 
 // MARK: - ManagedContainer
 
@@ -176,15 +227,15 @@ extension ManagedContainer {
     /// inform you of the mistake. But in a released application, `promised()` simply returns nil and your application can continue on.
     public func promised<T>(key: StaticString = #function, file: StaticString = #file, line: UInt = #line) -> Factory<T?>  {
         Factory<T?>(self, key: key) {
-            #if DEBUG
+        #if DEBUG
             if self.manager.promiseTriggersError {
                 resetAndTriggerFatalError("\(T.self) was not registered", file, line)
             } else {
                 return nil
             }
-            #else
+        #else
             nil
-            #endif
+        #endif
         }
     }
     /// Syntactic sugar allows container to create a parameter factory whose optional registration is promised before resolution.
@@ -197,15 +248,15 @@ extension ManagedContainer {
     /// inform you of the mistake. But in a released application, `promised()` simply returns nil and your application can continue on.
     public func promised<P,T>(key: StaticString = #function, file: StaticString = #file, line: UInt = #line) -> ParameterFactory<P,T?>  {
         ParameterFactory<P,T?>(self, key: key) { _ in
-            #if DEBUG
+        #if DEBUG
             if self.manager.promiseTriggersError {
                 resetAndTriggerFatalError("\(T.self) was not registered", file, line)
             } else {
                 return nil
             }
-            #else
+        #else
             nil
-            #endif
+        #endif
         }
     }
     /// Defines a decorator for the container. This decorator will see every dependency resolved by this container.
@@ -218,13 +269,18 @@ extension ManagedContainer {
     public func reset(options: FactoryResetOptions = .all) {
         manager.reset(options: options)
     }
+}
+
+extension ManagedContainer {
     /// Defines a with function to allow container transformation on assignment.
+    @available(*, deprecated, message: "Use callAsFunction version instead.")
     @discardableResult
     public func with(_ transform: (Self) -> Void) -> Self {
         transform(self)
         return self
     }
     /// Defines an async with function to allow container transformation on assignment.
+    @available(*, deprecated, message: "Use callAsFunction version instead.")
     @discardableResult
     public func with(_ transform: @Sendable @isolated(any) (Self) async -> Void) async -> Self {
         await transform(self)

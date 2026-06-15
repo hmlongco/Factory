@@ -32,7 +32,7 @@ struct ContentView: View {
 // the preview
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        let _ = Container.shared.myService.register { MockServiceN(4) }
+        Container.shared.myService { MockServiceN(4) }
         ContentView()
     }
 }
@@ -45,28 +45,19 @@ The same can be done using the new macro-based #Preview option added to Xcode 15
 
 ```swift
 #Preview {
-    let _ = Container.shared.myService.register { MockServiceN(4) }
+    Container.shared.myService { MockServiceN(4) }
     ContentView()
 }
 ```
-In fact, this `let _ = Container.shared.xxx.register` syntax happens so frequently that Factory 3.1.1 added some sugar to make it a bit easier.
-
-```swift
-#Preview {
-    register(\.myService) { MockServiceN(4) }
-    ContentView()
-}
-```
-The global `register` modifier even returns a discardable EmptyView, satisfying SwiftUI's ViewBuilder and eliminating the need for `let _ =`.
 
 ## Multiple Registrations
 
 There's also a variant for Containers if you need to do multiple registrations.
 ```swift
 #Preview {
-    Container.preview {
-        $0.myService.register { MockServiceN(4) }
-        $0.anotherService.register { MockAnotherService() }
+    Container.shared {
+        $0.myService { MockServiceN(4) }
+        $0.anotherService { MockAnotherService() }
     }
     ContentView()
 }
@@ -82,11 +73,11 @@ Prior to Xcode 15 and given the ContentView we used above, we'd need to do:
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         Group {
-            let _ = Container.shared.myService.register { MockServiceN(4) }
+            Container.shared.myService { MockServiceN(4) }
             let vm1 = ContentViewModel()
             ContentView(viewModel: vm1)
             
-            let _ = Container.shared.myService.register { MockServiceN(8) }
+            Container.shared.myService { MockServiceN(8) }
             let vm2 = ContentViewModel()
             ContentView(viewModel: vm2)
         }
@@ -96,11 +87,11 @@ struct ContentView_Previews: PreviewProvider {
 Of course, it's even easier with #Preview as each one runs in its own context..
 ```swift
 #Preview {
-    register(\.myService){ MockServiceN(4) }
+    Container.shared.myService { MockServiceN(4) }
     ContentView()
 }
 #Preview {
-    register(\.myService) { MockServiceN(0) }
+    Container.shared.myService { MockServiceN(0) }
     ContentView()
 }
 ```
@@ -113,8 +104,8 @@ If we have several mocks that we use all of the time in our previews or unit tes
 ```swift
 extension Container {
     func setupMocks() {
-        myService.register { MockServiceN(4) }
-        sharedService.register { MockService2() }
+        myService { MockServiceN(4) }
+        sharedService { MockService2() }
     }
 }
 
@@ -127,8 +118,8 @@ Or if you want to roll with the cool kids and continue with the preview syntax..
 ```swift
 extension Container {
     func setupMocks() -> EmptyView {
-        myService.register { MockServiceN(4) }
-        sharedService.register { MockService2() }
+        myService { MockServiceN(4) }
+        sharedService { MockService2() }
         return EmptyView()
     }
 }

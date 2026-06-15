@@ -26,6 +26,10 @@
 
 import Foundation
 
+#if canImport(SwiftUI)
+import SwiftUI
+#endif
+
 public typealias ParameterFactoryType<P, T> = (P) -> T
 public typealias VoidFactoryType<T> = () -> T
 
@@ -141,6 +145,25 @@ public nonisolated struct Factory<T>: FactoryModifying {
         return self
     }
 
+    #if canImport(SwiftUI)
+    /// Sugared registration function
+    /// ```swift
+    /// container.service {
+    ///     SomeService()
+    /// }
+    /// ```
+    @discardableResult
+    public func callAsFunction(factory: @escaping VoidFactoryType<T>) -> EmptyView {
+        register(factory: factory)
+        return EmptyView()
+    }
+    #else
+    /// Sugared registration function
+    public func callAsFunction(factory: @escaping VoidFactoryType<T>) {
+        register(factory: factory)
+    }
+    #endif
+
     /// Internal parameters for this Factory including id, container, the factory closure itself, the scope,
     /// and others.
     public var registration: FactoryRegistration<Void,T>
@@ -233,6 +256,25 @@ public nonisolated struct ParameterFactory<P,T>: FactoryModifying {
         registration.register(factory: factory)
         return self
     }
+
+    #if canImport(SwiftUI)
+    /// Sugared registration function
+    /// ```swift
+    /// container.parameterService { n in
+    ///     ParameterService(value: n)
+    /// }
+    /// ```
+    @discardableResult
+    public func callAsFunction(factory: @escaping ParameterFactoryType<P, T>) -> EmptyView {
+        register(factory: factory)
+        return EmptyView()
+    }
+    #else
+    /// Sugared registration function
+    public func callAsFunction(factory: @escaping ParameterFactoryType<P, T>) {
+        register(factory: factory)
+    }
+    #endif
 
     /// Required registration
     public var registration: FactoryRegistration<P,T>

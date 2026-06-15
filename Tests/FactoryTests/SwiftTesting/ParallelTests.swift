@@ -96,7 +96,7 @@ struct ParallelTests {
         @Test
         func bar() {
             // will reregister services
-            Container.shared.with {
+            Container.shared {
                 $0.fooBarBaz.register { Bar() }
                 $0.fooBarBazCached.register { Bar() }
                 $0.fooBarBazSingleton.register { Bar() }
@@ -108,7 +108,7 @@ struct ParallelTests {
         @Test
         func baz() {
             // will reregister services
-            Container.shared.with {
+            Container.shared {
                 $0.fooBarBaz.register { Baz() }
                 $0.fooBarBazCached.register { Baz() }
                 $0.fooBarBazSingleton.register { Baz() }
@@ -185,7 +185,7 @@ struct ParallelTests {
         @MainActor
         @Test(.container)
         func isolatedBaz() async {
-            await Container.shared.with { @MainActor in
+            await Container.shared { @MainActor in
                 $0.fooBarBaz.register { Baz() }
                 $0.fooBarBazCached.register { Baz() }
                 $0.fooBarBazSingleton.register { Baz() }
