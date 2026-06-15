@@ -63,7 +63,7 @@ For more examples of Factory definitions that define scopes, use constructor inj
 
 ## Other Factory Resolution Methods
 
-We started by demonstrating the `@Injected` property wrapper. But it's also possible to bypass the property wrapper and talk to the factory yourself.
+We started by demonstrating the `@Injected` property wrapper, but it's also possible to bypass the property wrapper and talk to the factory yourself.
 
 ```swift
 @Observable
@@ -75,7 +75,7 @@ class ContentViewModel {
     ...
 }
 ```
-Just call the desired factory as a function and you'll get an instance of its managed dependency. It's that simple. Note that this is an `@Observable` view model, and as such services are typically marked as `@ObservationIgnored`.
+Just call the desired factory as a function and you'll get an instance of its managed dependency. It's that simple. Note that this is an `@Observable` view model and services on such things are usually private and typically marked as `@ObservationIgnored`.
 
 If you're into container-based dependency injection, note that you can simply pass a container to a view model and obtain an instance of your service directly from that container.
 ```swift
