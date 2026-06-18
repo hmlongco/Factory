@@ -5,7 +5,7 @@
 
 A modern approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
-## Factory Version 3.2.0
+## Factory Version 3.2.1
 
 Factory is strongly influenced by SwiftUI, and in my opinion is highly suited for that environment. Factory is...
 
@@ -343,7 +343,7 @@ struct ContentView: View {
 ```
 `InjectedObservable` was added to Factory 2.4, and is roughly equivalent to `@State var viewModel = Container.shared.contentViewModel()`.
 
-See [SwiftUI](https://hmlongco.github.io/Factory/documentation/factorykit/swiftui) for more discussion.
+See [SwiftUI](https://hmlongco.github.io/Factory/documentation/factorykit/swiftui) and [Actors](https://hmlongco.github.io/Factory/documentation/factorykit/actors) for more discussion.
 
 ## Nonisolated Classes
 

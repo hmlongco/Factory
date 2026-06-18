@@ -1,5 +1,10 @@
 # Factory Changelog
 
+### 3.2.1
+
+* Add resolveOnMainActor and resolveOnGlobalActor functions for correct resolutions on detached tasks #370
+* Add Actors documentation explaining how to register and resolve actors and MainActor/globalActor instances
+
 ## 3.2.0
 
 * Added callAsFunction extensions to Factory's to simplify registration and SwiftUI previews even further

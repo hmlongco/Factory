@@ -60,6 +60,28 @@ struct MainActorTest {
         let _: TestActorType = await Container.shared.testActor()
     }
 
+    // resolve a @MainActor factory from a detached, non-isolated context using resolveOnMainActor()
+    @Test
+    func resolveOnMainActorFromDetached() async {
+        let distinct = await Task.detached {
+            let a = await Container.shared.mainActor.resolveOnMainActor()
+            let b = await Container.shared.mainActor.resolveOnMainActor()
+            return a !== b
+        }.value
+        #expect(distinct)
+    }
+
+    // resolve a @TestActor (global actor) factory from a detached, non-isolated context using resolveOnGlobalActor(_:)
+    @Test
+    func resolveOnGlobalActorFromDetached() async {
+        let distinct = await Task.detached {
+            let a = await Container.shared.testActor.resolveOnGlobalActor(TestActor.shared)
+            let b = await Container.shared.testActor.resolveOnGlobalActor(TestActor.shared)
+            return a !== b
+        }.value
+        #expect(distinct)
+    }
+
 }
 
 @MainActor

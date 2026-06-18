@@ -170,7 +170,42 @@ public nonisolated struct Factory<T>: FactoryModifying {
 
 }
 
-extension Factory: @unchecked Sendable where T: Sendable {}
+extension Factory: @unchecked Sendable where T: Sendable {
+    /// Resolves a Factory whose registration closure is `@MainActor`-isolated, hopping to the main actor
+    /// first so the dependency is constructed there.
+    ///
+    /// Resolving a main actor-isolated factory directly from a background context traps, because synchronous
+    /// resolution can't change actors on its own. Awaiting this `@MainActor` method performs the hop before
+    /// the closure runs.
+    ///
+    /// ```swift
+    /// Task.detached {
+    ///     let manager = await Container.shared.myMainActorManager.resolveOnMainActor()
+    ///     print(await manager.getValue())
+    /// }
+    /// ```
+    @MainActor
+    public func resolveOnMainActor() -> T {
+        registration.resolve(with: ())
+    }
+
+    /// Resolves a Factory whose registration closure is isolated to a global actor, hopping to that actor
+    /// first so the dependency is constructed there. Pass the global actor's `shared` instance.
+    ///
+    /// The `isolated` parameter makes this method run on the supplied actor, so awaiting it from a background
+    /// context performs the hop before the closure runs. You must pass the actor the registration is actually
+    /// isolated to; a mismatched actor still traps.
+    ///
+    /// ```swift
+    /// Task.detached {
+    ///     let manager = await Container.shared.customGlobalManager.resolveOnGlobalActor(CustomGlobalActor.shared)
+    ///     print(await manager.getValue())
+    /// }
+    /// ```
+    public func resolveOnGlobalActor(_ isolation: isolated (any Actor)) -> T {
+        registration.resolve(with: ())
+    }
+}
 
 // MARK: - ParameterFactory
 
@@ -281,4 +316,41 @@ public nonisolated struct ParameterFactory<P,T>: FactoryModifying {
 
 }
 
-extension ParameterFactory: @unchecked Sendable where P: Sendable, T: Sendable {}
+extension ParameterFactory: @unchecked Sendable where P: Sendable, T: Sendable {
+
+    /// Resolves a ParameterFactory whose registration closure is `@MainActor`-isolated, hopping to the main
+    /// actor first so the dependency is constructed there.
+    ///
+    /// Resolving a main actor-isolated factory directly from a background context traps, because synchronous
+    /// resolution can't change actors on its own. Awaiting this `@MainActor` method performs the hop before
+    /// the closure runs.
+    ///
+    /// ```swift
+    /// Task.detached {
+    ///     let manager = await Container.shared.myMainActorManager.resolveOnMainActor(42)
+    ///     print(await manager.getValue())
+    /// }
+    /// ```
+    @MainActor
+    public func resolveOnMainActor(_ parameters: P) -> T {
+        registration.resolve(with: parameters)
+    }
+
+    /// Resolves a ParameterFactory whose registration closure is isolated to a global actor, hopping to that
+    /// actor first so the dependency is constructed there. Pass the global actor's `shared` instance.
+    ///
+    /// The `isolated` parameter makes this method run on the supplied actor, so awaiting it from a background
+    /// context performs the hop before the closure runs. You must pass the actor the registration is actually
+    /// isolated to; a mismatched actor still traps.
+    ///
+    /// ```swift
+    /// Task.detached {
+    ///     let manager = await Container.shared.customGlobalManager.resolveOnGlobalActor(CustomGlobalActor.shared, parameters: 42)
+    ///     print(await manager.getValue())
+    /// }
+    /// ```
+    public func resolveOnGlobalActor(_ isolation: isolated (any Actor), parameters: P) -> T {
+        registration.resolve(with: parameters)
+    }
+
+}

@@ -42,6 +42,7 @@ Ready to get started?
 
 - <doc:Design>
 - <doc:Modifiers>
+- <doc:Actors>
 - <doc:Modules>
 - <doc:Cycle>
 - <doc:Optionals>
