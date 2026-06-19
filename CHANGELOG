@@ -1,5 +1,9 @@
 # Factory Changelog
 
+### 3.2.2
+
+* Factory supports Xcode 27 skill manifests and its skill can now be imported into Xcode
+
 ### 3.2.1
 
 * Add resolveOnMainActor and resolveOnGlobalActor functions for correct resolutions on detached tasks #370
