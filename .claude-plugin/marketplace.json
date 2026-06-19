@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "factory",
+  "description": "Factory dependency injection skills for Swift and SwiftUI",
+  "owner": {
+    "name": "Michael Long",
+    "url": "https://github.com/hmlongco"
+  },
+  "plugins": [
+    {
+      "name": "factory",
+      "source": "./.claude",
+      "description": "In-depth guide to Factory, a container-based DI system for Swift and SwiftUI.",
+      "version": "3.2.2"
+    }
+  ]
+}

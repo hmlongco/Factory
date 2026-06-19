@@ -1,0 +1,9 @@
+{
+  "name": "factory",
+  "description": "In-depth guide to Factory, a container-based DI system for Swift and SwiftUI.",
+  "version": "3.2.2",
+  "author": {
+    "name": "Michael Long",
+    "url": "https://github.com/hmlongco"
+  }
+}
