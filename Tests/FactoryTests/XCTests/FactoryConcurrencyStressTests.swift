@@ -124,6 +124,67 @@ final class FactoryConcurrencyStressTests: XCTestCase, @unchecked Sendable {
         results.deallocate()
     }
 
+    /// Regression: concurrent unique resolves on a non-graph container must not
+    /// corrupt graph depth/cache while another container is mid graph cycle.
+    /// (Release previously called enter/leave without the recursive lock when
+    /// hasGraphScope was false.)
+    func testNonGraphResolvesDoNotCorruptGraphDepth() throws {
+        let threadCount = 40
+        let iterations = 200
+        let group = DispatchGroup()
+        let queue = DispatchQueue(label: "graph-depth-stress", attributes: .concurrent)
+
+        nonisolated(unsafe) let failures = UnsafeMutablePointer<Int>.allocate(capacity: 1)
+        failures.initialize(to: 0)
+        let failureLock = NSLock()
+
+        // Half the threads hammer a container that never uses graph scope.
+        for _ in 0..<(threadCount / 2) {
+            group.enter()
+            queue.async {
+                for _ in 0..<iterations {
+                    _ = NonGraphStressContainer.shared.uniqueService()
+                }
+                group.leave()
+            }
+        }
+
+        // Half the threads resolve graph parents; children must still share.
+        for _ in 0..<(threadCount / 2) {
+            group.enter()
+            queue.async {
+                for _ in 0..<iterations {
+                    let parent = StressContainer.shared.graphParent()
+                    if parent.child1 !== parent.child2 {
+                        failureLock.lock()
+                        failures.pointee += 1
+                        failureLock.unlock()
+                    }
+                }
+                group.leave()
+            }
+        }
+
+        let result = group.wait(timeout: .now() + 30)
+        XCTAssertEqual(result, .success)
+        XCTAssertEqual(failures.pointee, 0,
+                       "Graph sharing broke under concurrent non-graph resolves (\(failures.pointee) failures)")
+        XCTAssertEqual(Scope.graph.depth, 0, "Graph depth leaked after concurrent resolves")
+        failures.deallocate()
+    }
+
+    /// defaultScope == .graph must mark hasGraphScope and share within a cycle
+    /// even before any factory explicitly registers .graph.
+    func testDefaultGraphScopeSharesWithinCycle() throws {
+        DefaultGraphStressContainer.shared.manager.reset()
+        DefaultGraphStressContainer.shared.manager.defaultScope = .graph
+
+        let parent = DefaultGraphStressContainer.shared.graphParent()
+        XCTAssertTrue(parent.child1 === parent.child2)
+        XCTAssertTrue(DefaultGraphStressContainer.shared.manager.state.hasGraphScope)
+        XCTAssertEqual(Scope.graph.depth, 0)
+    }
+
 }
 
 // MARK: - Test Helpers
@@ -152,6 +213,31 @@ private final class StressContainer: SharedContainer {
 
     var graphChild: Factory<StressService> {
         self { StressService() }.graph
+    }
+}
+
+/// Container that never registers a graph-scoped factory — used to stress
+/// concurrent unique resolves against a graph-using container.
+private final class NonGraphStressContainer: SharedContainer {
+    static let shared = NonGraphStressContainer()
+    let manager = ContainerManager()
+
+    var uniqueService: Factory<StressService> {
+        self { StressService() }
+    }
+}
+
+/// Container that relies on defaultScope == .graph rather than per-factory .graph.
+private final class DefaultGraphStressContainer: SharedContainer {
+    static let shared = DefaultGraphStressContainer()
+    let manager = ContainerManager()
+
+    var graphParent: Factory<GraphParent> {
+        self { GraphParent(child1: self.graphChild(), child2: self.graphChild()) }
+    }
+
+    var graphChild: Factory<StressService> {
+        self { StressService() }
     }
 }
 

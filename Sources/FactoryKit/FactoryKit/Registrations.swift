@@ -63,10 +63,19 @@ public nonisolated struct FactoryRegistration<P,T> {
         let scope: Scope? = options?.scope ?? manager.defaultScope
         let decorator: ((Any) -> ())? = manager.state.defaultDecorator
 
+        // Scope.graph.enter/leave run on every resolve and mutate process-global
+        // depth/cache. In DEBUG we already take the recursive lock whenever circular
+        // dependency testing or tracing is on (the common case). In Release the old
+        // path only locked when hasGraphScope was set, so non-graph containers still
+        // called enter/leave unlocked and could reset the graph cache mid-cycle on
+        // another thread. Always lock in Release so those mutations are serialized.
+        if scope === Scope.graph {
+            manager.state.hasGraphScope = true
+        }
         #if DEBUG
         let globalLockRequired = manager.state.hasGraphScope || globalTraceFlag || globalCircularDependencyTesting
         #else
-        let globalLockRequired = manager.state.hasGraphScope
+        let globalLockRequired = true
         #endif
 
         manager.lock.unlock()
