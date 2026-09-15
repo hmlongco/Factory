@@ -10,6 +10,53 @@ final class FactoryConcurrencyStressTests: XCTestCase, @unchecked Sendable {
         Scope.singleton.reset()
     }
 
+    func testCachedConcurrentFirstResolution() {
+        assertConcurrentFirstResolution(scope: Scope.Cached())
+    }
+
+    func testSingletonConcurrentFirstResolution() {
+        assertConcurrentFirstResolution(scope: Scope.Singleton())
+    }
+
+    private func assertConcurrentFirstResolution(scope: Scope, file: StaticString = #filePath, line: UInt = #line) {
+        let container = Container()
+        let circularDependencyTesting = container.manager.circularDependencyTesting
+        let trace = container.manager.trace
+        container.manager.circularDependencyTesting = false
+        container.manager.trace = false
+        defer {
+            container.manager.circularDependencyTesting = circularDependencyTesting
+            container.manager.trace = trace
+        }
+        XCTAssertFalse(container.manager.graphScopeEnabled, file: file, line: line)
+
+        let counter = CallCounter()
+        let results = ResolutionResults()
+        let factory = Factory(container) {
+            counter.increment()
+            // Keep the cache cold long enough for competing callers to enter resolution.
+            Thread.sleep(forTimeInterval: 0.02)
+            return UUID()
+        }.scope(scope)
+
+        DispatchQueue.concurrentPerform(iterations: 32) { _ in
+            results.insert(factory())
+        }
+
+        XCTAssertEqual(counter.value, 1, "Factory must execute exactly once", file: file, line: line)
+        XCTAssertEqual(results.count, 1, "Every caller must receive the same cached value", file: file, line: line)
+    }
+
+    func testCachedResolutionCanDelegateAcrossContainersWithSameKey() {
+        let first = Container()
+        let second = Container()
+        let scope = Scope.Cached()
+        let inner = Factory(second, key: "service") { UUID() }.scope(scope)
+        let outer = Factory(first, key: "service") { inner() }.scope(scope)
+
+        XCTAssertEqual(outer(), inner())
+    }
+
     /// Verifies that singleton scope returns the same instance across all threads.
     func testSingletonConsistencyUnderContention() throws {
         let threadCount = 100
@@ -206,5 +253,18 @@ private final class CallCounter: @unchecked Sendable {
         _lock.lock()
         _value += 1
         _lock.unlock()
+    }
+}
+
+private final class ResolutionResults: @unchecked Sendable {
+    private let lock = NSLock()
+    private var values: Set<UUID> = []
+
+    var count: Int {
+        lock.withLock { values.count }
+    }
+
+    func insert(_ value: UUID) {
+        lock.withLock { _ = values.insert(value) }
     }
 }

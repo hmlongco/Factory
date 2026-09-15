@@ -69,9 +69,7 @@ public class Scope: @unchecked Sendable {
             }
         }
 
-        let keyLock = lock.withLock {
-            locks[key, default: CrossPlatformLock()]
-        }
+        let keyLock = cache.resolutionLock(forKey: key)
 
         let result: (instance: T, cached: Bool) = keyLock.withLock {
             if let box = cache.value(forKey: key), let cached: T = unboxed(box: box) {
@@ -113,7 +111,6 @@ public class Scope: @unchecked Sendable {
 
     internal let scopeID: UUID = UUID()
     internal let lock: NSLocking = CrossPlatformLock()
-    internal var locks: [FactoryKey: CrossPlatformLock] = [:]
 
 }
 
@@ -263,7 +260,19 @@ extension Scope {
         // locals
         let lock = ReadWriteLock()
         var cache: CacheMap
+        // Keep locks for the cache lifetime, including across resets while resolutions may be in flight.
+        private var resolutionLocks: [FactoryKey: CrossPlatformLock] = [:]
         /// internal support functions
+        internal func resolutionLock(forKey key: FactoryKey) -> CrossPlatformLock {
+            lock.withWriteLock {
+                if let existing = resolutionLocks[key] {
+                    return existing
+                }
+                let newLock = CrossPlatformLock()
+                resolutionLocks[key] = newLock
+                return newLock
+            }
+        }
         @inlinable @inline(__always) func value(forKey key: FactoryKey) -> AnyBox? {
             lock.withReadLock { cache[key] }
         }
