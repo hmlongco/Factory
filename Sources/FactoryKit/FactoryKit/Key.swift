@@ -29,16 +29,16 @@ internal struct FactoryKey: Hashable {
 
     let type: ObjectIdentifier
     let key: StaticString
-    let parameter: Int
+    let parameter: AnyHashable?
 
     internal init(type: Any.Type, key: StaticString) {
         self.type = ObjectIdentifier(type) // globalIdentifier(for: type)
         self.key = key
-        self.parameter = 0
+        self.parameter = nil
     }
 
     @inline(__always)
-    private init(type: ObjectIdentifier, key: StaticString, parameter: Int) {
+    private init(type: ObjectIdentifier, key: StaticString, parameter: AnyHashable?) {
         self.type = type
         self.key = key
         self.parameter = parameter
@@ -58,11 +58,12 @@ internal struct FactoryKey: Hashable {
         guard let hashable = value as? any Hashable else {
             return self
         }
-        return .init(type: type, key: key, parameter: hashable.hashValue)
+        // Preserve equality so distinct parameters with the same hash do not share a cached value.
+        return .init(type: type, key: key, parameter: AnyHashable(hashable))
     }
 
     internal func normalized() -> Self {
-        return .init(type: type, key: key, parameter: 0)
+        return .init(type: type, key: key, parameter: nil)
     }
 
 }

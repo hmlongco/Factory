@@ -105,7 +105,9 @@ final class FactoryComponentTests: XCTestCase {
         let f1b = f2.parameterized("bar")
         XCTAssertNotEqual(f1b, f2f)
         let f1v = f1.parameterized(())
-        XCTAssertEqual(f1v.parameter, 0)
+        XCTAssertEqual(f1v, f1)
+        XCTAssertEqual(f1f.normalized(), f1)
+        XCTAssertEqual(f1b.normalized(), f2)
     }
 
 }
