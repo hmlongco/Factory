@@ -48,7 +48,7 @@ public nonisolated struct FactoryRegistration<P,T> {
 
     /// Resolves a Factory, returning an instance of the desired type. All roads lead here.
     ///
-    /// - Parameter factory: Factory wanting resolution.
+    /// - Parameter parameters: Parameters to pass to the factory closure.
     /// - Returns: Instance of the desired type.
     internal func resolve(with parameters: P) -> T {
         let manager: ContainerManager = container.manager
@@ -171,9 +171,7 @@ extension FactoryRegistration {
 
     /// Registers a new factory closure capable of producing an object or service of the desired type. This factory overrides the original factory and
     /// the next time this factory is resolved Factory will evaluate the newly registered factory instead.
-    /// - Parameters:
-    ///   - id: ID of associated Factory.
-    ///   - factory: Factory closure called to create a new instance of the service when needed.
+    /// - Parameter factory: Factory closure called to create a new instance of the service when needed.
     internal func register(factory: @escaping (P) -> T) {
         defer { container.manager.lock.unlock()  }
         container.manager.lock.lock()
@@ -252,9 +250,7 @@ extension FactoryRegistration {
 
     /// Support function resets the behavior for a specific Factory to its original state, removing any associated registrations and clearing
     /// any cached instances from the specified scope.
-    /// - Parameters:
-    ///   - options: Reset option: .all, .registration, .scope, .none
-    ///   - id: ID of item to remove from the appropriate cache.
+    /// - Parameter options: Reset option: .all, .registration, .scope, .none
     internal func reset(options: FactoryResetOptions) {
         guard options != .none else {
             return
