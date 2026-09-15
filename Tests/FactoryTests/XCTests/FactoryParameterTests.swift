@@ -62,6 +62,50 @@ final class FactoryParameterTests: XCTestCase {
         XCTAssertTrue(Container.shared.manager.isEmpty(.scope))
     }
 
+    func testScopeOnParametersDistinguishesHashCollisions() {
+        let container = Container()
+        let factory = ParameterFactory<CollidingParameter, ParameterService>(container) {
+            ParameterService(value: $0.value)
+        }.scopeOnParameters.cached
+        let first = CollidingParameter(value: 1)
+        let second = CollidingParameter(value: 2)
+
+        XCTAssertNotEqual(first, second)
+        XCTAssertEqual(first.hashValue, second.hashValue)
+
+        let service1 = factory(first)
+        let service2 = factory(second)
+        XCTAssertEqual(service1.value, 1)
+        XCTAssertEqual(service2.value, 2)
+        XCTAssertFalse(service1 === service2)
+        XCTAssertTrue(factory(CollidingParameter(value: 1)) === service1)
+        XCTAssertTrue(factory(CollidingParameter(value: 2)) === service2)
+
+        factory.reset(.scope)
+        XCTAssertFalse(factory(first) === service1)
+        XCTAssertFalse(factory(second) === service2)
+        XCTAssertEqual(factory(first).value, 1)
+        XCTAssertEqual(factory(second).value, 2)
+    }
+
+    func testRegistrationInvalidatesAllCollidingParameters() {
+        let container = Container()
+        let factory = ParameterFactory<CollidingParameter, ParameterService>(container) {
+            ParameterService(value: $0.value)
+        }.scopeOnParameters.cached
+        let first = CollidingParameter(value: 1)
+        let second = CollidingParameter(value: 2)
+        let service1 = factory(first)
+        let service2 = factory(second)
+
+        factory.register { ParameterService(value: $0.value + 10) }
+
+        XCTAssertEqual(factory(first).value, 11)
+        XCTAssertEqual(factory(second).value, 12)
+        XCTAssertFalse(factory(first) === service1)
+        XCTAssertFalse(factory(second) === service2)
+    }
+
 #if canImport(SwiftUI)
     func testPreviewFunction() throws {
         let service1 = Container.shared.parameterService(5)
@@ -75,4 +119,12 @@ final class FactoryParameterTests: XCTestCase {
     }
 #endif
 
+}
+
+private struct CollidingParameter: Hashable {
+    let value: Int
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(0)
+    }
 }
