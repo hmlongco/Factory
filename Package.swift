@@ -7,12 +7,12 @@ import PackageDescription
 let package = Package(
     name: "Factory",
     platforms: [
-        .iOS(.v13),
-        .macOS(.v10_15),
-        .tvOS(.v13),
-        .watchOS(.v8),
+        .iOS(.v15),
+        .tvOS(.v15),
+        .watchOS(.v9),
         .visionOS(.v1),
-        .macCatalyst(.v13)
+        .macOS(.v12),
+        .macCatalyst(.v15)
     ],
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.

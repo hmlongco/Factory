@@ -389,7 +389,7 @@ final class FactoryScopeTests: XCTestCase {
         container1.manager.trace.toggle()
     }
 
-    @available(iOS 13, *)
+    @available(iOS 15, *)
     func testSingletonScopeTimeToLive() async throws {
         Container.shared.singletonService.timeToLive(0.01)
         let service1 = Container.shared.singletonService()

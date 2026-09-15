@@ -1,5 +1,9 @@
 # Factory Changelog
 
+### 3.4.0
+
+* Update SPM minimum supported iOS and aligned versions to iOS 15 for Xcode 27 #382
+
 ### 3.3.2
 
 * Circular-dependency check false-positives on cross-container delegation #377
