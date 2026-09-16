@@ -70,6 +70,7 @@ public class Scope: @unchecked Sendable {
         }
 
         let keyLock = cache.resolutionLock(forKey: key)
+        defer { cache.releaseResolutionLock(forKey: key) }
 
         let result: (instance: T, cached: Bool) = keyLock.withLock {
             if let box = cache.value(forKey: key), let cached: T = unboxed(box: box) {
@@ -260,17 +261,31 @@ extension Scope {
         // locals
         let lock = ReadWriteLock()
         var cache: CacheMap
-        // Keep locks for the cache lifetime, including across resets while resolutions may be in flight.
-        private var resolutionLocks: [FactoryKey: CrossPlatformLock] = [:]
+        private struct ResolutionLock {
+            let lock = CrossPlatformLock()
+            var users = 0
+        }
+        // Count holders and waiters so resets cannot split resolutions across different locks.
+        private var resolutionLocks: [FactoryKey: ResolutionLock] = [:]
         /// internal support functions
         internal func resolutionLock(forKey key: FactoryKey) -> CrossPlatformLock {
             lock.withWriteLock {
-                if let existing = resolutionLocks[key] {
-                    return existing
+                var entry = resolutionLocks[key] ?? ResolutionLock()
+                entry.users += 1
+                resolutionLocks[key] = entry
+                return entry.lock
+            }
+        }
+        // Call only after unlocking. The last user also releases the key's parameter references.
+        internal func releaseResolutionLock(forKey key: FactoryKey) {
+            lock.withWriteLock {
+                guard var entry = resolutionLocks[key] else { return }
+                entry.users -= 1
+                if entry.users == 0 {
+                    resolutionLocks.removeValue(forKey: key)
+                } else {
+                    resolutionLocks[key] = entry
                 }
-                let newLock = CrossPlatformLock()
-                resolutionLocks[key] = newLock
-                return newLock
             }
         }
         @inlinable @inline(__always) func value(forKey key: FactoryKey) -> AnyBox? {
