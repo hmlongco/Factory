@@ -30,28 +30,33 @@ internal struct FactoryKey: Hashable {
     let type: ObjectIdentifier
     let key: StaticString
     let parameter: AnyHashable?
+    /// Identifies the originating container cache when a scope shares storage across containers.
+    let cacheID: ObjectIdentifier?
 
     internal init(type: Any.Type, key: StaticString) {
         self.type = ObjectIdentifier(type) // globalIdentifier(for: type)
         self.key = key
         self.parameter = nil
+        self.cacheID = nil
     }
 
     @inline(__always)
-    private init(type: ObjectIdentifier, key: StaticString, parameter: AnyHashable?) {
+    private init(type: ObjectIdentifier, key: StaticString, parameter: AnyHashable?, cacheID: ObjectIdentifier? = nil) {
         self.type = type
         self.key = key
         self.parameter = parameter
+        self.cacheID = cacheID
     }
 
     internal func hash(into hasher: inout Hasher) {
         hasher.combine(self.type)
         hasher.combine(self.key)
         hasher.combine(self.parameter)
+        hasher.combine(self.cacheID)
     }
 
     internal static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.key == rhs.key && lhs.type == rhs.type && lhs.parameter == rhs.parameter
+        lhs.key == rhs.key && lhs.type == rhs.type && lhs.parameter == rhs.parameter && lhs.cacheID == rhs.cacheID
     }
 
     internal func parameterized(_ value: Any) -> Self {
@@ -59,11 +64,15 @@ internal struct FactoryKey: Hashable {
             return self
         }
         // Preserve equality so distinct parameters with the same hash do not share a cached value.
-        return .init(type: type, key: key, parameter: AnyHashable(hashable))
+        return .init(type: type, key: key, parameter: AnyHashable(hashable), cacheID: cacheID)
     }
 
     internal func normalized() -> Self {
-        return .init(type: type, key: key, parameter: nil)
+        return .init(type: type, key: key, parameter: nil, cacheID: cacheID)
+    }
+
+    internal func scoped(to cache: Scope.Cache) -> Self {
+        .init(type: type, key: key, parameter: parameter, cacheID: ObjectIdentifier(cache))
     }
 
 }

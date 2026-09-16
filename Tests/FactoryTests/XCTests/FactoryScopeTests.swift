@@ -115,6 +115,52 @@ final class FactoryScopeTests: XCTestCase {
         XCTAssertTrue(CustomContainer.shared.manager.isEmpty(.scope))
     }
 
+    func testGraphScopeSeparatesContainers() {
+        let first = Container()
+        let second = Container()
+        let a = Factory(first, key: "service") { UUID() }.graph
+        let b = Factory(second, key: "service") { UUID() }.graph
+        let root = Factory(first, key: "root") { [a(), b(), a(), b()] }
+
+        let values = root()
+        XCTAssertEqual(values[0], values[2])
+        XCTAssertEqual(values[1], values[3])
+        XCTAssertNotEqual(values[0], values[1])
+        let next = root()
+        XCTAssertNotEqual(values[0], next[0])
+        XCTAssertNotEqual(values[1], next[1])
+    }
+
+    func testGraphScopeDelegatesAcrossContainersWithSameKey() {
+        let first = Container()
+        let second = Container()
+        // Also exercise graph scope inherited from the container default.
+        first.manager.defaultScope = .graph
+        second.manager.defaultScope = .graph
+        let inner = Factory(second, key: "service") { UUID() }
+        let outer = Factory(first, key: "service") { inner() }
+        let root = Factory(first, key: "root") { [outer(), inner(), outer()] }
+
+        let values = root()
+        XCTAssertEqual(values[0], values[1])
+        XCTAssertEqual(values[0], values[2])
+        XCTAssertNotEqual(values[0], root()[0])
+    }
+
+    func testGraphScopePreservesParameterAndContainerIdentity() {
+        let first = Container()
+        let second = Container()
+        let a = ParameterFactory<Int, UUID>(first, key: "service") { _ in UUID() }.scopeOnParameters.graph
+        let b = ParameterFactory<Int, UUID>(second, key: "service") { _ in UUID() }.scopeOnParameters.graph
+        let root = Factory(first, key: "root") { [a(1), a(2), b(1), a(1), b(1)] }
+
+        let values = root()
+        XCTAssertNotEqual(values[0], values[1])
+        XCTAssertNotEqual(values[0], values[2])
+        XCTAssertEqual(values[0], values[3])
+        XCTAssertEqual(values[2], values[4])
+    }
+
     func testExplicitProtocolSharedScope() throws {
         var service1: MyServiceType? = Container.shared.sharedExplicitProtocol()
         var service2: MyServiceType? = Container.shared.sharedExplicitProtocol()
