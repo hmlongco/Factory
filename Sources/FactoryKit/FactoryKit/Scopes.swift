@@ -55,8 +55,12 @@ public class Scope: @unchecked Sendable {
 
     fileprivate init() {}
 
-    /// Internal function returns cached value if it exists. Otherwise it creates a new instance and caches that value for later reference.
-    internal func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, factory: () -> T) -> (T, Bool) {
+    /// Selects the storage whose revision protects a resolution.
+    internal func resolutionCache(using cache: Cache) -> Cache { cache }
+
+    /// Returns a cached value or creates one, caching it only if no invalidation intervened.
+    internal func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, revision: Cache.Revision? = nil, factory: () -> T) -> (T, Bool) {
+        let revision = revision ?? cache.revision(forKey: key, scopeID: scopeID)
         if let box = cache.value(forKey: key), let cached: T = unboxed(box: box) {
             if let ttl = ttl {
                 let now = CFAbsoluteTimeGetCurrent()
@@ -85,7 +89,7 @@ public class Scope: @unchecked Sendable {
             }
             let instance = factory()
             if let box = box(instance) {
-                cache.set(value: box, forKey: key)
+                cache.set(value: box, forKey: key, ifCurrent: revision)
             }
             return (instance, true)
         }
@@ -138,9 +142,10 @@ extension Scope {
         internal override init() {
             super.init()
         }
-        internal override func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, factory: () -> T) -> (T, Bool) {
+        internal override func resolutionCache(using cache: Cache) -> Cache { self.cache }
+        internal override func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, revision: Cache.Revision? = nil, factory: () -> T) -> (T, Bool) {
             // ignore container's cache in favor of our own
-            return super.resolve(using: self.cache, key: key, ttl: ttl, factory: factory)
+            return super.resolve(using: self.cache, key: key, ttl: ttl, revision: revision, factory: factory)
         }
         // call to enter a new resolution level
         internal func enter() {
@@ -218,9 +223,10 @@ extension Scope {
             self.cache = from.cache.clone()
             super.init()
         }
-        internal override func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, factory: () -> T) -> (T, Bool) {
+        internal override func resolutionCache(using cache: Cache) -> Cache { self.cache }
+        internal override func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, revision: Cache.Revision? = nil, factory: () -> T) -> (T, Bool) {
             // ignore container's cache in favor of our own
-            return super.resolve(using: self.cache, key: key, ttl: ttl, factory: factory)
+            return super.resolve(using: self.cache, key: key, ttl: ttl, revision: revision, factory: factory)
         }
         /// Private shared cache
         internal var cache: Cache
@@ -244,7 +250,7 @@ extension Scope {
         public override init() {
             super.init()
         }
-        internal override func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, factory: () -> T) -> (T, Bool) {
+        internal override func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, revision: Cache.Revision? = nil, factory: () -> T) -> (T, Bool) {
             (factory(), true)
         }
     }
@@ -257,11 +263,39 @@ extension Scope {
     /// Internal class that manages scope caching for containers and scopes.
     internal final class Cache {
         typealias CacheMap = [FactoryKey:AnyBox]
+        struct Revision: Equatable {
+            let all: UInt64
+            let key: UInt64
+            let scope: UInt64
+        }
+        private var allRevision: UInt64 = 0
+        private var keyRevisions: [FactoryKey: UInt64] = [:]
+        private var scopeRevisions: [UUID: UInt64] = [:]
         // locals
         let lock = ReadWriteLock()
         var cache: CacheMap
         // Keep locks for the cache lifetime, including across resets while resolutions may be in flight.
         private var resolutionLocks: [FactoryKey: CrossPlatformLock] = [:]
+        // Capture while the registration is selected, before waiting for resolution locks.
+        internal func revision(forKey key: FactoryKey, scopeID: UUID) -> Revision {
+            lock.withReadLock { unsafeRevision(forKey: key, scopeID: scopeID) }
+        }
+        private func unsafeRevision(forKey key: FactoryKey, scopeID: UUID) -> Revision {
+            Revision(all: allRevision, key: keyRevisions[key.normalized(), default: 0],
+                     scope: scopeRevisions[scopeID, default: 0])
+        }
+        internal func set(value: AnyBox, forKey key: FactoryKey, ifCurrent revision: Revision) {
+            lock.withWriteLock {
+                if revision == unsafeRevision(forKey: key, scopeID: value.scopeID) {
+                    cache[key] = value
+                }
+            }
+        }
+        private func unsafeInvalidateAll() {
+            allRevision &+= 1
+            keyRevisions.removeAll(keepingCapacity: true)
+            scopeRevisions.removeAll(keepingCapacity: true)
+        }
         /// internal support functions
         internal func resolutionLock(forKey key: FactoryKey) -> CrossPlatformLock {
             lock.withWriteLock {
@@ -283,14 +317,21 @@ extension Scope {
             lock.withWriteLock { cache[key]?.timestamp = timestamp }
         }
         @inlinable @inline(__always) func removeValue(forKey key: FactoryKey) {
-            lock.withWriteLock { cache = cache.filter { $0.key.normalized() != key } }
+            lock.withWriteLock {
+                keyRevisions[key.normalized(), default: 0] &+= 1
+                cache = cache.filter { $0.key.normalized() != key }
+            }
         }
         internal func reset(scopeID: UUID) {
-            lock.withWriteLock { cache = cache.filter { $1.scopeID != scopeID } }
+            lock.withWriteLock {
+                scopeRevisions[scopeID, default: 0] &+= 1
+                cache = cache.filter { $1.scopeID != scopeID }
+            }
         }
         /// Internal function to clear cache if needed
         internal func reset() {
             lock.withWriteLock {
+                unsafeInvalidateAll()
                 if !cache.isEmpty {
                     cache.removeAll(keepingCapacity: true)
                 }
@@ -307,7 +348,10 @@ extension Scope {
             lock.withReadLock { .init(copy: cache) }
         }
         internal func assign(map: CacheMap) {
-            lock.withWriteLock { self.cache = map }
+            lock.withWriteLock {
+                unsafeInvalidateAll()
+                self.cache = map
+            }
         }
         #if DEBUG
         internal var isEmpty: Bool {
