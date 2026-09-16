@@ -281,6 +281,31 @@ final class FactoryScopeTests: XCTestCase {
         XCTAssertTrue(Container.shared.manager.isEmpty(.scope)) // nothing cached
     }
 
+    func testNilErasedServiceCaching() throws {
+        Container.shared.nilErasedCachedService.reset()
+        XCTAssertTrue(Container.shared.manager.isEmpty(.scope))
+        let service1 = Container.shared.nilErasedCachedService()
+        XCTAssertNil(service1 as? MyService)
+        XCTAssertTrue(Container.shared.manager.isEmpty(.scope)) // nothing cached
+        let service2 = Container.shared.nilErasedCachedService()
+        XCTAssertNil(service2 as? MyService)
+        XCTAssertTrue(Container.shared.manager.isEmpty(.scope)) // nothing cached
+        Container.shared.nilErasedCachedService.register {
+            MyService()
+        }
+        let service3 = Container.shared.nilErasedCachedService()
+        XCTAssertNotNil(service3 as? MyService)
+        XCTAssertFalse(Container.shared.manager.isEmpty(.scope)) // cached value
+        let service4 = Container.shared.nilErasedCachedService()
+        XCTAssertIdentical(service3 as AnyObject, service4 as AnyObject)
+        Container.shared.nilErasedCachedService.register {
+            Optional<MyService>.none as Any
+        }
+        let service5 = Container.shared.nilErasedCachedService()
+        XCTAssertNil(service5 as? MyService) // cache was reset by registration
+        XCTAssertTrue(Container.shared.manager.isEmpty(.scope)) // nothing cached
+    }
+
     func testNilSharedServiceCaching() throws {
         Container.shared.nilSharedService.reset()
         XCTAssertTrue(Container.shared.manager.isEmpty(.scope))

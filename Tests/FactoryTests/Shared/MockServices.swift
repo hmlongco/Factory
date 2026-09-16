@@ -132,6 +132,7 @@ extension Container {
     var nilSService: Factory<MyServiceType?> { self { nil } }
     var nilCachedService: Factory<MyServiceType?> { self { nil }.cached }
     var nilSharedService: Factory<MyServiceType?> { self { nil }.shared }
+    var nilErasedCachedService: Factory<Any> { self { Optional<MyService>.none as Any }.cached }
 
     var sessionService: Factory<MyService> { self { MyService() }.scope(.session) }
 

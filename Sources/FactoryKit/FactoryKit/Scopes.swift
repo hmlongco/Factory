@@ -98,12 +98,9 @@ public class Scope: @unchecked Sendable {
         (box as? StrongBox<T>)?.boxed
     }
 
-    /// Internal function correctly boxes value depending upon scope type
+    /// Internal function correctly boxes value depending upon scope type. A nil instance is never boxed.
     fileprivate func box<T>(_ instance: T) -> AnyBox? {
-        if let optional = instance as? OptionalProtocol {
-            if optional.hasWrappedValue {
-                return StrongBox<T>(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: instance)
-            }
+        if isNil(instance) {
             return nil
         }
         return StrongBox<T>(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: instance)
@@ -178,27 +175,19 @@ extension Scope {
             super.init()
         }
         fileprivate override func unboxed<T>(box: AnyBox?) -> T? {
-            if let box = box as? WeakBox, let instance = box.boxed as? T {
-                if let optional = instance as? OptionalProtocol {
-                    if optional.hasWrappedValue {
-                        return instance
-                    }
-                } else {
-                    return instance
-                }
+            if let box = box as? WeakBox, let instance = box.boxed as? T, !isNil(instance) {
+                return instance
             }
             return nil
         }
         /// Override function correctly boxes weak cache value
         fileprivate override func box<T>(_ instance: T) -> AnyBox? {
-            if let optional = instance as? OptionalProtocol {
-                if let unwrapped = optional.wrappedValue, type(of: unwrapped) is AnyObject.Type {
-                    return WeakBox(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: unwrapped as AnyObject)
-                }
-            } else if type(of: instance as Any) is AnyObject.Type {
-                return WeakBox(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: instance as AnyObject)
+            // pattern match discards a nil instance and unwraps one level of optionality so that the
+            // weak box references the instance itself and not the Optional wrapping it
+            guard case Optional<Any>.some(let value) = instance as Any, type(of: value) is AnyObject.Type else {
+                return nil
             }
-            return nil
+            return WeakBox(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: value as AnyObject)
         }
     }
 
@@ -343,20 +332,10 @@ internal struct WeakBox: AnyBox {
     weak var boxed: AnyObject?
 }
 
-/// Internal protocol used to evaluate optional types for caching
-internal protocol OptionalProtocol {
-    var hasWrappedValue: Bool { get }
-    var wrappedValue: Any? { get }
-}
-
-extension Optional: OptionalProtocol {
-    @inlinable internal var hasWrappedValue: Bool {
-        wrappedValue != nil
+/// Returns true when the instance is an Optional that holds no value.
+internal func isNil<T>(_ instance: T) -> Bool {
+    if case Optional<Any>.none = instance as Any {
+        return true
     }
-    @inlinable internal var wrappedValue: Any? {
-        if case .some(let value) = self {
-            return value
-        }
-        return nil
-    }
+    return false
 }
