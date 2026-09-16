@@ -24,7 +24,7 @@ final class OpenURLFunctionMock: Sendable {
     let openedURL: OSAllocatedUnfairLock<URL?> = .init(initialState: nil)
     init() {
       Container.shared.openURL.register {
-            { [weak self] url in
+          { [weak self = self] url in
               self?.openedURL.withLock { $0 = url }
                 return false
             }

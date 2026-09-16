@@ -26,7 +26,8 @@
       "Bash(xcodebuild test *)",
       "Bash(xcodebuild -list)",
       "Bash(find /Users/michael/Library/Developer/Xcode/DerivedData -maxdepth 4 -iname \"Test-FactoryDemo-*.xcresult\" 2>/dev/null | sort | tail -1)",
-      "Bash(xcrun xcresulttool *)"
+      "Bash(xcrun xcresulttool *)",
+      "Bash(gh pr *)"
     ]
   }
 }
