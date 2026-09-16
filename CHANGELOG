@@ -4,6 +4,7 @@
 
 * Update SPM minimum supported iOS and aligned versions to iOS 15 for Xcode 27 #382
 * Fix concurrent first resolution of cached dependencies #385
+* Fix parameter-scoped cache key hash collisions - #384
 
 ### 3.3.2
 
