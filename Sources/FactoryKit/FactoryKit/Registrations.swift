@@ -61,6 +61,8 @@ public nonisolated struct FactoryRegistration<P,T> {
 
         let options: FactoryOptions? = manager.options[key]
         let scope: Scope? = options?.scope ?? manager.defaultScope
+        let cache = scope?.resolutionCache(using: manager.cache) ?? manager.cache
+        let revision = scope.map { cache.revision(forKey: key, scopeID: $0.scopeID) }
         let hasGraphScope = manager.state.hasGraphScope
         let decorator: ((Any) -> ())? = manager.state.defaultDecorator
 
@@ -125,7 +127,7 @@ public nonisolated struct FactoryRegistration<P,T> {
 
         if let scope {
             let pKey = options?.scopeOnParameters == true ? key.parameterized(parameters) : key
-            (instance, instantiated) = scope.resolve(using: manager.cache, key: pKey, ttl: options?.ttl, factory: { current(parameters) })
+            (instance, instantiated) = scope.resolve(using: manager.cache, key: pKey, ttl: options?.ttl, revision: revision, factory: { current(parameters) })
         } else {
             (instance, instantiated) = (current(parameters), true)
         }
