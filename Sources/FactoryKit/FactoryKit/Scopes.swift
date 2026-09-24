@@ -98,12 +98,9 @@ public class Scope: @unchecked Sendable {
         (box as? StrongBox<T>)?.boxed
     }
 
-    /// Internal function correctly boxes value depending upon scope type
+    /// Internal function correctly boxes value depending upon scope type. A nil instance is never boxed.
     fileprivate func box<T>(_ instance: T) -> AnyBox? {
-        if let optional = instance as? OptionalProtocol {
-            if optional.hasWrappedValue {
-                return StrongBox<T>(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: instance)
-            }
+        guard case Optional<Any>.some = instance as Any else {
             return nil
         }
         return StrongBox<T>(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: instance)
@@ -178,36 +175,28 @@ extension Scope {
             super.init()
         }
         fileprivate override func unboxed<T>(box: AnyBox?) -> T? {
-            if let box = box as? WeakBox, let instance = box.boxed as? T {
-                if let optional = instance as? OptionalProtocol {
-                    if optional.hasWrappedValue {
-                        return instance
-                    }
-                } else {
-                    return instance
-                }
+            // guard against weak optional types (double optionals)
+            guard let box = box as? WeakBox, let instance = box.boxed as? T, case Optional<Any>.some = instance as Any else {
+                return nil
             }
-            return nil
+            return instance
         }
         /// Override function correctly boxes weak cache value
         fileprivate override func box<T>(_ instance: T) -> AnyBox? {
-            if let optional = instance as? OptionalProtocol {
-                if let unwrapped = optional.wrappedValue, type(of: unwrapped) is AnyObject.Type {
-                    return WeakBox(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: unwrapped as AnyObject)
-                }
-            } else if type(of: instance as Any) is AnyObject.Type {
-                return WeakBox(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: instance as AnyObject)
+            // guard against weak optional types (double optionals) and ensure value is a reference type
+            guard case Optional<Any>.some(let value) = instance as Any, type(of: value) is AnyObject.Type else {
+                return nil
             }
-            return nil
+            return WeakBox(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: value as AnyObject)
         }
     }
 
     /// A reference to the default singleton scope manager.
-    #if swift(>=5.5)
+#if swift(>=5.5)
     @TaskLocal public static var singleton = Singleton()
-    #else
+#else
     public static let singleton = Singleton()
-    #endif
+#endif
     /// Defines the singleton scope. The same instance will always be returned by the factory.
     public final class Singleton: Scope, InternalScopeCaching, @unchecked Sendable  {
         public override init() {
@@ -238,13 +227,13 @@ extension Scope {
     ///
     /// If no scope cache is specified then Factory is running in unique mode.
     public static let unique = Unique()
-    
+
     /// Defines the unique scope. A new instance of a given type will be returned on every resolution cycle.
     public final class Unique: Scope, @unchecked Sendable  {
         public override init() {
             super.init()
         }
-        internal override func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, factory: () -> T) -> (T, Bool) {
+        internal override final func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, factory: () -> T) -> (T, Bool) {
             (factory(), true)
         }
     }
@@ -309,11 +298,11 @@ extension Scope {
         internal func assign(map: CacheMap) {
             lock.withWriteLock { self.cache = map }
         }
-        #if DEBUG
+#if DEBUG
         internal var isEmpty: Bool {
             lock.withReadLock { cache.isEmpty }
         }
-        #endif
+#endif
     }
 }
 
@@ -341,22 +330,4 @@ internal struct WeakBox: AnyBox {
     let scopeID: UUID
     var timestamp: Double
     weak var boxed: AnyObject?
-}
-
-/// Internal protocol used to evaluate optional types for caching
-internal protocol OptionalProtocol {
-    var hasWrappedValue: Bool { get }
-    var wrappedValue: Any? { get }
-}
-
-extension Optional: OptionalProtocol {
-    @inlinable internal var hasWrappedValue: Bool {
-        wrappedValue != nil
-    }
-    @inlinable internal var wrappedValue: Any? {
-        if case .some(let value) = self {
-            return value
-        }
-        return nil
-    }
 }
