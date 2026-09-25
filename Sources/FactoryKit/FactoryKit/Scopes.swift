@@ -90,6 +90,8 @@ public class Scope: @unchecked Sendable {
             return (instance, true)
         }
 
+        cache.resolution(unlock: keyLock, forKey: key)
+
         return (result.instance, result.cached)
     }
 
@@ -247,21 +249,10 @@ extension Scope {
     internal final class Cache {
         typealias CacheMap = [FactoryKey:AnyBox]
         // locals
-        let lock = ReadWriteLock()
         var cache: CacheMap
-        // Keep locks for the cache lifetime, including across resets while resolutions may be in flight.
-        private var resolutionLocks: [FactoryKey: CrossPlatformLock] = [:]
-        /// internal support functions
-        internal func resolutionLock(forKey key: FactoryKey) -> CrossPlatformLock {
-            lock.withWriteLock {
-                if let existing = resolutionLocks[key] {
-                    return existing
-                }
-                let newLock = CrossPlatformLock()
-                resolutionLocks[key] = newLock
-                return newLock
-            }
-        }
+        var resolutionLocks: [FactoryKey: CrossPlatformLock] = [:]
+        let lock = ReadWriteLock()
+        /// internal cache support functions
         @inlinable @inline(__always) func value(forKey key: FactoryKey) -> AnyBox? {
             lock.withReadLock { cache[key] }
         }
@@ -282,6 +273,26 @@ extension Scope {
             lock.withWriteLock {
                 if !cache.isEmpty {
                     cache.removeAll(keepingCapacity: true)
+                }
+            }
+        }
+        // track locks per key, ensuring the same instance isn't instantiated more than once
+        internal func resolutionLock(forKey key: FactoryKey) -> CrossPlatformLock {
+            lock.withWriteLock {
+                if let keyLock = resolutionLocks[key] {
+                    keyLock.locks += 1
+                    return keyLock
+                }
+                let newLock = CrossPlatformLock()
+                resolutionLocks[key] = newLock
+                return newLock
+            }
+        }
+        internal func resolution(unlock keyLock: CrossPlatformLock, forKey key: FactoryKey) {
+            lock.withWriteLock {
+                keyLock.locks -= 1
+                if keyLock.locks == 0 {
+                    resolutionLocks.removeValue(forKey: key)
                 }
             }
         }

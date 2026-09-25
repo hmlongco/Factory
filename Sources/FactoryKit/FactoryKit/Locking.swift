@@ -68,6 +68,8 @@ internal let globalVariableLock = CrossPlatformLock()
 /// Custom lock using os_unfair_lock on Apple platforms.
 internal final class CrossPlatformLock: NSLocking, @unchecked Sendable {
 
+    internal var locks = 1
+
     private var _lock = os_unfair_lock()
 
     @inlinable @inline(__always) func lock() {
@@ -82,6 +84,8 @@ internal final class CrossPlatformLock: NSLocking, @unchecked Sendable {
 #else
 /// Custom lock compatible with Linux using pthread_mutex.
 internal final class CrossPlatformLock: NSLocking, @unchecked Sendable {
+
+    internal var locks = 1
 
     init() {
         mutex = UnsafeMutablePointer<pthread_mutex_t>.allocate(capacity: 1)

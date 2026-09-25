@@ -53,7 +53,51 @@ final class FactoryComponentTests: XCTestCase {
         XCTAssertNil(cache.value(forKey: key1))
         XCTAssertNotNil(cache.value(forKey: key2))
         XCTAssertFalse(cache.isEmpty)
-
+        // Resolution locks start empty
+        XCTAssertTrue(cache.resolutionLocks.isEmpty)
+        // First request creates lock
+        let lock1 = cache.resolutionLock(forKey: key1)
+        XCTAssertEqual(lock1.locks, 1)
+        XCTAssertEqual(cache.resolutionLocks.count, 1)
+        // Second request for same key shares lock and bumps count
+        let lock1B = cache.resolutionLock(forKey: key1)
+        XCTAssertTrue(lock1 === lock1B)
+        XCTAssertEqual(lock1.locks, 2)
+        XCTAssertEqual(cache.resolutionLocks.count, 1)
+        // Different key gets its own lock
+        let lock2 = cache.resolutionLock(forKey: key2)
+        XCTAssertFalse(lock1 === lock2)
+        XCTAssertEqual(cache.resolutionLocks.count, 2)
+        // Cache reset leaves in-flight locks alone
+        cache.reset()
+        XCTAssertEqual(cache.resolutionLocks.count, 2)
+        // Partial unlock keeps lock
+        cache.resolution(unlock: lock1, forKey: key1)
+        XCTAssertEqual(lock1.locks, 1)
+        XCTAssertTrue(cache.resolutionLocks[key1] === lock1)
+        // Final unlock removes lock
+        cache.resolution(unlock: lock1, forKey: key1)
+        XCTAssertEqual(lock1.locks, 0)
+        XCTAssertNil(cache.resolutionLocks[key1])
+        cache.resolution(unlock: lock2, forKey: key2)
+        XCTAssertTrue(cache.resolutionLocks.isEmpty)
+        // New request after release gets a fresh lock
+        let lock1C = cache.resolutionLock(forKey: key1)
+        XCTAssertFalse(lock1 === lock1C)
+        XCTAssertEqual(lock1C.locks, 1)
+        cache.resolution(unlock: lock1C, forKey: key1)
+        XCTAssertTrue(cache.resolutionLocks.isEmpty)
+        // Scope resolution releases its lock on both miss and hit paths
+        var calls = 0
+        _ = Scope.cached.resolve(using: cache, key: key1, ttl: nil) { calls += 1; return UUID() }
+        XCTAssertTrue(cache.resolutionLocks.isEmpty)
+        _ = Scope.cached.resolve(using: cache, key: key1, ttl: nil) { calls += 1; return UUID() }
+        XCTAssertTrue(cache.resolutionLocks.isEmpty)
+        XCTAssertEqual(calls, 1)
+        // Uncacheable (nil) results always take the slow path and still release
+        _ = Scope.cached.resolve(using: cache, key: key2, ttl: nil) { Optional<UUID>.none }
+        _ = Scope.cached.resolve(using: cache, key: key2, ttl: nil) { Optional<UUID>.none }
+        XCTAssertTrue(cache.resolutionLocks.isEmpty)
     }
 
     func testFactoryKey() {

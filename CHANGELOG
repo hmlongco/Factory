@@ -2,7 +2,8 @@
 
 ### 3.4.1
 
-* Scope performance optimization #389
+* Scope performance optimization eliminates protocol conformance check #389
+* Reclaim scope resolution locks #387
 
 ### 3.4.0
 
