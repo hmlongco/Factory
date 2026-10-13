@@ -9,7 +9,7 @@ import FactoryKit
 @available(iOS 17, *)
 struct SceneDemoView: View {
 
-    @SceneBasedObservable(\.sceneDemoViewModel) var model
+    @InjectedObservable(\.sceneDemoViewModel) var model
 
     var body: some View {
         Text("Scene ID: \(model.id)")
@@ -20,4 +20,13 @@ struct SceneDemoView: View {
 @available(iOS 17, *)
 #Preview {
     SceneDemoView()
+        .withContainer(\.id) { "TEST "}
+}
+
+@available(iOS 17, *)
+#Preview {
+    SceneDemoView()
+        .withContainer {
+            $0.setupMocks()
+        }
 }

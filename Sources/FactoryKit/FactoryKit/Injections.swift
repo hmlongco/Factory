@@ -538,8 +538,8 @@ extension InjectedObject: @unchecked Sendable where T: Sendable {}
 /// - Requires: The wrapped type `T` must conform to the `Observable` protocol.
 @available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
 @MainActor @propertyWrapper public struct InjectedObservable<T>: DynamicProperty where T: Observation.Observable {
-    /// The container registered for this scene, if any.
-    @Environment(\.container) fileprivate var container: Container?
+    /// The container registered for this scene, otherwise the global shared container.
+    @Environment(\.container) fileprivate var container: Container
     /// The observable dependency managed by this property wrapper.
     @State fileprivate var dependency: ThunkedValue<T>
     /// Initializes the `InjectedObservable` property wrapper, resolving the dependency from the default shared container.
@@ -554,7 +554,7 @@ extension InjectedObject: @unchecked Sendable where T: Sendable {}
     /// @InjectedObservable(\.contentViewModel) var viewModel: ContentViewModel
     /// ```
     public init(_ keyPath: KeyPath<Container, Factory<T>>) {
-        self._dependency = .init(wrappedValue: ThunkedValue(thunkedValue: { c in (c ?? Container.shared)[keyPath: keyPath]() }))
+        self._dependency = .init(wrappedValue: ThunkedValue(thunkedValue: { c in c[keyPath: keyPath]() }))
     }
     /// Initializes the property wrapper. The dependency is resolved on initialization.
     /// - Parameter keyPath: KeyPath to a Factory on the specified Container.
@@ -572,9 +572,6 @@ extension InjectedObject: @unchecked Sendable where T: Sendable {}
 }
 
 @available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
-public typealias SceneBasedObservable = InjectedObservable
-
-@available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
 extension InjectedObservable {
     /// Simple initializer with passed parameter bypassing injection.
     ///
@@ -588,23 +585,17 @@ extension InjectedObservable {
 @available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
 extension InjectedObservable: @unchecked Sendable where T: Sendable {}
 
-@available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
-extension EnvironmentValues {
-    /// Entry for per scene containers, used by `@InjectedObservable`.
-    @Entry public var container: Container? = nil
-}
-
-@available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
-private final class ThunkedValue<T: Observation.Observable> {
+@available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
+private final class ThunkedValue<T> {
 
     private var object: T!
-    private var thunk: ((_ c: Container?) -> T)?
+    private var thunk: ((_ c: Container) -> T)?
 
-    init(thunkedValue thunk: @escaping (_ c: Container?) -> T) {
+    init(thunkedValue thunk: @escaping (_ c: Container) -> T) {
         self.thunk = thunk
     }
 
-    func thunkedValue(_ c: Container?) -> T {
+    func thunkedValue(_ c: Container) -> T {
         if let thunk {
             object = thunk(c)
             self.thunk = nil
