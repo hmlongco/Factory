@@ -10,13 +10,21 @@ import Observation
 #endif
 
 @available(iOS 17, *)
+@MainActor
 @Observable
 final class SceneDemoViewModel {
 
     let id: String
 
-    init(id: String) {
-        self.id = id
+    private let service: MyServiceType
+
+    init(container: Container) {
+        self.id = container.id()
+        self.service = container.myServiceType()
+    }
+
+    func text() -> String {
+        service.text()
     }
 
 }
@@ -24,6 +32,6 @@ final class SceneDemoViewModel {
 @available(iOS 17, *)
 extension Container {
     @MainActor var sceneDemoViewModel: Factory<SceneDemoViewModel> {
-        self { SceneDemoViewModel(id: self.id()) }
+        self { SceneDemoViewModel(container: self) }
     }
 }
