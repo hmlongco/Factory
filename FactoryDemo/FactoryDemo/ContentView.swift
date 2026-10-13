@@ -11,11 +11,14 @@ import FactoryKit
 struct ContentView: View {
 
 //    @InjectedObject(\.contentViewModel)
-//    @StateObject var model = resolve(\.contentViewModel)
     @StateObject var model = ContentViewModel()
 
     var body: some View {
         List {
+            Section("Scene Demo") {
+                SceneDemoView()
+            }
+
             Section("View Model Bindings") {
                 HStack {
                     Text("Name")

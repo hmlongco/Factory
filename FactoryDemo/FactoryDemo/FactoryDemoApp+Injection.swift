@@ -11,6 +11,10 @@ import Common
 import SwiftUI
 
 extension Container {
+    var id: Factory<String> { self { UUID().uuidString }.cached }
+}
+
+extension Container {
 
     @MainActor var simpleService: Factory<SimpleService> {
         Factory(self) { SimpleService() }

@@ -9,16 +9,23 @@ import SwiftUI
 import FactoryKit
 
 @main
-struct FactoryDemoApp: App {
+struct DemoApp: App {
     var body: some Scene {
-        let _ = Container.shared.setupMocks()
-        let _ = ServiceContainer.test()
         WindowGroup {
-            NavigationView {
-                ContentView()
-            }
-            .environmentObject(DemoContainer.shared)
-            .navigationViewStyle(StackNavigationViewStyle())
+            PerSceneContentView()
         }
+        .environmentObject(DemoContainer.shared)
+    }
+}
+
+struct PerSceneContentView: View {
+    // Create and store the container
+    @State var sceneContainer = Container()
+    var body: some View {
+        NavigationStack {
+            ContentView()
+        }
+        // Add container to the scene root view
+        .environment(\.container, sceneContainer)
     }
 }

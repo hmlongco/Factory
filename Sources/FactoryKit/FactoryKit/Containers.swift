@@ -48,11 +48,11 @@ import SwiftUI
 ///  See <doc:Containers> for more information.
 public nonisolated final class Container: SharedContainer, @unchecked Sendable {
     /// Define the default shared container.
-    #if swift(>=5.5)
+#if swift(>=5.5)
     @TaskLocal public static var shared = Container()
-    #else
+#else
     public static let shared = Container()
-    #endif
+#endif
     /// Define the container's manager.
     public let manager: ContainerManager = ContainerManager()
     /// Public initializer
