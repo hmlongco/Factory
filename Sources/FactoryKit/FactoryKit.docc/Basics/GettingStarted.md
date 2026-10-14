@@ -157,11 +157,21 @@ Our ContentView uses our view model, which is assigned to a StateObject. Great. 
 It's easy. Just replace `MyService` with a mock that also conforms to `MyServiceType`.
 
 ```swift
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        Container.shared.myService { MockService2() }
-        ContentView()
-    }
+#Preview {
+    ContentView()
+        .withContainer(\.myService) { MockService2() }
+}
+```
+
+Or use the closure form when there's more to set up.
+
+```swift
+#Preview {
+    ContentView()
+        .withContainer {
+            $0.myService.register { MockService2() }
+            $0.analytics.register { MockAnalytics() }
+        }
 }
 ```
 

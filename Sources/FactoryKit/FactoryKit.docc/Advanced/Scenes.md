@@ -22,9 +22,11 @@ Two windows, two accounts. Both windows ask `Container.shared` for a session, an
 
 Because you can't. `Container.shared` is a `@TaskLocal`, and a task local is get-only. The only way to change what it returns is `Container.$shared.withValue(_:)`, and the new value lasts for that closure and the child tasks created inside it.
 
-SwiftUI doesn't build your views inside a closure you wrote. It creates and updates them on its own schedule, and by then your `withValue` has long since returned. Anything resolved lazily later quietly falls back to the global container, and nothing tells you.
+There are other issues as well, but basically we need to stop trying to replace the global and figure out a way to give each scene its own container and let the views find it.
 
-So we need to stop trying to replace the global and figure out a way to give each scene its own container and let the views find it.
+Fortunately, Apple gave us a solution. With a catch, of course.
+
+Let's dive in.
 
 ## One container per scene
 
@@ -54,6 +56,33 @@ Put it in the scene root, not the app root. `WindowGroup` instantiates `SceneRoo
 The container lives exactly as long as the scene. When the window goes away, `@State` releases the container, and its registrations and cached objects go with it.
 
 The default value of `\.container` is `Container.shared`. Any view that isn't inside a scene root behaves exactly as it always did.
+
+## Accessing the container
+
+So now we have our container. How do we access it? Well, in some cases we can simply access the environment variable.
+
+```swift
+struct ContentView: View {
+    @Environment(\.container) var container
+    ...
+}
+```
+
+But there's a problem here. The Environment isn't available on View initialization, and that's where we usually need to construct our view models or setup access to our repositories or other services.
+
+```swift
+struct ContentView: View {
+    @Environment(\.container) var container
+    @State var model: ContentViewModel
+    init() {
+        model = .init(container: container) // FAILS! Container not available!
+    }
+    var body: some View {
+        Text(model.text)
+    }
+}
+```
+Fortunately, Factory has long had a solution to this problem. All you need to do is let Factory construct your view model for you.
 
 ## InjectedObject and InjectedObservable
 

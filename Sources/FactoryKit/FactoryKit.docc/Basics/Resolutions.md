@@ -103,7 +103,23 @@ class ContentViewModel: ObservableObject {
     let newSchool = Container.newSchool()
 }
 ```
-This was discussed in greater detail in <doc:Registrations>
+This was discussed in greater detail in <doc:Registrations>.
+
+
+### Scene Based Containers
+
+New to Factory 3.5 is support for scene-based containers in SwiftUI. `InjectedObservable` and `InjectedObject` can both obtain their containers from the environment and resolve their dependencies from the current scene.
+
+```swift
+    struct ContentView: View {
+        @InjectedObservable(\.contentViewModel) var viewModel
+        var body: some View {
+            Text(viewModel.text)
+        }
+    }
+```
+
+See <doc:Scenes> for more information on how to accomplish this.
 
 ### Composition Root
 
@@ -129,5 +145,5 @@ struct FactoryDemoApp: App {
             }
         }
     }
-}ß
+}
 ```

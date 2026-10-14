@@ -32,8 +32,8 @@ struct ContentView: View {
 // the preview
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        Container.shared.myService { MockServiceN(4) }
         ContentView()
+            .withContainer(\.myService) { MockService() }
     }
 }
 ```
@@ -45,21 +45,22 @@ The same can be done using the new macro-based #Preview option added to Xcode 15
 
 ```swift
 #Preview {
-    Container.shared.myService { MockServiceN(4) }
     ContentView()
+        .withContainer(\.myService) { MockService() }
 }
 ```
 
 ## Multiple Registrations
 
 There's also a variant for Containers if you need to do multiple registrations.
+
 ```swift
 #Preview {
-    Container.shared {
-        $0.myService { MockServiceN(4) }
-        $0.anotherService { MockAnotherService() }
-    }
     ContentView()
+        .withContainer {
+            $0.myService.register { MockService() }
+            $0.analytics.register { MockAnalytics() }
+        }
 }
 ```
 
@@ -84,15 +85,17 @@ struct ContentView_Previews: PreviewProvider {
     }
 }
 ```
+*Note the deprecated registration syntax.*
+
 Of course, it's even easier with #Preview as each one runs in its own context..
 ```swift
 #Preview {
-    Container.shared.myService { MockServiceN(4) }
     ContentView()
+        .withContainer(\.myService) { MockServiceN(4) }
 }
 #Preview {
-    Container.shared.myService { MockServiceN(0) }
     ContentView()
+        .withContainer(\.myService) { MockServiceN(0) }
 }
 ```
 Since the #Preview macro has been back-ported to iOS 13, there's really no need to use the old syntax.
@@ -110,23 +113,7 @@ extension Container {
 }
 
 #Preview {
-    let _ = Container.shared.setupMocks()
     ContentView()
+        .withContainer { $0.setupMocks() }
 }
 ```
-Or if you want to roll with the cool kids and continue with the preview syntax...
-```swift
-extension Container {
-    func setupMocks() -> EmptyView {
-        myService { MockServiceN(4) }
-        sharedService { MockService2() }
-        return EmptyView()
-    }
-}
-
-#Preview {
-    Container.shared.setupMocks()
-    ContentView()
-}
-```
-

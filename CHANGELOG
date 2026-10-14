@@ -1,5 +1,13 @@
 # Factory Changelog
 
+### 3.5.0
+
+* Added a `container` environment key for SwiftUI to support per-scene containers
+* Updated InjectedObject and InjectedObservable to support per-scene containers
+* Added withContainer syntax for SwiftUI Previews
+
+See /Advanced/Scenes in the documentation for more details.
+
 ### 3.4.1
 
 * Scope performance optimization eliminates protocol conformance check #389

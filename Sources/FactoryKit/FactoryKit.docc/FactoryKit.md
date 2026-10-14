@@ -40,7 +40,6 @@ Ready to get started?
 
 ### Advanced Topics
 
-- <doc:Design>
 - <doc:Modifiers>
 - <doc:Actors>
 - <doc:Modules>
@@ -52,4 +51,5 @@ Ready to get started?
 
 ### Additional Topics
 
+- <doc:Design>
 - <doc:Migration>
