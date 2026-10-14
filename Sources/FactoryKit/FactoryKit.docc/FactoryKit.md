@@ -44,6 +44,7 @@ Ready to get started?
 - <doc:Modifiers>
 - <doc:Actors>
 - <doc:Modules>
+- <doc:Scenes>
 - <doc:Cycle>
 - <doc:Optionals>
 - <doc:Functional>

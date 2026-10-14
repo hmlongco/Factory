@@ -33,7 +33,7 @@ import SwiftUI
 
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
 extension EnvironmentValues {
-    /// Entry for per scene containers, used by `@InjectedObservable`.
+    /// Entry for per scene containers, used by `@InjectedObject` and `@InjectedObservable`.
     @Entry public var container: Container = Container.shared
 }
 
@@ -41,7 +41,25 @@ extension View {
     /// Configures the ambient scene container if one is already set (e.g. by a parent view), otherwise we default to the
     /// global shared container.
     ///
-    /// Publishes the result via `\.container` so `@InjectedObservable` resolve against it instead of `Container.shared`.
+    /// Publishes the result via `\.container` so `@InjectedObject` and `@InjectedObservable` resolve against it instead of `Container.shared`.
+    ///
+    /// Use it to apply any number of registrations to the container, for example in a preview or at the root of a scene.
+    /// ```swift
+    /// #Preview {
+    ///     ContentView()
+    ///         .withContainer {
+    ///             $0.myServiceType.register { MockService() }
+    ///             $0.analytics.register { MockAnalytics() }
+    ///         }
+    /// }
+    /// ```
+    /// > Important: The modifier changes the container it finds in the environment, so it must be applied *inside* the view that
+    /// sets `\.container`. Applied outside, it finds and changes `Container.shared` instead.
+    /// ```swift
+    /// ContentView()
+    ///     .withContainer { $0.myServiceType.register { MockService() } } // Registers on sceneContainer.
+    ///     .environment(\.container, sceneContainer)
+    /// ```
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     public func withContainer(_ modify: @escaping (Container) -> Void) -> some View {
         modifier(SceneContainerModifier(modify: modify))
@@ -50,7 +68,16 @@ extension View {
     /// Registers the factory on the ambient scene container if one is already set (e.g. by a parent view), otherwise we default to the
     /// global shared container.
     ///
-    /// Publishes the result via `\.container` so `@InjectedObservable` resolve against it instead of `Container.shared`.
+    /// Publishes the result via `\.container` so `@InjectedObject` and `@InjectedObservable` resolve against it instead of `Container.shared`.
+    ///
+    /// Shorthand for registering a single factory.
+    /// ```swift
+    /// #Preview {
+    ///     ContentView()
+    ///         .withContainer(\.myServiceType) { MockService() }
+    /// }
+    /// ```
+    /// The same placement rule applies. Apply it inside the view that sets `\.container`, or it registers on `Container.shared`.
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     public func withContainer<T>(_ keyPath: KeyPath<Container, Factory<T>>, _ registration: @escaping () -> T) -> some View {
         modifier(SceneContainerModifier(modify: { $0[keyPath: keyPath].register(factory: registration) }))

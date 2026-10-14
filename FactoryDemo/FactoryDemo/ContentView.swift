@@ -51,6 +51,7 @@ struct ContentView: View {
             }
 
             Section("Miscellaneous") {
+                ObservableObjectView()
                 if #available(iOS 17, *) {
                     ObservableView()
                 }

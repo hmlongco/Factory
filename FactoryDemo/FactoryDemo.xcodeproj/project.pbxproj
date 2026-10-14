@@ -48,6 +48,7 @@
 		4CF40C3C2A228E5900935E49 /* IODemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CF40C3B2A228E5900935E49 /* IODemoView.swift */; };
 		4CF4A8F9307DBC7400255BFA /* SceneDemoViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CF4A8F8307DBC7400255BFA /* SceneDemoViewModel.swift */; };
 		4CF4A8FF307DBC7500255BFA /* SceneDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CF4A8FE307DBC7500255BFA /* SceneDemoView.swift */; };
+		4CF4A910307EC74200255BFA /* ObservableObjectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CF4A90F307EC74200255BFA /* ObservableObjectView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -163,6 +164,7 @@
 		4CF40C3B2A228E5900935E49 /* IODemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IODemoView.swift; sourceTree = "<group>"; };
 		4CF4A8F8307DBC7400255BFA /* SceneDemoViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDemoViewModel.swift; sourceTree = "<group>"; };
 		4CF4A8FE307DBC7500255BFA /* SceneDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDemoView.swift; sourceTree = "<group>"; };
+		4CF4A90F307EC74200255BFA /* ObservableObjectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservableObjectView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -299,6 +301,7 @@
 				4CF40C3B2A228E5900935E49 /* IODemoView.swift */,
 				4C02802E2AF6D62A00768BA9 /* ModelTest.swift */,
 				4C38E9D12AED7166002063CD /* ObservableView.swift */,
+				4CF4A90F307EC74200255BFA /* ObservableObjectView.swift */,
 				4CEEC34E284927EF00C979B3 /* Preview Content */,
 				4CEEC35D284930DB00C979B3 /* Services.swift */,
 				4CF4A8F8307DBC7400255BFA /* SceneDemoViewModel.swift */,
@@ -554,6 +557,7 @@
 				4CEEC35C2849309C00C979B3 /* FactoryDemoApp+Injection.swift in Sources */,
 				4C46E0662956433200185E6E /* CircularDependencies.swift in Sources */,
 				4CAA10E02C2C7EAC00799300 /* AsyncInit.swift in Sources */,
+				4CF4A910307EC74200255BFA /* ObservableObjectView.swift in Sources */,
 				4C977B3B29A2AD3A0072FC17 /* SimpleContainer.swift in Sources */,
 				4CEEC3602849311000C979B3 /* ContentViewModel.swift in Sources */,
 				4C02802F2AF6D62A00768BA9 /* ModelTest.swift in Sources */,

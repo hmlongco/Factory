@@ -182,6 +182,7 @@ extension Injected: @unchecked Sendable where T: Sendable {}
     /// deinit {
     ///     $myService.resolvedOrNil()?.cleanup()
     /// }
+    /// ```
     public func resolvedOrNil() -> T? {
         storage.lock.withLock { storage.initialized ? storage.dependency : nil }
     }
@@ -200,8 +201,8 @@ extension LazyInjected: @unchecked Sendable where T: Sendable {}
 ///
 /// ```swift
 /// class MyViewModel {
-///    @LazyInjected(\.myService) var service1
-///    @LazyInjected(\MyCustomContainer.myService) var service2
+///    @WeakLazyInjected(\.myService) var service1
+///    @WeakLazyInjected(\MyCustomContainer.myService) var service2
 /// }
 /// ```
 /// The provided keypath resolves to a Factory definition on the `shared` container required for each Container type.
@@ -282,6 +283,7 @@ extension LazyInjected: @unchecked Sendable where T: Sendable {}
     /// deinit {
     ///     $myService.resolvedOrNil()?.cleanup()
     /// }
+    /// ```
     public func resolvedOrNil() -> T? {
         storage.lock.withLock { storage.dependency as? T }
     }
@@ -355,7 +357,7 @@ extension DynamicInjected: @unchecked Sendable where T: Sendable {}
     public init() {
         self.dependency = (Container.shared as? Resolving)?.resolve()
     }
-    /// Initializes the property wrapper from the default Container. The dependency is resolved on initialization.
+    /// Initializes the property wrapper from the specified container. The dependency is resolved on initialization.
     public init(_ container: ManagedContainer) {
         self.dependency = (container as? Resolving)?.resolve()
     }
@@ -405,12 +407,12 @@ extension InjectedType: @unchecked Sendable where T: Sendable {}
 }
 
 #if canImport(SwiftUI)
-/// Immediate injection property wrapper for SwiftUI ObservableObjects.
+/// Injection property wrapper for SwiftUI ObservableObjects.
 ///
 /// This wrapper is meant for use in SwiftUI Views and exposes bindable objects similar to that of SwiftUI @StateObject
 /// and @EnvironmentObject.
 ///
-/// Like the other Injected property wrappers, InjectedObject wraps obtains the dependency from the Factory keypath
+/// Like the other Injected property wrappers, InjectedObject obtains the dependency from the Factory keypath
 /// and provides it to a wrapped instance of StateObject. Updating object state will trigger view update.
 /// ```swift
 /// struct ContentView: View {
@@ -429,26 +431,71 @@ extension InjectedType: @unchecked Sendable where T: Sendable {}
 ///     }
 /// }
 /// ```
+/// `InjectedObject` can also look for a registered scene container and use that container instead of Container.shared. This can be
+/// beneficial in multitasking environments like SplitView.
+///
+/// To do so, register and store the container at the scene root, NOT the app root.
+/// ```swift
+/// @main
+/// struct DemoApp: App {
+///     var body: some Scene {
+///         WindowGroup {
+///             PerSceneContentView()
+///         }
+///     }
+/// }
+/// // Create a new container for each scene.
+/// struct PerSceneContentView: View {
+///     @State var sceneContainer = Container()
+///     var body: some View {
+///         ContentView()
+///             .environment(\.container, sceneContainer)
+///     }
+/// }
+/// ```
+/// You'll probably also want to pass the container into the view model on initialization so it's accessing the proper dependencies. Using
+/// `@Injected` or other Factory property wrappers will revert to accessing `Container.shared`, which is not what we want.
+/// ```swift
+/// extension Container {
+///     @MainActor var contentViewModel: Factory<ContentViewModel> {
+///         self { ContentViewModel(container: self) }
+///     }
+/// }
+///
+/// @MainActor
+/// final class ContentViewModel: ObservableObject {
+///     private let service: MyServiceType
+///     init(container: Container) {
+///         // If you want the service resolved from the "per scene" container do this!
+///         self.service = container.myServiceType()
+///     }
+///     // Not this!
+///     @Injected(\.myServiceType) private var badDependency
+/// }
+/// ```
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
-@MainActor @frozen @propertyWrapper public struct InjectedObject<T>: DynamicProperty where T: Combine.ObservableObject {
-    @StateObject fileprivate var dependency: T
-    /// Initializes the property wrapper. The dependency is resolved on initialization.
+@MainActor @propertyWrapper public struct InjectedObject<T>: DynamicProperty where T: Combine.ObservableObject {
+    /// The container registered for this scene, otherwise the global shared container.
+    @Environment(\.container) fileprivate var container: Container
+    /// The observable dependency managed by this property wrapper. Held in a StateObject so SwiftUI observes its changes.
+    @StateObject fileprivate var dependency: ThunkedObject<T>
+    /// Initializes the property wrapper. The dependency is resolved on first use.
     /// - Parameter keyPath: KeyPath to a Factory on the default Container.
     public init(_ keyPath: KeyPath<Container, Factory<T>>) {
-        self._dependency = StateObject<T>(wrappedValue: Container.shared[keyPath: keyPath]())
+        self._dependency = StateObject(wrappedValue: ThunkedObject(thunkedValue: { c in c[keyPath: keyPath]() }))
     }
-    /// Initializes the property wrapper. The dependency is resolved on initialization.
-    /// - Parameter keyPath: KeyPath to a Factory on the specified Container.
-    public init<C:SharedContainer>(_ keyPath: KeyPath<C, Factory<T>>) {
-        self._dependency = StateObject<T>(wrappedValue: C.shared[keyPath: keyPath]())
+    /// Initializes the property wrapper. The dependency is resolved on first use.
+    /// - Parameter keyPath: KeyPath to a Factory on the specified Container. Resolves from `C.shared`, not the scene container.
+    public init<C: SharedContainer>(_ keyPath: KeyPath<C, Factory<T>>) {
+        self._dependency = StateObject(wrappedValue: ThunkedObject(thunkedValue: { _ in C.shared[keyPath: keyPath]() }))
     }
-    /// Manages the wrapped dependency.
+    /// Provides direct access to the wrapped observable dependency.
     public var wrappedValue: T {
-        get { dependency }
+        get { dependency.thunkedValue(container) }
     }
-    /// Manages the wrapped dependency.
+    /// Provides bindings to the properties of the wrapped observable dependency.
     public var projectedValue: ObservedObject<T>.Wrapper {
-        return $dependency
+        ObservedObject(wrappedValue: dependency.thunkedValue(container)).projectedValue
     }
 }
 
@@ -459,7 +506,7 @@ extension InjectedObject {
     /// Still has issue with attempting to pass dependency into existing view when existing InjectedObject has keyPath.
     /// https://forums.swift.org/t/allow-property-wrappers-with-multiple-arguments-to-defer-initialization-when-wrappedvalue-is-not-specified
     public init(_ wrappedValue: T) {
-        self._dependency = StateObject<T>(wrappedValue: wrappedValue)
+        self._dependency = StateObject(wrappedValue: ThunkedObject(thunkedValue: { _ in wrappedValue }))
     }
 }
 
@@ -470,8 +517,8 @@ extension InjectedObject: @unchecked Sendable where T: Sendable {}
 ///
 /// `InjectedObservable` is designed to automatically resolve and inject Observable dependencies
 /// from a shared container, allowing for easy management of Observable objects within
-/// SwiftUI views. This property wrapper ensures that the dependency is resolved at
-/// initialization and provides state storage, direct access, and binding capabilities.
+/// SwiftUI views. This property wrapper ensures that the dependency is resolved on
+/// first use and provides state storage, direct access, and binding capabilities.
 ///
 /// And unlike using State (prior to iOS 27), the injected dependency is only resolved once, on first use.
 ///
@@ -490,7 +537,8 @@ extension InjectedObject: @unchecked Sendable where T: Sendable {}
 ///         Text(model.text)
 ///     }
 /// }
-/// ```///
+/// ```
+///
 /// `InjectedObservable` can also look for a registered scene container and use that container instead of Container.shared. This can be
 /// beneficial in multitasking environments like SplitView.
 ///
@@ -527,7 +575,7 @@ extension InjectedObject: @unchecked Sendable where T: Sendable {}
 /// final class SceneDemoViewModel {
 ///     private let service: MyServiceType
 ///     init(container: Container) {
-///         // Do this!
+///         // If you want the service resolved from the "per scene" container do this!
 ///         self.service = container.myServiceType()
 ///     }
 ///     // Not this!
@@ -556,8 +604,8 @@ extension InjectedObject: @unchecked Sendable where T: Sendable {}
     public init(_ keyPath: KeyPath<Container, Factory<T>>) {
         self._dependency = .init(wrappedValue: ThunkedValue(thunkedValue: { c in c[keyPath: keyPath]() }))
     }
-    /// Initializes the property wrapper. The dependency is resolved on initialization.
-    /// - Parameter keyPath: KeyPath to a Factory on the specified Container.
+    /// Initializes the property wrapper. The dependency is resolved on first use.
+    /// - Parameter keyPath: KeyPath to a Factory on the specified Container. Resolves from `C.shared`, not the scene container.
     public init<C: SharedContainer>(_ keyPath: KeyPath<C, Factory<T>>) {
         self._dependency = .init(wrappedValue: ThunkedValue(thunkedValue: { _ in C.shared[keyPath: keyPath]() }))
     }
@@ -565,7 +613,7 @@ extension InjectedObject: @unchecked Sendable where T: Sendable {}
     public var wrappedValue: T {
         get { dependency.thunkedValue(container) }
     }
-    /// Provides a binding to the wrapped observable dependency, allowing for dynamic updates.
+    /// Provides a binding to the wrapped observable dependency. Setting the binding's value has no effect.
     public var projectedValue: Binding<T> {
         Binding(get: { dependency.thunkedValue(container) }, set: { _ in })
     }
@@ -575,7 +623,7 @@ extension InjectedObject: @unchecked Sendable where T: Sendable {}
 extension InjectedObservable {
     /// Simple initializer with passed parameter bypassing injection.
     ///
-    /// Still has issue with attempting to pass dependency into existing view when existing InjectedObject has keyPath.
+    /// Still has issue with attempting to pass dependency into existing view when existing InjectedObservable has keyPath.
     /// https://forums.swift.org/t/allow-property-wrappers-with-multiple-arguments-to-defer-initialization-when-wrappedvalue-is-not-specified
     public init(_ wrappedValue: @autoclosure @escaping () -> T) {
         self._dependency = .init(wrappedValue: ThunkedValue(thunkedValue: { _ in wrappedValue() }))
@@ -604,4 +652,35 @@ private final class ThunkedValue<T> {
     }
 
 }
+
+/// Like ThunkedValue, but for ObservableObjects. Resolves lazily and forwards the resolved object's `objectWillChange`
+/// so that a StateObject holding this box invalidates the view when the dependency publishes changes.
+@available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
+@MainActor
+private final class ThunkedObject<T: Combine.ObservableObject>: Combine.ObservableObject {
+
+    private var object: T!
+    private var thunk: ((_ c: Container) -> T)?
+    private var cancellable: AnyCancellable?
+
+    init(thunkedValue thunk: @escaping (_ c: Container) -> T) {
+        self.thunk = thunk
+    }
+
+    func thunkedValue(_ c: Container) -> T {
+        if let thunk {
+            let object = thunk(c)
+            self.object = object
+            self.thunk = nil
+            cancellable = object.objectWillChange.sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
+        }
+        return object
+    }
+
+}
+
+
 #endif
+
