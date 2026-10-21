@@ -113,8 +113,8 @@ struct FactoryDemoApp: App {
         }
     }
 }
-
 ```
+
 New to Factory 3.5 is support for scene-based containers in SwiftUI. `InjectedObservable` and `InjectedObject` both obtain their containers from the environment and resolve their dependencies from the current scene.
 
 ```swift
@@ -125,6 +125,7 @@ struct ContentView: View {
     }
 }
 ```
+
 See [Scenes](https://hmlongco.github.io/Factory/documentation/factorykit/scenes) for more examples.
 
 Finally, Factory also has a set of global dependency resolution functions. These global functions can easily be replaced should you want to minimize your codebase's apparent dependency on Factory.
