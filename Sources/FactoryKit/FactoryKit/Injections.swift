@@ -475,27 +475,27 @@ extension InjectedType: @unchecked Sendable where T: Sendable {}
 /// ```
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
 @MainActor @propertyWrapper public struct InjectedObject<T>: DynamicProperty where T: Combine.ObservableObject {
-    /// The container registered for this scene, otherwise the global shared container.
-    @Environment(\.container) fileprivate var container: Container
+    /// The containers registered for this scene, otherwise the global shared containers.
+    @Environment(\.sceneContainers) fileprivate var containers: SceneContainers
     /// The observable dependency managed by this property wrapper. Held in a StateObject so SwiftUI observes its changes.
     @StateObject fileprivate var dependency: ThunkedObject<T>
     /// Initializes the property wrapper. The dependency is resolved on first use.
     /// - Parameter keyPath: KeyPath to a Factory on the default Container.
     public init(_ keyPath: KeyPath<Container, Factory<T>>) {
-        self._dependency = StateObject(wrappedValue: ThunkedObject(thunkedValue: { c in c[keyPath: keyPath]() }))
+        self._dependency = StateObject(wrappedValue: ThunkedObject(thunkedValue: { $0[Container.self][keyPath: keyPath]() }))
     }
     /// Initializes the property wrapper. The dependency is resolved on first use.
-    /// - Parameter keyPath: KeyPath to a Factory on the specified Container. Resolves from `C.shared`, not the scene container.
+    /// - Parameter keyPath: KeyPath to a Factory on the specified Container. Resolves from the container of that type installed for the scene, otherwise `C.shared`.
     public init<C: SharedContainer>(_ keyPath: KeyPath<C, Factory<T>>) {
-        self._dependency = StateObject(wrappedValue: ThunkedObject(thunkedValue: { _ in C.shared[keyPath: keyPath]() }))
+        self._dependency = StateObject(wrappedValue: ThunkedObject(thunkedValue: { $0[C.self][keyPath: keyPath]() }))
     }
     /// Provides direct access to the wrapped observable dependency.
     public var wrappedValue: T {
-        get { dependency.thunkedValue(container) }
+        get { dependency.thunkedValue(containers) }
     }
     /// Provides bindings to the properties of the wrapped observable dependency.
     public var projectedValue: ObservedObject<T>.Wrapper {
-        ObservedObject(wrappedValue: dependency.thunkedValue(container)).projectedValue
+        ObservedObject(wrappedValue: dependency.thunkedValue(containers)).projectedValue
     }
 }
 
@@ -586,8 +586,8 @@ extension InjectedObject: @unchecked Sendable where T: Sendable {}
 /// - Requires: The wrapped type `T` must conform to the `Observable` protocol.
 @available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
 @MainActor @propertyWrapper public struct InjectedObservable<T>: DynamicProperty where T: Observation.Observable {
-    /// The container registered for this scene, otherwise the global shared container.
-    @Environment(\.container) fileprivate var container: Container
+    /// The containers registered for this scene, otherwise the global shared containers.
+    @Environment(\.sceneContainers) fileprivate var containers: SceneContainers
     /// The observable dependency managed by this property wrapper.
     @State fileprivate var dependency: ThunkedValue<T>
     /// Initializes the `InjectedObservable` property wrapper, resolving the dependency from the default shared container.
@@ -602,20 +602,20 @@ extension InjectedObject: @unchecked Sendable where T: Sendable {}
     /// @InjectedObservable(\.contentViewModel) var viewModel: ContentViewModel
     /// ```
     public init(_ keyPath: KeyPath<Container, Factory<T>>) {
-        self._dependency = .init(wrappedValue: ThunkedValue(thunkedValue: { c in c[keyPath: keyPath]() }))
+        self._dependency = .init(wrappedValue: ThunkedValue(thunkedValue: { $0[Container.self][keyPath: keyPath]() }))
     }
     /// Initializes the property wrapper. The dependency is resolved on first use.
-    /// - Parameter keyPath: KeyPath to a Factory on the specified Container. Resolves from `C.shared`, not the scene container.
+    /// - Parameter keyPath: KeyPath to a Factory on the specified Container. Resolves from the container of that type installed for the scene, otherwise `C.shared`.
     public init<C: SharedContainer>(_ keyPath: KeyPath<C, Factory<T>>) {
-        self._dependency = .init(wrappedValue: ThunkedValue(thunkedValue: { _ in C.shared[keyPath: keyPath]() }))
+        self._dependency = .init(wrappedValue: ThunkedValue(thunkedValue: { $0[C.self][keyPath: keyPath]() }))
     }
     /// Provides direct access to the wrapped observable dependency.
     public var wrappedValue: T {
-        get { dependency.thunkedValue(container) }
+        get { dependency.thunkedValue(containers) }
     }
     /// Provides a binding to the wrapped observable dependency. Setting the binding's value has no effect.
     public var projectedValue: Binding<T> {
-        Binding(get: { dependency.thunkedValue(container) }, set: { _ in })
+        Binding(get: { dependency.thunkedValue(containers) }, set: { _ in })
     }
 }
 
@@ -637,13 +637,13 @@ extension InjectedObservable: @unchecked Sendable where T: Sendable {}
 private final class ThunkedValue<T> {
 
     private var object: T!
-    private var thunk: ((_ c: Container) -> T)?
+    private var thunk: ((_ c: SceneContainers) -> T)?
 
-    init(thunkedValue thunk: @escaping (_ c: Container) -> T) {
+    init(thunkedValue thunk: @escaping (_ c: SceneContainers) -> T) {
         self.thunk = thunk
     }
 
-    func thunkedValue(_ c: Container) -> T {
+    func thunkedValue(_ c: SceneContainers) -> T {
         if let thunk {
             object = thunk(c)
             self.thunk = nil
@@ -660,14 +660,14 @@ private final class ThunkedValue<T> {
 private final class ThunkedObject<T: Combine.ObservableObject>: Combine.ObservableObject {
 
     private var object: T!
-    private var thunk: ((_ c: Container) -> T)?
+    private var thunk: ((_ c: SceneContainers) -> T)?
     private var cancellable: AnyCancellable?
 
-    init(thunkedValue thunk: @escaping (_ c: Container) -> T) {
+    init(thunkedValue thunk: @escaping (_ c: SceneContainers) -> T) {
         self.thunk = thunk
     }
 
-    func thunkedValue(_ c: Container) -> T {
+    func thunkedValue(_ c: SceneContainers) -> T {
         if let thunk {
             let object = thunk(c)
             self.object = object

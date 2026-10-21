@@ -31,10 +31,38 @@ import Combine
 import Observation
 import SwiftUI
 
+/// Holds the per-scene containers published in the environment, keyed by container type.
+///
+/// Reading a container type that hasn't been installed returns that type's `shared` container.
+@available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
+struct SceneContainers: Equatable, Sendable {
+
+    private var containers: [ObjectIdentifier: any SharedContainer] = [:]
+
+    subscript<C: SharedContainer>(_ type: C.Type) -> C {
+        get { (containers[ObjectIdentifier(type)] as? C) ?? C.shared }
+        set { containers[ObjectIdentifier(type)] = newValue }
+    }
+
+    static func == (lhs: SceneContainers, rhs: SceneContainers) -> Bool {
+        lhs.containers.count == rhs.containers.count
+            && lhs.containers.allSatisfy { rhs.containers[$0.key] === $0.value }
+    }
+
+}
+
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
 extension EnvironmentValues {
+    /// Per scene containers, by container type. Used by `@InjectedObject` and `@InjectedObservable`.
+    @Entry var sceneContainers: SceneContainers = SceneContainers()
+
     /// Entry for per scene containers, used by `@InjectedObject` and `@InjectedObservable`.
-    @Entry public var container: Container = Container.shared
+    ///
+    /// Defaults to `Container.shared`. Custom container types are installed with `withContainer(_:)`.
+    public var container: Container {
+        get { sceneContainers[Container.self] }
+        set { sceneContainers[Container.self] = newValue }
+    }
 }
 
 extension View {
@@ -57,12 +85,13 @@ extension View {
     /// sets `\.container`. Applied outside, it finds and changes `Container.shared` instead.
     /// ```swift
     /// ContentView()
-    ///     .withContainer { $0.myServiceType.register { MockService() } } // Registers on sceneContainer.
+    ///     .withContainer { $0.myServiceType.register { MockService() } }
+    ///     // Registers on sceneContainer.
     ///     .environment(\.container, sceneContainer)
     /// ```
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     public func withContainer(_ modify: @escaping (Container) -> Void) -> some View {
-        modifier(SceneContainerModifier(modify: modify))
+        modifier(SceneContainerModifier<Container>(modify: modify))
     }
 
     /// Registers the factory on the ambient scene container if one is already set (e.g. by a parent view), otherwise we default to the
@@ -80,24 +109,79 @@ extension View {
     /// The same placement rule applies. Apply it inside the view that sets `\.container`, or it registers on `Container.shared`.
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     public func withContainer<T>(_ keyPath: KeyPath<Container, Factory<T>>, _ registration: @escaping () -> T) -> some View {
-        modifier(SceneContainerModifier(modify: { $0[keyPath: keyPath].register(factory: registration) }))
+        modifier(SceneContainerModifier<Container>(modify: { $0[keyPath: keyPath].register(factory: registration) }))
+    }
+
+    /// Configures the ambient scene container of the given custom container type if one is already set (e.g. by a parent view),
+    /// otherwise we default to that type's `shared` container.
+    ///
+    /// Publishes the result so `@InjectedObject` and `@InjectedObservable` resolve `\MyContainer` key paths against it instead of `MyContainer.shared`.
+    /// ```swift
+    /// #Preview {
+    ///     ContentView()
+    ///         .withContainer(MyContainer.self) {
+    ///             $0.myServiceType.register { MockService() }
+    ///         }
+    /// }
+    /// ```
+    /// The same placement rule applies. Apply it inside the view that installs the container, or it registers on `MyContainer.shared`.
+    @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
+    public func withContainer<C: SharedContainer>(_ type: C.Type, _ modify: @escaping (C) -> Void) -> some View {
+        modifier(SceneContainerModifier<C>(modify: modify))
+    }
+
+    /// Registers the factory on the ambient scene container of the custom container type if one is already set (e.g. by a parent view),
+    /// otherwise we default to that type's `shared` container.
+    ///
+    /// Shorthand for registering a single factory on a custom container.
+    /// ```swift
+    /// #Preview {
+    ///     ContentView()
+    ///         .withContainer(\MyContainer.myServiceType) { MockService() }
+    /// }
+    /// ```
+    /// The same placement rule applies. Apply it inside the view that installs the container, or it registers on `MyContainer.shared`.
+    @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
+    public func withContainer<C: SharedContainer, T>(_ keyPath: KeyPath<C, Factory<T>>, _ registration: @escaping () -> T) -> some View {
+        modifier(SceneContainerModifier<C>(modify: { $0[keyPath: keyPath].register(factory: registration) }))
+    }
+
+    /// Installs a container for this scene, for any container type, so `@InjectedObject` and `@InjectedObservable` resolve against it
+    /// instead of that type's `shared` container.
+    ///
+    /// This is the custom container counterpart of `.environment(\.container, sceneContainer)`.
+    /// ```swift
+    /// struct SceneRoot: View {
+    ///     @State private var sceneContainer = MyContainer()
+    ///     var body: some View {
+    ///         ContentView()
+    ///             .withContainer(sceneContainer)
+    ///     }
+    /// }
+    /// ```
+    @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
+    public func withContainer<C: SharedContainer>(_ container: C) -> some View {
+        transformEnvironment(\.sceneContainers) { $0[C.self] = container }
     }
 }
 
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
-private struct SceneContainerModifier: ViewModifier {
+private struct SceneContainerModifier<C: SharedContainer>: ViewModifier {
 
-    @Environment(\.container) private var environmentContainer: Container
+    @Environment(\.sceneContainers) private var environmentContainers: SceneContainers
 
-    let modify: (Container) -> Void
+    let modify: (C) -> Void
 
     func body(content: Content) -> some View {
-        content.environment(\.container, modifiedContainer())
+        content.environment(\.sceneContainers, modifiedContainers())
     }
 
-    func modifiedContainer() -> Container {
-        modify(environmentContainer)
-        return environmentContainer
+    func modifiedContainers() -> SceneContainers {
+        var containers = environmentContainers
+        let container = containers[C.self]
+        modify(container)
+        containers[C.self] = container
+        return containers
     }
 }
 

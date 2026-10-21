@@ -140,13 +140,46 @@ It may be that some dependencies can be shared across windows (analytics, for ex
 
 ## What does not follow the scene container
 
-The environment only reaches the two aforementioned SwiftUI wrappers, and only when you use the default container's key path.
+The environment only reaches the two aforementioned SwiftUI wrappers.
 
 ``Injected``, ``LazyInjected``, ``WeakLazyInjected``, ``DynamicInjected`` and a bare `Container.shared.myService()` always use `Container.shared`. 
 
 **They have no way to see the environment.**
 
-The custom container form, `@InjectedObservable(\MyContainer.service)`, resolves from `MyContainer.shared` as well. If you need per-scene behavior, use the default `Container` or explicitly pass your own container in the environment.
+## Custom containers
+
+The custom container form, `@InjectedObservable(\MyContainer.service)`, works the same way. It resolves from the container of that type installed for the scene, and falls back to `MyContainer.shared` when there isn't one.
+
+Install one with `withContainer`. It's the custom container counterpart of `.environment(\.container, sceneContainer)`.
+
+```swift
+struct SceneRoot: View {
+    @State private var sceneContainer = MyContainer()
+    var body: some View {
+        ContentView()
+            .withContainer(sceneContainer)
+    }
+}
+```
+
+The registration forms take the container type, or a key path rooted in it.
+
+```swift
+#Preview {
+    ContentView()
+        .withContainer(MyContainer.self) { $0.myServiceType.register { MockService() } }
+        .withContainer(MyContainer())
+}
+
+#Preview {
+    ContentView()
+        .withContainer(\MyContainer.myServiceType) { MockService() }
+        .withContainer(MyContainer())
+}
+```
+
+The same placement rule applies. Apply the registrations inside the view that installs the container, or they register on `MyContainer.shared`.
+
 
 Scopes behave the way you'd expect once you remember where they live. `.cached` and `.shared` are stored on the container, so they're per scene. `.singleton` is global and independent of any container, so it's shared by every scene. If a dependency must not be shared across windows, don't make it a singleton.
 

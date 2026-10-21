@@ -14,7 +14,6 @@ struct DemoApp: App {
         WindowGroup {
             PerSceneContentView()
         }
-        .environmentObject(DemoContainer.shared)
     }
 }
 
@@ -26,6 +25,6 @@ struct PerSceneContentView: View {
             ContentView()
         }
         // Add container to the scene root view
-        .environment(\.container, sceneContainer)
+        .withContainer(sceneContainer)
     }
 }
