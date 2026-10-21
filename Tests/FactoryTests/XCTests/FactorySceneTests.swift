@@ -87,6 +87,35 @@ private struct ObservableProbe: View {
     }
 }
 
+private struct InjectedContainerProbe: View {
+    let seen: Seen
+    @InjectedContainer(SceneTestContainer.self) var container
+    var body: some View {
+        let _ = seen.record(container.sceneTestName())
+        Text(container.sceneTestName())
+    }
+}
+
+private struct DefaultInjectedContainerProbe: View {
+    let seen: Seen
+    @InjectedContainer var container
+    var body: some View {
+        let _ = seen.record(container.sceneTestName())
+        Text(container.sceneTestName())
+    }
+}
+
+private final class PlainContainerHolder {
+    @InjectedContainer(SceneTestContainer.self) var container
+}
+
+// Mirrors FactoryDemo's ContentViewModel, which uses the wrapper in a MainActor class.
+@MainActor
+private final class MainActorContainerHolder {
+    @InjectedContainer var container
+    @InjectedContainer(SceneTestContainer.self) var custom
+}
+
 // MARK: - Tests
 
 @MainActor
@@ -133,6 +162,27 @@ final class FactorySceneTests: XCTestCase {
         environment.container = scene
         XCTAssertTrue(environment.container === scene)
         XCTAssertTrue(environment.sceneContainers[Container.self] === scene)
+    }
+
+    // MARK: InjectedContainer
+
+    func testInjectedContainerInClassResolvesSharedContainer() {
+        let holder = PlainContainerHolder()
+        XCTAssertTrue(holder.container === SceneTestContainer.shared)
+    }
+
+    func testInjectedContainerInMainActorClassResolvesSharedContainers() {
+        let holder = MainActorContainerHolder()
+        XCTAssertTrue(holder.container === Container.shared)
+        XCTAssertTrue(holder.custom === SceneTestContainer.shared)
+    }
+
+    func testInjectedContainerResetActsOnResolvedContainer() {
+        var wrapper = InjectedContainer(SceneTestContainer.self)
+        SceneTestContainer.shared.sceneTestName.register { "registered" }
+        XCTAssertEqual(wrapper.wrappedValue.sceneTestName(), "registered")
+        wrapper.reset(options: .registration)
+        XCTAssertEqual(wrapper.wrappedValue.sceneTestName(), "shared")
     }
 
     #if canImport(AppKit)
@@ -259,6 +309,36 @@ final class FactorySceneTests: XCTestCase {
         XCTAssertEqual(seen.name, "implicit")
         XCTAssertEqual(scene.sceneTestName(), "implicit")
         XCTAssertEqual(Container.shared.sceneTestName(), "default")
+        _ = window
+    }
+
+    // MARK: InjectedContainer in views
+
+    func testInjectedContainerInViewResolvesInstalledCustomContainer() {
+        let scene = SceneTestContainer()
+        scene.sceneTestName.register { "scene" }
+        let seen = Seen()
+        let window = host(InjectedContainerProbe(seen: seen).withContainer(scene))
+        spin()
+        XCTAssertEqual(seen.name, "scene")
+        _ = window
+    }
+
+    func testInjectedContainerInViewFallsBackToShared() {
+        let seen = Seen()
+        let window = host(InjectedContainerProbe(seen: seen))
+        spin()
+        XCTAssertEqual(seen.name, "shared")
+        _ = window
+    }
+
+    func testInjectedContainerInViewResolvesDefaultSceneContainer() {
+        let scene = Container()
+        scene.sceneTestName.register { "scene-default" }
+        let seen = Seen()
+        let window = host(DefaultInjectedContainerProbe(seen: seen).environment(\.container, scene))
+        spin()
+        XCTAssertEqual(seen.name, "scene-default")
         _ = window
     }
 

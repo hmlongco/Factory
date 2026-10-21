@@ -1,5 +1,12 @@
 # Factory Changelog
 
+### 3.5.1
+
+* Updated code to support custom scene containers
+* Updated withContainer to register scene containers
+* Updated Updated InjectedObject and InjectedObservable to support custom per-scene containers
+* Updated InjectedContainer to read custom scene containers
+
 ### 3.5.0
 
 * Added a `container` environment key for SwiftUI to support per-scene containers

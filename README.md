@@ -5,7 +5,7 @@
 
 A modern approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
-## Factory Version 3.5.0
+## Factory Version 3.5.1
 
 Factory is strongly influenced by SwiftUI, and in my opinion is highly suited for that environment. Factory is...
 
@@ -125,6 +125,8 @@ struct ContentView: View {
     }
 }
 ```
+See [Scenes](https://hmlongco.github.io/Factory/documentation/factorykit/scenes) for more examples.
+
 Finally, Factory also has a set of global dependency resolution functions. These global functions can easily be replaced should you want to minimize your codebase's apparent dependency on Factory.
 ```swift
 final class NetworkService {

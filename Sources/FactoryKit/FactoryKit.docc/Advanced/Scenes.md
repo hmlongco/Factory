@@ -30,7 +30,7 @@ Let's dive in.
 
 ## One container per scene
 
-Start by creating the container at the root of the scene and publish it in the environment under `\.container`.
+Start by creating the container at the root of the scene and publishing it in the environment using `.withContainer`.
 
 ```swift
 @main
@@ -46,7 +46,7 @@ struct SceneRoot: View {
     @State private var sceneContainer = Container()
     var body: some View {
         ContentView()
-            .environment(\.container, sceneContainer)
+            .withContainer(sceneContainer)
     }
 }
 ```
@@ -55,18 +55,33 @@ Put it in the scene root, not the app root. `WindowGroup` instantiates `SceneRoo
 
 The container lives exactly as long as the scene. When the window goes away, `@State` releases the container, and its registrations and cached objects go with it.
 
-The default value of `\.container` is `Container.shared`. Any view that isn't inside a scene root behaves exactly as it always did.
+The default value of the environment variable is `Container.shared`. Any view that isn't inside a scene root behaves exactly as it always did.
 
 ## Accessing the container
 
 So now we have our container. How do we access it? Well, in some cases we can simply access the environment variable.
 
 ```swift
+// Directly
 struct ContentView: View {
     @Environment(\.container) var container
     ...
 }
 ```
+
+The environment only knows about the default container, though. ``InjectedContainer`` does the same job and also works with custom containers.
+
+```swift
+struct ContentView: View {
+    // The default Container
+    @InjectedContainer var container   
+    // A custom container
+    @InjectedContainer(MyContainer.self) var myContainer 
+    ...
+}
+```
+
+It's read-only. It returns the container installed for the scene, and falls back to the shared container if there isn't one.
 
 But there's a problem here. The Environment isn't available on View initialization, and that's where we usually need to construct our view models or setup access to our repositories or other services.
 
@@ -82,6 +97,8 @@ struct ContentView: View {
     }
 }
 ```
+`InjectedContainer` has the same limitation. Read it in `init` and you'll quietly receive the shared container.
+
 Fortunately, Factory has long had a solution to this problem. All you need to do is let Factory construct your view model for you.
 
 ## InjectedObject and InjectedObservable
@@ -161,6 +178,8 @@ struct SceneRoot: View {
     }
 }
 ```
+
+Inside the scene, views can read that container with `@InjectedContainer(MyContainer.self) var container`.
 
 The registration forms take the container type, or a key path rooted in it.
 

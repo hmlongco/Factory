@@ -370,19 +370,45 @@ extension DynamicInjected: @unchecked Sendable where T: Sendable {}
 
 extension InjectedType: @unchecked Sendable where T: Sendable {}
 
-/// Convenience property wrapper injects the specified Container. similar to using Environment or
+/// Convenience property wrapper injects the specified Container's shared value, similar to using Environment or
 /// EnvironmentObject in SwiftUI.
 /// ```swift
 /// class MyViewModel {
 ///    @InjectedContainer var container
-///    @InjectedContainer(\MyCustomContainer) var container2
+///    @InjectedContainer(MyCustomContainer.self) var container2
 /// }
 /// ```
 /// > Note: The @InjectedContainer property wrapper will be resolved on **initialization**. In the above example
 /// the referenced containers will be acquired when the parent class is created.
+///
+/// Used in a SwiftUI View, the wrapper returns the container installed for the scene with `withContainer`,
+/// or falls back to the shared container if there isn't one.
+/// ```swift
+/// // Default Container
+/// struct ContentView: View {
+///     @InjectedContainer var container
+///     var body: some View {
+///         Button("Load") { container.myService().load() }
+///     }
+/// }
+/// // Custom Container
+/// struct ContentView: View {
+///     @InjectedContainer(MyCustomContainer.self) var container
+///     var body: some View {
+///         Button("Load") { container.myService().load() }
+///     }
+/// }
+/// ```
+/// The scene container is only available once the view is installed. Like `@Environment`, we don't read it in the view's `init`,
+/// where we'd receive the shared container.
 @propertyWrapper public struct InjectedContainer<C: SharedContainer> {
 
     private var container: C
+
+    #if canImport(SwiftUI)
+    @Environment(\.sceneContainers) private var sceneContainers: SceneContainers
+    private let scene = SceneContainersBox()
+    #endif
 
     /// Initializes the property wrapper. The dependency is resolved on initialization.
     public init() where C == Container {
@@ -396,15 +422,36 @@ extension InjectedType: @unchecked Sendable where T: Sendable {}
 
     /// Manages the wrapped dependency.
     public var wrappedValue: C {
-        get { return container }
-        mutating set { container = newValue }
+        get {
+            #if canImport(SwiftUI)
+            if let containers = scene.containers {
+                return containers[C.self]
+            }
+            #endif
+            return container
+        }
     }
 
     /// Allows the user to force a Factory resolution at their discretion.
     public mutating func reset(options: FactoryResetOptions = .none) {
-        container.reset(options: options)
+        wrappedValue.reset(options: options)
     }
 }
+
+#if canImport(SwiftUI)
+/// Receives the scene containers when SwiftUI installs the wrapper, so the wrapper never reads the environment outside of a view.
+private final class SceneContainersBox: @unchecked Sendable {
+    var containers: SceneContainers?
+}
+
+@available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
+extension InjectedContainer: DynamicProperty {
+    /// Captures the current scene containers before the view's body is evaluated.
+    public mutating func update() {
+        scene.containers = sceneContainers
+    }
+}
+#endif
 
 #if canImport(SwiftUI)
 /// Injection property wrapper for SwiftUI ObservableObjects.
