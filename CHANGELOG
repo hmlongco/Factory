@@ -1,5 +1,9 @@
 # Factory Changelog
 
+### 3.5.2
+
+* Unpdated README and documentation to cover withContainer caveats and examples
+
 ### 3.5.1
 
 * Updated code to support custom scene containers

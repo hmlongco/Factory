@@ -89,6 +89,10 @@ extension View {
     ///     // Registers on sceneContainer.
     ///     .environment(\.container, sceneContainer)
     /// ```
+    /// > Important: The view is already constructed when the modifier is attached, and the registrations run later, when SwiftUI
+    /// renders. They're visible to `@InjectedObject` and `@InjectedObservable`, which resolve on first use. They're **not** visible
+    /// to `@Injected`, or to a view model created in the view's `init`, since those resolve first. See the Scenes article for
+    /// the fallbacks.
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     public func withContainer(_ modify: @escaping (Container) -> Void) -> some View {
         modifier(SceneContainerModifier<Container>(modify: modify))
@@ -107,6 +111,9 @@ extension View {
     /// }
     /// ```
     /// The same placement rule applies. Apply it inside the view that sets `\.container`, or it registers on `Container.shared`.
+    ///
+    /// The same timing rule applies as well. It reaches `@InjectedObject` and `@InjectedObservable`, but not `@Injected` or
+    /// anything created in the view's `init`.
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     public func withContainer<T>(_ keyPath: KeyPath<Container, Factory<T>>, _ registration: @escaping () -> T) -> some View {
         modifier(SceneContainerModifier<Container>(modify: { $0[keyPath: keyPath].register(factory: registration) }))
@@ -125,6 +132,9 @@ extension View {
     /// }
     /// ```
     /// The same placement rule applies. Apply it inside the view that installs the container, or it registers on `MyContainer.shared`.
+    ///
+    /// The same timing rule applies as well. It reaches `@InjectedObject` and `@InjectedObservable`, but not `@Injected` or
+    /// anything created in the view's `init`.
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     public func withContainer<C: SharedContainer>(_ type: C.Type, _ modify: @escaping (C) -> Void) -> some View {
         modifier(SceneContainerModifier<C>(modify: modify))
@@ -141,6 +151,9 @@ extension View {
     /// }
     /// ```
     /// The same placement rule applies. Apply it inside the view that installs the container, or it registers on `MyContainer.shared`.
+    ///
+    /// The same timing rule applies as well. It reaches `@InjectedObject` and `@InjectedObservable`, but not `@Injected` or
+    /// anything created in the view's `init`.
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     public func withContainer<C: SharedContainer, T>(_ keyPath: KeyPath<C, Factory<T>>, _ registration: @escaping () -> T) -> some View {
         modifier(SceneContainerModifier<C>(modify: { $0[keyPath: keyPath].register(factory: registration) }))
@@ -173,7 +186,8 @@ private struct SceneContainerModifier<C: SharedContainer>: ViewModifier {
     let modify: (C) -> Void
 
     func body(content: Content) -> some View {
-        content.environment(\.sceneContainers, modifiedContainers())
+        let containers = modifiedContainers()
+        content.environment(\.sceneContainers, containers)
     }
 
     func modifiedContainers() -> SceneContainers {

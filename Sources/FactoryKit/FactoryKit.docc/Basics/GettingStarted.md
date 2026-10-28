@@ -158,22 +158,23 @@ It's easy. Just replace `MyService` with a mock that also conforms to `MyService
 
 ```swift
 #Preview {
+    Container.shared.myService.register { MockService2() }
+    ContentView()
+}
+```
+
+The registration runs before `ContentView` is created, and that matters here. `ContentViewModel` is created in the view's `init` and resolves its dependencies there.
+
+Views that use ``InjectedObject`` or ``InjectedObservable`` can also register from the view hierarchy.
+
+```swift
+#Preview {
     ContentView()
         .withContainer(\.myService) { MockService2() }
 }
 ```
 
-Or use the closure form when there's more to set up.
-
-```swift
-#Preview {
-    ContentView()
-        .withContainer {
-            $0.myService.register { MockService2() }
-            $0.analytics.register { MockAnalytics() }
-        }
-}
-```
+But `withContainer` is a modifier, so it runs after the view has already been built. It's too late for anything obtained via ``Injected`` or for a view model created in `init`, as in our example above. See <doc:Scenes> for details and fallbacks.
 
 Note the line in our preview code where we’re gone back to our container and registered a new closure on our factory. This function overrides the default factory closure.
 

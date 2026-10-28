@@ -48,6 +48,9 @@ import SwiftUI
 ///
 /// > Note: The @Injected property wrapper will be resolved on **initialization**. In the above example
 /// the referenced dependencies will be acquired when the parent class is created.
+///
+/// Because it always reads `Container.shared` at that moment, it can't see registrations made later by the SwiftUI `withContainer`
+/// modifier or a container installed in the environment. Use `@InjectedObject` or `@InjectedObservable` for that.
 @propertyWrapper public struct Injected<T> {
 
     private var thunk: () -> Factory<T>

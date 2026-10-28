@@ -5,7 +5,7 @@
 
 A modern approach to Container-Based Dependency Injection for Swift and SwiftUI.
 
-## Factory Version 3.5.1
+## Factory Version 3.5.2
 
 Factory is strongly influenced by SwiftUI, and in my opinion is highly suited for that environment. Factory is...
 
@@ -171,26 +171,23 @@ It's easy. Just replace `MyService` with a mock that also conforms to `MyService
 
 ```swift
 #Preview {
+    Container.shared.myService.register { MockService() }
     ContentView()
-        .withContainer(\.myService) { MockService() }
-}
-```
-
-Or use the closure form when there's more to set up.
-
-```swift
-#Preview {
-    ContentView()
-        .withContainer {
-            $0.myService.register { MockService() }
-            $0.analytics.register { MockAnalytics() }
-        }
 }
 ```
 
 Now when our preview is displayed `ContentView` creates a `ContentViewModel` which in turn has a dependency on `myService` using the `Injected` property wrapper. And when the wrapper asks the factory for an instance of `MyServiceType` it now gets a `MockService2` instead of the `MyService` type originally defined.
 
-This is a powerful concept that lets us reach deep into a chain of dependencies and alter the behavior of a system as needed.
+Views that use `@InjectedObject` or `@InjectedObservable` can also register from the view hierarchy.
+
+```swift
+#Preview {
+    ContentView()
+        .withContainer(\.myService) { MockService() }
+}
+```
+
+Either way, this is a powerful concept that lets us reach deep into a chain of dependencies and alter the behavior of a system as needed.
 
 See the [Previews](https://hmlongco.github.io/Factory/documentation/factorykit/previews) documentation for more.
 
