@@ -24,8 +24,6 @@
 // THE SOFTWARE.
 //
 
-import Foundation
-
 #if canImport(SwiftUI)
 import Combine
 import Observation

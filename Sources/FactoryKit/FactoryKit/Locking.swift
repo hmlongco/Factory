@@ -24,15 +24,36 @@
 // THE SOFTWARE.
 //
 
-import Foundation
+#if canImport(Darwin)
+import Darwin
+#elseif canImport(Glibc)
+import Glibc
+#elseif canImport(Musl)
+import Musl
+#elseif canImport(Android)
+import Android
+#endif
 
 // MARK: - Locking
+
+/// A lock that can run a closure while it holds the lock.
+internal protocol Locking: AnyObject {
+    func lock()
+    func unlock()
+}
+
+extension Locking {
+    @inlinable @inline(__always) func withLock<R>(_ body: () throws -> R) rethrows -> R {
+        lock(); defer { unlock() }
+        return try body()
+    }
+}
 
 /// Master recursive lock
 nonisolated(unsafe) internal var globalRecursiveLock = RecursiveLock()
 
 /// Custom recursive lock
-internal final class RecursiveLock: NSLocking {
+internal final class RecursiveLock: Locking {
 
     init() {
         let mutexAttr = UnsafeMutablePointer<pthread_mutexattr_t>.allocate(capacity: 1)
@@ -66,7 +87,7 @@ internal let globalVariableLock = CrossPlatformLock()
 
 #if os(macOS) || os(iOS) || os(watchOS)
 /// Custom lock using os_unfair_lock on Apple platforms.
-internal final class CrossPlatformLock: NSLocking, @unchecked Sendable {
+internal final class CrossPlatformLock: Locking, @unchecked Sendable {
 
     internal var locks = 1
 
@@ -83,7 +104,7 @@ internal final class CrossPlatformLock: NSLocking, @unchecked Sendable {
 }
 #else
 /// Custom lock compatible with Linux using pthread_mutex.
-internal final class CrossPlatformLock: NSLocking, @unchecked Sendable {
+internal final class CrossPlatformLock: Locking, @unchecked Sendable {
 
     internal var locks = 1
 

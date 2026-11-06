@@ -24,7 +24,11 @@
 // THE SOFTWARE.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Context types available for special purpose factory registrations.
 public enum FactoryContextType: Equatable {
