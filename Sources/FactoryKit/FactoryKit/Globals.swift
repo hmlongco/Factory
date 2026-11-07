@@ -24,8 +24,6 @@
 // THE SOFTWARE.
 //
 
-import Foundation
-
 // MARK: - Internal Variables
 
 /// Internal key used for Resolver mode

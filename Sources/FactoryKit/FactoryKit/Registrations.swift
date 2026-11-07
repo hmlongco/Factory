@@ -24,7 +24,11 @@
 // THE SOFTWARE.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Shared registration type for Factory and ParameterFactory. Used internally to manage the registration and resolution process.
 public nonisolated struct FactoryRegistration<P,T> {

@@ -24,8 +24,11 @@
 // THE SOFTWARE.
 //
 
-import CoreFoundation
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 // MARK: - Scope
 
@@ -59,7 +62,7 @@ public class Scope: @unchecked Sendable {
     internal func resolve<T>(using cache: Cache, key: FactoryKey, ttl: TimeInterval?, factory: () -> T) -> (T, Bool) {
         if let box = cache.value(forKey: key), let cached: T = unboxed(box: box) {
             if let ttl = ttl {
-                let now = CFAbsoluteTimeGetCurrent()
+                let now = Date().timeIntervalSinceReferenceDate
                 if (box.timestamp + ttl) > now {
                     cache.set(timestamp: now, forKey: key)
                     return (cached, false)
@@ -74,7 +77,7 @@ public class Scope: @unchecked Sendable {
         let result: (instance: T, cached: Bool) = keyLock.withLock {
             if let box = cache.value(forKey: key), let cached: T = unboxed(box: box) {
                 if let ttl = ttl {
-                    let now = CFAbsoluteTimeGetCurrent()
+                    let now = Date().timeIntervalSinceReferenceDate
                     if (box.timestamp + ttl) > now {
                         cache.set(timestamp: now, forKey: key)
                         return (cached, false)
@@ -105,11 +108,11 @@ public class Scope: @unchecked Sendable {
         guard case Optional<Any>.some = instance as Any else {
             return nil
         }
-        return StrongBox<T>(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: instance)
+        return StrongBox<T>(scopeID: scopeID, timestamp: Date().timeIntervalSinceReferenceDate, boxed: instance)
     }
 
     internal let scopeID: UUID = UUID()
-    internal let lock: NSLocking = CrossPlatformLock()
+    internal let lock = CrossPlatformLock()
 
 }
 
@@ -189,7 +192,7 @@ extension Scope {
             guard case Optional<Any>.some(let value) = instance as Any, type(of: value) is AnyObject.Type else {
                 return nil
             }
-            return WeakBox(scopeID: scopeID, timestamp: CFAbsoluteTimeGetCurrent(), boxed: value as AnyObject)
+            return WeakBox(scopeID: scopeID, timestamp: Date().timeIntervalSinceReferenceDate, boxed: value as AnyObject)
         }
     }
 

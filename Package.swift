@@ -40,7 +40,7 @@ let package = Package(
         .target(
             name: "FactoryKit",
             dependencies: [],
-            resources: [.copy("PrivacyInfo.xcprivacy")],
+            resources: FactoryResources.kit,
             swiftSettings: FactorySwiftSetting.common
         ),
         .target(
@@ -67,4 +67,14 @@ enum FactorySwiftSetting {
     static let common: [SwiftSetting] = [
         .enableExperimentalFeature("StrictConcurrency")
     ]
+}
+
+enum FactoryResources {
+    // The privacy manifest matters only on Apple platforms. Elsewhere a resource makes SwiftPM generate
+    // a `Bundle.module` accessor, which links the full Foundation.
+    #if canImport(Darwin)
+    static let kit: [Resource] = [.copy("PrivacyInfo.xcprivacy")]
+    #else
+    static let kit: [Resource] = []
+    #endif
 }
