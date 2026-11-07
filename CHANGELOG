@@ -1,5 +1,9 @@
 # Factory Changelog
 
+### 3.5.3
+
+* Use FoundationEssentials on Linux and Android #391
+
 ### 3.5.2
 
 * Updated README and documentation to cover withContainer caveats and examples
